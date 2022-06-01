@@ -1,5 +1,10 @@
 *Boneworks mod that removes RNG.*
 
+## Features
+
+- Makes boss claw always patrol to the area near the finish in Streets
+  - Boss claw cabin appears *green* when this feature is on, so that you're aware RNG is being manipulated
+
 ## Installation
 
 - Make sure Melon Loader is installed in Boneworks

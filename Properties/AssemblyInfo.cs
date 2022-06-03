@@ -3,23 +3,20 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle(BoneworksSpeedrunTools.BuildInfo.Name)]
+[assembly: AssemblyTitle(SpeedrunTools.BuildInfo.Name)]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany(BoneworksSpeedrunTools.BuildInfo.Company)]
-[assembly: AssemblyProduct(BoneworksSpeedrunTools.BuildInfo.Name)]
-[assembly: AssemblyCopyright("Created by " + BoneworksSpeedrunTools.BuildInfo.Author)]
-[assembly: AssemblyTrademark(BoneworksSpeedrunTools.BuildInfo.Company)]
+[assembly: AssemblyCompany(SpeedrunTools.BuildInfo.Company)]
+[assembly: AssemblyProduct(SpeedrunTools.BuildInfo.Name)]
+[assembly: AssemblyCopyright("Created by " + SpeedrunTools.BuildInfo.Author)]
+[assembly: AssemblyTrademark(SpeedrunTools.BuildInfo.Company)]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 //[assembly: Guid("")]
-[assembly: AssemblyVersion(BoneworksSpeedrunTools.BuildInfo.Version)]
-[assembly: AssemblyFileVersion(BoneworksSpeedrunTools.BuildInfo.Version)]
+[assembly: AssemblyVersion(SpeedrunTools.BuildInfo.Version)]
+[assembly: AssemblyFileVersion(SpeedrunTools.BuildInfo.Version)]
 [assembly: NeutralResourcesLanguage("en")]
-[assembly: MelonInfo(typeof(BoneworksSpeedrunTools.BoneworksSpeedrunTools), BoneworksSpeedrunTools.BuildInfo.Name, BoneworksSpeedrunTools.BuildInfo.Version, BoneworksSpeedrunTools.BuildInfo.Author, BoneworksSpeedrunTools.BuildInfo.DownloadLink)]
+[assembly: MelonInfo(typeof(SpeedrunTools.SpeedrunTools), SpeedrunTools.BuildInfo.Name, SpeedrunTools.BuildInfo.Version, SpeedrunTools.BuildInfo.Author, SpeedrunTools.BuildInfo.DownloadLink)]
 
 
-// Create and Setup a MelonModGame to mark a Mod as Universal or Compatible with specific Games.
-// If no MelonModGameAttribute is found or any of the Values for any MelonModGame on the Mod is null or empty it will be assumed the Mod is Universal.
-// Values for MelonModGame can be found in the Game's app.info file or printed at the top of every log directly beneath the Unity version.
-[assembly: MelonGame(null, null)]
+[assembly: MelonGame("Stress Level Zero", "BONEWORKS")]

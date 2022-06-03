@@ -1,20 +1,21 @@
 ﻿using MelonLoader;
 
-namespace BoneworksSpeedrunTools
+namespace SpeedrunTools
 {
   public static class BuildInfo
   {
-    public const string Name = "BoneworksSpeedrunTools";
+    public const string Name = "SpeedrunTools";
     public const string Author = "jakzo";
     public const string Company = null;
     public const string Version = "1.0.0";
-    public const string DownloadLink = null;
+    public const string DownloadLink = "https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/";
   }
 
-  public class BoneworksSpeedrunTools : MelonMod
+  public class SpeedrunTools : MelonMod
   {
-    private const string PREF_CATEGORY = "BoneworksSpeedrunTools";
+    private const string PREF_CATEGORY = "SpeedrunTools";
     private const string PREF_REMOVE_BOSS_CLAW_RNG = "removeBossClawRng";
+    private const string PREF_BOSS_CLAW_X = "bossClawX";
 
     static private T GetPref<T>(string identifier)
     {
@@ -25,7 +26,8 @@ namespace BoneworksSpeedrunTools
     {
       MelonLogger.Msg("Loading preferences");
       var category = MelonPreferences.CreateCategory(PREF_CATEGORY);
-      category.CreateEntry(PREF_REMOVE_BOSS_CLAW_RNG, true, "Make boss claw always patrol to the area at the end of the level");
+      category.CreateEntry(PREF_REMOVE_BOSS_CLAW_RNG, true, "Make boss claw always patrol to a single point");
+      category.CreateEntry(PREF_BOSS_CLAW_X, 120.0f, "The point the boss claw will always patrol to (should be between -100 and 140, default is 120 near level exit)");
       MelonLogger.Msg("Preferences loaded");
     }
 
@@ -43,7 +45,11 @@ namespace BoneworksSpeedrunTools
         // Set home position X to near the level exit instead of the middle
         MelonLogger.Msg("Setting BossClawAi._homePosition");
         var homePosition = bca._homePosition;
-        bca._homePosition = new UnityEngine.Vector3(120.0f, homePosition.y, homePosition.z);
+        bca._homePosition = new UnityEngine.Vector3(
+          GetPref<float>(PREF_BOSS_CLAW_X),
+          homePosition.y,
+          homePosition.z
+        );
         // Reduce patrol area to a point at the home position
         MelonLogger.Msg("Setting BossClawAi.patrolXz");
         bca.patrolXz = new UnityEngine.Vector2(0.0f, 0.0f);

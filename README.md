@@ -1,18 +1,18 @@
 _Utilities for practicing Boneworks speedrunning._
 
-## Features
+# Features
 
 - Makes boss claw always patrol to the area near the finish in Streets
   - Boss claw cabin appears _green_ when this feature is on, so that you're aware RNG is being manipulated
 
-## Installation
+# Installation
 
 - Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) is installed in Boneworks
-- Download [this mod from Thunderstore](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/) (click on "Manual Download")
+- Download [the SpeedrunTools mod from Thunderstore](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/) (click on "Manual Download")
 - Open the downloaded `.zip` file and extract `Mods/SpeedrunTools.dll` into `BONEWORKS/Mods/SpeedrunTools.dll`
   - You can usually find your `BONEWORKS` directory at `C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS`
 
-## Configuration
+# Configuration
 
 You can change some things (like where the boss claw moves to) by using MelonPreferencesManager:
 

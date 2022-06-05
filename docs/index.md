@@ -2,6 +2,11 @@
 
 I've always wondered how people mod games -- figuring out all the APIs, what they do and hooking into them to make something cool. I recently went through this process of understanding the exact logic used in a part of the game and building a mod to change it. During this I learnt how C# and Unity compile to machine code, how to read disassembled x86 code and the various tools to help with these tasks. But before I get to that, I'll explain what I'm modding and why.
 
+- Table of contents
+{:toc}
+
+## 🎙️ Introduction
+
 Boneworks is amazing! 😍 I bought it when I first got my VR headset a year ago but my first playthrough was a nauseating experience as I managed to get my body stuck in the monkey bars of the museum. 🤢 I never even saw an enemy before putting it down and getting into other games like Beat Saber. But about a month ago I picked it back up and to my surprise I no longer got motion sick! I played through the whole story and the side chambers and loved it so much that I decided to keep playing it and turn to one of my favourite pastimes: speedrunning. 🏃 I mostly enjoy watching speedruns and letting other people put in the hundreds of hours of grinding and glitch hunting, so two weeks in and [with a respectable time](https://www.youtube.com/watch?v=fWU1n0-W-wA) that would have placed in the top 20 on the leaderboard if I'd submitted it, this was probably the furthest I'd ever gone into running a game myself. At this point, to get better times I needed to practise tricks like [flinging from the boss claw to the finish of Streets](https://youtu.be/1nZAoV9Tna8?t=167) so I could pull them off consistently. The problem with this is that the direction the boss claw travels is totally random, so it is annoying to practise when it rarely goes the right way for a fling. 😩 That's when I set out to fix this. I decided to build a mod to force it in the right direction and also see if I could reverse engineer the logic used to decide where the boss claw will go.
 
 ## ⚙️ Technical background
@@ -200,11 +205,13 @@ I still wanted to know if the point it goes to was truly random though. To do th
 
 The success rate of decompilation was 47% and unfortunately when I opened the output in dnSpy I found that `AiTick()` failed to decompile. ☹️
 
-<figure>
+Output:
 
 ```
 [Info] [Program] Overall analysis success rate: 47% (8617) of 18267 methods.
 ```
+
+What dnSpy shows:
 
 ```c#
 // Token: 0x0600074B RID: 1867 RVA: 0x00002050 File Offset: 0x00000250
@@ -216,14 +223,11 @@ private void AiTick()
 }
 ```
 
-<figcaption align="center">What dnSpy shows</figcaption>
-</figure>
-
 ### 🔬 Disassembling the code
 
 My backup plan was to read the assembly directly, so I loaded the game's assembly (`GameAssembly.dll`) into IDA. In addition to just converting the machine code, IDA analyses and works out the boundaries of all the subroutines and displays the disassembled code in a nice graph format. I ran Il2CppInspector on the game to find the address of `BossClawAi.AiTick()` and opened the subroutine graph at that address, since the logic for deciding where to go is probably in here. I knew that there should be a call to `NavMeshAgent.SetDestination()` just after it figures out the point it wants to patrol to so I searched for calls to its address in this subroutine and found a few of them. For each of these calls I worked backwards through the code, renaming any `call` instructions as I came across them to change the opaque memory address into a function name by cross-referencing the address with Il2CppInspector's output. Eventually I found what I think is the call that sends the boss claw to patrol.
 
-<figure>
+The segment of assembly from IDA that sends the boss claw to a random point:
 
 ```asm
 loc_1804EC38A:                          ; CODE XREF: sub_1804EB1A0+118C↑j
@@ -295,9 +299,6 @@ loc_1804EC446:                          ; CODE XREF: sub_1804EB1A0+1296↑j
                 call    BehaviourBaseNav_SetPath ; ========= Send boss claw to randomly chosen patrol point
                 jmp     loc_1804EBB03
 ```
-
-<figcaption align="center">The segment of assembly from IDA that sends the boss claw to a random point</figcaption>
-</figure>
 
 What I found was what I was expecting (a call to get a random value followed by `NavMeshAgent.SetDestination()`) but not what I was hoping for 😞 (some logic which could be manipulated to force it to go in a certain direction). Although it's important to note that I'm not 100% certain on this. Assembly is complicated. I haven't worked out the purpose of every single instruction and there are so many other code paths in the function. There may be some trick to trigger one of the other `NavMeshAgent.SetDestination()` calls to send it in the desired direction. 🤷
 

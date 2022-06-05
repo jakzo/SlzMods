@@ -30,3 +30,4 @@ In future I'll make the config appear in the BoneMenu:
 
 - Repository: https://github.com/jakzo/BoneworksSpeedrunTools
 - Thunderstore: https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/
+- How I reverse engineer the game: https://jakzo.github.io/BoneworksSpeedrunTools/

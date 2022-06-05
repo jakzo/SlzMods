@@ -15,15 +15,15 @@ This section will be pretty dense so I'll include a **tl;dr** for each section i
 
 ### 🏗️ How the game is compiled
 
-> C# source code -> compiled to C# IL -> compiled to C++ code by IL2CPP -> compiled to x86 binary
+> C# source code -> compiled to C# IL -> compiled to C++ code by IL2CPP -> compiled to x86 binary.
 
-Boneworks is a [Unity](https://unity.com/) game, and as such the code is written in [C#](<https://en.wikipedia.org/wiki/C_Sharp_(programming_language)>). A lot of languages (eg. [C++](https://en.wikipedia.org/wiki/C%2B%2B)) compile into instructions for a particular CPU architecture (eg. [x86](https://en.wikipedia.org/wiki/X86) which is most popular for PCs today), but C# compiles to an intermediate language (IL) which no CPU understands. Instead an execution engine (eg. [Mono](<https://en.wikipedia.org/wiki/Mono_(software)>)) interprets, compiles and runs the IL when the program is run. However this [just-in-time](https://en.wikipedia.org/wiki/Just-in-time_compilation) interpreting of the code adds overhead and for games, faster is better. This is why Unity built a tool called [IL2CPP](https://docs.unity3d.com/Manual/IL2CPP.html).
+Boneworks is a [Unity](https://unity.com/) game, and as such the code is written in [C#](<https://en.wikipedia.org/wiki/C_Sharp_(programming_language)>). A lot of languages (eg. [C++](https://en.wikipedia.org/wiki/C%2B%2B)) compile into instructions for a particular CPU architecture (eg. [x86](https://en.wikipedia.org/wiki/X86) which is most popular for PCs today), but C# compiles to an intermediate language (IL) which no CPU understands. Instead an execution engine (eg. [Mono](<https://en.wikipedia.org/wiki/Mono_(software)>)) interprets, compiles and runs the IL when the program is run. However this [just-in-time compiling](https://en.wikipedia.org/wiki/Just-in-time_compilation) of the code adds overhead and for games, faster is better. This is why Unity built a tool called [IL2CPP](https://docs.unity3d.com/Manual/IL2CPP.html).
 
-IL2CPP transforms the IL into C++ code (as the name suggests). This C++ code can then be compiled to a particular CPU architecture, eliminating the overhead of an execution engine. One thing that is important to note though: usually in C++ the names of your variables and structures don't matter because they are all compiled down to memory addresses, but C# supports (and heavily uses) [reflection](https://en.wikipedia.org/wiki/Reflective_programming) which allows code to introspect things like method names and types. IL2CPP outputs a file with all these symbols that the C++ code can use so that reflection features work. The compiled output (whether IL or IL2CPP binary) is a `.dll` file that is known in C# terminology as an _assembly_.
+IL2CPP transforms the IL into C++ code (as the name suggests). This C++ code can then be compiled to a particular CPU architecture, eliminating the overhead of an execution engine. One thing that is important to note though: usually in C++ the names of your variables and structures don't matter because they are all compiled down to memory addresses, but C# supports (and heavily uses) [reflection](https://en.wikipedia.org/wiki/Reflective_programming) which allows code to introspect things like method names and types. IL2CPP outputs a file with all these symbols that the C++ code can use so that reflection features work. The compiled output (whether IL or IL2CPP binary) is a `.dll` file that is known in C# terminology as an _assembly_ (which is confusing because it is referring to a file containing machine code, while in computer science terminology the word assembly generally refers to human-readable text format representing some machine code, and I'll be using this other definition further below when we get into disassembly).
 
 So now that we have some background on how the game is compiled and which data is available, we can get to the actual process of reverse engineering!
 
-### 🪄 C# decompilers
+### 🪛 C# decompilers
 
 > dnSpy and ILSpy allow reading compiled C# code but won't work for Boneworks because of IL2CPP.
 
@@ -33,19 +33,19 @@ So now that we have some background on how the game is compiled and which data i
 
 It would be great if I could open Boneworks with these tools since it would be really easy to read the C# code and see what the boss claw logic is, but ultimately it's not possible because they only read IL, not x86 binaries produced by IL2CPP. 🚧
 
-### 🪛 IL2CPP reversers
+### 🪄 IL2CPP reversers
 
 > Il2CppInspector outputs the classes/methods/properties, their types and locations in the assembly. Cpp2IL converts the assembly to IL (which can be used with dnSpy/ILSpy).
 
 [Il2CppInspector](https://github.com/djkaty/Il2CppInspector) is a tool that reads the reflection metadata from a compiled IL2CPP project. This gives us a list of all the classes, methods and properties with types as well as the address where they are in the assembly. The author has a [great blog series](https://katyscode.wordpress.com/tag/il2cpp/) that goes into how it works and the various obfuscation techniques game developers use to hide the reflection metadata from reverse engineering. It worked out of the box for Boneworks though (and the developers -- Stress Level Zero -- are modding-friendly by the way) so I had no issue with this. There are plenty of output options, like creating a C# project with class/method stubs, C headers and Python scripts to assign class/method names to locations in disassemblers.
 
-[Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) is a really interesting project that aims to reconstruct the IL from the compiled C++. C# decompilers like dnSpy/ILSpy can then be used to read the code in a much more friendly syntax than x86 assembly. Il2CppInspector development has been discontinued and recommends this project. Unfortunately it's not perfect yet and there are many instances where it cannot reconstruct something and bails out of reconstructing the entire function.
+[Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) is a really interesting project that aims to reconstruct the IL from the compiled C++. C# decompilers like dnSpy/ILSpy can then be used to read the code in a much more friendly syntax than x86 assembly. I imagine IL2CPP produces a particular set of C++ code for some C# code, so that seems reversible but C++ to machine code can be very different, which is why it is so impressive that this project works at all. Unfortunately it's not perfect yet and there are many instances where it cannot reconstruct something and bails out of reconstructing the entire function.
 
 ### 🤖 x86 disassemblers
 
-> IDA is the best x86 disassembler (but automatic subroutine renaming based on reflection metadata doesn't work on free version).
+> Disassemblers turn binary into assembly. IDA is probably the best x86 disassembler (but automatic subroutine renaming based on reflection metadata doesn't work on free version).
 
-There are many x86 disassemblers but two of the best are [IDA](https://hex-rays.com/ida-free/) and [Ghidra](https://ghidra-sre.org/). These read machine code (the raw 1s and 0s that CPUs understand) and converts it to assembly code (human-readable instructions, not to be confused with C# assemblies which I mentioned above). IDA is better but many useful features are only in the paid version, while Ghidra is free and open-source. Il2CppInspector supports creating scripts for automatically renaming the subroutines identified by IDA and Ghidra to their real names based on the IL reflection metadata but unfortunately IDA free cannot run scripts and there were heaps of errors in the Ghidra file. 😕 In the end I just manually renamed subroutines every time I saw a `call` instruction as I was reading the disassembled code by cross-referencing the called address with the table produced by Il2CppInspector. 😒
+Disassemblers turn machine code (eg. compiled C++, the raw 1s and 0s CPUs understand) into assembly (human-readable list of CPU instructions, not to be confused with C# assemblies which I mentioned above). There are many x86 disassemblers but two of the most popular are [IDA](https://hex-rays.com/ida-free/) and [Ghidra](https://ghidra-sre.org/). IDA is better but many useful features are only in the paid version, while Ghidra is free and open-source. Il2CppInspector supports creating scripts for automatically renaming the subroutines identified by IDA and Ghidra to their real names based on the IL reflection metadata but unfortunately IDA free cannot run scripts and there were heaps of errors in the Ghidra file. 😕 In the end I just manually renamed subroutines every time I saw a `call` instruction as I was reading the disassembled code by cross-referencing the called address with the table produced by Il2CppInspector. 😒
 
 Assembly code is pretty easy to read but hard to understand since it is so low-level. An example of assembly instructions is this:
 
@@ -53,10 +53,10 @@ Assembly code is pretty easy to read but hard to understand since it is so low-l
 add rax, 100   ; adds 100 to the rax register
 add rax, rbx   ; adds the value in rbx to rax
 add rax, [100] ; adds the value in memory at address 100 to rax
-add rax, [rbx] ; adds the value in rbx to rax
+add rax, [rbx] ; adds the value in memory at address pointed to by rbx to rax
 ```
 
-Basically the CPU has several registers which store a small amount of data (eg. a 64-bit integer) and reads/executes instructions from memory which operate on these registers. You can look up what instructions do and what registers are generally used for on Google and in CPU reference manuals.
+Basically the CPU has several registers which store a small amount of data (eg. a 64-bit integer) and reads/executes instructions from memory which operate on these registers. As you read through the assembly code, you can look up what instructions do and what registers are generally used for on Google and in CPU reference manuals to gradually learn everything.
 
 I have some prior experience with x86 assembly so have no issues reading it but I'm not sure about conventions like where C++ usually stores arguments before calling another subroutine. Also there's just so much state you need to keep in your head to understand what's going on. 😵‍💫
 
@@ -73,49 +73,77 @@ Alright, we're finally ready to start figuring out the internals of the boss cla
 ```c#
 public class BossClawAi : MonoBehaviour
 {
-    // Important things for boss claw RNG!
-    public Vector3 _homePosition { get; set; } // the position it starts at (in the middle of the street)
-    public Vector2 patrolXz { get; set; } // a plane that extends this many units from _homePosition in X and Z directions
-        // When patrolling it will choose a random point on this plane to patrol to
-        // The Z component is 0 (I assume an early version of the claw behaved more like an arcade machine claw which can
-        // move in two dimensions but the mechanics of the overhead arms would be complicated for it to go to the drop-off
-        // point so they made it held up by an overhead track instead and just reduced the Z to 0 to stay on the track)
-    public UnityEngine.AI.NavMeshAgent _navAgent { get; set; } // manages pathing, movement and current target position
-        // The claw is very simple so barely needs an AI but it does have to go around a corner to reach the drop-off point
-    public void AiTick(); // called on each frame to perform claw logic
+    // === Important things for boss claw RNG! ===
 
-    // Others
-    public float _aiTickFreq { get; set; } // how often AiTick() is called
-    public float _lastAiTickTime { get; set; } // last time AiTick() was called
-    public float patrolFrequency { get; set; } // how often to move to a random patrol point
-    public float _patrolTimer { get; set; } // time when it last moved to a random patrol point
-    public List<TriggerRefProxy> targetList { get; set; } // list of targets it wants to pick up
-    public TriggerRefProxy _activeTarget { get; set; } // target it's currently going for
-    public float _curExtension { get; set; } // percentage it's currently extended to the ground
-    public float _extensionVelocity { get; set; } // speed it is extending to the ground
-    public bool CaughtPrey(); // called when it has grabbed something
-    public void FixedUpdate(); // called on each frame
+    // The position it starts at (in the middle of the street)
+    public Vector3 _homePosition { get; set; }
+    // A plane that extends this many units from _homePosition in X and Z
+    // directions. When patrolling it will choose a random point on this plane
+    // to patrol to. The Z component is 0 (I assume an early version of the claw
+    // behaved more like an arcade machine claw which can move in two dimensions
+    // but the mechanics of the overhead arms would be complicated for it to go
+    // to the drop-off point so they made it held up by an overhead track
+    // instead and just reduced the Z to 0 to stay on the track).
+    public Vector2 patrolXz { get; set; }
+    // Manages pathing, movement and current target position. The claw is very
+    // simple so barely needs an AI but it does have to go around a corner to
+    // reach the drop-off point so I guess it makes sense to have one.
+    public UnityEngine.AI.NavMeshAgent _navAgent { get; set; }
+    // Called on each frame to perform claw logic.
+    public void AiTick();
+
+
+    // === Others ===
+
+    // How often AiTick() is called.
+    public float _aiTickFreq { get; set; }
+    // Last time AiTick() was called.
+    public float _lastAiTickTime { get; set; }
+    // How often to move to a random patrol point.
+    public float patrolFrequency { get; set; }
+    // Time when it last moved to a random patrol point.
+    public float _patrolTimer { get; set; }
+    // List of targets it wants to pick up.
+    public List<TriggerRefProxy> targetList { get; set; }
+    // Target it's currently going for.
+    public TriggerRefProxy _activeTarget { get; set; }
+    // Percentage it's currently extended to the ground.
+    public float _curExtension { get; set; }
+    // Speed it is extending to the ground.
+    public float _extensionVelocity { get; set; }
+    // Called when it has grabbed something.
+    public bool CaughtPrey();
+    // Called on each frame.
+    public void Update();
+    // Called on each frame.
+    public void FixedUpdate();
+    // Called on load.
+    public void Awake();
+    // Change state.
     public void SwitchMentalState(MentalState mState);
+    // Change state.
     public void SwitchPounceState(PounceState pState);
-    public void ToggleScoop(bool toggleOn); // set whether to show the blue barrier when picking something up
+    // Set whether to show the blue barrier when picking something up.
+    public void ToggleScoop(bool toggleOn);
+    // Starts calling AiTick() on each frame. Claw becomes active after jumping
+    // the wall in a run. Before then it just sits at the home position. I
+    // assume this is for performance since the player won't see the claw when
+    // they're somewhere else.
+    public void SetActive();
+    // Stop calling AiTick().
+    public void SetDeactive();
 
-    // Claw becomes active when jumping the wall
-    // Before then it just sits at the home position
-    // I assume this is for performance since the player won't see the claw when they're somewhere else
-    public void SetActive(); // starts calling AiTick() on each frame
-    public void SetDeactive(); // stop calling it
-
-    // State (including config for default)
+    // === State === (including config for default)
     public MentalState _defaultState { get; set; }
     public PounceState _pounceState { get; set; }
     public MentalState _mentalState { get; set; }
 
-    // Config for movement
+    // === Config for movement ===
     public float _baseAcceleration { get; set; }
     public float acceleration { get; set; }
     public float speed { get; set; }
 
-    // Config for when it is attempting to grab something
+    // === Config for when it is attempting to grab something ===
     public float pounceSpeedMult { get; set; }
     public float pounceAccelMult { get; set; }
     public float pounceSpringMult { get; set; }
@@ -123,12 +151,13 @@ public class BossClawAi : MonoBehaviour
     public float maxExtension { get; set; }
     public float extensionTime { get; set; }
 
-    // Config for springiness when it's picking something up
+    // === Config for springiness when it's picking something up ===
     public float scoopSpringXz { get; set; }
     public float scoopDamperXz { get; set; }
     public float retractionTime { get; set; }
 
-    // Physics (for moving the segments between the top and bottom of the claw)
+    // === Physics ===
+    // (for moving the segments between the top and bottom of the claw)
     public Rigidbody _baseRb { get; set; }
     public ConfigurableJoint _jointBase { get; set; }
     public ConfigurableJoint _jointSpineA { get; set; }
@@ -136,7 +165,7 @@ public class BossClawAi : MonoBehaviour
     public ConfigurableJoint _jointSpineC { get; set; }
     public ConfigurableJoint _jointCabin { get; set; }
 
-    // Audio
+    // === Audio ===
     public UnityEngine.Audio.AudioMixerGroup _mixerGroup { get; set; }
     public AudioPlayer _articulationPlayer { get; set; }
     public AudioPlayer _movementPlayer { get; set; }
@@ -147,27 +176,41 @@ public class BossClawAi : MonoBehaviour
     public UnityEngine.AudioClip _scoopOff { get; set; }
     public void AttenuateMovementLoop(ref AudioPlayer player, Transform parentTransform, float volume, float pitch);
 
-    // Not totally sure about the rest of these
-    public bool _forceAiTick { get; set; } // maybe AiTick() debounces and this bypasses that on next call?
-    public LayerMask preyLayers { get; set; } // decides which objects it should try to pick up?
-    public Dictionary<TriggerRefProxy, int> _targetRefCount { get; set; } // map of targets to something?
-    public ulong _activeTargetId { get; set; } // some kind of ID for the current target?
-    public float _targetExtension { get; set; } // how far it should extend downwards to pick up its target?
-    public float _pounceTimer { get; set; } // for timing when to pounce again after missing a pounce?
-    public Il2CppReferenceArray<Collider> _boxCheckResults { get; set; } // what objects are inside the claw?
-    public Transform _boxCheck { get; set; } // the area inside the claw which counts as grabbed?
-    public Transform unloadPoint { get; set; } // where to drop off grabbed objects?
+    // === Not totally sure about the rest of these ===
+    // Maybe AiTick() debounces and this bypasses that on next call?
+    public bool _forceAiTick { get; set; }
+    // Decides which objects it should try to pick up?
+    public LayerMask preyLayers { get; set; }
+    // Map of targets to something?
+    public Dictionary<TriggerRefProxy, int> _targetRefCount { get; set; }
+    // Some kind of ID for the current target?
+    public ulong _activeTargetId { get; set; }
+    // How far it should extend downwards to pick up its target?
+    public float _targetExtension { get; set; }
+    // For timing when to pounce again after missing a pounce?
+    public float _pounceTimer { get; set; }
+    // What objects are inside the claw?
+    public Il2CppReferenceArray<Collider> _boxCheckResults { get; set; }
+    // The area inside the claw which counts as grabbed?
+    public Transform _boxCheck { get; set; }
+    // Where to drop off grabbed objects?
+    public Transform unloadPoint { get; set; }
+    // ?
     public Vector3 _scoopDisplace { get; set; }
+    // ?
     public Il2CppReferenceArray<GameObject> _scoopObjects { get; set; }
-    public void Awake();
+    // ?
     public void CheckTarget();
-    public void ClearPath(); // navigation?
-    public void SetPath(Vector3 target); // navigation?
-    public void SetScoopXzDrives(float spring, float damper); // how "diagonal" the claw is as it extends?
+    // Stops moving?
+    public void ClearPath();
+    // Move to somewhere?
+    public void SetPath(Vector3 target);
+    // How "diagonal" the claw is as it extends?
+    public void SetScoopXzDrives(float spring, float damper);
+    // ?
     public void TriggerStateChange(TriggerRefProxy trp, bool enter = true);
-    public void Update();
 
-    // The different possible states
+    // === Different possible states ===
     public enum MentalState
     {
         Rest = 0,
@@ -194,6 +237,13 @@ From this I had all the information I needed to build a mod which makes the boss
 Since there was the possibility of cheating runs with this mod (consciously or accidentally) I also had it paint the boss claw green so it's obvious the mod is active.
 
 Also interesting to note here is that MelonLoader comes with a library called [Harmony](https://harmony.pardeike.net/) which allows "patching" methods. This replaces the code at the memory address of the method with a stub that calls your `Prefix` handler, the original method, then your `Postfix` handler. I didn't need to use it for my mod though, since I could do everything with standard Unity APIs and the built-in MelonLoader hooks.
+
+#### 🔗 Links
+
+If you're interested in the mod, here are the links to download and see the code:
+
+- Installation link: [https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/)
+- Mod repository: [https://github.com/jakzo/BoneworksSpeedrunTools](https://github.com/jakzo/BoneworksSpeedrunTools)
 
 ### 🔍 Decompiling the code
 
@@ -247,11 +297,11 @@ loc_1804EC38A:                          ; CODE XREF: sub_1804EB1A0+118C↑j
                 divss   xmm1, xmm6
                 addss   xmm0, xmm1
                 movss   dword ptr [rdi+108h], xmm0
-                call    Random_1_get_value        ; ========= Random patrol area X?
+                call    Random_1_get_value        ; === Random patrol area X?
                 movss   xmm6, dword ptr [rdi+68h]
                 xor     ecx, ecx
                 movaps  xmm7, xmm0
-                call    Random_1_get_value        ; ========= Random patrol area Z?
+                call    Random_1_get_value        ; === Random patrol area Z?
                 movss   xmm1, dword ptr [rdi+6Ch]
                 lea     rcx, [rbp+57h+var_D0]
                 movaps  xmm3, xmm1
@@ -296,7 +346,7 @@ loc_1804EC446:                          ; CODE XREF: sub_1804EB1A0+1296↑j
                 xor     r8d, r8d
                 movsd   [rsp+110h+var_E0], xmm0
                 mov     [rsp+110h+var_D8], eax
-                call    BehaviourBaseNav_SetPath ; ========= Send boss claw to randomly chosen patrol point
+                call    BehaviourBaseNav_SetPath ; === Send boss claw to point
                 jmp     loc_1804EBB03
 ```
 

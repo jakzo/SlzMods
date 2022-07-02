@@ -1,0 +1,45 @@
+name: Develop build
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: Develop
+    outputs:
+      release_upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up toolchain
+        run: sudo apt install -y mono-devel flatbuffers-compiler
+      - name: Install dependencies
+        run: nuget restore SpeedrunTools.sln
+      - name: Build
+        run: msbuild /property:Configuration=Release
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          prerelease: true
+          tag_name: dev_${{ github.run_number }}
+          release_name: dev_${{ github.run_number }}
+          body: >
+            **DO NOT DOWNLOAD!**
+
+            Testing build used for development of the mod.
+      - name: Upload build to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/Release/SpeedrunTools.dll
+          asset_name: SpeedrunTools.dll
+          asset_content_type: application/octet-stream

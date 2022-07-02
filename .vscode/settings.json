@@ -1,13 +1,19 @@
 {
-    "cSpell.language": "en-GB",
-    "cSpell.words": [
-        "Boneworks",
-        "Ghidra",
-        "leaderboard",
-        "pathing",
-        "playthrough",
-        "Saber",
-        "speedrunning",
-        "speedruns"
-    ]
+  "cSpell.words": [
+    "Boneworks",
+    "choco",
+    "devel",
+    "Dont",
+    "Flatbuffer",
+    "Flatbuffers",
+    "flatc",
+    "jakzo",
+    "Lerp",
+    "lerped",
+    "msbuild",
+    "Speedrun",
+    "speedrunning",
+    "thumbstick"
+  ],
+  "omnisharp.useModernNet": false
 }

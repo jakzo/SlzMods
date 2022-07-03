@@ -1,26 +1,52 @@
-﻿using System.Collections.Generic;
+﻿using MelonLoader;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using UnityEngine;
 
 namespace SpeedrunTools.Replay
 {
   class Recorder
   {
-    public bool IsRecording = false;
+    private static readonly string TEMP_FILENAME = $"temp.{Constants.REPLAY_EXTENSION}";
+    private static readonly string TEMP_FILE_PATH = Path.Combine(Utils.REPLAYS_DIR, TEMP_FILENAME);
 
-    private float _minFrameDuration;
-    private int _maxFrameLength;
+    public bool IsRecording = false;
+    public string FilenamePrefix;
+    public float MaxFps;
+    public float MaxDuration;
+
+    private float _minFrameTime;
     private int _numFrames = 0;
     private System.DateTime _startTime;
-    private FlatBuffers.FlatBufferBuilder _builder;
     private List<FlatBuffers.Offset<Bwr.Level>> _levels = new List<FlatBuffers.Offset<Bwr.Level>>();
-    private List<FlatBuffers.Offset<Bwr.Frame>> _frames = new List<FlatBuffers.Offset<Bwr.Frame>>();
+    private float _levelStartTime;
+    private int _levelStartFrameOffset;
     private float? _loadStartTime;
     private float _relativeStartTime;
     private float _lastFrameTime;
     private Camera _cam;
+    private FileStream _fs;
+    private int _fileIdx = 0;
+    private FlatBuffers.FlatBufferBuilder _metaBuilder;
+
+    public string FilePath;
+
+    private void WriteFile(byte[] bytes)
+    {
+      // TODO: Should we queue this async?
+      _fs.Write(bytes, _fileIdx, bytes.Length);
+      _fileIdx += bytes.Length;
+    }
+
+    private void CloseFile()
+    {
+      if (_fs == null) return;
+      _fs.Close();
+      _fs = null;
+    }
 
     private Transform GetPlayerTransform()
     {
@@ -44,125 +70,98 @@ namespace SpeedrunTools.Replay
       return _cam.transform;
     }
 
-    public void Start(float minFrameDuration, float maxDuration)
+    public Recorder(string filenamePrefix = "run", float maxFps = 144, float maxDuration = 60 * 60 * 10)
     {
-      _minFrameDuration = minFrameDuration;
-      _maxFrameLength = (int)(maxDuration / _minFrameDuration);
+      FilenamePrefix = filenamePrefix;
+      MaxFps = maxFps;
+      MaxDuration = maxDuration;
+
+      _minFrameTime = 1 / maxFps;
       _startTime = System.DateTime.Now;
       _loadStartTime = Time.time;
       _relativeStartTime = Time.time;
       IsRecording = true;
 
-      _builder = new FlatBuffers.FlatBufferBuilder(1024);
+      try
+      {
+        File.Delete(TEMP_FILE_PATH);
+      } catch { }
+      _fs = File.Create(TEMP_FILE_PATH);
+      _fileIdx = 0;
+      WriteFile(Constants.FILE_START_BYTES);
+
+      _metaBuilder = new FlatBuffers.FlatBufferBuilder(1024);
     }
 
-    public void Stop()
+    public string Stop()
     {
+      if (!IsRecording)
+      {
+        throw new System.Exception("Cannot stop recording when not started.");
+      }
+
       IsRecording = false;
       var duration = _lastFrameTime - _relativeStartTime;
-      var file = Bwr.File.CreateFile(
-        _builder,
-        Bwr.Metadata.CreateMetadata(_builder, _startTime.ToBinary(), duration),
-        Bwr.File.CreateLevelsVector(_builder, _levels.ToArray())
+
+      var metadata = Bwr.Metadata.CreateMetadata(
+        _metaBuilder,
+        _startTime.ToBinary(),
+        duration,
+        Bwr.Metadata.CreateLevelsVector(_metaBuilder, _levels.ToArray())
       );
-      _builder.Finish(file.Value);
-    }
+      _metaBuilder.Finish(metadata.Value);
+      var metadataOffset = _fileIdx;
+      WriteFile(_metaBuilder.SizedByteArray());
+      _fs.Write(System.BitConverter.GetBytes(metadataOffset), Constants.METADATA_OFFSET_INDEX, sizeof(int));
 
-    public byte[] GetReplayBytes()
-    {
-      if (_builder == null || IsRecording)
-        throw new System.Exception("Replay cannot be saved until recording is finished");
-      return _builder.SizedByteArray();
-    }
-
-    public Replay GetReplay()
-    {
-      if (_builder == null || IsRecording)
-        throw new System.Exception("Replay cannot be saved until recording is finished");
-      return new Replay(Bwr.File.GetRootAsFile(_builder.DataBuffer));
-    }
-
-    public void SaveToFile(string filePath)
-    {
-      System.IO.File.WriteAllBytes(filePath, GetReplayBytes());
+      CloseFile();
+      var durationTs = System.TimeSpan.FromSeconds(duration);
+      FilePath = Path.Combine(
+        Utils.REPLAYS_DIR,
+        $"{FilenamePrefix}-{_startTime:yyyy\\_MM\\_dd\\-HH\\_mm\\_ss}-{durationTs:h\\_mm\\_ss}.{Constants.REPLAY_EXTENSION}"
+      );
+      File.Move(TEMP_FILE_PATH, FilePath);
+      return FilePath;
     }
 
     public void OnUpdate(int currentSceneIdx)
     {
       if (!IsRecording) return;
-      if (_numFrames >= _maxFrameLength)
+      if (Time.time - _relativeStartTime >= MaxDuration)
       {
-        Utils.LogDebug("Max recording length reached");
-        IsRecording = false;
+        MelonLogger.Warning("Max recording length reached. Stopping recording.");
+        Stop();
         return;
       }
 
-      // Stop recording during loading screens
+      // Pause recording during loading screens
       if (SceneLoader.loading)
       {
         if (!_loadStartTime.HasValue)
         {
-          var frames = Bwr.Level.CreateFramesVector(_builder, _frames.ToArray());
-          _levels.Add(Bwr.Level.CreateLevel(_builder, _levelStartTime, currentSceneIdx, frames));
+          _levels.Add(Bwr.Level.CreateLevel(_metaBuilder, _levelStartTime, currentSceneIdx, _levelStartFrameOffset));
 
           _loadStartTime = Time.time;
           _cam = null; // seems like camera is replaced on scene change
         }
         return;
       }
+
+      // Resume recording after loading
       if (_loadStartTime.HasValue)
       {
         _levelStartTime = Time.time;
+        _levelStartFrameOffset = _fileIdx;
         _loadStartTime = null;
       }
 
-      // Only record frame if time since last frame is greater than MinFrameDuration
-      if (_frames.Count > 0 && _lastFrameTime + _minFrameDuration > Time.time) return;
+      // Only record frame if time since last frame is greater than max FPS
+      if (Time.time < _lastFrameTime + _minFrameTime) return;
 
       // Record frame
-      {
-        var transform = GetHeadsetTransform();
-        Bwr.Headset.StartHeadset(_builder);
-        var pos = transform.position;
-        Bwr.Headset.AddPosition(_builder, Bwr.Vector3.CreateVector3(_builder, pos.x, pos.y, pos.z));
-        var rot = transform.rotation.eulerAngles;
-        Bwr.Headset.AddRotationEuler(_builder, Bwr.Vector3.CreateVector3(_builder, rot.x, rot.y, rot.z));
-      }
-      var headset = Bwr.Headset.EndHeadset(_builder);
-
-      {
-        var transform = GetControllerTransform("left");
-        Bwr.Controller.StartController(_builder);
-        var pos = transform.position;
-        Bwr.Controller.AddPosition(_builder, Bwr.Vector3.CreateVector3(_builder, pos.x, pos.y, pos.z));
-        var rot = transform.rotation.eulerAngles;
-        Bwr.Controller.AddRotationEuler(_builder, Bwr.Vector3.CreateVector3(_builder, rot.x, rot.y, rot.z));
-      }
-      var controllerLeft = Bwr.Controller.EndController(_builder);
-
-      {
-        var transform = GetControllerTransform("right");
-        Bwr.Controller.StartController(_builder);
-        var pos = transform.position;
-        Bwr.Controller.AddPosition(_builder, Bwr.Vector3.CreateVector3(_builder, pos.x, pos.y, pos.z));
-        var rot = transform.rotation.eulerAngles;
-        Bwr.Controller.AddRotationEuler(_builder, Bwr.Vector3.CreateVector3(_builder, rot.x, rot.y, rot.z));
-      }
-      var controllerRight = Bwr.Controller.EndController(_builder);
-
-      {
-        var transform = GetPlayerTransform();
-        Bwr.Player.StartPlayer(_builder);
-        var pos = transform.position;
-        Bwr.Player.AddPosition(_builder, Bwr.Vector3.CreateVector3(_builder, pos.x, pos.y, pos.z));
-        Bwr.Player.AddRotation(_builder, transform.rotation.eulerAngles.y);
-        Bwr.Player.AddHeadset(_builder, headset);
-        Bwr.Player.AddControllerLeft(_builder, controllerLeft);
-        Bwr.Player.AddControllerRight(_builder, controllerRight);
-      }
-      var player = Bwr.Player.EndPlayer(_builder);
-
-      _frames.Add(Bwr.Frame.CreateFrame(_builder, Time.time, player));
+      var frame = CreateFrame.Instance.Create();
+      WriteFile(System.BitConverter.GetBytes((ushort)frame.Length));
+      WriteFile(frame);
       _lastFrameTime = Time.time;
       //Utils.LogDebug($"Recorded frame: {currentSceneIdx} {cam.position.ToString()}");
     }

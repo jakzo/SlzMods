@@ -5,28 +5,23 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace SpeedrunTools.PluginRecord
+namespace SpeedrunTools.PluginReplay
 {
-  class PluginRecord : Plugin
+  class PluginReplay : Plugin
   {
-    private const float MIN_FRAME_TIME = 0.1f;
-    private const float MAX_RECORDING_DURATION = 60 * 60;
     private const int SCENE_IDX_MENU = 1;
     private const int SCENE_IDX_START = 2;
     private const int SCENE_IDX_THRONE = 15;
-    private const string GHOST_FILENAME = "ghost.vrr";
+    private const string MANUAL_REPLAY_FILE_PREFIX = "manual";
 
-    private static readonly string GHOST_FILE_PATH = Path.Combine(Utils.DIR, GHOST_FILENAME);
+    private static readonly string GHOST_FILE_PATH =
+      Path.Combine(Utils.DIR, $"ghost.{Replay.Constants.REPLAY_EXTENSION}");
 
     private static Replay.Recorder s_hotkey_recorder;
     private static Replay.Replay s_hotkey_replay;
     private static Ghost s_hotkey_ghost;
 
-    private static Replay.Recorder s_recorder;
-    private static Replay.Replay s_replay;
-    private static Ghost s_ghost;
-
-    private static int s_currentSceneIdx = -1;
+    private static int s_currentSceneIdx;
 
     public static readonly Pref<bool> PrefHotkeys = new Pref<bool>()
     {
@@ -46,8 +41,7 @@ namespace SpeedrunTools.PluginRecord
           MelonLogger.Msg("Recording stopped");
         } else
         {
-          s_hotkey_recorder = new Replay.Recorder();
-          s_hotkey_recorder.Start(MIN_FRAME_TIME, MAX_RECORDING_DURATION);
+          s_hotkey_recorder = new Replay.Recorder(MANUAL_REPLAY_FILE_PREFIX);
           MelonLogger.Msg("Recording started");
         }
       }
@@ -58,10 +52,22 @@ namespace SpeedrunTools.PluginRecord
       Predicate = (cl, cr) => cr.GetThumbStick() && PrefHotkeys.Read(),
       Handler = () =>
       {
-        if (s_hotkey_replay == null) return;
+        if (s_hotkey_replay == null)
+        {
+          var manualReplayFiles =
+            Directory
+              .GetFiles(Utils.REPLAYS_DIR)
+              .Where(filename => filename.StartsWith($"{MANUAL_REPLAY_FILE_PREFIX}-"))
+              .ToArray();
+          if (manualReplayFiles.Length == 0) return;
+          System.Array.Sort(manualReplayFiles);
+          s_hotkey_replay = new Replay.Replay(Path.Combine(Utils.REPLAYS_DIR, manualReplayFiles[0]));
+        }
         if (s_hotkey_ghost != null && (s_hotkey_ghost.IsPlaying || s_hotkey_ghost.IsFinishedPlaying))
         {
           s_hotkey_ghost.Stop();
+          s_hotkey_ghost = null;
+          s_hotkey_replay = null;
           MelonLogger.Msg("Playback stopped");
         } else
         {
@@ -74,43 +80,6 @@ namespace SpeedrunTools.PluginRecord
 
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
-      if (buildIndex == SCENE_IDX_MENU)
-      {
-        Replay.Replay.ReadFromFile(GHOST_FILE_PATH);
-      }
-
-      Utils.LogDebug($"buildIndex = {buildIndex}");
-      if (buildIndex == SCENE_IDX_START && (s_recorder == null || !s_recorder.IsRecording))
-      {
-        MelonLogger.Msg("Recording started");
-        s_recorder = new Replay.Recorder();
-        s_recorder.Start(MIN_FRAME_TIME, MAX_RECORDING_DURATION);
-
-        try
-        {
-          s_replay = Replay.Replay.ReadFromFile(GHOST_FILE_PATH);
-          s_ghost = new Ghost(s_replay);
-          s_ghost.Start();
-        } catch (FileNotFoundException) { }
-      } else if (buildIndex != s_currentSceneIdx + 1 && (s_recorder != null && s_recorder.IsRecording))
-      {
-        s_recorder.Stop();
-        var replay = s_recorder.GetReplay();
-        if (s_ghost != null) s_ghost.Stop();
-        if (buildIndex == SCENE_IDX_MENU && s_currentSceneIdx == SCENE_IDX_THRONE)
-        {
-          // TODO: Make this async
-          var startTime = System.DateTime.FromBinary(replay.File.Metadata.Value.StartTime);
-          var filename = $"run-{startTime:yyyy\\_MM\\_dd\\-HH\\_mm\\_ss}-{replay.GetDuration():m\\_ss}.vrr";
-          replay.SaveToFile(filename);
-          if (!File.Exists(GHOST_FILE_PATH))
-          {
-            File.Copy(Path.Combine(Utils.DIR, filename), GHOST_FILE_PATH);
-            MelonLogger.Msg("Replay also saved as ghost.vrr since it didn't exist");
-          }
-        }
-      }
-
       s_currentSceneIdx = buildIndex;
     }
 
@@ -118,9 +87,6 @@ namespace SpeedrunTools.PluginRecord
     {
       if (s_hotkey_recorder != null) s_hotkey_recorder.OnUpdate(s_currentSceneIdx);
       if (s_hotkey_ghost != null) s_hotkey_ghost.OnUpdate(s_currentSceneIdx);
-
-      if (s_recorder != null) s_recorder.OnUpdate(s_currentSceneIdx);
-      if (s_ghost != null) s_ghost.OnUpdate(s_currentSceneIdx);
     }
   }
 
@@ -184,7 +150,7 @@ namespace SpeedrunTools.PluginRecord
     private int _frameIdx;
     private float? _loadStartTime;
     private GameObject _head;
-    private Bwr.Level _level;
+    // private Bwr.Level _level;
 
     public Ghost(Replay.Replay replay)
     {
@@ -235,35 +201,35 @@ namespace SpeedrunTools.PluginRecord
         _loadStartTime = null;
       }
 
-      // Seek forward until _frameIdx is frame <= now && _frameIdx+1 is frame > now (or none at end)
-      var time = Time.time - _startTime;
-      Bwr.Frame? nextFrame;
-      while ((nextFrame = _level.Frames(_frameIdx + 1)).HasValue && nextFrame.Value.Time <= time) _frameIdx++;
-      if (!nextFrame.HasValue && _levelIdx + 1 >= Replay.File.LevelsLength)
-      {
-        Pause();
-        IsFinishedPlaying = true;
-        Utils.LogDebug("Finished playing");
-      }
+      // // Seek forward until _frameIdx is frame <= now && _frameIdx+1 is frame > now (or none at end)
+      // var time = Time.time - _startTime;
+      // Bwr.Frame? nextFrame;
+      // while ((nextFrame = _level.Frames(_frameIdx + 1)).HasValue && nextFrame.Value.Time <= time) _frameIdx++;
+      // if (!nextFrame.HasValue && _levelIdx + 1 >= Replay.File.LevelsLength)
+      // {
+      //   Pause();
+      //   IsFinishedPlaying = true;
+      //   Utils.LogDebug("Finished playing");
+      // }
 
-      // Render nothing if ghost is not in the current scene
-      if (currentSceneIdx != _level.SceneIndex)
-      {
-        if (_head != null)
-        {
-          Object.Destroy(_head);
-          _head = null;
-        }
-        return;
-      }
+      // // Render nothing if ghost is not in the current scene
+      // if (currentSceneIdx != _level.SceneIndex)
+      // {
+      //   if (_head != null)
+      //   {
+      //     Object.Destroy(_head);
+      //     _head = null;
+      //   }
+      //   return;
+      // }
 
-      // Render head lerped between prev and next frames
-      var curFrame = _level.Frames(_frameIdx).Value;
-      if (_head == null)
-      {
-        _head = Object.Instantiate(s_head);
-        _head.active = true;
-      }
+      // // Render head lerped between prev and next frames
+      // var curFrame = _level.Frames(_frameIdx).Value;
+      // if (_head == null)
+      // {
+      //   _head = Object.Instantiate(s_head);
+      //   _head.active = true;
+      // }
       // if (!nextFrame.HasValue)
       // {
       //   var pos = curFrame.Player.Value.Position.Value;

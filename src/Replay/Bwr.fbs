@@ -2,31 +2,27 @@
 
 // === File Format ===
 // "BwRp" = Magic string in ASCII
-// Metadata
-// uint32 = byte offset of Levels within the file
+// int32 = byte offset of Metadata within the file
 // (
 //   uint16 = length of this Frame
 //   Frame
-// )*
-// Levels
+// ) x 0 or more
+// Metadata
 
 // file_extension "bwr";
 // file_identifier "BwRp";
 
 table Metadata {
-  start_time: uint64;
+  start_time: int64;
   duration: float32;
-}
-// root_type Metadata;
-
-table Levels {
   levels: [Level] (required);
 }
 table Level {
   start_time: float32;
+  duration: float32;
   scene_index: int32;
   // Byte offset of first frame of level within the file
-  frame_offset: uint32;
+  frame_offset: int32;
 }
 
 table Frame {

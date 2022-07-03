@@ -17,8 +17,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Set up toolchain
         run: sudo apt install -y mono-devel flatbuffers-compiler
-      - name: Install dependencies
-        run: nuget restore SpeedrunTools.sln
       - name: Build
         run: msbuild /property:Configuration=Release
       - name: Create release
@@ -31,9 +29,9 @@ jobs:
           tag_name: dev_${{ github.run_number }}
           release_name: dev_${{ github.run_number }}
           body: >
-            **DO NOT DOWNLOAD!**
+            **DO NOT DOWNLOAD** if you are looking for the Speedrun mod. Go to the [Thunderstore listing](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/) for that.
 
-            Testing build used for development of the mod.
+            This is a testing build used for development of the mod. This contains the most recent changes which are usually untested and broken. Use at your own risk.
       - name: Upload build to release
         uses: actions/upload-release-asset@v1
         env:

@@ -20,24 +20,28 @@ public struct Level : IFlatbufferObject
   public Level __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public float StartTime { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
-  public int SceneIndex { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
-  public uint FrameOffset { get { int o = __p.__offset(8); return o != 0 ? __p.bb.GetUint(o + __p.bb_pos) : (uint)0; } }
+  public float Duration { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  public int SceneIndex { get { int o = __p.__offset(8); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
+  public int FrameOffset { get { int o = __p.__offset(10); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
   public static Offset<Bwr.Level> CreateLevel(FlatBufferBuilder builder,
       float start_time = 0.0f,
+      float duration = 0.0f,
       int scene_index = 0,
-      uint frame_offset = 0) {
-    builder.StartTable(3);
+      int frame_offset = 0) {
+    builder.StartTable(4);
     Level.AddFrameOffset(builder, frame_offset);
     Level.AddSceneIndex(builder, scene_index);
+    Level.AddDuration(builder, duration);
     Level.AddStartTime(builder, start_time);
     return Level.EndLevel(builder);
   }
 
-  public static void StartLevel(FlatBufferBuilder builder) { builder.StartTable(3); }
+  public static void StartLevel(FlatBufferBuilder builder) { builder.StartTable(4); }
   public static void AddStartTime(FlatBufferBuilder builder, float startTime) { builder.AddFloat(0, startTime, 0.0f); }
-  public static void AddSceneIndex(FlatBufferBuilder builder, int sceneIndex) { builder.AddInt(1, sceneIndex, 0); }
-  public static void AddFrameOffset(FlatBufferBuilder builder, uint frameOffset) { builder.AddUint(2, frameOffset, 0); }
+  public static void AddDuration(FlatBufferBuilder builder, float duration) { builder.AddFloat(1, duration, 0.0f); }
+  public static void AddSceneIndex(FlatBufferBuilder builder, int sceneIndex) { builder.AddInt(2, sceneIndex, 0); }
+  public static void AddFrameOffset(FlatBufferBuilder builder, int frameOffset) { builder.AddInt(3, frameOffset, 0); }
   public static Offset<Bwr.Level> EndLevel(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<Bwr.Level>(o);

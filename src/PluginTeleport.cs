@@ -9,11 +9,13 @@ namespace SpeedrunTools
     private static GameControl s_gameControl;
     private static Vector3? s_teleportPos;
     private static Vector3? s_resetPos;
-    private static string s_lastSceneName;
+    private static int s_currentSceneIdx;
 
     public readonly Hotkey HotkeySet = new Hotkey()
     {
-      Predicate = (cl, cr) => s_rigManager != null && cl.GetBButton() && cr.GetBButton(),
+      Predicate = (cl, cr) =>
+        s_rigManager != null && s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
+        cl.GetBButton() && cr.GetBButton(),
       Handler = () =>
       {
         var pos = Utils.GetPlayerPos(s_rigManager);
@@ -24,7 +26,9 @@ namespace SpeedrunTools
 
     public readonly Hotkey HotkeyTeleport = new Hotkey()
     {
-      Predicate = (cl, cr) => s_rigManager != null && s_teleportPos.HasValue && cr.GetThumbStick(),
+      Predicate = (cl, cr) =>
+        s_rigManager != null && s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
+        s_teleportPos.HasValue && cr.GetThumbStick(),
       Handler = () =>
       {
         MelonLogger.Msg("Teleporting");
@@ -34,7 +38,9 @@ namespace SpeedrunTools
 
     public readonly Hotkey HotkeyReset = new Hotkey()
     {
-      Predicate = (cl, cr) => cl.GetAButton() && cl.GetBButton(),
+      Predicate = (cl, cr) =>
+        s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
+        cl.GetAButton() && cl.GetBButton(),
       Handler = () =>
       {
         MelonLogger.Msg("Resetting level");
@@ -46,9 +52,9 @@ namespace SpeedrunTools
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
       // Init teleport
-      if (sceneName != s_lastSceneName)
+      if (buildIndex != s_currentSceneIdx)
       {
-        s_lastSceneName = sceneName;
+        s_currentSceneIdx = buildIndex;
         s_teleportPos = null;
       }
       s_rigManager = Object.FindObjectOfType<StressLevelZero.Rig.RigManager>();

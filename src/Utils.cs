@@ -9,6 +9,8 @@ namespace SpeedrunTools
   {
     public const string PREF_CATEGORY = "SpeedrunTools";
     public static readonly string DIR = Path.Combine(MelonUtils.UserDataDirectory, "SpeedrunTools");
+    public static readonly string REPLAYS_DIR = Path.Combine(DIR, "replays");
+    public const int SCENE_MENU_IDX = 1;
 
     public static MelonPreferences_Category s_prefCategory;
 

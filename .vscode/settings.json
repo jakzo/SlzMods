@@ -2,6 +2,7 @@
   "cSpell.words": [
     "Boneworks",
     "choco",
+    "Consts",
     "devel",
     "Dont",
     "Flatbuffer",
@@ -11,9 +12,12 @@
     "Lerp",
     "lerped",
     "msbuild",
+    "RELOADSCENE",
     "Speedrun",
     "speedrunning",
-    "thumbstick"
+    "Teleporting",
+    "thumbstick",
+    "Thunderstore"
   ],
   "omnisharp.useModernNet": false
 }

@@ -41,9 +41,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="FlatBuffers.Core, Version=1.12.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\FlatBuffers.Core.1.12.0\lib\netstandard2.0\FlatBuffers.Core.dll</HintPath>
-    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\MelonLoader\Managed\Assembly-CSharp.dll</HintPath>
       <HintPath>references\Assembly-CSharp.dll</HintPath>
@@ -75,32 +72,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppVersion.cs" />
-    <Compile Include="src\PluginTeleport.cs" />
-    <Compile Include="src\PluginResetSave.cs" />
-    <!-- <Compile Include="src\PluginGhost.cs" />
-    <Compile Include="src\Replay\Recorder.cs" />
-    <Compile Include="src\Replay\Replay.cs" />
-    <Compile Include="src\Replay\Bwr\Controller.cs" />
-    <Compile Include="src\Replay\Bwr\File.cs" />
-    <Compile Include="src\Replay\Bwr\Frame.cs" />
-    <Compile Include="src\Replay\Bwr\Headset.cs" />
-    <Compile Include="src\Replay\Bwr\Level.cs" />
-    <Compile Include="src\Replay\Bwr\Metadata.cs" />
-    <Compile Include="src\Replay\Bwr\Player.cs" />
-    <Compile Include="src\Replay\Bwr\Vector3.cs" /> -->
-    <Compile Include="src\Utils.cs" />
-    <Compile Include="src\PluginRemoveBossClawRng.cs" />
-    <Compile Include="src\SpeedrunTools.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="src\Replay\Bwr.fbs" />
+    <Compile Include="src/**/*.cs" />
+    <Compile Include="Properties/*.cs" />
+    <Compile Include="FlatBuffers/*.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
-"C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\BONEWORKS.exe"</PostBuildEvent>
+    <PostBuildEvent>COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"</PostBuildEvent>
   </PropertyGroup>
 </Project>

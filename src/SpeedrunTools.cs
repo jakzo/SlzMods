@@ -24,7 +24,8 @@ namespace SpeedrunTools
     private static readonly Plugin[] plugins = {
       // new PluginRemoveBossClawRng(),
       // new PluginTeleport(),
-      new PluginResetSave(),
+      // new PluginResetSave(),
+      new PluginBlindfold(),
     };
 
     private static Hotkeys s_hotkeys;

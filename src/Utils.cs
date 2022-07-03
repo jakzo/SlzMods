@@ -59,7 +59,7 @@ namespace SpeedrunTools
   {
     private Hotkey[] _hotkeys { get; set; }
     private bool[] _isKeyDown;
-    private StressLevelZero.Rig.Controller[] _controllers;
+    private StressLevelZero.Rig.BaseController[] _controllers;
 
     public Hotkeys(params Hotkey[] hotkeys)
     {
@@ -69,7 +69,7 @@ namespace SpeedrunTools
     public void Init()
     {
       _isKeyDown = new bool[_hotkeys.Length];
-      var controllerObjects = UnityEngine.Object.FindObjectsOfType<StressLevelZero.Rig.Controller>();
+      var controllerObjects = UnityEngine.Object.FindObjectsOfType<StressLevelZero.Rig.BaseController>();
       _controllers = new string[] { "left", "right" }
         .Select(type => $"Controller ({type})")
         .Select(name => controllerObjects.First(controller => controller.name == name))
@@ -98,7 +98,7 @@ namespace SpeedrunTools
 
   public class Hotkey
   {
-    public Func<StressLevelZero.Rig.Controller, StressLevelZero.Rig.Controller, bool> Predicate { get; set; }
+    public Func<StressLevelZero.Rig.BaseController, StressLevelZero.Rig.BaseController, bool> Predicate { get; set; }
     public Action Handler { get; set; }
   }
 

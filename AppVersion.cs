@@ -1,4 +1,4 @@
-﻿namespace SpeedrunTools
+namespace SpeedrunTools
 {
   static class AppVersion
   {

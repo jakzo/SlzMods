@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      versionBumpType:
+        description: Can be MAJOR, MINOR or PATCH.
+        required: true
+        default: PATCH
+      changelogDescription:
+        description: Markdown to add to changelog.
+        required: true
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: Release
+    outputs:
+      release_upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up toolchain
+        run: sudo apt install -y mono-devel flatbuffers-compiler
+      - name: Install dependencies
+        run: nuget restore SpeedrunTools.sln
+      - name: Build
+        run: msbuild /property:Configuration=Release
+      - name: Bump version
+        id: bump_version
+        env:
+          VERSION_BUMP_TYPE: ${{ github.event.inputs.versionBumpType }}
+          CHANGELOG_DESCRIPTION: ${{ github.event.inputs.changelogDescription }}
+        run: |
+          set -eux
+          csi ./scripts/Release.csx "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Release"
+          git push
+      # - name: Upload to Thunderstore
+      #   run: csi ./scripts/UploadThunderstore.csx
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.bump_version.new_version }}
+          body: ${{ steps.bump_version.changelog }}
+          files: |
+            ./bin/Release/SpeedrunTools.dll
+            ./thunderstore/SpeedrunTools_${{ steps.bump_version.new_version }}.zip

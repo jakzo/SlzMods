@@ -20,24 +20,13 @@ jobs:
       - name: Build
         run: msbuild /property:Configuration=Release
       - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           prerelease: true
           tag_name: dev_${{ github.run_number }}
-          release_name: dev_${{ github.run_number }}
           body: >
             **DO NOT DOWNLOAD** if you are looking for the Speedrun mod. Go to the [Thunderstore listing](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/) for that.
 
             This is a testing build used for development of the mod. This contains the most recent changes which are usually untested and broken. Use at your own risk.
-      - name: Upload build to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/Release/SpeedrunTools.dll
-          asset_name: SpeedrunTools.dll
-          asset_content_type: application/octet-stream
+          files: |
+            ./bin/Release/SpeedrunTools.dll

@@ -1,4 +1,5 @@
 ﻿using MelonLoader;
+using UnityEngine;
 
 namespace SpeedrunTools
 {
@@ -10,10 +11,10 @@ namespace SpeedrunTools
 
     public readonly Hotkey HotkeyReset = new Hotkey()
     {
-      Predicate = (cl, cr) => cl.GetAButton() && cl.GetBButton(),
+      Predicate = (cl, cr) => Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.B),
       Handler = () =>
       {
-        var controlCharacter = UnityEngine.Object.FindObjectOfType<Control_Character>();
+        var controlCharacter = Object.FindObjectOfType<Control_Character>();
         if (controlCharacter == null)
         {
           MelonLogger.Warning("No character to blindfold");

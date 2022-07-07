@@ -1,4 +1,6 @@
 ﻿using MelonLoader;
+using UnityEngine;
+using System.IO;
 
 namespace SpeedrunTools
 {
@@ -9,13 +11,33 @@ namespace SpeedrunTools
     public readonly Hotkey HotkeyReset = new Hotkey()
     {
       Predicate = (cl, cr) =>
-        s_currentSceneIdx == Utils.SCENE_MENU_IDX &&
-        cl.GetAButton() && cl.GetBButton() &&
-        cr.GetAButton() && cr.GetBButton(),
+        s_currentSceneIdx == Utils.SCENE_MENU_IDX && (
+          cl.GetAButton() && cl.GetBButton() && cr.GetAButton() && cr.GetBButton() ||
+          Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.R)
+        ),
       Handler = () =>
       {
+        // Backup existing save (if no backup already exists) to
+        // %UserProfile%\AppData\LocalLow\Stress Level Zero\BONEWORKS.backup
+        try
+        {
+          var dirName = Path.GetFileName(Application.persistentDataPath);
+          var backupPath = Path.Combine(Application.persistentDataPath, "..", $"{dirName}.backup");
+          if (!Directory.Exists(backupPath))
+          {
+            MelonLogger.Msg($"Backing up save to: {backupPath}");
+            CopyDirectory(Application.persistentDataPath, backupPath, true);
+          } else
+          {
+            MelonLogger.Msg("Not backing up save (backup already exists)");
+          }
+        } catch
+        {
+          MelonLogger.Warning("Failed to backup, continuing with reset anyway");
+        }
+
         MelonLogger.Msg("Resetting save");
-        var dataManager = UnityEngine.Object.FindObjectOfType<Data_Manager>();
+        var dataManager = Object.FindObjectOfType<Data_Manager>();
 
         var oldData = dataManager.data_player;
         var additionalLighting = oldData.additionalLighting;
@@ -110,6 +132,28 @@ namespace SpeedrunTools
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
       s_currentSceneIdx = buildIndex;
+    }
+
+    static private void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
+    {
+      var dir = new DirectoryInfo(sourceDir);
+      if (!dir.Exists)
+        throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+      DirectoryInfo[] dirs = dir.GetDirectories();
+      Directory.CreateDirectory(destinationDir);
+      foreach (FileInfo file in dir.GetFiles())
+      {
+        string targetFilePath = Path.Combine(destinationDir, file.Name);
+        file.CopyTo(targetFilePath);
+      }
+      if (recursive)
+      {
+        foreach (DirectoryInfo subDir in dirs)
+        {
+          string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+          CopyDirectory(subDir.FullName, newDestinationDir, true);
+        }
+      }
     }
   }
 }

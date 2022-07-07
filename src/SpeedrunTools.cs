@@ -25,7 +25,7 @@ namespace SpeedrunTools
       new PluginRemoveBossClawRng(),
       new PluginTeleport(),
       new PluginResetSave(),
-      new PluginBlindfold(),
+      // new PluginBlindfold(),
       // new PluginReplay(),
     };
 

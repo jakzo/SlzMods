@@ -48,8 +48,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           target_commitish: ${{ github.sha }}
-          tag_name: ${{ steps.bump_version.new_version }}
-          body: ${{ steps.bump_version.changelog }}
+          tag_name: "${{ steps.bump_version.new_version }}"
+          body: "${{ steps.bump_version.changelog }}"
           files: |
             ./bin/Release/SpeedrunTools.dll
             ./thunderstore/SpeedrunTools_${{ steps.bump_version.new_version }}.zip

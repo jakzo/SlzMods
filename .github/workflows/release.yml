@@ -48,7 +48,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           target_commitish: ${{ github.sha }}
-          tag_name: "${{ steps.bump_version.new_version }}"
+          tag_name: "v${{ steps.bump_version.new_version }}"
           body: "${{ steps.bump_version.changelog }}"
           files: |
             ./bin/Release/SpeedrunTools.dll

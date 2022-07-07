@@ -19,4 +19,4 @@ using System.Runtime.InteropServices;
 [assembly: MelonInfo(typeof(SpeedrunTools.SpeedrunTools), SpeedrunTools.BuildInfo.Name, SpeedrunTools.BuildInfo.Version, SpeedrunTools.BuildInfo.Author, SpeedrunTools.BuildInfo.DownloadLink)]
 
 
-[assembly: MelonGame("Stress Level Zero", "BONEWORKS")]
+[assembly: MelonGame(SpeedrunTools.BuildInfo.Developer, SpeedrunTools.BuildInfo.GameName)]

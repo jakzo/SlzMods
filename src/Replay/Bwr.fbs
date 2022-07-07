@@ -1,0 +1,55 @@
+﻿namespace Bwr;
+
+// === File Format ===
+// "BwRp" = Magic string in ASCII
+// int32 = byte offset of Metadata within the file
+// (
+//   uint16 = length of this Frame
+//   Frame
+// ) x 1 or more
+// Metadata
+
+// file_extension "bwr";
+// file_identifier "BwRp";
+
+table Metadata {
+  start_time: int64;
+  duration: float32;
+  levels: [Level] (required);
+}
+table Level {
+  start_time: float32;
+  duration: float32;
+  scene_index: int32;
+  // Byte offset of first frame of level within the file
+  frame_offset: int32;
+}
+
+table Frame {
+  time: float32;
+  player: Player (required);
+}
+
+table Player {
+  position: Vector3 (required);
+  rotation: float32;
+  headset: Headset (required);
+  controller_left: Controller (required);
+  controller_right: Controller (required);
+}
+
+table Headset {
+  position: Vector3 (required);
+  rotation_euler: Vector3 (required);
+}
+
+table Controller {
+  position: Vector3 (required);
+  rotation_euler: Vector3 (required);
+}
+
+struct Vector3 {
+  x: float32;
+  y: float32;
+  z: float32;
+}

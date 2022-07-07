@@ -1,0 +1,35 @@
+name: Develop build
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: Develop
+    outputs:
+      release_upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up toolchain
+        run: sudo apt install -y mono-devel flatbuffers-compiler
+      - name: Install dependencies
+        run: nuget restore SpeedrunTools.sln
+      - name: Build
+        run: msbuild /property:Configuration=Release
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          target_commitish: ${{ github.sha }}
+          tag_name: dev_${{ github.run_number }}
+          body: >
+            **DO NOT DOWNLOAD** if you are looking for the Speedrun mod. Go to the [Thunderstore listing](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/) for that.
+
+            This is a testing build used for development of the mod. This contains the most recent changes which are usually untested and broken. Use at your own risk.
+          files: |
+            ./bin/Release/SpeedrunTools.dll

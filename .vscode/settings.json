@@ -1,13 +1,31 @@
 {
-    "cSpell.language": "en-GB",
-    "cSpell.words": [
-        "Boneworks",
-        "Ghidra",
-        "leaderboard",
-        "pathing",
-        "playthrough",
-        "Saber",
-        "speedrunning",
-        "speedruns"
-    ]
+  "cSpell.words": [
+    "Boneworks",
+    "choco",
+    "commitish",
+    "Consts",
+    "devel",
+    "Dont",
+    "Flatbuffer",
+    "Flatbuffers",
+    "flatc",
+    "jakzo",
+    "Lerp",
+    "lerped",
+    "msbuild",
+    "newfile",
+    "Newtonsoft",
+    "noreply",
+    "RELOADSCENE",
+    "softprops",
+    "Speedrun",
+    "speedrunning",
+    "steamapps",
+    "Teleporting",
+    "thumbstick",
+    "Thunderstore",
+    "Unblindfolding",
+    "vcontroller"
+  ],
+  "omnisharp.useModernNet": false
 }

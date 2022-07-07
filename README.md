@@ -1,10 +1,10 @@
-_Utilities for practicing Boneworks speedrunning._
+_Utilities for Boneworks speedrunning._
 
 # Features
 
 - Makes boss claw always patrol to the area near the finish in Streets
   - Boss claw cabin appears _green_ when this feature is on, so that you're aware RNG is being manipulated
-- Teleport to a chosen location to practise parts of a level again
+- Teleport to a chosen location to practice parts of a level again
   - Pressing B on both controllers at the same time sets the teleport point to the position you are currently standing at
   - Clicking the right controller thumbstick teleports you to the set point
   - Clicking A and B on the left controller at the same time resets the level

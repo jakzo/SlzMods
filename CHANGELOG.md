@@ -1,3 +1,7 @@
+## 1.2.1
+
+Added save reset instructions to readme.
+
 ## 1.2.0
 
 Save resetting. Hotkeys should also now work in the Oculus version of the game.

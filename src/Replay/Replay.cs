@@ -8,6 +8,7 @@ namespace SpeedrunTools.Replay
   class Replay
   {
     private FileStream _fs;
+    private int _framesEndIdx;
 
     public string FilePath;
     public Bwr.Metadata Metadata;
@@ -29,6 +30,7 @@ namespace SpeedrunTools.Replay
       if (metadataIdx < 0 || metadataIdx >= _fs.Length)
         throw new ReplayException("Invalid metadata offset (out of bounds)");
 
+      _framesEndIdx = metadataIdx;
       var metadataBytes = new byte[_fs.Length - metadataIdx];
       _fs.Read(metadataBytes, metadataIdx, metadataBytes.Length);
       Metadata = Bwr.Metadata.GetRootAsMetadata(new FlatBuffers.ByteBuffer(metadataBytes));
@@ -39,6 +41,9 @@ namespace SpeedrunTools.Replay
       _fs.Close();
     }
 
+    public FrameReader CreateFrameReader() =>
+      new FrameReader(_fs, Metadata, _framesEndIdx);
+
     public System.DateTime GetStartTime() =>
       System.DateTime.FromBinary(Metadata.StartTime);
     public System.TimeSpan GetDuration() =>
@@ -48,5 +53,51 @@ namespace SpeedrunTools.Replay
   class ReplayException : System.Exception
   {
     public ReplayException(string message) : base($"Invalid replay: {message}") { }
+  }
+
+  class FrameReader
+  {
+    private int _idx;
+    private FileStream _fs;
+    private int _framesEndIdx;
+    private int _levelIdx;
+    private Bwr.Level? _nextLevel;
+    private Bwr.Metadata _metadata;
+
+    public FrameReader(FileStream fs, Bwr.Metadata metadata, int framesEndIdx)
+    {
+      _fs = fs;
+      _framesEndIdx = framesEndIdx;
+      _metadata = metadata;
+      _levelIdx = 0;
+      _nextLevel = metadata.Levels(_levelIdx);
+    }
+
+    private byte[] _readBytes(int count)
+    {
+      var bytes = new byte[count];
+      _fs.Read(bytes, _idx, count);
+      _idx += count;
+      if (_idx > _framesEndIdx)
+        throw new System.Exception("Invalid frame length (past end)");
+      return bytes;
+    }
+
+    public (int?, Bwr.Frame?) Read()
+    {
+      if (_idx >= _framesEndIdx) return (null, null);
+      int? sceneIdx = null;
+      if (_nextLevel.HasValue && _idx >= _nextLevel.Value.FrameOffset)
+      {
+        sceneIdx = _nextLevel.Value.SceneIndex;
+        _nextLevel = _metadata.Levels(++_levelIdx);
+      }
+      var frameLen = System.BitConverter.ToUInt16(_readBytes(2), 0);
+      var frameBytes = _readBytes(frameLen);
+      return (
+        sceneIdx,
+        Bwr.Frame.GetRootAsFrame(new FlatBuffers.ByteBuffer(frameBytes))
+      );
+    }
   }
 }

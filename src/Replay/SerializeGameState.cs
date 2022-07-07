@@ -8,14 +8,14 @@ using UnityEngine;
 
 namespace SpeedrunTools.Replay
 {
-  class CreateFrame
+  class SerializeGameState
   {
-    private static CreateFrame s_instance;
-    public static CreateFrame Instance
+    private static SerializeGameState s_instance;
+    public static SerializeGameState Instance
     {
       get
       {
-        if (s_instance == null) s_instance = new CreateFrame();
+        if (s_instance == null) s_instance = new SerializeGameState();
         return s_instance;
       }
     }
@@ -51,7 +51,7 @@ namespace SpeedrunTools.Replay
       _cam = null;
     }
 
-    public byte[] Create()
+    public byte[] BuildFrame()
     {
       var builder = new FlatBuffers.FlatBufferBuilder(1024);
       {

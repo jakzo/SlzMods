@@ -6,7 +6,7 @@
 // (
 //   uint16 = length of this Frame
 //   Frame
-// ) x 0 or more
+// ) x 1 or more
 // Metadata
 
 // file_extension "bwr";

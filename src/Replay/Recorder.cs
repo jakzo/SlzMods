@@ -159,7 +159,7 @@ namespace SpeedrunTools.Replay
       if (Time.time < _lastFrameTime + _minFrameTime) return;
 
       // Record frame
-      var frame = CreateFrame.Instance.Create();
+      var frame = SerializeGameState.Instance.BuildFrame();
       WriteFile(System.BitConverter.GetBytes((ushort)frame.Length));
       WriteFile(frame);
       _lastFrameTime = Time.time;

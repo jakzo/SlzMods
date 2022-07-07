@@ -22,10 +22,11 @@ namespace SpeedrunTools
   public class SpeedrunTools : MelonMod
   {
     private static readonly Plugin[] plugins = {
-      // new PluginRemoveBossClawRng(),
-      // new PluginTeleport(),
-      // new PluginResetSave(),
+      new PluginRemoveBossClawRng(),
+      new PluginTeleport(),
+      new PluginResetSave(),
       new PluginBlindfold(),
+      // new PluginReplay(),
     };
 
     private static Hotkeys s_hotkeys;

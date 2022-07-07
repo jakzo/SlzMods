@@ -25,8 +25,6 @@ jobs:
         run: sudo apt install -y mono-devel flatbuffers-compiler
       - name: Install dependencies
         run: nuget restore SpeedrunTools.sln
-      - name: Build
-        run: msbuild /property:Configuration=Release
       - name: Bump version
         id: bump_version
         env:
@@ -40,11 +38,14 @@ jobs:
           git add -A
           git commit -m "Release"
           git push
+      - name: Build
+        run: msbuild /property:Configuration=Release
       # - name: Upload to Thunderstore
       #   run: csi ./scripts/UploadThunderstore.csx
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
+          target_commitish: ${{ github.sha }}
           tag_name: ${{ steps.bump_version.new_version }}
           body: ${{ steps.bump_version.changelog }}
           files: |

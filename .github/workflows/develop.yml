@@ -17,6 +17,8 @@ jobs:
         uses: actions/checkout@v2
       - name: Set up toolchain
         run: sudo apt install -y mono-devel flatbuffers-compiler
+      - name: Install dependencies
+        run: nuget restore SpeedrunTools.sln
       - name: Build
         run: msbuild /property:Configuration=Release
       - name: Create release

@@ -1,3 +1,7 @@
+## 1.3.0
+
+Save resetting. Hotkeys should also now work in the Oculus version of the game.
+
 ## 1.2.0
 
 Save resetting. Hotkeys should also now work in the Oculus version of the game.

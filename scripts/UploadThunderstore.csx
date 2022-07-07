@@ -36,66 +36,74 @@ using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
 
 Console.WriteLine("Thunderstore zip file created");
 
-var zipBytes = File.ReadAllBytes(zipPath);
+// var zipBytes = File.ReadAllBytes(zipPath);
 
-var client = new HttpClient();
-client.BaseAddress = new Uri("https://boneworks.thunderstore.io/api/experimental");
+// readonly string AUTH_TOKEN = Environment.GetEnvironmentVariable("THUNDERSTORE_API_TOKEN");
 
-readonly string AUTH_TOKEN = Environment.GetEnvironmentVariable("THUNDERSTORE_API_TOKEN");
-async Task<T> Post<T>(string url, object body)
-{
-  var content = new StringContent(
-    JsonConvert.SerializeObject(body),
-    Encoding.UTF8,
-    "application/json"
-  );
-  content.Headers.Add("Authorization", AUTH_TOKEN);
-  var res = await client.PostAsync(url, content);
-  res.EnsureSuccessStatusCode();
-  var resText = await res.Content.ReadAsStringAsync();
-  return JsonConvert.DeserializeObject<T>(resText);
-}
+// var client = new HttpClient();
 
-var resInitUpload = await Post<ResInitUpload>(
-  "/usermedia/initiate-upload/",
-  new
-  {
-    filename = zipFilename,
-    file_size_bytes = zipBytes.Length,
-  }
-);
+// if (AUTH_TOKEN == null) throw new Exception("THUNDERSTORE_API_TOKEN not set");
+// async Task<T> Post<T>(string url, object body)
+// {
+//   var res = await client.SendAsync(new HttpRequestMessage
+//   {
+//     Method = HttpMethod.Post,
+//     RequestUri = new Uri($"https://boneworks.thunderstore.io/api/experimental{url}"),
+//     Content = new StringContent(
+//       JsonConvert.SerializeObject(body),
+//       Encoding.UTF8,
+//       "application/json"
+//     ),
+//     Headers = {
+//       { "Authorization", $"Bearer {AUTH_TOKEN}" },
+//     },
+//   });
+//   res.EnsureSuccessStatusCode();
+//   var resText = await res.Content.ReadAsStringAsync();
+//   return JsonConvert.DeserializeObject<T>(resText);
+// }
 
-var parts = new List<ReqFinishUploadPart>();
-foreach (var uploadUrl in resInitUpload.upload_urls)
-{
-  var bytes = new byte[uploadUrl.length];
-  Array.Copy(zipBytes, uploadUrl.offset, bytes, 0, uploadUrl.length);
-  var res = await client.PutAsync(uploadUrl.url, new ByteArrayContent(bytes));
-  res.EnsureSuccessStatusCode();
-  parts.Add(new ReqFinishUploadPart
-  {
-    PartNumber = uploadUrl.part_number,
-    ETag = res.Headers.ETag.Tag,
-  });
-}
+// var resInitUpload = await Post<ResInitUpload>(
+//   "/usermedia/initiate-upload/",
+//   new
+//   {
+//     filename = zipFilename,
+//     file_size_bytes = zipBytes.Length,
+//   }
+// );
+// Console.WriteLine("Upload initiated");
 
-var uuid = resInitUpload.user_media.uuid;
-Console.WriteLine($"Uploaded {zipFilename} to Thunderstore with UUID {uuid}");
+// var parts = new List<ReqFinishUploadPart>();
+// foreach (var uploadUrl in resInitUpload.upload_urls)
+// {
+//   var bytes = new byte[uploadUrl.length];
+//   Array.Copy(zipBytes, uploadUrl.offset, bytes, 0, uploadUrl.length);
+//   var res = await client.PutAsync(uploadUrl.url, new ByteArrayContent(bytes));
+//   res.EnsureSuccessStatusCode();
+//   parts.Add(new ReqFinishUploadPart
+//   {
+//     PartNumber = uploadUrl.part_number,
+//     ETag = res.Headers.ETag.Tag,
+//   });
+// }
 
-await Post<object>($"/usermedia/{uuid}/finish-upload/", new { parts });
-await Post<object>(
-  "/submission/submit/",
-  new
-  {
-    upload_uuid = uuid,
-    author_name = "jakzo",
-    categories = new string[] { "code-mods" },
-    communities = new string[] { "boneworks" },
-    has_nsfw_content = false,
-  }
-);
+// var uuid = resInitUpload.user_media.uuid;
+// Console.WriteLine($"Uploaded {zipFilename} to Thunderstore with UUID {uuid}");
 
-Console.WriteLine("Submitted to Thunderstore");
+// await Post<object>($"/usermedia/{uuid}/finish-upload/", new { parts });
+// await Post<object>(
+//   "/submission/submit/",
+//   new
+//   {
+//     upload_uuid = uuid,
+//     author_name = "jakzo",
+//     categories = new string[] { "code-mods" },
+//     communities = new string[] { "boneworks" },
+//     has_nsfw_content = false,
+//   }
+// );
+
+// Console.WriteLine("Submitted to Thunderstore");
 
 // Types
 class ResInitUpload
@@ -106,11 +114,6 @@ class ResInitUpload
 class ResUserMedia
 {
   public string uuid;
-  // public string filename;
-  // public int size;
-  // public string datetime_created;
-  // public string expiry;
-  // public string status;
 }
 class ResUploadUrl
 {

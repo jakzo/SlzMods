@@ -11,6 +11,8 @@ _Utilities for Boneworks speedrunning._
     - Useful for situations like in Museum when you teleport back to retry valve flying and need the valve to be back at its starting location
 - Reset your save without restarting the game
   - Keeps your preferences so you don't need to set things like height and turn settings after a reset
+  - To reset you must be in the main menu and press A + B on both controllers at the same time
+    - Alternatively you can use CTRL + R on the keyboard to trigger a reset
   - Backs up the old save at the location your game save files are kept
     - By default the backup will be at `%UserProfile%\AppData\LocalLow\Stress Level Zero\BONEWORKS.backup`
     - Restore the save by replacing the `BONEWORKS` directory with the `BONEWORKS.backup` one

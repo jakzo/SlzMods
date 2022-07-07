@@ -4,6 +4,7 @@
     "choco",
     "commitish",
     "Consts",
+    "datetime",
     "devel",
     "Dont",
     "Flatbuffer",
@@ -25,6 +26,7 @@
     "thumbstick",
     "Thunderstore",
     "Unblindfolding",
+    "usermedia",
     "vcontroller"
   ],
   "omnisharp.useModernNet": false

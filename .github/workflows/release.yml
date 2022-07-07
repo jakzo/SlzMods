@@ -42,14 +42,14 @@ jobs:
         run: msbuild /property:Configuration=Release
       - name: Upload to Thunderstore
         env:
-          NEW_VERSION: ${{ steps.bump_version.new_version }}
+          NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
         run: csi ./scripts/UploadThunderstore.csx "$NEW_VERSION"
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           target_commitish: ${{ github.sha }}
-          tag_name: "v${{ steps.bump_version.new_version }}"
-          body: "${{ steps.bump_version.changelog }}"
+          tag_name: ${{ steps.bump_version.outputs.new_version }}
+          body: ${{ steps.bump_version.outputs.changelog }}
           files: |
             ./bin/Release/SpeedrunTools.dll
-            ./thunderstore/SpeedrunTools_${{ steps.bump_version.new_version }}.zip
+            ./thunderstore/SpeedrunTools_${{ steps.bump_version.outputs.new_version }}.zip

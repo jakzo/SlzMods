@@ -2,13 +2,19 @@ _Utilities for Boneworks speedrunning._
 
 # Features
 
-- Makes boss claw always patrol to the area near the finish in Streets
+- Make boss claw always patrol to the area near the finish in Streets
   - Boss claw cabin appears _green_ when this feature is on, so that you're aware RNG is being manipulated
 - Teleport to a chosen location to practice parts of a level again
   - Pressing B on both controllers at the same time sets the teleport point to the position you are currently standing at
   - Clicking the right controller thumbstick teleports you to the set point
   - Clicking A and B on the left controller at the same time resets the level
     - Useful for situations like in Museum when you teleport back to retry valve flying and need the valve to be back at its starting location
+- Reset your save without restarting the game
+  - Keeps your preferences so you don't need to set things like height and turn settings after a reset
+  - Backs up the old save at the location your game save files are kept
+    - By default the backup will be at `%UserProfile%\AppData\LocalLow\Stress Level Zero\BONEWORKS.backup`
+    - Restore the save by replacing the `BONEWORKS` directory with the `BONEWORKS.backup` one
+    - It **does not** save a backup if a backup already exists
 
 # Installation
 

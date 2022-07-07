@@ -1,8 +1,3 @@
-#r "System.IO.Compression"
-#r "System.IO.Compression.ZipFile"
-
-using System.IO.Compression;
-
 const string MANIFEST_PATH = "thunderstore/manifest.json";
 const string APP_VERSION_PATH = "AppVersion.cs";
 const string CHANGELOG_PATH = "CHANGELOG.md";
@@ -68,31 +63,6 @@ var newChangelog = $"## {newVersion}\n\n{changelogDescription}\n\n{oldChangelog}
 File.WriteAllText(CHANGELOG_PATH, newChangelog);
 
 Console.WriteLine("CHANGELOG.md updated");
-
-var readme = File.ReadAllText("README.md");
-File.WriteAllText("thunderstore/README.md", $"{readme}\n# Changelog\n\n{newChangelog}");
-const string MODS_DIR = "thunderstore/Mods";
-if (Directory.Exists(MODS_DIR))
-{
-  foreach (var file in Directory.GetFiles(MODS_DIR)) File.Delete(file);
-} else
-{
-  Directory.CreateDirectory(MODS_DIR);
-}
-File.Copy("bin/Release/SpeedrunTools.dll", MODS_DIR);
-
-Console.WriteLine("Thunderstore files copied");
-
-var thunderstoreZipPath = $"thunderstore/SpeedrunTools_{newVersion}.zip";
-using (ZipArchive zip = ZipFile.Open(thunderstoreZipPath, ZipArchiveMode.Create))
-{
-  zip.CreateEntryFromFile("thunderstore/manifest.json", "manifest.json");
-  zip.CreateEntryFromFile("thunderstore/icon.png", "icon.png");
-  zip.CreateEntryFromFile("thunderstore/README.md", "README.md");
-  zip.CreateEntryFromFile("thunderstore/Mods/SpeedrunTools.dll", "Mods/SpeedrunTools.dll");
-}
-
-Console.WriteLine("Thunderstore zip file created");
 
 Console.WriteLine("Setting Github action outputs");
 var escapedChangelog = changelogDescription

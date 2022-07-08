@@ -43,6 +43,7 @@ jobs:
       - name: Upload to Thunderstore
         env:
           NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
+          THUNDERSTORE_API_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
         run: csi ./scripts/UploadThunderstore.csx "$NEW_VERSION"
       - name: Create release
         uses: softprops/action-gh-release@v1

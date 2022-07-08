@@ -12,11 +12,15 @@ _Utilities for Boneworks speedrunning._
 - Reset your save without restarting the game
   - Keeps your preferences so you don't need to set things like height and turn settings after a reset
   - To reset you must be in the main menu and press A + B on both controllers at the same time
-    - Alternatively you can use CTRL + R on the keyboard to trigger a reset
+    - Alternatively you can use CTRL + R on the keyboard to trigger a reset (game window must be focussed)
   - Backs up the old save at the location your game save files are kept
     - By default the backup will be at `%UserProfile%\AppData\LocalLow\Stress Level Zero\BONEWORKS.backup`
     - Restore the save by replacing the `BONEWORKS` directory with the `BONEWORKS.backup` one
     - It **does not** save a backup if a backup already exists
+- Blindfold (Steam game version only)
+  - For practicing and performing blindfolded runs
+  - To blindfold yourself, press CTRL + B on the keyboard (game window must be focussed)
+  - This will make the VR headset display pitch black but the game window will still show the game (for spectating or to see where you are while practicing)
 
 # Installation
 

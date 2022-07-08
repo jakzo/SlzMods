@@ -1,3 +1,7 @@
+## 1.3.1
+
+Fix release missing blindfold feature.
+
 ## 1.3.0
 
 Blindfold.

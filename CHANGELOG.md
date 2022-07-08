@@ -1,3 +1,7 @@
+## 1.3.0
+
+Blindfold.
+
 ## 1.2.1
 
 Added save reset instructions to readme.

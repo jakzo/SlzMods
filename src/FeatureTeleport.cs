@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SpeedrunTools
 {
-  class PluginTeleport : Plugin
+  class FeatureTeleport : Feature
   {
     private static StressLevelZero.Rig.RigManager s_rigManager;
     private static GameControl s_gameControl;

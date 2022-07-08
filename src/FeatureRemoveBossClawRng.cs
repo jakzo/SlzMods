@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SpeedrunTools
 {
-  class PluginRemoveBossClawRng : Plugin
+  class FeatureRemoveBossClawRng : Feature
   {
     public readonly Pref<bool> PrefEnabled = new Pref<bool>()
     {

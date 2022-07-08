@@ -21,12 +21,12 @@ namespace SpeedrunTools
 
   public class SpeedrunTools : MelonMod
   {
-    private static readonly Plugin[] plugins = {
-      new PluginRemoveBossClawRng(),
-      new PluginTeleport(),
-      new PluginResetSave(),
-      // new PluginBlindfold(),
-      // new PluginReplay(),
+    private static readonly Feature[] features = {
+      new FeatureRemoveBossClawRng(),
+      new FeatureTeleport(),
+      new FeatureResetSave(),
+      new FeatureBlindfold(),
+      // new FeatureReplay(),
     };
 
     private static Hotkeys s_hotkeys;
@@ -38,18 +38,18 @@ namespace SpeedrunTools
       Utils.s_prefCategory = MelonPreferences.CreateCategory(Utils.PREF_CATEGORY);
       Utils.PrefDebug.Create();
       List<Hotkey> hotkeys = new List<Hotkey>();
-      foreach (var plugin in plugins)
+      foreach (var feature in features)
       {
-        foreach (var field in plugin.GetType().GetFields())
+        foreach (var field in feature.GetType().GetFields())
         {
           var type = Nullable.GetUnderlyingType(field.FieldType) ?? field.FieldType;
           if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Pref<>))
           {
-            var pref = field.GetValue(plugin) as IPref;
+            var pref = field.GetValue(feature) as IPref;
             pref.Create();
           } else if (type == typeof(Hotkey))
           {
-            var hotkey = field.GetValue(plugin) as Hotkey;
+            var hotkey = field.GetValue(feature) as Hotkey;
             hotkeys.Add(hotkey);
           }
         }
@@ -58,6 +58,8 @@ namespace SpeedrunTools
 
       s_hotkeys = new Hotkeys(hotkeys.ToArray());
       Utils.LogDebug("Hotkeys loaded");
+
+      HarmonyInstance.PatchAll();
     }
 
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -65,12 +67,12 @@ namespace SpeedrunTools
       Utils.LogDebug("OnSceneWasInitialized: hotkeys");
       s_hotkeys.Init();
 
-      foreach (var plugin in plugins)
+      foreach (var feature in features)
       {
         try
         {
-          Utils.LogDebug($"OnSceneWasInitialized: {plugin}");
-          plugin.OnSceneWasInitialized(buildIndex, sceneName);
+          Utils.LogDebug($"OnSceneWasInitialized: {feature}");
+          feature.OnSceneWasInitialized(buildIndex, sceneName);
         } catch (Exception ex)
         {
           MelonLogger.Error(ex);
@@ -83,11 +85,11 @@ namespace SpeedrunTools
     public override void OnUpdate()
     {
       s_hotkeys.OnUpdate();
-      foreach (var plugin in plugins)
+      foreach (var feature in features)
       {
         try
         {
-          plugin.OnUpdate();
+          feature.OnUpdate();
         } catch (Exception ex)
         {
           MelonLogger.Error(ex);

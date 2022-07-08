@@ -102,7 +102,7 @@ namespace SpeedrunTools
     public Action Handler { get; set; }
   }
 
-  abstract class Plugin
+  abstract class Feature
   {
     public virtual void OnSceneWasInitialized(int buildIndex, string sceneName) { }
     public virtual void OnUpdate() { }

@@ -4,7 +4,7 @@ using System.IO;
 
 namespace SpeedrunTools
 {
-  class PluginResetSave : Plugin
+  class FeatureResetSave : Feature
   {
     private static int s_currentSceneIdx;
 

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SpeedrunTools
 {
-  class PluginReplay : Plugin
+  class FeatureReplay : Feature
   {
     private const int SCENE_IDX_MENU = 1;
     private const int SCENE_IDX_START = 2;

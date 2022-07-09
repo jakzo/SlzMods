@@ -1,5 +1,6 @@
 ﻿using MelonLoader;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -57,18 +58,12 @@ namespace SpeedrunTools
 
   public class Hotkeys
   {
-    private Hotkey[] _hotkeys { get; set; }
-    private bool[] _isKeyDown;
+    private List<Hotkey> _hotkeys = new List<Hotkey>();
+    private Dictionary<Hotkey, bool> _isKeyDown = new Dictionary<Hotkey, bool>();
     private StressLevelZero.Rig.BaseController[] _controllers;
-
-    public Hotkeys(params Hotkey[] hotkeys)
-    {
-      _hotkeys = hotkeys;
-    }
 
     public void Init()
     {
-      _isKeyDown = new bool[_hotkeys.Length];
       var controllerObjects = UnityEngine.Object.FindObjectsOfType<StressLevelZero.Rig.BaseController>();
       _controllers = new string[] { "left", "right" }
         .Select(type => $"Controller ({type})")
@@ -77,20 +72,35 @@ namespace SpeedrunTools
         .ToArray();
     }
 
+    public void AddHotkey(Hotkey hotkey)
+    {
+      if (_hotkeys.Contains(hotkey)) return;
+      _hotkeys.Add(hotkey);
+      _isKeyDown.Add(hotkey, false);
+    }
+
+    public void RemoveHotkey(Hotkey hotkey)
+    {
+      _hotkeys.Remove(hotkey);
+      _isKeyDown.Remove(hotkey);
+    }
+
     public void OnUpdate()
     {
       if (_hotkeys == null || _controllers == null || _controllers.Length < 2) return;
 
-      foreach (var (def, i) in _hotkeys.Select((value, i) => (value, i)))
+      foreach (var (hotkey, i) in _hotkeys.Select((value, i) => (value, i)))
       {
-        if (def.Predicate(_controllers[0], _controllers[1]))
+        if (hotkey.Predicate(_controllers[0], _controllers[1]))
         {
-          if (_isKeyDown[i]) continue;
-          _isKeyDown[i] = true;
-          def.Handler();
+          bool isDown;
+          _isKeyDown.TryGetValue(hotkey, out isDown);
+          if (isDown) continue;
+          _isKeyDown.Add(hotkey, true);
+          hotkey.Handler();
         } else
         {
-          _isKeyDown[i] = false;
+          _isKeyDown.Add(hotkey, false);
         }
       }
     }

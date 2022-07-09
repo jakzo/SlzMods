@@ -29,7 +29,42 @@ namespace SpeedrunTools
       // new FeatureReplay(),
     };
 
-    private static Hotkeys s_hotkeys;
+    private static List<Feature> enabledFeatures = new List<Feature>();
+
+    private static Dictionary<Feature, Pref<bool>> featureEnabledPrefs =
+      new Dictionary<Feature, Pref<bool>>();
+
+    private static Hotkeys s_hotkeys = new Hotkeys();
+
+    private static void EnableFeature(Feature feature)
+    {
+      if (enabledFeatures.Contains(feature)) return;
+      enabledFeatures.Add(feature);
+      foreach (var field in feature.GetType().GetFields())
+      {
+        var type = Nullable.GetUnderlyingType(field.FieldType) ?? field.FieldType;
+        if (type == typeof(Hotkey))
+        {
+          var hotkey = field.GetValue(feature) as Hotkey;
+          s_hotkeys.AddHotkey(hotkey);
+        }
+      }
+    }
+
+    private static void DisableFeature(Feature feature)
+    {
+      if (!enabledFeatures.Contains(feature)) return;
+      enabledFeatures.Remove(feature);
+      foreach (var field in feature.GetType().GetFields())
+      {
+        var type = Nullable.GetUnderlyingType(field.FieldType) ?? field.FieldType;
+        if (type == typeof(Hotkey))
+        {
+          var hotkey = field.GetValue(feature) as Hotkey;
+          s_hotkeys.RemoveHotkey(hotkey);
+        }
+      }
+    }
 
     public override void OnApplicationStart()
     {
@@ -37,9 +72,18 @@ namespace SpeedrunTools
 
       Utils.s_prefCategory = MelonPreferences.CreateCategory(Utils.PREF_CATEGORY);
       Utils.PrefDebug.Create();
-      List<Hotkey> hotkeys = new List<Hotkey>();
       foreach (var feature in features)
       {
+        var name = feature.GetType().Name;
+        var enabledPref = new Pref<bool>()
+        {
+          Id = $"enableFeature{name}",
+          Name = $"Enable {name}",
+          DefaultValue = true
+        };
+        enabledPref.Create();
+        featureEnabledPrefs.Add(feature, enabledPref);
+
         foreach (var field in feature.GetType().GetFields())
         {
           var type = Nullable.GetUnderlyingType(field.FieldType) ?? field.FieldType;
@@ -47,17 +91,12 @@ namespace SpeedrunTools
           {
             var pref = field.GetValue(feature) as IPref;
             pref.Create();
-          } else if (type == typeof(Hotkey))
-          {
-            var hotkey = field.GetValue(feature) as Hotkey;
-            hotkeys.Add(hotkey);
           }
         }
-      }
-      Utils.LogDebug("Preferences loaded");
 
-      s_hotkeys = new Hotkeys(hotkeys.ToArray());
-      Utils.LogDebug("Hotkeys loaded");
+        if (enabledPref.Read()) EnableFeature(feature);
+      }
+      Utils.LogDebug("Feature preferences and hotkeys loaded");
 
       HarmonyInstance.PatchAll();
     }
@@ -68,6 +107,17 @@ namespace SpeedrunTools
       s_hotkeys.Init();
 
       foreach (var feature in features)
+      {
+        if (featureEnabledPrefs[feature].Read())
+        {
+          EnableFeature(feature);
+        } else
+        {
+          DisableFeature(feature);
+        }
+      }
+
+      foreach (var feature in enabledFeatures)
       {
         try
         {
@@ -85,7 +135,7 @@ namespace SpeedrunTools
     public override void OnUpdate()
     {
       s_hotkeys.OnUpdate();
-      foreach (var feature in features)
+      foreach (var feature in enabledFeatures)
       {
         try
         {

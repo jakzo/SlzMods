@@ -76,7 +76,7 @@ namespace SpeedrunTools
     {
       if (_hotkeys.Contains(hotkey)) return;
       _hotkeys.Add(hotkey);
-      _isKeyDown.Add(hotkey, false);
+      _isKeyDown[hotkey] = false;
     }
 
     public void RemoveHotkey(Hotkey hotkey)
@@ -96,11 +96,11 @@ namespace SpeedrunTools
           bool isDown;
           _isKeyDown.TryGetValue(hotkey, out isDown);
           if (isDown) continue;
-          _isKeyDown.Add(hotkey, true);
+          _isKeyDown[hotkey] = true;
           hotkey.Handler();
         } else
         {
-          _isKeyDown.Add(hotkey, false);
+          _isKeyDown[hotkey] = false;
         }
       }
     }

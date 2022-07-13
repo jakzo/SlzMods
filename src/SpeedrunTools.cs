@@ -83,7 +83,7 @@ namespace SpeedrunTools
           DefaultValue = true
         };
         enabledPref.Create();
-        featureEnabledPrefs.Add(feature, enabledPref);
+        featureEnabledPrefs[feature] = enabledPref;
 
         foreach (var field in feature.GetType().GetFields())
         {

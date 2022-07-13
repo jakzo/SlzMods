@@ -12,8 +12,8 @@ namespace SpeedrunTools.Replay
   {
     private StressLevelZero.Rig.RigManager _rigManager;
     private (Bwr.SettingType, float)[] _prevSettings;
-    private ushort _buttonsPressedLeft;
-    private ushort _buttonsPressedRight;
+    private byte _buttonsPressedLeft;
+    private byte _buttonsPressedRight;
 
     public void OnSceneChange()
     {
@@ -27,14 +27,16 @@ namespace SpeedrunTools.Replay
       RegisterButtonPresses(_rigManager.ControllerRig.leftController, ref _buttonsPressedLeft);
       RegisterButtonPresses(_rigManager.ControllerRig.rightController, ref _buttonsPressedRight);
     }
-    private void RegisterButtonPresses(StressLevelZero.Rig.BaseController controller, ref ushort pressed)
+    private void RegisterButtonPresses(StressLevelZero.Rig.BaseController controller, ref byte pressed)
     {
-      if (controller.GetAButton()) pressed |= (ushort)Bwr.ButtonPress.A;
-      if (controller.GetBButton()) pressed |= (ushort)Bwr.ButtonPress.B;
-      // if (controller.GetPrimaryInteractionButton()) pressed |= (ushort)Bwr.ButtonPress.C;
-      // if (controller.GetSecondaryInteractionButton()) pressed |= (ushort)Bwr.ButtonPress.C;
-      // if (controller.GetThumbStick()) pressed |= (ushort)Bwr.ButtonPress.C;
-      // if (controller.GetGrabbedState()) pressed |= (ushort)Bwr.ButtonPress.C;
+      if (controller.GetAButton()) pressed |= (byte)Bwr.ButtonPress.A;
+      if (controller.GetBButton()) pressed |= (byte)Bwr.ButtonPress.B;
+      if (controller.GetMenuButton()) pressed |= (byte)Bwr.ButtonPress.MENU;
+      if (controller.GetSecondaryMenuButton()) pressed |= (byte)Bwr.ButtonPress.SECONDARY_MENU;
+      if (controller.GetThumbStick()) pressed |= (byte)Bwr.ButtonPress.THUMB_STICK;
+      if (controller.GetPrimaryInteractionButton()) pressed |= (byte)Bwr.ButtonPress.PRIMARY_INTERACTION;
+      if (controller.GetSecondaryInteractionButton()) pressed |= (byte)Bwr.ButtonPress.SECONDARY_INTERACTION;
+      if (controller.GetGrabbedState()) pressed |= (byte)Bwr.ButtonPress.GRABBED_STATE;
     }
 
     public byte[] BuildFrame()
@@ -81,9 +83,13 @@ namespace SpeedrunTools.Replay
 
       var hmdTransform = _rigManager.ControllerRig.hmdTransform;
       var hmdEulerAngles = hmdTransform.eulerAngles;
-      var controllerLeftTransform = _rigManager.ControllerRig.leftController.transform;
+      var controllerLeft = _rigManager.ControllerRig.leftController;
+      var controllerLeftThumbstickAxis = controllerLeft.GetThumbStickAxis();
+      var controllerLeftTransform = controllerLeft.transform;
       var controllerLeftEulerAngles = controllerLeftTransform.eulerAngles;
-      var controllerRightTransform = _rigManager.ControllerRig.rightController.transform;
+      var controllerRight = _rigManager.ControllerRig.rightController;
+      var controllerRightThumbstickAxis = controllerRight.GetThumbStickAxis();
+      var controllerRightTransform = controllerRight.transform;
       var controllerRightEulerAngles = controllerRightTransform.eulerAngles;
       var vrRoot = _rigManager.ControllerRig.vrRoot;
       Bwr.Frame.AddVrInput(builder, Bwr.VrInput.CreateVrInput(
@@ -111,7 +117,11 @@ namespace SpeedrunTools.Replay
         vrRoot.position.z,
         vrRoot.eulerAngles.y,
         _buttonsPressedLeft,
-        _buttonsPressedRight
+        controllerLeftThumbstickAxis.x,
+        controllerLeftThumbstickAxis.y,
+        _buttonsPressedRight,
+        controllerRightThumbstickAxis.x,
+        controllerRightThumbstickAxis.y
       ));
 
       var frame = Bwr.Frame.EndFrame(builder);

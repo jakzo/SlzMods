@@ -184,13 +184,13 @@ namespace SpeedrunTools.Replay
       var frameNextTime = _frameNext.Value.Time - Replay.Metadata.StartTime;
       var t = (time - frameCurTime) / (frameNextTime - frameCurTime);
       _head.transform.position = Vector3.Lerp(
-        ToUnityVec3(_frameCur.VrInput.Value.Player.Headset.Position),
-        ToUnityVec3(_frameNext.Value.VrInput.Value.Player.Headset.Position),
+        ToUnityVec3(_frameCur.VrInput.Value.PlayerPosition.Headset.Position),
+        ToUnityVec3(_frameNext.Value.VrInput.Value.PlayerPosition.Headset.Position),
         t
       );
       _head.transform.rotation = Quaternion.Lerp(
-        ToUnityQuaternion(_frameCur.VrInput.Value.Player.Headset.RotationEuler),
-        ToUnityQuaternion(_frameNext.Value.VrInput.Value.Player.Headset.RotationEuler),
+        ToUnityQuaternion(_frameCur.VrInput.Value.PlayerPosition.Headset.RotationEuler),
+        ToUnityQuaternion(_frameNext.Value.VrInput.Value.PlayerPosition.Headset.RotationEuler),
         t
       );
     }

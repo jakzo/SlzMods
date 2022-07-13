@@ -6,10 +6,16 @@ namespace Bwr
 {
 
 [System.FlagsAttribute]
-public enum ButtonPress : ushort
+public enum ButtonPress : byte
 {
   A = 1,
   B = 2,
+  MENU = 4,
+  SECONDARY_MENU = 8,
+  THUMB_STICK = 16,
+  PRIMARY_INTERACTION = 32,
+  SECONDARY_INTERACTION = 64,
+  GRABBED_STATE = 128,
 };
 
 

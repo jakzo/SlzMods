@@ -50,6 +50,11 @@ struct ChangedSetting {
   value: float32;
 }
 
+struct Vector2 {
+  x: float32;
+  y: float32;
+}
+
 struct Vector3 {
   x: float32;
   y: float32;
@@ -72,17 +77,24 @@ struct PlayerPosition {
   controller_right: Transform;
 }
 
-enum ButtonPress: uint16 (bit_flags) {
+enum ButtonPress: uint8 (bit_flags) {
   A,
   B,
+  MENU,
+  SECONDARY_MENU,
+  THUMB_STICK,
+  PRIMARY_INTERACTION,
+  SECONDARY_INTERACTION,
+  GRABBED_STATE,
 }
 struct ControllerInputs {
   /// Bit field of ButtonPress
-  buttons: uint16;
+  buttons: uint8;
+  thumbstick: Vector2;
 }
 
 struct VrInput {
-  player: PlayerPosition;
+  player_position: PlayerPosition;
   vr_root: TransformRotY;
   left_controller: ControllerInputs;
   right_controller: ControllerInputs;

@@ -17,11 +17,16 @@ public struct ControllerInputs : IFlatbufferObject
   public ControllerInputs __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   /// Bit field of ButtonPress
-  public ushort Buttons { get { return __p.bb.GetUshort(__p.bb_pos + 0); } }
+  public byte Buttons { get { return __p.bb.Get(__p.bb_pos + 0); } }
+  public Bwr.Vector2 Thumbstick { get { return (new Bwr.Vector2()).__assign(__p.bb_pos + 4, __p.bb); } }
 
-  public static Offset<Bwr.ControllerInputs> CreateControllerInputs(FlatBufferBuilder builder, ushort Buttons) {
-    builder.Prep(2, 2);
-    builder.PutUshort(Buttons);
+  public static Offset<Bwr.ControllerInputs> CreateControllerInputs(FlatBufferBuilder builder, byte Buttons, float thumbstick_X, float thumbstick_Y) {
+    builder.Prep(4, 12);
+    builder.Prep(4, 8);
+    builder.PutFloat(thumbstick_Y);
+    builder.PutFloat(thumbstick_X);
+    builder.Pad(3);
+    builder.PutByte(Buttons);
     return new Offset<Bwr.ControllerInputs>(builder.Offset);
   }
 };

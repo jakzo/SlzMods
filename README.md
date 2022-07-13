@@ -36,7 +36,7 @@ You can change some things (like where the boss claw moves to) by using MelonPre
 - Install [MelonPreferencesManager](https://github.com/sinai-dev/MelonPreferencesManager) (download the IL2CPP version)
 - Open the menu in-game using F5 to change config options
 
-Most settings require restarting the level to take effect.
+Most settings require restarting the level or game to take effect.
 
 # Links
 

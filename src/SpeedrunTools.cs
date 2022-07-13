@@ -37,34 +37,35 @@ namespace SpeedrunTools
 
     private static Hotkeys s_hotkeys = new Hotkeys();
 
-    private static void EnableFeature(Feature feature)
+    private static IEnumerable<Hotkey> GetHotkeys(Feature feature)
     {
-      if (enabledFeatures.Contains(feature)) return;
-      enabledFeatures.Add(feature);
       foreach (var field in feature.GetType().GetFields())
       {
         var type = Nullable.GetUnderlyingType(field.FieldType) ?? field.FieldType;
         if (type == typeof(Hotkey))
         {
           var hotkey = field.GetValue(feature) as Hotkey;
-          s_hotkeys.AddHotkey(hotkey);
+          yield return hotkey;
         }
       }
+    }
+
+    private static void EnableFeature(Feature feature)
+    {
+      if (enabledFeatures.Contains(feature)) return;
+      MelonLogger.Msg($"Enabling feature: {feature.GetType().Name}");
+      enabledFeatures.Add(feature);
+      foreach (var hotkey in GetHotkeys(feature))
+        s_hotkeys.AddHotkey(hotkey);
     }
 
     private static void DisableFeature(Feature feature)
     {
       if (!enabledFeatures.Contains(feature)) return;
+      MelonLogger.Msg($"Disabling feature: {feature.GetType().Name}");
       enabledFeatures.Remove(feature);
-      foreach (var field in feature.GetType().GetFields())
-      {
-        var type = Nullable.GetUnderlyingType(field.FieldType) ?? field.FieldType;
-        if (type == typeof(Hotkey))
-        {
-          var hotkey = field.GetValue(feature) as Hotkey;
-          s_hotkeys.RemoveHotkey(hotkey);
-        }
-      }
+      foreach (var hotkey in GetHotkeys(feature))
+        s_hotkeys.RemoveHotkey(hotkey);
     }
 
     public override void OnApplicationStart()

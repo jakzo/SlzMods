@@ -5,13 +5,6 @@ namespace SpeedrunTools
 {
   class FeatureRemoveBossClawRng : Feature
   {
-    public readonly Pref<bool> PrefEnabled = new Pref<bool>()
-    {
-      Id = "removeBossClawRng",
-      Name = "Make boss claw always patrol to a single point",
-      DefaultValue = true
-    };
-
     public readonly Pref<float> PrefX = new Pref<float>()
     {
       Id = "bossClawX",
@@ -21,7 +14,7 @@ namespace SpeedrunTools
 
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
-      if (sceneName != "scene_streets" || !PrefEnabled.Read()) return;
+      if (sceneName != "scene_streets") return;
 
       Utils.LogDebug("Init boss claw RNG");
       var bca = Object.FindObjectOfType<BossClawAi>();

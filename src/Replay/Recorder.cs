@@ -31,6 +31,7 @@ namespace SpeedrunTools.Replay
     private FileStream _fs;
     private int _fileIdx = 0;
     private FlatBuffers.FlatBufferBuilder _metaBuilder;
+    private GameStateSerializer _serializer;
 
     public string FilePath;
 
@@ -91,6 +92,7 @@ namespace SpeedrunTools.Replay
       WriteFile(Constants.FILE_START_BYTES);
 
       _metaBuilder = new FlatBuffers.FlatBufferBuilder(1024);
+      _serializer = new GameStateSerializer();
     }
 
     public string Stop()
@@ -122,6 +124,11 @@ namespace SpeedrunTools.Replay
       );
       File.Move(TEMP_FILE_PATH, FilePath);
       return FilePath;
+    }
+
+    public void OnSceneChange()
+    {
+      _serializer.OnSceneChange();
     }
 
     public void OnUpdate(int currentSceneIdx)
@@ -159,7 +166,7 @@ namespace SpeedrunTools.Replay
       if (Time.time < _lastFrameTime + _minFrameTime) return;
 
       // Record frame
-      var frame = SerializeGameState.Instance.BuildFrame();
+      var frame = _serializer.BuildFrame();
       WriteFile(System.BitConverter.GetBytes((ushort)frame.Length));
       WriteFile(frame);
       _lastFrameTime = Time.time;

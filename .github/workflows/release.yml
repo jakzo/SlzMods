@@ -22,7 +22,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Set up toolchain
-        run: sudo apt install -y mono-devel flatbuffers-compiler
+        run: sudo apt install -y mono-devel flatbuffers-compiler=2.0.6
       - name: Install dependencies
         run: nuget restore SpeedrunTools.sln
       - name: Bump version

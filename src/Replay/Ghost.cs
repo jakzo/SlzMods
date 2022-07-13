@@ -14,20 +14,26 @@ namespace SpeedrunTools.Replay
     private const float HEAD_HEIGHT = 0.25f;
     private const float HEAD_DEPTH = 0.15f;
 
-    private static GameObject CreateHead()
+    private static void AddCubeMeshFilter(
+      ref GameObject gameObject,
+      float left, float right,
+      float top, float bottom,
+      float front, float back
+    )
     {
-      Vector3[] vertices = {
-        new Vector3(HEAD_WIDTH * -0.5f, HEAD_HEIGHT * -0.5f, HEAD_DEPTH * (-0.5f - 0.5f)),
-        new Vector3(HEAD_WIDTH *  0.5f, HEAD_HEIGHT * -0.5f, HEAD_DEPTH * (-0.5f - 0.5f)),
-        new Vector3(HEAD_WIDTH *  0.5f, HEAD_HEIGHT *  0.5f, HEAD_DEPTH * (-0.5f - 0.5f)),
-        new Vector3(HEAD_WIDTH * -0.5f, HEAD_HEIGHT *  0.5f, HEAD_DEPTH * (-0.5f - 0.5f)),
-        new Vector3(HEAD_WIDTH * -0.5f, HEAD_HEIGHT *  0.5f, HEAD_DEPTH * ( 0.5f - 0.5f)),
-        new Vector3(HEAD_WIDTH *  0.5f, HEAD_HEIGHT *  0.5f, HEAD_DEPTH * ( 0.5f - 0.5f)),
-        new Vector3(HEAD_WIDTH *  0.5f, HEAD_HEIGHT * -0.5f, HEAD_DEPTH * ( 0.5f - 0.5f)),
-        new Vector3(HEAD_WIDTH * -0.5f, HEAD_HEIGHT * -0.5f, HEAD_DEPTH * ( 0.5f - 0.5f)),
+      var meshFilter = gameObject.AddComponent<MeshFilter>();
+      meshFilter.mesh.Clear();
+      meshFilter.mesh.vertices = new[] {
+        new Vector3(left, top, back),
+        new Vector3(right, top, back),
+        new Vector3(right, bottom, back),
+        new Vector3(left, bottom, back),
+        new Vector3(left, bottom, front),
+        new Vector3(right, bottom, front),
+        new Vector3(right, top, front),
+        new Vector3(left, top, front),
       };
-
-      int[] triangles = {
+      meshFilter.mesh.triangles = new[] {
         0, 2, 1, 0, 3, 2, // front
         2, 3, 4, 2, 4, 5, // top
         1, 2, 5, 1, 5, 6, // right
@@ -35,7 +41,12 @@ namespace SpeedrunTools.Replay
         5, 4, 7, 5, 7, 6, // back
         0, 6, 7, 0, 1, 6, // bottom
       };
+      meshFilter.mesh.Optimize();
+      meshFilter.mesh.RecalculateNormals();
+    }
 
+    private static GameObject CreateHead()
+    {
       var head = new GameObject("SpeedrunTools_Ghost_Head")
       {
         // https://gamedev.stackexchange.com/questions/71713/how-to-create-a-new-gameobject-without-adding-it-to-the-scene
@@ -44,12 +55,12 @@ namespace SpeedrunTools.Replay
       };
       Object.DontDestroyOnLoad(head);
 
-      var meshFilter = head.AddComponent<MeshFilter>();
-      meshFilter.mesh.Clear();
-      meshFilter.mesh.vertices = vertices;
-      meshFilter.mesh.triangles = triangles;
-      meshFilter.mesh.Optimize();
-      meshFilter.mesh.RecalculateNormals();
+      AddCubeMeshFilter(
+        ref head,
+        HEAD_WIDTH * -0.5f, HEAD_WIDTH * 0.5f,
+        HEAD_HEIGHT * -0.5f, HEAD_HEIGHT * 0.5f,
+        0, -HEAD_DEPTH
+      );
 
       var meshRenderer = head.AddComponent<MeshRenderer>();
       meshRenderer.material.color = Color.blue;
@@ -173,13 +184,13 @@ namespace SpeedrunTools.Replay
       var frameNextTime = _frameNext.Value.Time - Replay.Metadata.StartTime;
       var t = (time - frameCurTime) / (frameNextTime - frameCurTime);
       _head.transform.position = Vector3.Lerp(
-        ToUnityVec3(_frameCur.Player.Value.Position.Value),
-        ToUnityVec3(_frameNext.Value.Player.Value.Position.Value),
+        ToUnityVec3(_frameCur.VrInput.Value.Player.Headset.Position),
+        ToUnityVec3(_frameNext.Value.VrInput.Value.Player.Headset.Position),
         t
       );
       _head.transform.rotation = Quaternion.Lerp(
-        ToUnityQuaternion(_frameCur.Player.Value.Headset.Value.RotationEuler.Value),
-        ToUnityQuaternion(_frameNext.Value.Player.Value.Headset.Value.RotationEuler.Value),
+        ToUnityQuaternion(_frameCur.VrInput.Value.Player.Headset.RotationEuler),
+        ToUnityQuaternion(_frameNext.Value.VrInput.Value.Player.Headset.RotationEuler),
         t
       );
     }

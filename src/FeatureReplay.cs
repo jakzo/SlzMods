@@ -81,7 +81,7 @@ namespace SpeedrunTools
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
       s_currentSceneIdx = buildIndex;
-      Replay.SerializeGameState.Instance.OnSceneChange(buildIndex);
+      if (s_hotkey_recorder != null) s_hotkey_recorder.OnSceneChange();
     }
 
     public override void OnUpdate()

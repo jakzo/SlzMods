@@ -1,6 +1,4 @@
-﻿namespace Bwr;
-
-// === File Format ===
+﻿// === File Format ===
 // "BwRp" = Magic string in ASCII
 // int32 = byte offset of Metadata within the file
 // (
@@ -9,8 +7,7 @@
 // ) x 1 or more
 // Metadata
 
-// file_extension "bwr";
-// file_identifier "BwRp";
+namespace Bwr;
 
 table Metadata {
   start_time: int64;
@@ -27,29 +24,66 @@ table Level {
 
 table Frame {
   time: float32;
-  player: Player (required);
+  changed_settings: [ChangedSetting];
+  vr_input: VrInput;
 }
 
-table Player {
-  position: Vector3 (required);
-  rotation: float32;
-  headset: Headset (required);
-  controller_left: Controller (required);
-  controller_right: Controller (required);
+enum SettingType: uint8 {
+  BELT_RIGHT_SIDE,
+  IS_INVERTED,
+  IS_RIGHT_HANDED,
+  JOY_SENSITIVITY,
+  LOCO_CURVE,
+  LOCO_DEGREES_PER_SNAP,
+  LOCO_DIRECTION,
+  LOCO_SNAP_DEGREES_PER_FRAME,
+  OFFSET_FLOOR,
+  OFFSET_SITTING,
+  PHYSICS_UPDATE_RATE,
+  PLAYER_HEIGHT,
+  SNAP_ENABLED,
+  STANDING,
+  VIRTUAL_CROUCHING,
 }
-
-table Headset {
-  position: Vector3 (required);
-  rotation_euler: Vector3 (required);
-}
-
-table Controller {
-  position: Vector3 (required);
-  rotation_euler: Vector3 (required);
+struct ChangedSetting {
+  type: SettingType;
+  value: float32;
 }
 
 struct Vector3 {
   x: float32;
   y: float32;
   z: float32;
+}
+
+struct Transform {
+  position: Vector3;
+  rotation_euler: Vector3;
+}
+
+struct TransformRotY {
+  position: Vector3;
+  rotation_y: float32;
+}
+
+struct PlayerPosition {
+  headset: Transform;
+  controller_left: Transform;
+  controller_right: Transform;
+}
+
+enum ButtonPress: uint16 (bit_flags) {
+  A,
+  B,
+}
+struct ControllerInputs {
+  /// Bit field of ButtonPress
+  buttons: uint16;
+}
+
+struct VrInput {
+  player: PlayerPosition;
+  vr_root: TransformRotY;
+  left_controller: ControllerInputs;
+  right_controller: ControllerInputs;
 }

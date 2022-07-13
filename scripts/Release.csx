@@ -2,20 +2,11 @@ const string MANIFEST_PATH = "thunderstore/manifest.json";
 const string APP_VERSION_PATH = "AppVersion.cs";
 const string CHANGELOG_PATH = "CHANGELOG.md";
 
-class SemverType
-{
-  public string name;
-}
-
-SemverType[] semverTypes = {
-  new SemverType() { name = "major" },
-  new SemverType() { name = "minor" },
-  new SemverType() { name = "patch" },
-};
+string[] semverTypes = { "major", "minor", "patch" };
 
 string SemverIncrement(string version, int semverTypeIdx)
 {
-  var parts = version.Split(".");
+  var parts = version.Split('.');
   parts[semverTypeIdx] = (int.Parse(parts[semverTypeIdx]) + 1).ToString();
   int idx = semverTypeIdx;
   while (++idx < parts.Length) parts[idx] = "0";
@@ -25,7 +16,7 @@ string SemverIncrement(string version, int semverTypeIdx)
 try
 {
   var semverTypeArg = Args[0].ToLower();
-  var semverTypeIdx = Array.FindIndex(semverTypes, type => type.name == semverTypeArg);
+  var semverTypeIdx = Array.FindIndex(semverTypes, type => type == semverTypeArg);
   if (semverTypeIdx == -1) throw new Exception($"Unknown semver increment type: {semverTypeArg}");
 
   var manifestJson = File.ReadAllText(MANIFEST_PATH);

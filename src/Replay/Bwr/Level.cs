@@ -46,7 +46,7 @@ public struct Level : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<Bwr.Level>(o);
   }
-}
+};
 
 
 }

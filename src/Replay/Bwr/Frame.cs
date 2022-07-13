@@ -20,26 +20,20 @@ public struct Frame : IFlatbufferObject
   public Frame __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public float Time { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
-  public Bwr.Player? Player { get { int o = __p.__offset(6); return o != 0 ? (Bwr.Player?)(new Bwr.Player()).__assign(__p.__indirect(o + __p.bb_pos), __p.bb) : null; } }
+  public Bwr.ChangedSetting? ChangedSettings(int j) { int o = __p.__offset(6); return o != 0 ? (Bwr.ChangedSetting?)(new Bwr.ChangedSetting()).__assign(__p.__vector(o) + j * 8, __p.bb) : null; }
+  public int ChangedSettingsLength { get { int o = __p.__offset(6); return o != 0 ? __p.__vector_len(o) : 0; } }
+  public Bwr.VrInput? VrInput { get { int o = __p.__offset(8); return o != 0 ? (Bwr.VrInput?)(new Bwr.VrInput()).__assign(o + __p.bb_pos, __p.bb) : null; } }
 
-  public static Offset<Bwr.Frame> CreateFrame(FlatBufferBuilder builder,
-      float time = 0.0f,
-      Offset<Bwr.Player> playerOffset = default(Offset<Bwr.Player>)) {
-    builder.StartTable(2);
-    Frame.AddPlayer(builder, playerOffset);
-    Frame.AddTime(builder, time);
-    return Frame.EndFrame(builder);
-  }
-
-  public static void StartFrame(FlatBufferBuilder builder) { builder.StartTable(2); }
+  public static void StartFrame(FlatBufferBuilder builder) { builder.StartTable(3); }
   public static void AddTime(FlatBufferBuilder builder, float time) { builder.AddFloat(0, time, 0.0f); }
-  public static void AddPlayer(FlatBufferBuilder builder, Offset<Bwr.Player> playerOffset) { builder.AddOffset(1, playerOffset.Value, 0); }
+  public static void AddChangedSettings(FlatBufferBuilder builder, VectorOffset changedSettingsOffset) { builder.AddOffset(1, changedSettingsOffset.Value, 0); }
+  public static void StartChangedSettingsVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(8, numElems, 4); }
+  public static void AddVrInput(FlatBufferBuilder builder, Offset<Bwr.VrInput> vrInputOffset) { builder.AddStruct(2, vrInputOffset.Value, 0); }
   public static Offset<Bwr.Frame> EndFrame(FlatBufferBuilder builder) {
     int o = builder.EndTable();
-    builder.Required(o, 6);  // player
     return new Offset<Bwr.Frame>(o);
   }
-}
+};
 
 
 }

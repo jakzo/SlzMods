@@ -23,10 +23,11 @@ namespace SpeedrunTools
   {
     private static readonly Feature[] features = {
       new FeatureRemoveBossClawRng(),
-      new FeatureTeleport(),
-      new FeatureResetSave(),
+      // new FeatureTeleport(),
+      // new FeatureResetSave(),
       new FeatureBlindfold(),
       // new FeatureReplay(),
+      new FeatureControlTesting(),
     };
 
     private static List<Feature> enabledFeatures = new List<Feature>();

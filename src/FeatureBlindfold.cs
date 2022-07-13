@@ -9,12 +9,12 @@ namespace SpeedrunTools
 
     static public bool s_isBlindfolded = false;
 
-    static private void SetBlindfold(bool blindfolded)
+    static private void SetBlindfold(bool blindfolded, float fadeTime = FADE_TIME)
     {
       var compositor = Valve.VRRenderingPackage.OpenVR.Compositor;
       if (compositor == null)
         throw new System.Exception("Failed to blindfold (could not find Steam OpenVR compositor)");
-      compositor.FadeToColor(FADE_TIME, 0, 0, 0, blindfolded ? 1 : 0, false);
+      compositor.FadeToColor(fadeTime, 0, 0, 0, blindfolded ? 1 : 0, false);
       s_isBlindfolded = blindfolded;
     }
 
@@ -35,14 +35,24 @@ namespace SpeedrunTools
       }
     };
 
-    bool prevSceneLoading = false;
+    private bool _isSceneInited = false;
+
+    public override void OnSceneWasInitialized(int buildIndex, string sceneName)
+    {
+      _isSceneInited = true;
+    }
+
     public override void OnUpdate()
     {
-      if (SceneLoader.loading == prevSceneLoading) return;
-      prevSceneLoading = SceneLoader.loading;
-      if (!s_isBlindfolded || SceneLoader.loading) return;
-      Utils.LogDebug("Blindfolding on scene load");
-      SetBlindfold(true);
+      if (SceneLoader.loading)
+      {
+        // I don't know the exact point the scene fades in but it's somewhere between scene init
+        // and loading finished so just spam an instant fade-to-black for this period
+        if (s_isBlindfolded && _isSceneInited) SetBlindfold(true, 0);
+      } else
+      {
+        _isSceneInited = false;
+      }
     }
   }
 }

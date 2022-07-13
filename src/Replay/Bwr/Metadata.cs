@@ -47,7 +47,7 @@ public struct Metadata : IFlatbufferObject
     builder.Required(o, 8);  // levels
     return new Offset<Bwr.Metadata>(o);
   }
-}
+};
 
 
 }

@@ -103,6 +103,21 @@ namespace SpeedrunTools
       HarmonyInstance.PatchAll();
     }
 
+    public override void BONEWORKS_OnLoadingScreen()
+    {
+      foreach (var feature in enabledFeatures)
+      {
+        try
+        {
+          Utils.LogDebug($"OnLoadingScreen: {feature}");
+          feature.OnLoadingScreen();
+        } catch (Exception ex)
+        {
+          MelonLogger.Error(ex);
+        }
+      }
+    }
+
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
       Utils.LogDebug("OnSceneWasInitialized: hotkeys");

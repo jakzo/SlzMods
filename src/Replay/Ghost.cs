@@ -10,6 +10,8 @@ namespace SpeedrunTools.Replay
   class Ghost
   {
     private static readonly GameObject s_head = CreateHead();
+    private static readonly GameObject s_controllerLeft = CreateController(true);
+    private static readonly GameObject s_controllerRight = CreateController(false);
     private const float HEAD_WIDTH = 0.4f;
     private const float HEAD_HEIGHT = 0.25f;
     private const float HEAD_DEPTH = 0.15f;
@@ -50,7 +52,7 @@ namespace SpeedrunTools.Replay
       var head = new GameObject("SpeedrunTools_Ghost_Head")
       {
         // https://gamedev.stackexchange.com/questions/71713/how-to-create-a-new-gameobject-without-adding-it-to-the-scene
-        hideFlags = HideFlags.HideInHierarchy,
+        // hideFlags = HideFlags.HideInHierarchy,
         active = false,
       };
       Object.DontDestroyOnLoad(head);
@@ -68,6 +70,39 @@ namespace SpeedrunTools.Replay
       return head;
     }
 
+    private static GameObject CreateController(bool isLeft)
+    {
+      var controller = new GameObject(
+        $"SpeedrunTools_Ghost_Controller_{(isLeft ? "Left" : "right")}"
+      )
+      {
+        active = false,
+      };
+      Object.DontDestroyOnLoad(controller);
+
+      AddCubeMeshFilter(
+        ref controller,
+        -0.07f, 0.07f,
+        -0.07f, 0.12f,
+        0.07f, -0.07f
+      );
+
+      var meshRenderer = controller.AddComponent<MeshRenderer>();
+      meshRenderer.material.color = Color.blue;
+
+      return controller;
+    }
+
+    private static (GameObject, GameObject, GameObject, GameObject) CreateGhostGameObjects()
+    {
+      var go = new GameObject("SpeedrunTools_Ghost");
+      var head = Object.Instantiate(s_head, go.transform);
+      head.active = true;
+      var controllerLeft = Object.Instantiate(s_controllerLeft, go.transform);
+      var controllerRight = Object.Instantiate(s_controllerRight, go.transform);
+      return (go, head, controllerLeft, controllerRight);
+    }
+
     public Replay Replay;
     public bool IsPlaying = false;
     public bool IsPaused = false;
@@ -77,11 +112,14 @@ namespace SpeedrunTools.Replay
     private float _relativeStartTime;
     private int _levelIdx;
     private int _frameIdx;
-    private float? _loadStartTime;
+    private float _loadStartTime;
+    private GameObject _go;
     private GameObject _head;
-    // private Bwr.Level _level;
+    private GameObject _controllerLeft;
+    private GameObject _controllerRight;
     private Bwr.Frame _frameCur;
     private Bwr.Frame? _frameNext;
+    private bool _isLoading = false;
 
     public Ghost(Replay replay)
     {
@@ -91,18 +129,27 @@ namespace SpeedrunTools.Replay
 
     public void Start()
     {
-      IsPlaying = true;
-      IsPaused = false;
-      IsFinishedPlaying = false;
-      _relativeStartTime = Time.time;
+      if (IsPlaying) return;
 
       var (l1, f1) = _frameReader.Read();
       if (l1.HasValue) _levelIdx = l1.Value;
-      if (f1.HasValue) _frameCur = f1.Value;
+      if (f1.HasValue)
+      {
+        _frameCur = f1.Value;
+      } else
+      {
+        IsFinishedPlaying = true;
+        IsPlaying = IsPaused = false;
+        return;
+      }
+
+      IsPlaying = true;
+      IsPaused = IsFinishedPlaying = false;
+      _relativeStartTime = Time.time;
 
       var (l2, f2) = _frameReader.Read();
       if (l2.HasValue) _levelIdx = l2.Value;
-      if (f2.HasValue) _frameCur = f2.Value;
+      if (f2.HasValue) _frameNext = f2.Value;
     }
 
     public void Pause()
@@ -123,21 +170,22 @@ namespace SpeedrunTools.Replay
       }
     }
 
+    public void OnLoadingScreen()
+    {
+      _isLoading = true;
+      _loadStartTime = Time.time;
+    }
+
+    public void OnSceneChange()
+    {
+      _isLoading = false;
+      _relativeStartTime += Time.time - _loadStartTime;
+    }
+
     public void OnUpdate(int currentSceneIdx)
     {
-      if (!IsPlaying) return;
-
       // Pause playback during loading screens
-      if (SceneLoader.loading)
-      {
-        if (!_loadStartTime.HasValue) _loadStartTime = Time.time;
-        return;
-      }
-      if (_loadStartTime.HasValue)
-      {
-        _relativeStartTime += Time.time - _loadStartTime.Value;
-        _loadStartTime = null;
-      }
+      if (!IsPlaying || _isLoading) return;
 
       // Seek forward until _frameCur is <= now && _frameNext is > now (or none at end)
       var time = Time.time - _relativeStartTime;
@@ -151,9 +199,6 @@ namespace SpeedrunTools.Replay
         {
           _levelIdx = nextLevelIdx.Value;
           hasLevelChanged = true;
-        } else
-        {
-          hasLevelChanged = false;
         }
       }
       if (!_frameNext.HasValue)
@@ -166,19 +211,21 @@ namespace SpeedrunTools.Replay
       // Render nothing if ghost is not in the current scene
       if (hasLevelChanged || currentSceneIdx != _levelIdx)
       {
-        if (_head != null)
+        if (_go != null)
         {
+          Object.Destroy(_go);
           Object.Destroy(_head);
-          _head = null;
+          Object.Destroy(_controllerLeft);
+          Object.Destroy(_controllerRight);
+          _go = _head = _controllerLeft = _controllerRight = null;
         }
         return;
       }
 
       // Render head lerped between prev and next frames
-      if (_head == null)
+      if (_go == null)
       {
-        _head = Object.Instantiate(s_head);
-        _head.active = true;
+        (_go, _head, _controllerLeft, _controllerRight) = CreateGhostGameObjects();
       }
       var frameCurTime = _frameCur.Time - Replay.Metadata.StartTime;
       var frameNextTime = _frameNext.Value.Time - Replay.Metadata.StartTime;

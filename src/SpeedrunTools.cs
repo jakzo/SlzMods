@@ -75,7 +75,8 @@ namespace SpeedrunTools
     public SpeedrunTools()
     {
       // This is safe in the constructor, since features is first used in OnApplicationStart()
-      features.Append(new FeatureSpeedrun(this));
+      if (!features.Any(feature => feature is FeatureSpeedrun))
+        features.Append(new FeatureSpeedrun(this));
     }
 
     public override void OnApplicationStart()

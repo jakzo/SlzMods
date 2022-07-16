@@ -8,6 +8,7 @@ namespace SpeedrunTools
   class FeatureSpeedrun : Feature
   {
     private static HashSet<string> ALLOWED_MOD_IDS = new HashSet<string>();
+    private static string MENU_TEXT_NAME = "SpeedrunTools_MenuText";
 
     private static MelonMod s_thisMod;
     private static int s_currentSceneIdx;
@@ -33,10 +34,31 @@ namespace SpeedrunTools
       return illegitimacyReasons;
     }
 
-    private static void AddTextToMainScreen(string text)
+    private static void UpdateMainMenuText(string customText)
     {
-      // TODO
+      var text = customText ?? GetMenuText();
+
+      var menuText = GameObject.Find(MENU_TEXT_NAME);
+
+      if (menuText == null)
+      {
+        menuText = new GameObject(MENU_TEXT_NAME);
+        var rectTransform = menuText.AddComponent<RectTransform>();
+        rectTransform.rect.Set(-1, -2, 2, 2);
+        var tmp = menuText.AddComponent<TMPro.TextMeshPro>();
+        tmp.alignment = TMPro.TextAlignmentOptions.TopLeft;
+        tmp.fontSize = 1.8f;
+        tmp.rectTransform.sizeDelta = new Vector2(2, 2);
+        tmp.rectTransform.position = new Vector3(2.65f, 1.8f, 9.6f);
+      }
+
+      menuText.GetComponent<TMPro.TextMeshPro>().SetText(text);
     }
+
+    private static string GetMenuText() =>
+      $@"{(s_isActive ? "✅" : "❌")} Speedrun mode {(s_isActive ? "enabled" : "disabled")}
+» Practice features are {(s_isActive ? "disabled" : "enabled")}
+» You are{(s_isActive ? "" : " not")} allowed to submit runs to leaderboard";
 
     public FeatureSpeedrun(MelonMod thisMod)
     {
@@ -55,24 +77,22 @@ namespace SpeedrunTools
       {
         if (s_isActive)
         {
-          var message = "Speedrun mode disabled";
-          AddTextToMainScreen($"❌ {message}\n- Practice features are enabled\n- You are not allowed to submit runs to leaderboard");
-          MelonLogger.Msg(message);
           s_isActive = false;
+          UpdateMainMenuText(null);
+          MelonLogger.Msg("Speedrun mode disabled");
         } else
         {
           var illegitimacyReasons = ComputeRunLegitimacy();
           if (illegitimacyReasons.Count == 0)
           {
-            var message = "Speedrun mode enabled";
-            AddTextToMainScreen($"✅ {message}\n- Practice features are disabled\n- You are allowed to submit runs to leaderboard");
-            MelonLogger.Msg(message);
+            UpdateMainMenuText(null);
+            MelonLogger.Msg("Speedrun mode enabled");
             s_isActive = true;
           } else
           {
-            var reasonMessages = string.Join("", illegitimacyReasons.Select(reason => $"\n- {reason.Value}"));
+            var reasonMessages = string.Join("", illegitimacyReasons.Select(reason => $"\n» {reason.Value}"));
             var message = $"Could not enable speedrun mode because:{reasonMessages}";
-            AddTextToMainScreen($"❌ {message}");
+            UpdateMainMenuText($"❌ {message}");
             MelonLogger.Msg(message);
           }
         }
@@ -87,6 +107,8 @@ namespace SpeedrunTools
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
       s_currentSceneIdx = buildIndex;
+
+      if (s_currentSceneIdx == Utils.SCENE_MENU_IDX) UpdateMainMenuText(null);
     }
   }
 }

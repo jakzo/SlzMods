@@ -8,27 +8,36 @@ namespace SpeedrunTools
   class FeatureSpeedrun : Feature
   {
     private static HashSet<string> ALLOWED_MOD_IDS = new HashSet<string>();
+    private static HashSet<string> ALLOWED_PLUGIN_IDS = new HashSet<string>();
     private static string MENU_TEXT_NAME = "SpeedrunTools_MenuText";
+    private static string LOADING_TEXT_NAME = "SpeedrunTools_LoadingText";
 
-    private static MelonMod s_thisMod;
     private static int s_currentSceneIdx;
-    private static bool s_isActive = false;
 
     private enum RunIllegitimacyReason
     {
       DISALLOWED_MODS,
+      DISALLOWED_PLUGINS,
     }
 
     private static Dictionary<RunIllegitimacyReason, string> ComputeRunLegitimacy()
     {
       var illegitimacyReasons = new Dictionary<RunIllegitimacyReason, string>();
 
-      var disallowedMods = MelonHandler.Mods.Where(mod => mod != s_thisMod && !ALLOWED_MOD_IDS.Contains(mod.ID));
+      var disallowedMods = MelonHandler.Mods.Where(mod => mod is SpeedrunTools && !ALLOWED_MOD_IDS.Contains(mod.ID));
       if (disallowedMods.Count() > 0)
       {
         var disallowedModNames = disallowedMods.Select(mod => mod.Info.Name);
         illegitimacyReasons[RunIllegitimacyReason.DISALLOWED_MODS] =
           $"Disallowed mods are active: {string.Join(", ", disallowedModNames)}";
+      }
+
+      var disallowedPlugins = MelonHandler.Plugins.Where(plugin => !ALLOWED_PLUGIN_IDS.Contains(plugin.ID));
+      if (disallowedPlugins.Count() > 0)
+      {
+        var disallowedPluginNames = disallowedPlugins.Select(mod => mod.Info.Name);
+        illegitimacyReasons[RunIllegitimacyReason.DISALLOWED_PLUGINS] =
+          $"Disallowed plugins are active: {string.Join(", ", disallowedPluginNames)}";
       }
 
       return illegitimacyReasons;
@@ -43,8 +52,6 @@ namespace SpeedrunTools
       if (menuText == null)
       {
         menuText = new GameObject(MENU_TEXT_NAME);
-        var rectTransform = menuText.AddComponent<RectTransform>();
-        rectTransform.rect.Set(-1, -2, 2, 2);
         var tmp = menuText.AddComponent<TMPro.TextMeshPro>();
         tmp.alignment = TMPro.TextAlignmentOptions.TopLeft;
         tmp.fontSize = 1.8f;
@@ -56,15 +63,17 @@ namespace SpeedrunTools
     }
 
     private static string GetMenuText() =>
-      $@"{(s_isActive ? "✅" : "❌")} Speedrun mode {(s_isActive ? "enabled" : "disabled")}
-» Practice features are {(s_isActive ? "disabled" : "enabled")}
-» You are{(s_isActive ? "" : " not")} allowed to submit runs to leaderboard";
+      $@"{(SpeedrunTools.s_isLegitRunActive ? "✅" : "❌")} Speedrun mode {(SpeedrunTools.s_isLegitRunActive ? "enabled" : "disabled")}
+» Practice features are {(SpeedrunTools.s_isLegitRunActive ? "disabled" : "enabled")}
+» You are{(SpeedrunTools.s_isLegitRunActive ? "" : " not")} allowed to submit runs to leaderboard";
 
-    public FeatureSpeedrun(MelonMod thisMod)
+    public FeatureSpeedrun()
     {
-      s_thisMod = thisMod;
       isAllowedInLegitRuns = true;
     }
+
+    private float? _relativeStartTime;
+    private float? _loadingStartTime;
 
     public readonly Hotkey HotkeyToggle = new Hotkey()
     {
@@ -75,9 +84,9 @@ namespace SpeedrunTools
         ),
       Handler = () =>
       {
-        if (s_isActive)
+        if (SpeedrunTools.s_isLegitRunActive)
         {
-          s_isActive = false;
+          SpeedrunTools.s_isLegitRunActive = false;
           UpdateMainMenuText(null);
           MelonLogger.Msg("Speedrun mode disabled");
         } else
@@ -85,9 +94,9 @@ namespace SpeedrunTools
           var illegitimacyReasons = ComputeRunLegitimacy();
           if (illegitimacyReasons.Count == 0)
           {
+            SpeedrunTools.s_isLegitRunActive = true;
             UpdateMainMenuText(null);
             MelonLogger.Msg("Speedrun mode enabled");
-            s_isActive = true;
           } else
           {
             var reasonMessages = string.Join("", illegitimacyReasons.Select(reason => $"\n» {reason.Value}"));
@@ -101,12 +110,44 @@ namespace SpeedrunTools
 
     public override void OnLoadingScreen()
     {
-      // TODO: Add text to loading screen to indicate run legitimacy (include mod version)
+      _loadingStartTime = Time.time;
+
+      var loadingText = GameObject.Find(LOADING_TEXT_NAME);
+
+      if (loadingText == null)
+      {
+        loadingText = new GameObject(LOADING_TEXT_NAME);
+        var tmp = loadingText.AddComponent<TMPro.TextMeshPro>();
+        tmp.alignment = TMPro.TextAlignmentOptions.TopLeft;
+        tmp.fontSize = 1.8f;
+        tmp.rectTransform.sizeDelta = new Vector2(2, 2);
+        tmp.rectTransform.position = new Vector3(1.5f, 1.8f, 1.5f);
+      }
+
+      var startTime = _relativeStartTime.HasValue ? _relativeStartTime.Value : Time.time;
+      loadingText.GetComponent<TMPro.TextMeshPro>().SetText(
+        SpeedrunTools.s_isLegitRunActive
+          ? $@"✅ Speedrun mode enabled
+{BuildInfo.Name} v{BuildInfo.Version}
+Time: {System.TimeSpan.FromMilliseconds(Time.time - startTime):h\\:mm\\:ss\\.ff}"
+          : "Speedrun mode disabled"
+      );
     }
 
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
+      if (_loadingStartTime.HasValue && _relativeStartTime.HasValue)
+      {
+        _relativeStartTime += Time.time - _loadingStartTime.Value;
+        _loadingStartTime = null;
+      }
+
+      var previousSceneIdx = s_currentSceneIdx;
       s_currentSceneIdx = buildIndex;
+
+      if (previousSceneIdx == Utils.SCENE_MENU_IDX)
+        _relativeStartTime = Time.time;
+
 
       if (s_currentSceneIdx == Utils.SCENE_MENU_IDX) UpdateMainMenuText(null);
     }

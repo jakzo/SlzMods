@@ -58,8 +58,8 @@ namespace SpeedrunTools
 
   public class Hotkeys
   {
-    private List<Hotkey> _hotkeys = new List<Hotkey>();
-    private Dictionary<Hotkey, bool> _isKeyDown = new Dictionary<Hotkey, bool>();
+    private Dictionary<Hotkey, (Feature, bool)> _hotkeys =
+      new Dictionary<Hotkey, (Feature, bool)>();
     private StressLevelZero.Rig.BaseController[] _controllers;
 
     public void Init()
@@ -72,35 +72,38 @@ namespace SpeedrunTools
         .ToArray();
     }
 
-    public void AddHotkey(Hotkey hotkey)
+    public void AddHotkey(Feature feature, Hotkey hotkey)
     {
-      if (_hotkeys.Contains(hotkey)) return;
-      _hotkeys.Add(hotkey);
-      _isKeyDown[hotkey] = false;
+      if (_hotkeys.ContainsKey(hotkey)) return;
+      _hotkeys.Add(hotkey, (feature, false));
     }
 
     public void RemoveHotkey(Hotkey hotkey)
     {
       _hotkeys.Remove(hotkey);
-      _isKeyDown.Remove(hotkey);
     }
 
     public void OnUpdate()
     {
-      if (_hotkeys == null || _controllers == null || _controllers.Length < 2) return;
+      if (_controllers == null || _controllers.Length < 2) return;
 
-      foreach (var (hotkey, i) in _hotkeys.Select((value, i) => (value, i)))
+      var entries = _hotkeys.Select((entry, i) => (
+        i,
+        entry.Key,
+        entry.Value.Item1,
+        entry.Value.Item2
+      ));
+      foreach (var (i, hotkey, feature, isDown) in entries)
       {
+        if (SpeedrunTools.s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
         if (hotkey.Predicate(_controllers[0], _controllers[1]))
         {
-          bool isDown;
-          _isKeyDown.TryGetValue(hotkey, out isDown);
           if (isDown) continue;
-          _isKeyDown[hotkey] = true;
+          _hotkeys[hotkey] = (feature, true);
           hotkey.Handler();
         } else
         {
-          _isKeyDown[hotkey] = false;
+          _hotkeys[hotkey] = (feature, false);
         }
       }
     }
@@ -112,7 +115,7 @@ namespace SpeedrunTools
     public Action Handler { get; set; }
   }
 
-  abstract class Feature
+  abstract public class Feature
   {
     public bool isAllowedInLegitRuns = false;
     public virtual void OnLoadingScreen() { }

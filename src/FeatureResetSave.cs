@@ -129,6 +129,11 @@ namespace SpeedrunTools
       }
     };
 
+    public FeatureResetSave()
+    {
+      isAllowedInLegitRuns = true;
+    }
+
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
       s_currentSceneIdx = buildIndex;

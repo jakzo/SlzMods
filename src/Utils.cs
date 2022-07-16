@@ -114,6 +114,7 @@ namespace SpeedrunTools
 
   abstract class Feature
   {
+    public bool isAllowedInLegitRuns = false;
     public virtual void OnLoadingScreen() { }
     public virtual void OnSceneWasInitialized(int buildIndex, string sceneName) { }
     public virtual void OnUpdate() { }

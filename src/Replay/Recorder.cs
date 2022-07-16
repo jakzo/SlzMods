@@ -22,12 +22,12 @@ namespace SpeedrunTools.Replay
     private int _numFrames = 0;
     private System.DateTime _startTime;
     private List<FlatBuffers.Offset<Bwr.Level>> _levels = new List<FlatBuffers.Offset<Bwr.Level>>();
+    private bool _isLoading = false;
+    private int _currentSceneIdx;
     private float _levelStartTime;
     private int _levelStartFrameOffset;
-    private float? _loadStartTime;
     private float _relativeStartTime;
     private float _lastFrameTime;
-    private Camera _cam;
     private FileStream _fs;
     private int _fileIdx = 0;
     private FlatBuffers.FlatBufferBuilder _metaBuilder;
@@ -49,29 +49,7 @@ namespace SpeedrunTools.Replay
       _fs = null;
     }
 
-    private Transform GetPlayerTransform()
-    {
-      if (_cam == null)
-      {
-        var rig = Object.FindObjectOfType<StressLevelZero.Rig.RigManager>();
-        _cam = rig.ControllerRig.GetComponentInChildren<Camera>();
-      }
-      return _cam.transform;
-    }
-
-    private Transform GetHeadsetTransform()
-    {
-      // TODO
-      return _cam.transform;
-    }
-
-    private Transform GetControllerTransform(string name)
-    {
-      // TODO
-      return _cam.transform;
-    }
-
-    public Recorder(string filenamePrefix = "run", float maxFps = 144, float maxDuration = 60 * 60 * 10)
+    public Recorder(string filenamePrefix = "run", float maxFps = 5, float maxDuration = 60 * 60 * 10)
     {
       FilenamePrefix = filenamePrefix;
       MaxFps = maxFps;
@@ -79,9 +57,11 @@ namespace SpeedrunTools.Replay
 
       _minFrameTime = 1 / maxFps;
       _startTime = System.DateTime.Now;
-      _loadStartTime = Time.time;
       _relativeStartTime = Time.time;
       IsRecording = true;
+
+      _levelStartTime = Time.time;
+      _levelStartFrameOffset = _fileIdx;
 
       try
       {
@@ -126,14 +106,38 @@ namespace SpeedrunTools.Replay
       return FilePath;
     }
 
+    public void OnLoadingScreen()
+    {
+      _serializer.OnSceneChange();
+      if (!IsRecording || _isLoading) return;
+      _levels.Add(Bwr.Level.CreateLevel(
+        _metaBuilder,
+        _levelStartTime,
+        Time.time - _levelStartTime,
+        _currentSceneIdx,
+        _levelStartFrameOffset
+      ));
+      _isLoading = true;
+    }
+
     public void OnSceneChange()
     {
       _serializer.OnSceneChange();
+
+      // Resume recording after loading
+      if (_isLoading)
+      {
+        _levelStartTime = Time.time;
+        _levelStartFrameOffset = _fileIdx;
+        _isLoading = false;
+      }
     }
 
     public void OnUpdate(int currentSceneIdx)
     {
       if (!IsRecording) return;
+
+      _currentSceneIdx = currentSceneIdx;
       if (Time.time - _relativeStartTime >= MaxDuration)
       {
         MelonLogger.Warning("Max recording length reached. Stopping recording.");
@@ -142,25 +146,7 @@ namespace SpeedrunTools.Replay
       }
 
       // Pause recording during loading screens
-      if (SceneLoader.loading)
-      {
-        if (!_loadStartTime.HasValue)
-        {
-          _levels.Add(Bwr.Level.CreateLevel(_metaBuilder, _levelStartTime, currentSceneIdx, _levelStartFrameOffset));
-
-          _loadStartTime = Time.time;
-          _cam = null; // seems like camera is replaced on scene change
-        }
-        return;
-      }
-
-      // Resume recording after loading
-      if (_loadStartTime.HasValue)
-      {
-        _levelStartTime = Time.time;
-        _levelStartFrameOffset = _fileIdx;
-        _loadStartTime = null;
-      }
+      if (_isLoading) return;
 
       // Only record frame if time since last frame is greater than max FPS
       if (Time.time < _lastFrameTime + _minFrameTime) return;

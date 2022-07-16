@@ -22,16 +22,13 @@ namespace SpeedrunTools
   public class SpeedrunTools : MelonMod
   {
     private static readonly Feature[] features = {
+      new FeatureSpeedrun(),
       new FeatureRemoveBossClawRng(),
       new FeatureTeleport(),
       new FeatureResetSave(),
       new FeatureBlindfold(),
       // new FeatureReplay(),
       // new FeatureControlTesting(),
-
-      // FeatureSpeedrun is added in the constructor once we have
-      // a reference to the SpeedrunTools instance
-      // new FeatureSpeedrun(this),
     };
 
     private static List<Feature> enabledFeatures = new List<Feature>();
@@ -40,6 +37,8 @@ namespace SpeedrunTools
       new Dictionary<Feature, Pref<bool>>();
 
     private static Hotkeys s_hotkeys = new Hotkeys();
+
+    public static bool s_isLegitRunActive = false;
 
     private static IEnumerable<Hotkey> GetHotkeys(Feature feature)
     {
@@ -60,7 +59,7 @@ namespace SpeedrunTools
       MelonLogger.Msg($"Enabling feature: {feature.GetType().Name}");
       enabledFeatures.Add(feature);
       foreach (var hotkey in GetHotkeys(feature))
-        s_hotkeys.AddHotkey(hotkey);
+        s_hotkeys.AddHotkey(feature, hotkey);
     }
 
     private static void DisableFeature(Feature feature)
@@ -70,13 +69,6 @@ namespace SpeedrunTools
       enabledFeatures.Remove(feature);
       foreach (var hotkey in GetHotkeys(feature))
         s_hotkeys.RemoveHotkey(hotkey);
-    }
-
-    public SpeedrunTools()
-    {
-      // This is safe in the constructor, since features is first used in OnApplicationStart()
-      if (!features.Any(feature => feature is FeatureSpeedrun))
-        features.Append(new FeatureSpeedrun(this));
     }
 
     public override void OnApplicationStart()
@@ -147,6 +139,7 @@ namespace SpeedrunTools
 
       foreach (var feature in enabledFeatures)
       {
+        if (s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
         try
         {
           Utils.LogDebug($"OnSceneWasInitialized: {feature}");
@@ -165,6 +158,7 @@ namespace SpeedrunTools
       s_hotkeys.OnUpdate();
       foreach (var feature in enabledFeatures)
       {
+        if (s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
         try
         {
           feature.OnUpdate();

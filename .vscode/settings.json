@@ -11,6 +11,7 @@
     "Flatbuffers",
     "flatc",
     "jakzo",
+    "leaderboard",
     "Lerp",
     "lerped",
     "msbuild",

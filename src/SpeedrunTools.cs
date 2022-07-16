@@ -28,6 +28,10 @@ namespace SpeedrunTools
       new FeatureBlindfold(),
       // new FeatureReplay(),
       // new FeatureControlTesting(),
+
+      // FeatureSpeedrun is added in the constructor once we have
+      // a reference to the SpeedrunTools instance
+      // new FeatureSpeedrun(this),
     };
 
     private static List<Feature> enabledFeatures = new List<Feature>();
@@ -68,6 +72,12 @@ namespace SpeedrunTools
         s_hotkeys.RemoveHotkey(hotkey);
     }
 
+    public SpeedrunTools()
+    {
+      // This is safe in the constructor, since features is first used in OnApplicationStart()
+      features.Append(new FeatureSpeedrun(this));
+    }
+
     public override void OnApplicationStart()
     {
       Directory.CreateDirectory(Utils.DIR);
@@ -79,7 +89,7 @@ namespace SpeedrunTools
         var name = feature.GetType().Name;
         var enabledPref = new Pref<bool>()
         {
-          Id = $"enableFeature{name}",
+          Id = $"enable{name}",
           Name = $"Enable {name}",
           DefaultValue = true
         };

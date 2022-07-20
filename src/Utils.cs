@@ -32,6 +32,10 @@ namespace SpeedrunTools
       if (PrefDebug.Read())
         MelonLogger.Msg($"dbg: {msg}", data);
     }
+
+    public static bool GetKeyControl() =>
+      UnityEngine.Input.GetKey(UnityEngine.KeyCode.LeftControl) ||
+      UnityEngine.Input.GetKey(UnityEngine.KeyCode.RightControl);
   }
 
   class Pref<T> : IPref
@@ -92,7 +96,7 @@ namespace SpeedrunTools
         entry.Key,
         entry.Value.Item1,
         entry.Value.Item2
-      ));
+      )).ToArray();
       foreach (var (i, hotkey, feature, isDown) in entries)
       {
         if (SpeedrunTools.s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
@@ -118,7 +122,7 @@ namespace SpeedrunTools
   abstract public class Feature
   {
     public bool isAllowedInLegitRuns = false;
-    public virtual void OnLoadingScreen() { }
+    public virtual void OnApplicationStart() { }
     public virtual void OnSceneWasInitialized(int buildIndex, string sceneName) { }
     public virtual void OnUpdate() { }
   }

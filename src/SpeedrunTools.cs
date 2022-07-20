@@ -23,9 +23,9 @@ namespace SpeedrunTools
   {
     private static readonly Feature[] features = {
       new FeatureSpeedrun(),
+      new FeatureResetSave(),
       new FeatureRemoveBossClawRng(),
       new FeatureTeleport(),
-      new FeatureResetSave(),
       new FeatureBlindfold(),
       // new FeatureReplay(),
       // new FeatureControlTesting(),
@@ -103,17 +103,12 @@ namespace SpeedrunTools
       }
       Utils.LogDebug("Feature preferences and hotkeys loaded");
 
-      HarmonyInstance.PatchAll();
-    }
-
-    public override void BONEWORKS_OnLoadingScreen()
-    {
       foreach (var feature in enabledFeatures)
       {
         try
         {
-          Utils.LogDebug($"OnLoadingScreen: {feature}");
-          feature.OnLoadingScreen();
+          Utils.LogDebug($"OnApplicationStart: {feature}");
+          feature.OnApplicationStart();
         } catch (Exception ex)
         {
           MelonLogger.Error(ex);

@@ -20,7 +20,7 @@ namespace SpeedrunTools
 
     public readonly Hotkey HotkeyBlindfold = new Hotkey()
     {
-      Predicate = (cl, cr) => Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.B),
+      Predicate = (cl, cr) => Utils.GetKeyControl() && Input.GetKey(KeyCode.B),
       Handler = () =>
       {
         if (s_isBlindfolded)

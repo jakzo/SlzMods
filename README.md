@@ -2,6 +2,12 @@ _Utilities for Boneworks speedrunning._
 
 # Features
 
+- Speedrun mode
+  - Enabling this mode will disable practice features but still allow features like save resetting
+  - Runs recorded in this mode are allowed to be submitted to the leaderboard
+  - Pressing B on both controllers while in the menu will enable/disable this mode
+    - Alternatively you can use CTRL + S on the keyboard (game window must be focused)
+  - When this mode is enabled, there will be a green Boneworks logo in the loading screen (Steam game version only)
 - Make boss claw always patrol to the area near the finish in Streets
   - Boss claw cabin appears _green_ when this feature is on, so that you're aware RNG is being manipulated
 - Teleport to a chosen location to practice parts of a level again
@@ -12,14 +18,14 @@ _Utilities for Boneworks speedrunning._
 - Reset your save without restarting the game
   - Keeps your preferences so you don't need to set things like height and turn settings after a reset
   - To reset you must be in the main menu and press A + B on both controllers at the same time
-    - Alternatively you can use CTRL + R on the keyboard to trigger a reset (game window must be focussed)
+    - Alternatively you can use CTRL + R on the keyboard to trigger a reset (game window must be focused)
   - Backs up the old save at the location your game save files are kept
     - By default the backup will be at `%UserProfile%\AppData\LocalLow\Stress Level Zero\BONEWORKS.backup`
     - Restore the save by replacing the `BONEWORKS` directory with the `BONEWORKS.backup` one
     - It **does not** save a backup if a backup already exists
 - Blindfold (Steam game version only)
   - For practicing and performing blindfolded runs
-  - To blindfold yourself, press CTRL + B on the keyboard (game window must be focussed)
+  - To blindfold yourself, press CTRL + B on the keyboard (game window must be focused)
   - This will make the VR headset display pitch black but the game window will still show the game (for spectating or to see where you are while practicing)
 
 # Installation
@@ -36,7 +42,7 @@ You can change some things (like where the boss claw moves to) by using MelonPre
 - Install [MelonPreferencesManager](https://github.com/sinai-dev/MelonPreferencesManager) (download the IL2CPP version)
 - Open the menu in-game using F5 to change config options
 
-Most settings require restarting the level or game to take effect.
+Most settings require restarting the level to take effect.
 
 # Links
 

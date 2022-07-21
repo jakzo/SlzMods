@@ -23,7 +23,6 @@ namespace SpeedrunTools
   {
     private static readonly Feature[] features = {
       new FeatureSpeedrun(),
-      new FeatureResetSave(),
       new FeatureRemoveBossClawRng(),
       new FeatureTeleport(),
       new FeatureBlindfold(),
@@ -116,11 +115,8 @@ namespace SpeedrunTools
       }
     }
 
-    public override void OnSceneWasInitialized(int buildIndex, string sceneName)
+    public override void OnSceneWasLoaded(int buildIndex, string sceneName)
     {
-      Utils.LogDebug("OnSceneWasInitialized: hotkeys");
-      s_hotkeys.Init();
-
       foreach (var feature in features)
       {
         if (featureEnabledPrefs[feature].Read())
@@ -131,6 +127,27 @@ namespace SpeedrunTools
           DisableFeature(feature);
         }
       }
+
+      foreach (var feature in enabledFeatures)
+      {
+        if (s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
+        try
+        {
+          Utils.LogDebug($"OnSceneWasLoaded: {feature}");
+          feature.OnSceneWasLoaded(buildIndex, sceneName);
+        } catch (Exception ex)
+        {
+          MelonLogger.Error(ex);
+        }
+      }
+
+      Utils.LogDebug("Load complete");
+    }
+
+    public override void OnSceneWasInitialized(int buildIndex, string sceneName)
+    {
+      Utils.LogDebug("OnSceneWasInitialized: hotkeys");
+      s_hotkeys.Init();
 
       foreach (var feature in enabledFeatures)
       {

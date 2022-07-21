@@ -3,11 +3,18 @@ _Utilities for Boneworks speedrunning._
 # Features
 
 - Speedrun mode
-  - Enabling this mode will disable practice features but still allow features like save resetting
+  - Enabling this mode will disable practice features and temporarily reset the save state
+    - Returning to the main menu while enabled will also trigger a reset of the save
+    - Preferences like height and turn settings are maintained through a save reset
+    - Deactivate speedrun mode to restore your save to before you enabled speedrun mode
   - Runs recorded in this mode are allowed to be submitted to the leaderboard
-  - Pressing B on both controllers while in the menu will enable/disable this mode
+  - You must disable all other mods before enabling this mode
+  - Pressing A + B on both controllers while in the menu will enable/disable this mode
     - Alternatively you can use CTRL + S on the keyboard (game window must be focused)
   - When this mode is enabled, there will be a green Boneworks logo in the loading screen (Steam game version only)
+  - For 100% runs you can press CTRL + H on the keyboard to enable 100% speedrun mode
+    - The difference between this and regular speedrun mode is that it will not reset the save when going back to the main menu
+    - The Boneworks logo in the loading screen will be _blue_ in this mode
 - Make boss claw always patrol to the area near the finish in Streets
   - Boss claw cabin appears _green_ when this feature is on, so that you're aware RNG is being manipulated
 - Teleport to a chosen location to practice parts of a level again
@@ -15,14 +22,6 @@ _Utilities for Boneworks speedrunning._
   - Clicking the right controller thumbstick teleports you to the set point
   - Clicking A and B on the left controller at the same time resets the level
     - Useful for situations like in Museum when you teleport back to retry valve flying and need the valve to be back at its starting location
-- Reset your save without restarting the game
-  - Keeps your preferences so you don't need to set things like height and turn settings after a reset
-  - To reset you must be in the main menu and press A + B on both controllers at the same time
-    - Alternatively you can use CTRL + R on the keyboard to trigger a reset (game window must be focused)
-  - Backs up the old save at the location your game save files are kept
-    - By default the backup will be at `%UserProfile%\AppData\LocalLow\Stress Level Zero\BONEWORKS.backup`
-    - Restore the save by replacing the `BONEWORKS` directory with the `BONEWORKS.backup` one
-    - It **does not** save a backup if a backup already exists
 - Blindfold (Steam game version only)
   - For practicing and performing blindfolded runs
   - To blindfold yourself, press CTRL + B on the keyboard (game window must be focused)

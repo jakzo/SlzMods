@@ -123,6 +123,7 @@ namespace SpeedrunTools
   {
     public bool isAllowedInLegitRuns = false;
     public virtual void OnApplicationStart() { }
+    public virtual void OnSceneWasLoaded(int buildIndex, string sceneName) { }
     public virtual void OnSceneWasInitialized(int buildIndex, string sceneName) { }
     public virtual void OnUpdate() { }
   }

@@ -12,6 +12,8 @@ namespace SpeedrunTools
     public static readonly string DIR = Path.Combine(MelonUtils.UserDataDirectory, "SpeedrunTools");
     public static readonly string REPLAYS_DIR = Path.Combine(DIR, "replays");
     public const int SCENE_MENU_IDX = 1;
+    public const string SCENE_MENU_NAME = "scene_mainMenu";
+    public const string SCENE_MENU_NAME_ALT = "Main Menu";
 
     public static MelonPreferences_Category s_prefCategory;
 
@@ -99,7 +101,7 @@ namespace SpeedrunTools
       )).ToArray();
       foreach (var (i, hotkey, feature, isDown) in entries)
       {
-        if (SpeedrunTools.s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
+        if (SpeedrunTools.s_isRunActive && !feature.isAllowedInRuns) continue;
         if (hotkey.Predicate(_controllers[0], _controllers[1]))
         {
           if (isDown) continue;
@@ -121,7 +123,7 @@ namespace SpeedrunTools
 
   abstract public class Feature
   {
-    public bool isAllowedInLegitRuns = false;
+    public bool isAllowedInRuns = false;
     public virtual void OnApplicationStart() { }
     public virtual void OnSceneWasLoaded(int buildIndex, string sceneName) { }
     public virtual void OnSceneWasInitialized(int buildIndex, string sceneName) { }

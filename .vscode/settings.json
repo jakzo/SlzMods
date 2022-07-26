@@ -7,10 +7,12 @@
     "datetime",
     "devel",
     "Dont",
+    "esbenp",
     "Flatbuffer",
     "Flatbuffers",
     "flatc",
     "jakzo",
+    "kitbash",
     "Lerp",
     "lerped",
     "msbuild",
@@ -28,7 +30,23 @@
     "Thunderstore",
     "Unblindfolding",
     "usermedia",
-    "vcontroller"
+    "vcontroller",
+    "xaver"
   ],
-  "omnisharp.useModernNet": false
+  "omnisharp.useModernNet": false,
+  "editor.formatOnSave": true,
+  "files.autoSave": "off",
+  "clang-format.language.csharp.fallbackStyle": "LLVM",
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  }
 }

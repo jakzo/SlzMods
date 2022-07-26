@@ -1,0 +1,11 @@
+tasks:
+  - name: Dependencies
+    init: nuget restore SpeedrunTools.sln
+    openMode: split-right
+vscode:
+  extensions:
+    - muhammad-sammy.csharp
+    - esbenp.prettier-vscode
+    - xaver.clang-format
+    - streetsidesoftware.code-spell-checker
+    - redhat.vscode-xml

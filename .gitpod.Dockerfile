@@ -1,2 +1,2 @@
 FROM gitpod/workspace-full
-RUN sudo apt install -y mono-devel
+RUN sudo install-packages mono-devel

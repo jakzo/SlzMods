@@ -3,18 +3,22 @@ _Utilities for Boneworks speedrunning._
 # Features
 
 - Speedrun mode
-  - Enabling this mode will disable practice features and temporarily reset the save state
-    - Returning to the main menu while enabled will also trigger a reset of the save
-    - Preferences like height and turn settings are maintained through a save reset
-    - Deactivate speedrun mode to restore your save to before you enabled speedrun mode
-  - Runs recorded in this mode are allowed to be submitted to the leaderboard
-  - You must disable all other mods before enabling this mode
-  - Pressing A + B on both controllers while in the menu will enable/disable this mode
-    - Alternatively you can use CTRL + S on the keyboard (game window must be focused)
-  - When this mode is enabled, there will be a green Boneworks logo in the loading screen (Steam game version only)
-  - For 100% runs you can press CTRL + H on the keyboard to enable 100% speedrun mode
-    - The difference between this and regular speedrun mode is that it will not reset the save when going back to the main menu
-    - The Boneworks logo in the loading screen will be _blue_ in this mode
+  - Enabling this mode will disable practice features and temporarily alter the save state so that a run will meet the leaderboard submission rules
+  - There are three modes depending on what type of speedrun you are performing:
+    - Normal
+      - Activate with CTRL + S or by pressing A + B on both controllers
+      - In this mode the save state will be reset every time you visit the main menu
+    - Newgame+
+      - Activate with CTRL + N
+      - In this mode the save state will be updated to have everything unlocked
+    - 100%
+      - Activate with CTRL + H
+      - In this mode the save state will be reset only when initially enabled
+  - Deactivate any mode with any of the activation hotkeys while in the main menu
+  - Preferences like height and turn settings are maintained through save state resets and loads
+  - Deactivate speedrun mode to restore your original save state
+  - You must disable all other mods before enabling any speedrun mode
+  - You can tell that a speedrun mode is enabled based on the color of the Boneworks logo in the loading screen (Steam game version only)
 - Make boss claw always patrol to the area near the finish in Streets
   - Boss claw cabin appears _green_ when this feature is on, so that you're aware RNG is being manipulated
 - Teleport to a chosen location to practice parts of a level again

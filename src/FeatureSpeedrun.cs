@@ -2,8 +2,10 @@
 using UnityEngine;
 using Valve.VR;
 using StressLevelZero.Utilities;
+using StressLevelZero.Data;
 using HarmonyLib;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -11,6 +13,50 @@ namespace SpeedrunTools
 {
   class FeatureSpeedrun : Feature
   {
+    class Mode
+    {
+      public static readonly Mode DISABLED = new Mode()
+      {
+        color = new Color(0.8f, 0.1f, 0.1f),
+        colorRgb = "cc1111",
+      };
+      public static readonly Mode NORMAL = new Mode()
+      {
+        name = "Speedrun",
+        color = new Color(0.2f, 0.9f, 0.1f),
+        colorRgb = "22ee11",
+        resetSaveOnEnable = true,
+        resetSaveOnMainMenu = true,
+        resetTimerOnMainMenu = true,
+      };
+      public static readonly Mode NEWGAME_PLUS = new Mode()
+      {
+        name = "Newgame+ speedrun",
+        color = new Color(0.9f, 0.9f, 0.1f),
+        colorRgb = "eeee11",
+        resetSaveOnEnable = false,
+        resetSaveOnMainMenu = false,
+        saveResourceFilename = "NewgamePlusSave.zip",
+      };
+      public static readonly Mode HUNDRED_PERCENT = new Mode()
+      {
+        name = "100% speedrun",
+        color = new Color(0.3f, 0.3f, 0.9f),
+        colorRgb = "4444ee",
+        resetSaveOnEnable = true,
+        resetSaveOnMainMenu = false,
+        resetTimerOnMainMenu = true,
+      };
+
+      public string name;
+      public Color color;
+      public string colorRgb;
+      public bool resetSaveOnEnable;
+      public bool resetSaveOnMainMenu;
+      public bool resetTimerOnMainMenu;
+      public string saveResourceFilename;
+    }
+
     private static HashSet<string> ALLOWED_MODS = new HashSet<string>();
     private static HashSet<string> ALLOWED_PLUGINS = new HashSet<string>()
     {
@@ -18,68 +64,93 @@ namespace SpeedrunTools
     };
     private const string MENU_TEXT_NAME = "SpeedrunTools_MenuText";
     private const string LOADING_TEXT_NAME = "SpeedrunTools_LoadingText";
-    private static readonly Color COLOR_GREEN = new Color(0.2f, 0.9f, 0.1f);
-    private static readonly Color COLOR_RED = new Color(0.8f, 0.1f, 0.1f);
-    private static readonly Color COLOR_BLUE = new Color(0.2f, 0.1f, 0.9f);
     private static bool SHOW_BONEWORKS_LOGO_OVERLAY = true;
     private static readonly string OVERLAY_KEY = $"{SteamVR_Overlay.key}.SpeedrunTools_RunStatus";
+    private const int NUM_SLOTS = 5;
 
-    private static int s_currentSceneIdx;
     private static ulong s_overlayHandle;
     private static float? s_relativeStartTime;
     private static float? s_loadingStartTime;
     private static Texture2D s_overlayTexture;
-    private static bool s_is100PercentRun = false;
     private static bool s_didReset = false;
-    private static bool s_shouldRestoreSave = false;
+    private static bool s_isSceneInitialized = false;
+    private static bool s_blockSaveUntilSceneLoad = false;
+    private static Data_Player s_playerPrefsToRestoreOnLoad;
+    private static Mode s_mode = Mode.DISABLED;
 
     public FeatureSpeedrun()
     {
-      isAllowedInLegitRuns = true;
+      isAllowedInRuns = true;
     }
 
-    public readonly Hotkey HotkeyToggle = new Hotkey()
+    public readonly Hotkey HotkeyToggleNormal = new Hotkey()
     {
       Predicate = (cl, cr) =>
-        s_currentSceneIdx == Utils.SCENE_MENU_IDX && (
+        BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX && (
           cl.GetAButton() && cl.GetBButton() && cr.GetAButton() && cr.GetBButton() ||
           Utils.GetKeyControl() && Input.GetKey(KeyCode.S)
         ),
-      Handler = () => ToggleRun(false),
+      Handler = () => ToggleRun(Mode.NORMAL),
     };
-    public readonly Hotkey HotkeyToggle100Percent = new Hotkey()
+    public readonly Hotkey HotkeyToggleNewgamePlus = new Hotkey()
     {
       Predicate = (cl, cr) =>
-        s_currentSceneIdx == Utils.SCENE_MENU_IDX &&
+        BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX &&
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.N),
+      Handler = () => ToggleRun(Mode.NEWGAME_PLUS),
+    };
+    public readonly Hotkey HotkeyToggleHundredPercent = new Hotkey()
+    {
+      Predicate = (cl, cr) =>
+        BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX &&
           Utils.GetKeyControl() && Input.GetKey(KeyCode.H),
-      Handler = () => ToggleRun(true),
+      Handler = () => ToggleRun(Mode.HUNDRED_PERCENT),
     };
 
-    private static void ToggleRun(bool is100PercentRun)
+    private static void ToggleRun(Mode mode)
     {
-      if (SpeedrunTools.s_isLegitRunActive)
-      {
-        SpeedrunTools.s_isLegitRunActive = s_is100PercentRun = false;
-        s_shouldRestoreSave = true;
-        BoneworksSceneManager.ReloadScene();
-        MelonLogger.Msg("Speedrun mode disabled");
-      } else
+      if (!s_isSceneInitialized || s_blockSaveUntilSceneLoad) return;
+
+      if (s_mode == Mode.DISABLED)
       {
         var illegitimacyReasons = ComputeRunLegitimacy();
         if (illegitimacyReasons.Count == 0)
         {
+          SaveData();
           BackupSave();
-          ResetSave();
-          SpeedrunTools.s_isLegitRunActive = true;
-          s_is100PercentRun = is100PercentRun;
+
+          s_mode = mode;
+          SpeedrunTools.s_isRunActive = true;
+          if (s_mode.saveResourceFilename != null)
+          {
+            MelonLogger.Msg("Loading newgame+ save");
+            s_playerPrefsToRestoreOnLoad = Data_Manager.Instance.data_player;
+            RestoreSaveFileResource(s_mode.saveResourceFilename);
+            LoadData();
+            s_didReset = true;
+          } else if (s_mode.resetSaveOnEnable)
+          {
+            ResetSave();
+            s_didReset = true;
+          }
+          s_blockSaveUntilSceneLoad = true;
           BoneworksSceneManager.ReloadScene();
-          MelonLogger.Msg($"Speedrun mode enabled{(is100PercentRun ? " (100%)" : "")}");
+          MelonLogger.Msg($"{s_mode.name} mode enabled");
         } else
         {
           var reasonMessages = string.Join("", illegitimacyReasons.Select(reason => $"\n» {reason.Value}"));
-          UpdateMainMenuText($"{ColorText("Could not enable speedrun mode", COLOR_RED)} because:{reasonMessages}");
+          UpdateMainMenuText($"{ColorText("Could not enable speedrun mode", Mode.DISABLED)} because:{reasonMessages}");
           MelonLogger.Msg($"Could not enable speedrun mode because:{reasonMessages}");
         }
+      } else
+      {
+        s_mode = Mode.DISABLED;
+        SpeedrunTools.s_isRunActive = false;
+        s_blockSaveUntilSceneLoad = true;
+        RestoreSaveBackupIfExists();
+        LoadData();
+        BoneworksSceneManager.ReloadScene();
+        MelonLogger.Msg("Speedrun mode disabled");
       }
     }
 
@@ -93,13 +164,13 @@ namespace SpeedrunTools
     {
       var illegitimacyReasons = new Dictionary<RunIllegitimacyReason, string>();
 
-      var disallowedMods = MelonHandler.Mods.Where(mod => !(mod is SpeedrunTools) && !ALLOWED_MODS.Contains(mod.Info.Name));
-      if (disallowedMods.Count() > 0)
-      {
-        var disallowedModNames = disallowedMods.Select(mod => mod.Info.Name);
-        illegitimacyReasons[RunIllegitimacyReason.DISALLOWED_MODS] =
-          $"Disallowed mods are active: {string.Join(", ", disallowedModNames)}";
-      }
+      // var disallowedMods = MelonHandler.Mods.Where(mod => !(mod is SpeedrunTools) && !ALLOWED_MODS.Contains(mod.Info.Name));
+      // if (disallowedMods.Count() > 0)
+      // {
+      //   var disallowedModNames = disallowedMods.Select(mod => mod.Info.Name);
+      //   illegitimacyReasons[RunIllegitimacyReason.DISALLOWED_MODS] =
+      //     $"Disallowed mods are active: {string.Join(", ", disallowedModNames)}";
+      // }
 
       var disallowedPlugins = MelonHandler.Plugins.Where(plugin => !ALLOWED_PLUGINS.Contains(plugin.Info.Name));
       if (disallowedPlugins.Count() > 0)
@@ -112,8 +183,8 @@ namespace SpeedrunTools
       return illegitimacyReasons;
     }
 
-    private static string ColorText(string text, Color color) =>
-      $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{text}</color>";
+    private static string ColorText(string text, Mode mode) =>
+      $@"<color=#{mode.colorRgb}>{text}</color>";
 
     private static void UpdateMainMenuText(string text)
     {
@@ -124,7 +195,7 @@ namespace SpeedrunTools
         menuText = new GameObject(MENU_TEXT_NAME);
         var tmp = menuText.AddComponent<TMPro.TextMeshPro>();
         tmp.alignment = TMPro.TextAlignmentOptions.TopLeft;
-        tmp.fontSize = 1.6f;
+        tmp.fontSize = 1.5f;
         tmp.rectTransform.sizeDelta = new Vector2(2, 2);
         tmp.rectTransform.position = new Vector3(2.65f, 1.8f, 9.6f);
       }
@@ -200,7 +271,7 @@ namespace SpeedrunTools
       return texture;
     }
 
-    private static void ShowOverlay(string text, Color color)
+    private static void ShowOverlay(string text)
     {
       var texture = TextToTexture(text);
 
@@ -230,6 +301,7 @@ namespace SpeedrunTools
         eColorSpace = EColorSpace.Auto,
       };
       OpenVR.Overlay.SetOverlayTexture(s_overlayHandle, ref ovrTexture);
+      var color = s_mode.color;
       if (color != null)
         OpenVR.Overlay.SetOverlayColor(s_overlayHandle, color.r, color.g, color.b);
       OpenVR.Overlay.SetOverlayAlpha(s_overlayHandle, 1);
@@ -274,70 +346,126 @@ namespace SpeedrunTools
       OpenVR.Overlay.HideOverlay(s_overlayHandle);
     }
 
-    private static void OnLoadingStart()
-    {
-      s_loadingStartTime = Time.time;
-      var startTime = s_relativeStartTime.HasValue ? s_relativeStartTime.Value : Time.time;
-      var duration = System.TimeSpan.FromSeconds(Time.time - startTime);
-      var modeText = SpeedrunTools.s_isLegitRunActive
-        ? ColorText("enabled", s_is100PercentRun ? COLOR_BLUE : COLOR_GREEN)
-        : ColorText("disabled", COLOR_RED);
-      var text = $@"{(s_is100PercentRun ? "100% speedrun mode" : "Speedrun mode")} {modeText}
-v{BuildInfo.Version}
-{duration:h\:mm\:ss\.ff}";
-      ShowOverlay(
-        text,
-        SpeedrunTools.s_isLegitRunActive ? s_is100PercentRun ? COLOR_BLUE : COLOR_GREEN : COLOR_RED
-      );
-    }
 
-    public override void OnApplicationStart()
+    [HarmonyPatch(
+      typeof(BoneworksSceneManager),
+      nameof(BoneworksSceneManager.LoadScene),
+      new System.Type[] { typeof(string) }
+    )]
+    class BoneworksSceneManager_LoadScene_Patch
     {
-      RestoreSaveBackupIfExists();
-    }
-
-    public override void OnSceneWasLoaded(int sceneBuildIndex, string sceneName)
-    {
-      if (!SpeedrunTools.s_isLegitRunActive)
+      [HarmonyPrefix()]
+      internal static void Prefix(string sceneName)
       {
-        RestoreSaveBackupIfExists();
-      } else if (sceneBuildIndex == Utils.SCENE_MENU_IDX && !s_is100PercentRun)
-      {
-        ResetSave();
-        s_didReset = true;
+        s_loadingStartTime = Time.time;
+        s_isSceneInitialized = false;
+        var isLoadingMainMenu = sceneName == Utils.SCENE_MENU_NAME || sceneName == Utils.SCENE_MENU_NAME_ALT;
+        if (s_mode.resetSaveOnMainMenu && isLoadingMainMenu && !s_didReset)
+        {
+          ResetSave();
+          s_didReset = true;
+        }
       }
+    }
+
+    public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+    {
+      s_blockSaveUntilSceneLoad = false;
     }
 
     public override void OnSceneWasInitialized(int buildIndex, string sceneName)
     {
-      if (s_loadingStartTime.HasValue && s_relativeStartTime.HasValue)
+      s_isSceneInitialized = true;
+
+      if (s_playerPrefsToRestoreOnLoad != null)
       {
-        s_relativeStartTime += Time.time - s_loadingStartTime.Value;
-        s_loadingStartTime = null;
+        RestorePlayerPrefs(s_playerPrefsToRestoreOnLoad);
+        s_playerPrefsToRestoreOnLoad = null;
       }
 
-      var previousSceneIdx = s_currentSceneIdx;
-      s_currentSceneIdx = buildIndex;
-
-      if (previousSceneIdx == Utils.SCENE_MENU_IDX)
-        s_relativeStartTime = Time.time;
-
-      if (s_currentSceneIdx == Utils.SCENE_MENU_IDX)
+      if (s_relativeStartTime.HasValue)
       {
-        var heading = SpeedrunTools.s_isLegitRunActive
-          ? s_is100PercentRun
-            ? ColorText("100% speedrun mode enabled", COLOR_BLUE)
-            : ColorText("Speedrun mode enabled", COLOR_GREEN)
-          : ColorText("Speedrun mode disabled", COLOR_RED);
-        var text = $@"{heading}
-» You are{(SpeedrunTools.s_isLegitRunActive ? "" : " not")} allowed to submit runs to leaderboard
-» Practice features are {(SpeedrunTools.s_isLegitRunActive ? "disabled" : "enabled")}
-» Press A + B on both controllers at once (or CTRL + S) to toggle speedrun mode
-» Press CTRL + H to toggle speedrun mode for 100% runs
-{(s_didReset ? $@"» Save was reset (deactivate speedrun mode to restore)" : "")}";
+        if (s_loadingStartTime.HasValue)
+        {
+          s_relativeStartTime += Time.time - s_loadingStartTime.Value;
+          s_loadingStartTime = null;
+        }
+      } else if (buildIndex != Utils.SCENE_MENU_IDX)
+      {
+        s_relativeStartTime = Time.time;
+      }
+
+      if (buildIndex == Utils.SCENE_MENU_IDX)
+      {
+        var text = string.Join("\n", new string[] {
+          ColorText(s_mode == Mode.DISABLED ? "Speedrun mode disabled" : $"{s_mode.name} mode enabled", s_mode),
+          $"» You are{(s_mode == Mode.DISABLED ? " not" : "")} allowed to submit runs to leaderboard",
+          $"» Practice features are {(s_mode == Mode.DISABLED ? "enabled" : "disabled")}",
+          $"» Press A + B on both controllers at once (or CTRL + S) to toggle speedrun mode",
+          s_mode == Mode.DISABLED ? "» Press CTRL + H to toggle for 100% runs" : null,
+          s_didReset
+            ? s_mode == Mode.NEWGAME_PLUS
+              ? "» Completed save was loaded (deactivate speedrun mode to restore)"
+              : "» Save was reset (deactivate speedrun mode to restore)"
+            : null,
+        }.Where(line => line != null));
         UpdateMainMenuText(text);
       }
       s_didReset = false;
+    }
+
+    private static void ResetSave()
+    {
+      MelonLogger.Msg("Resetting save");
+      var oldData = Data_Manager.Instance.data_player;
+      Data_Manager.Instance.DATA_DEFAULT_ALL();
+      RestorePlayerPrefs(oldData);
+    }
+
+    private static void RestorePlayerPrefs(Data_Player oldData)
+    {
+      var newData = Data_Manager.Instance.data_player;
+      newData.additionalLighting = oldData.additionalLighting;
+      newData.aliasing = oldData.aliasing;
+      newData.ambientOcclusion = oldData.ambientOcclusion;
+      newData.audio_GlobalVolume = oldData.audio_GlobalVolume;
+      newData.audio_Music = oldData.audio_Music;
+      newData.audio_SFX = oldData.audio_SFX;
+      newData.beltRightSide = oldData.beltRightSide;
+      newData.bloom = oldData.bloom;
+      newData.fisheye = oldData.fisheye;
+      newData.fisheyeLocation = oldData.fisheyeLocation;
+      newData.isAdaptiveOn = oldData.isAdaptiveOn;
+      newData.isInverted = oldData.isInverted;
+      newData.isRightHanded = oldData.isRightHanded;
+      newData.joySensitivityNew = oldData.joySensitivityNew;
+      newData.language = oldData.language;
+      newData.loco_Curve = oldData.loco_Curve;
+      newData.loco_DegreesPerSnap = oldData.loco_DegreesPerSnap;
+      newData.loco_Direction = oldData.loco_Direction;
+      newData.loco_SnapDegreesPerFrame = oldData.loco_SnapDegreesPerFrame;
+      newData.mod_Haptic = oldData.mod_Haptic;
+      newData.motionBlur = oldData.motionBlur;
+      newData.mouseSensitivityNew = oldData.mouseSensitivityNew;
+      newData.offset_Floor = oldData.offset_Floor;
+      newData.offset_Sitting = oldData.offset_Sitting;
+      newData.physicsUpdateRate = oldData.physicsUpdateRate;
+      newData.player_Height = oldData.player_Height;
+      newData.player_Name = oldData.player_Name;
+      newData.playMode = oldData.playMode;
+      newData.profile_Name = oldData.profile_Name;
+      newData.quality = oldData.quality;
+      newData.resX = oldData.resX;
+      newData.resY = oldData.resY;
+      newData.shadowQuality = oldData.shadowQuality;
+      newData.SnapEnabled = oldData.SnapEnabled;
+      newData.standing = oldData.standing;
+      newData.subtitlesOn = oldData.subtitlesOn;
+      newData.TextureResolution = oldData.TextureResolution;
+      newData.VirtualCrouching = oldData.VirtualCrouching;
+
+      SaveData();
+      LoadData();
     }
 
     [HarmonyPatch(typeof(LoadingScreenPackage), nameof(LoadingScreenPackage.StartAlpha))]
@@ -346,7 +474,11 @@ v{BuildInfo.Version}
       [HarmonyPrefix()]
       internal static void Prefix()
       {
-        OnLoadingStart();
+        var durationSecs = (s_loadingStartTime - s_relativeStartTime) ?? 0;
+        var text = $@"{s_mode.name} {ColorText(s_mode == Mode.DISABLED ? "disabled" : "enabled", s_mode)}
+v{BuildInfo.Version}
+{System.TimeSpan.FromSeconds(durationSecs):h\:mm\:ss\.ff}";
+        ShowOverlay(text);
       }
     }
 
@@ -354,10 +486,16 @@ v{BuildInfo.Version}
     class LoadingScreenPackage_AlphaOverlays_Patch
     {
       [HarmonyPrefix()]
-      internal static void Prefix()
-      {
-        HideOverlay();
-      }
+      internal static void Prefix() => HideOverlay();
+
+      // Silence errors
+      [HarmonyFinalizer()]
+      internal static void Finalizer() { }
+    }
+
+    public override void OnApplicationStart()
+    {
+      RestoreSaveBackupIfExists();
     }
 
     private static string GetBackupPath()
@@ -369,104 +507,72 @@ v{BuildInfo.Version}
     private static void BackupSave()
     {
       // Backup existing save file to:
-      // %UserProfile%\AppData\LocalLow\Stress Level Zero\BONEWORKS.backup
+      // %UserProfile%\AppData\LocalLow\Stress Level Zero\BONEWORKS.speedrun_backup
       var backupPath = GetBackupPath();
       if (Directory.Exists(backupPath))
-        throw new System.Exception("Backup already exists");
+        throw new System.Exception($"Backup already exists at: {backupPath}");
       MelonLogger.Msg($"Backing up save to: {backupPath}");
-      CopyDirectory(Application.persistentDataPath, backupPath, true);
+      Directory.CreateDirectory(backupPath);
+      foreach (var filePath in Directory.EnumerateFiles(Application.persistentDataPath))
+      {
+        if (filePath.EndsWith("output_log.txt")) continue;
+        File.Copy(filePath, Path.Combine(backupPath, Path.GetFileName(filePath)));
+      }
     }
 
-    private static void ResetSave()
+    private static void RestoreSaveFileResource(string saveResourceName)
     {
-      MelonLogger.Msg("Resetting save");
-      var dataManager = Object.FindObjectOfType<Data_Manager>();
+      Utils.LogDebug($"Loading save: {saveResourceName}");
+      DeleteSave();
+      var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+      string resourcePath = assembly
+        .GetManifestResourceNames()
+        .Single(str => str.EndsWith(saveResourceName));
+      using (var stream = assembly.GetManifestResourceStream(resourcePath))
+      {
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
+        {
+          foreach (var entry in archive.Entries)
+          {
+            var entryStream = entry.Open();
+            using (var fileStream = File.Create(Path.Combine(Application.persistentDataPath, entry.FullName)))
+            {
+              entryStream.CopyTo(fileStream);
+            }
+          }
+        }
+      }
+    }
 
-      var oldData = dataManager.data_player;
-      var additionalLighting = oldData.additionalLighting;
-      var aliasing = oldData.aliasing;
-      var ambientOcclusion = oldData.ambientOcclusion;
-      var audio_GlobalVolume = oldData.audio_GlobalVolume;
-      var audio_Music = oldData.audio_Music;
-      var audio_SFX = oldData.audio_SFX;
-      var beltRightSide = oldData.beltRightSide;
-      var bloom = oldData.bloom;
-      var fisheye = oldData.fisheye;
-      var fisheyeLocation = oldData.fisheyeLocation;
-      var isAdaptiveOn = oldData.isAdaptiveOn;
-      var isInverted = oldData.isInverted;
-      var isRightHanded = oldData.isRightHanded;
-      var joySensitivityNew = oldData.joySensitivityNew;
-      var language = oldData.language;
-      var loco_Curve = oldData.loco_Curve;
-      var loco_DegreesPerSnap = oldData.loco_DegreesPerSnap;
-      var loco_Direction = oldData.loco_Direction;
-      var loco_SnapDegreesPerFrame = oldData.loco_SnapDegreesPerFrame;
-      var mod_Haptic = oldData.mod_Haptic;
-      var motionBlur = oldData.motionBlur;
-      var mouseSensitivityNew = oldData.mouseSensitivityNew;
-      var offset_Floor = oldData.offset_Floor;
-      var offset_Sitting = oldData.offset_Sitting;
-      var physicsUpdateRate = oldData.physicsUpdateRate;
-      var player_Height = oldData.player_Height;
-      var player_Name = oldData.player_Name;
-      var playIntroCheck = oldData.playIntroCheck;
-      var playMode = oldData.playMode;
-      var profile_Name = oldData.profile_Name;
-      var quality = oldData.quality;
-      var resX = oldData.resX;
-      var resY = oldData.resY;
-      var shadowQuality = oldData.shadowQuality;
-      var SnapEnabled = oldData.SnapEnabled;
-      var standing = oldData.standing;
-      var subtitlesOn = oldData.subtitlesOn;
-      var TextureResolution = oldData.TextureResolution;
-      var VirtualCrouching = oldData.VirtualCrouching;
+    private static void SaveData()
+    {
+      for (int slot = 0; slot < NUM_SLOTS; slot++)
+        Data_Manager.Instance.DATA_SAVE(slot);
+      AmmoData.Save();
+      LevelData.Save();
+      ReclaimerData.Save();
+      TimeTrialData.Save();
+    }
 
-      dataManager.DATA_DEFAULT_ALL();
+    private static void LoadData()
+    {
+      for (int slot = 0; slot < NUM_SLOTS; slot++)
+        Data_Manager.Instance.DATA_LOAD(slot);
+      Data_Manager.Instance.DATA_PROFILE_SET(0);
+      AmmoData.Load();
+      LevelData.Load();
+      ReclaimerData.Load();
+      TimeTrialData.Load();
+    }
 
-      var newData = dataManager.data_player;
-      newData.additionalLighting = additionalLighting;
-      newData.aliasing = aliasing;
-      newData.ambientOcclusion = ambientOcclusion;
-      newData.audio_GlobalVolume = audio_GlobalVolume;
-      newData.audio_Music = audio_Music;
-      newData.audio_SFX = audio_SFX;
-      newData.beltRightSide = beltRightSide;
-      newData.bloom = bloom;
-      newData.fisheye = fisheye;
-      newData.fisheyeLocation = fisheyeLocation;
-      newData.isAdaptiveOn = isAdaptiveOn;
-      newData.isInverted = isInverted;
-      newData.isRightHanded = isRightHanded;
-      newData.joySensitivityNew = joySensitivityNew;
-      newData.language = language;
-      newData.loco_Curve = loco_Curve;
-      newData.loco_DegreesPerSnap = loco_DegreesPerSnap;
-      newData.loco_Direction = loco_Direction;
-      newData.loco_SnapDegreesPerFrame = loco_SnapDegreesPerFrame;
-      newData.mod_Haptic = mod_Haptic;
-      newData.motionBlur = motionBlur;
-      newData.mouseSensitivityNew = mouseSensitivityNew;
-      newData.offset_Floor = offset_Floor;
-      newData.offset_Sitting = offset_Sitting;
-      newData.physicsUpdateRate = physicsUpdateRate;
-      newData.player_Height = player_Height;
-      newData.player_Name = player_Name;
-      newData.playIntroCheck = playIntroCheck;
-      newData.playMode = playMode;
-      newData.profile_Name = profile_Name;
-      newData.quality = quality;
-      newData.resX = resX;
-      newData.resY = resY;
-      newData.shadowQuality = shadowQuality;
-      newData.SnapEnabled = SnapEnabled;
-      newData.standing = standing;
-      newData.subtitlesOn = subtitlesOn;
-      newData.TextureResolution = TextureResolution;
-      newData.VirtualCrouching = VirtualCrouching;
-
-      dataManager.DATA_SAVE();
+    private static void DeleteSave()
+    {
+      Utils.LogDebug("Deleting save");
+      foreach (var filePath in Directory.EnumerateFiles(Application.persistentDataPath))
+      {
+        if (filePath.EndsWith("output_log.txt")) continue;
+        File.Delete(filePath);
+      }
     }
 
     private static void RestoreSaveBackupIfExists()
@@ -477,37 +583,36 @@ v{BuildInfo.Version}
         if (Directory.Exists(backupPath))
         {
           MelonLogger.Msg($"Restoring save backup from: {backupPath}");
-          Directory.Delete(Application.persistentDataPath);
-          Directory.Move(backupPath, Application.persistentDataPath);
+          DeleteSave();
+          foreach (var filePath in Directory.EnumerateFiles(backupPath))
+          {
+            File.Copy(filePath, Path.Combine(Application.persistentDataPath, Path.GetFileName(filePath)));
+          }
+          Directory.Delete(backupPath, true);
         }
       } catch (System.Exception err)
       {
-        MelonLogger.Error("WARNING: There is a backup of your save file created when enabling " +
-          "speedrun mode but restoring it failed with this error:");
+        MelonLogger.Error("WARNING: A backup of your save file exists because speedrun mode was " +
+          "enabled but restoring it failed with this error:");
         MelonLogger.Error(err);
       }
     }
 
-    private static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
-    {
-      var dir = new DirectoryInfo(sourceDir);
-      if (!dir.Exists)
-        throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
-      DirectoryInfo[] dirs = dir.GetDirectories();
-      Directory.CreateDirectory(destinationDir);
-      foreach (FileInfo file in dir.GetFiles())
-      {
-        string targetFilePath = Path.Combine(destinationDir, file.Name);
-        file.CopyTo(targetFilePath);
-      }
-      if (recursive)
-      {
-        foreach (DirectoryInfo subDir in dirs)
-        {
-          string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
-          CopyDirectory(subDir.FullName, newDestinationDir, true);
-        }
-      }
-    }
+    // Save disabling (used to prevent overwriting of newly copied-in save files when reloading a level)
+    [HarmonyPatch(typeof(Data_Manager), nameof(Data_Manager.DATA_SAVE))]
+    class Data_Manager_DATA_SAVE_Patch
+    { [HarmonyPrefix()] internal static bool Prefix() => !s_blockSaveUntilSceneLoad; }
+    [HarmonyPatch(typeof(ReclaimerData), nameof(ReclaimerData.Save))]
+    class ReclaimerData_Save_Patch
+    { [HarmonyPrefix()] internal static bool Prefix() => !s_blockSaveUntilSceneLoad; }
+    [HarmonyPatch(typeof(AmmoData), nameof(AmmoData.Save))]
+    class AmmoData_Save_Patch
+    { [HarmonyPrefix()] internal static bool Prefix() => !s_blockSaveUntilSceneLoad; }
+    [HarmonyPatch(typeof(LevelData), nameof(LevelData.Save))]
+    class LevelData_Save_Patch
+    { [HarmonyPrefix()] internal static bool Prefix() => !s_blockSaveUntilSceneLoad; }
+    [HarmonyPatch(typeof(TimeTrialData), nameof(TimeTrialData.Save))]
+    class TimeTrialData_Save_Patch
+    { [HarmonyPrefix()] internal static bool Prefix() => !s_blockSaveUntilSceneLoad; }
   }
 }

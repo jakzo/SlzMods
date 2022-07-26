@@ -37,7 +37,7 @@ namespace SpeedrunTools
 
     private static Hotkeys s_hotkeys = new Hotkeys();
 
-    public static bool s_isLegitRunActive = false;
+    public static bool s_isRunActive = false;
 
     private static IEnumerable<Hotkey> GetHotkeys(Feature feature)
     {
@@ -130,7 +130,7 @@ namespace SpeedrunTools
 
       foreach (var feature in enabledFeatures)
       {
-        if (s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
+        if (s_isRunActive && !feature.isAllowedInRuns) continue;
         try
         {
           Utils.LogDebug($"OnSceneWasLoaded: {feature}");
@@ -151,7 +151,7 @@ namespace SpeedrunTools
 
       foreach (var feature in enabledFeatures)
       {
-        if (s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
+        if (s_isRunActive && !feature.isAllowedInRuns) continue;
         try
         {
           Utils.LogDebug($"OnSceneWasInitialized: {feature}");
@@ -170,7 +170,7 @@ namespace SpeedrunTools
       s_hotkeys.OnUpdate();
       foreach (var feature in enabledFeatures)
       {
-        if (s_isLegitRunActive && !feature.isAllowedInLegitRuns) continue;
+        if (s_isRunActive && !feature.isAllowedInRuns) continue;
         try
         {
           feature.OnUpdate();

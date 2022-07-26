@@ -164,13 +164,13 @@ namespace SpeedrunTools
     {
       var illegitimacyReasons = new Dictionary<RunIllegitimacyReason, string>();
 
-      // var disallowedMods = MelonHandler.Mods.Where(mod => !(mod is SpeedrunTools) && !ALLOWED_MODS.Contains(mod.Info.Name));
-      // if (disallowedMods.Count() > 0)
-      // {
-      //   var disallowedModNames = disallowedMods.Select(mod => mod.Info.Name);
-      //   illegitimacyReasons[RunIllegitimacyReason.DISALLOWED_MODS] =
-      //     $"Disallowed mods are active: {string.Join(", ", disallowedModNames)}";
-      // }
+      var disallowedMods = MelonHandler.Mods.Where(mod => !(mod is SpeedrunTools) && !ALLOWED_MODS.Contains(mod.Info.Name));
+      if (disallowedMods.Count() > 0)
+      {
+        var disallowedModNames = disallowedMods.Select(mod => mod.Info.Name);
+        illegitimacyReasons[RunIllegitimacyReason.DISALLOWED_MODS] =
+          $"Disallowed mods are active: {string.Join(", ", disallowedModNames)}";
+      }
 
       var disallowedPlugins = MelonHandler.Plugins.Where(plugin => !ALLOWED_PLUGINS.Contains(plugin.Info.Name));
       if (disallowedPlugins.Count() > 0)
@@ -402,11 +402,11 @@ namespace SpeedrunTools
           $"» You are{(s_mode == Mode.DISABLED ? " not" : "")} allowed to submit runs to leaderboard",
           $"» Practice features are {(s_mode == Mode.DISABLED ? "enabled" : "disabled")}",
           $"» Press A + B on both controllers at once (or CTRL + S) to toggle speedrun mode",
-          s_mode == Mode.DISABLED ? "» Press CTRL + H to toggle for 100% runs" : null,
+          s_mode == Mode.DISABLED ? "» Press CTRL + N for Newgame+ runs or CTRL + H for 100% runs" : null,
           s_didReset
             ? s_mode == Mode.NEWGAME_PLUS
-              ? "» Completed save was loaded (deactivate speedrun mode to restore)"
-              : "» Save was reset (deactivate speedrun mode to restore)"
+              ? "» Completed save was loaded"
+              : "» Save state was reset"
             : null,
         }.Where(line => line != null));
         UpdateMainMenuText(text);

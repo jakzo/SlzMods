@@ -1,3 +1,5 @@
+image:
+  file: .gitpod.Dockerfile
 tasks:
   - name: Dependencies
     init: nuget restore SpeedrunTools.sln

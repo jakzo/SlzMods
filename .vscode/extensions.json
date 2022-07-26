@@ -1,3 +1,7 @@
 {
-  "recommendations": ["ms-dotnettools.csharp", "esbenp.prettier-vscode"]
+  "recommendations": [
+    "muhammad-sammy.csharp",
+    "esbenp.prettier-vscode",
+    "xaver.clang-format"
+  ]
 }

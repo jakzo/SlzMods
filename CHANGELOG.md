@@ -1,3 +1,7 @@
+## 2.0.0
+
+Speedrun mode. Removed save reset feature.
+
 ## 1.3.2
 
 Fix issue with hotkeys crashing the mod. Also make the blindfold not be briefly disabled at the start of levels.

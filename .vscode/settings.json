@@ -43,7 +43,7 @@
   ],
   "omnisharp.useModernNet": false,
   "editor.formatOnSave": true,
-  "files.autoSave": "off",
+  "files.autoSave": "onFocusChange",
   "clang-format.language.csharp.fallbackStyle": "LLVM",
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"

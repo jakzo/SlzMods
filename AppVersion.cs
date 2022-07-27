@@ -1,7 +1,3 @@
-namespace SpeedrunTools
-{
-  static class AppVersion
-  {
-    public const string Value = "1.3.2";
-  }
+namespace SpeedrunTools {
+static class AppVersion { public const string Value = "1.3.2"; }
 }

@@ -57,7 +57,6 @@ class FeatureSpeedrun : Feature {
   private static float? s_loadingStartTime;
   private static Texture2D s_overlayTexture;
   private static bool s_didReset = false;
-  private static bool s_isSceneInitialized = false;
   private static bool s_blockSaveUntilSceneLoad = false;
   private static Data_Player s_playerPrefsToRestoreOnLoad;
   private static Mode s_mode = Mode.DISABLED;
@@ -86,7 +85,7 @@ class FeatureSpeedrun : Feature {
   };
 
   private static void ToggleRun(Mode mode) {
-    if (!s_isSceneInitialized || s_blockSaveUntilSceneLoad)
+    if (GameObject.FindObjectOfType<SceneLoader>() != null)
       return;
 
     if (s_mode == Mode.DISABLED) {
@@ -321,7 +320,6 @@ class FeatureSpeedrun : Feature {
     [HarmonyPrefix()]
     internal static void Prefix(string sceneName) {
       s_loadingStartTime = Time.time;
-      s_isSceneInitialized = false;
       var isLoadingMainMenu = sceneName == Utils.SCENE_MENU_NAME ||
                               sceneName == Utils.SCENE_MENU_NAME_ALT;
       if (s_mode.resetSaveOnMainMenu && isLoadingMainMenu && !s_didReset) {
@@ -336,8 +334,6 @@ class FeatureSpeedrun : Feature {
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    s_isSceneInitialized = true;
-
     if (s_playerPrefsToRestoreOnLoad != null) {
       RestorePlayerPrefs(s_playerPrefsToRestoreOnLoad);
       s_playerPrefsToRestoreOnLoad = null;

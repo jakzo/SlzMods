@@ -58,6 +58,7 @@ class FeatureSpeedrun : Feature {
   private static Texture2D s_overlayTexture;
   private static bool s_didReset = false;
   private static bool s_blockSaveUntilSceneLoad = false;
+  private static bool s_resetSaveOnNewGame = false;
   private static Data_Player s_playerPrefsToRestoreOnLoad;
   private static Mode s_mode = Mode.DISABLED;
 
@@ -118,14 +119,19 @@ class FeatureSpeedrun : Feature {
             $"Could not enable speedrun mode because:{reasonMessages}");
       }
     } else {
-      s_mode = Mode.DISABLED;
-      SpeedrunTools.s_isRunActive = false;
-      s_blockSaveUntilSceneLoad = true;
-      RestoreSaveBackupIfExists();
-      LoadData();
+      DisableSpeedrunMode();
       BoneworksSceneManager.ReloadScene();
-      MelonLogger.Msg("Speedrun mode disabled");
     }
+  }
+
+  private static void DisableSpeedrunMode() {
+    s_mode = Mode.DISABLED;
+    SpeedrunTools.s_isRunActive = false;
+    s_blockSaveUntilSceneLoad = true;
+    s_resetSaveOnNewGame = false;
+    RestoreSaveBackupIfExists();
+    LoadData();
+    MelonLogger.Msg("Speedrun mode disabled");
   }
 
   private enum RunIllegitimacyReason {
@@ -320,17 +326,22 @@ class FeatureSpeedrun : Feature {
     [HarmonyPrefix()]
     internal static void Prefix(string sceneName) {
       s_loadingStartTime = Time.time;
-      var isLoadingMainMenu = sceneName == Utils.SCENE_MENU_NAME ||
-                              sceneName == Utils.SCENE_MENU_NAME_ALT;
-      if (s_mode.resetSaveOnMainMenu && isLoadingMainMenu && !s_didReset) {
-        ResetSave();
-        s_didReset = true;
+
+      if (s_resetSaveOnNewGame) {
+        s_resetSaveOnNewGame = false;
+        if (sceneName == Utils.SCENE_INTRO_NAME)
+          ResetSave();
+        else
+          DisableSpeedrunMode();
       }
     }
   }
 
   public override void OnSceneWasLoaded(int buildIndex, string sceneName) {
     s_blockSaveUntilSceneLoad = false;
+
+    if (s_mode.resetSaveOnMainMenu && buildIndex == Utils.SCENE_MENU_IDX)
+      s_resetSaveOnNewGame = true;
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {

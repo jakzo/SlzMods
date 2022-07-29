@@ -12,7 +12,8 @@ class Utils {
   public static readonly string REPLAYS_DIR = Path.Combine(DIR, "replays");
   public const int SCENE_MENU_IDX = 1;
   public const string SCENE_MENU_NAME = "scene_mainMenu";
-  public const string SCENE_MENU_NAME_ALT = "Main Menu";
+  public const string SCENE_MENU_NAME_CLEAN = "Main Menu";
+  public const string SCENE_INTRO_NAME = "scene_theatrigon_movie01";
 
   public static MelonPreferences_Category s_prefCategory;
 

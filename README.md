@@ -7,7 +7,7 @@ _Utilities for Boneworks speedrunning._
   - There are three modes depending on what type of speedrun you are performing:
     - Normal
       - Activate with CTRL + S or by pressing A + B on both controllers
-      - In this mode the save state will be reset every time you visit the main menu
+      - In this mode the save state will be reset every time you leave the main menu and start a new game
     - Newgame+
       - Activate with CTRL + N
       - In this mode the save state will be updated to have everything unlocked

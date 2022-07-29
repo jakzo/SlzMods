@@ -130,7 +130,9 @@ class FeatureSpeedrun : Feature {
     s_blockSaveUntilSceneLoad = true;
     s_resetSaveOnNewGame = false;
     RestoreSaveBackupIfExists();
+    var oldData = Data_Manager.Instance.data_player;
     LoadData();
+    RestorePlayerPrefs(oldData);
     MelonLogger.Msg("Speedrun mode disabled");
   }
 

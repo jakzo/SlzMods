@@ -113,5 +113,6 @@ abstract public class Feature {
   public virtual void OnSceneWasLoaded(int buildIndex, string sceneName) {}
   public virtual void OnSceneWasInitialized(int buildIndex, string sceneName) {}
   public virtual void OnUpdate() {}
+  public virtual void OnFixedUpdate() {}
 }
 }

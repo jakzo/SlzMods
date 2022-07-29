@@ -63,7 +63,20 @@ public class SpeedrunTools : MelonMod {
       s_hotkeys.RemoveHotkey(hotkey);
   }
 
+  private static void OnFeatureCallback(Action<Feature> action) {
+    foreach (var feature in enabledFeatures) {
+      if (s_isRunActive && !feature.isAllowedInRuns)
+        continue;
+      try {
+        action(feature);
+      } catch (Exception ex) {
+        MelonLogger.Error(ex);
+      }
+    }
+  }
+
   public override void OnApplicationStart() {
+    Utils.LogDebug("OnApplicationStart");
     Directory.CreateDirectory(Utils.DIR);
 
     Utils.s_prefCategory = MelonPreferences.CreateCategory(Utils.PREF_CATEGORY);
@@ -89,19 +102,12 @@ public class SpeedrunTools : MelonMod {
       if (enabledPref.Read())
         EnableFeature(feature);
     }
-    Utils.LogDebug("Feature preferences and hotkeys loaded");
 
-    foreach (var feature in enabledFeatures) {
-      try {
-        Utils.LogDebug($"OnApplicationStart: {feature}");
-        feature.OnApplicationStart();
-      } catch (Exception ex) {
-        MelonLogger.Error(ex);
-      }
-    }
+    OnFeatureCallback(feature => feature.OnApplicationStart());
   }
 
   public override void OnSceneWasLoaded(int buildIndex, string sceneName) {
+    Utils.LogDebug("OnSceneWasLoaded");
     foreach (var feature in features) {
       if (featureEnabledPrefs[feature].Read()) {
         EnableFeature(feature);
@@ -109,50 +115,24 @@ public class SpeedrunTools : MelonMod {
         DisableFeature(feature);
       }
     }
-
-    foreach (var feature in enabledFeatures) {
-      if (s_isRunActive && !feature.isAllowedInRuns)
-        continue;
-      try {
-        Utils.LogDebug($"OnSceneWasLoaded: {feature}");
-        feature.OnSceneWasLoaded(buildIndex, sceneName);
-      } catch (Exception ex) {
-        MelonLogger.Error(ex);
-      }
-    }
-
-    Utils.LogDebug("Load complete");
+    OnFeatureCallback(feature =>
+                          feature.OnSceneWasLoaded(buildIndex, sceneName));
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    Utils.LogDebug("OnSceneWasInitialized: hotkeys");
+    Utils.LogDebug("OnSceneWasInitialized");
     s_hotkeys.Init();
-
-    foreach (var feature in enabledFeatures) {
-      if (s_isRunActive && !feature.isAllowedInRuns)
-        continue;
-      try {
-        Utils.LogDebug($"OnSceneWasInitialized: {feature}");
-        feature.OnSceneWasInitialized(buildIndex, sceneName);
-      } catch (Exception ex) {
-        MelonLogger.Error(ex);
-      }
-    }
-
-    Utils.LogDebug("Initialization complete");
+    OnFeatureCallback(feature =>
+                          feature.OnSceneWasInitialized(buildIndex, sceneName));
   }
 
   public override void OnUpdate() {
     s_hotkeys.OnUpdate();
-    foreach (var feature in enabledFeatures) {
-      if (s_isRunActive && !feature.isAllowedInRuns)
-        continue;
-      try {
-        feature.OnUpdate();
-      } catch (Exception ex) {
-        MelonLogger.Error(ex);
-      }
-    }
+    OnFeatureCallback(feature => feature.OnUpdate());
+  }
+
+  public override void OnFixedUpdate() {
+    OnFeatureCallback(feature => feature.OnFixedUpdate());
   }
 }
 }

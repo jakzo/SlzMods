@@ -44,6 +44,9 @@
   "editor.formatOnSave": true,
   "files.autoSave": "onFocusChange",
   "clang-format.language.csharp.fallbackStyle": "LLVM",
+  "[csharp]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -57,6 +60,7 @@
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "clang-format.assumeFilename": "Name.cs",
+  "clang-format.language.csharp.enable": true,
   "clang-format.language.apex.enable": false,
   "clang-format.language.c.enable": false,
   "clang-format.language.cpp.enable": false,

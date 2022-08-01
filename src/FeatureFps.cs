@@ -5,8 +5,8 @@ namespace SpeedrunTools {
 class FeatureFps : Feature {
   public float UpdateFrequency = 1;
 
-  private FpsTimer _fixedUpdateTimer;
-  private FpsTimer _updateTimer;
+  private FpsTimer _fixedUpdateTimer = new FpsTimer();
+  private FpsTimer _updateTimer = new FpsTimer();
   private float _lastUpdate = 0;
 
   public override void OnFixedUpdate() { _fixedUpdateTimer.OnFrame(Time.time); }
@@ -17,10 +17,17 @@ class FeatureFps : Feature {
     if (Time.time - _lastUpdate >= UpdateFrequency) {
       _lastUpdate = Time.time;
 
-      var updateFps = _updateTimer.GetFps(Time.time).ToString("n1");
-      var fixedUpdateFps = _updateTimer.GetFps(Time.time).ToString("n1");
+      var timing = new Valve.VR.Compositor_FrameTiming();
+      timing.m_nSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(
+          typeof(Valve.VR.Compositor_FrameTiming));
+      Valve.VR.OpenVR.Compositor.GetFrameTiming(ref timing, 0);
+
+      var updateFps = _updateTimer.GetFps(Time.time).ToString("N1");
+      var fixedUpdateFps = _fixedUpdateTimer.GetFps(Time.time).ToString("N1");
+      var refreshRate =
+          (1 / (timing.m_flClientFrameIntervalMs / 1000)).ToString("N1");
       MelonLogger.Msg(
-          $"FPS Update: {updateFps}, FixedUpdate: {fixedUpdateFps}");
+          $"FPS Refresh: {refreshRate}, Update: {updateFps}, FixedUpdate: {fixedUpdateFps}");
     }
   }
 }

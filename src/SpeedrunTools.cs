@@ -24,6 +24,9 @@ public class SpeedrunTools : MelonMod {
     new FeatureTeleport(), new FeatureBlindfold(),
     // new FeatureReplay(),
     // new FeatureControlTesting(),
+    // new FeatureFps(),
+    // new FeatureTas(),
+    // new FeatureFixPhysicsRate(),
   };
 
   private static List<Feature> enabledFeatures = new List<Feature>();
@@ -52,6 +55,7 @@ public class SpeedrunTools : MelonMod {
     enabledFeatures.Add(feature);
     foreach (var hotkey in GetHotkeys(feature))
       s_hotkeys.AddHotkey(feature, hotkey);
+    feature.OnEnabled();
   }
 
   private static void DisableFeature(Feature feature) {
@@ -61,6 +65,7 @@ public class SpeedrunTools : MelonMod {
     enabledFeatures.Remove(feature);
     foreach (var hotkey in GetHotkeys(feature))
       s_hotkeys.RemoveHotkey(hotkey);
+    feature.OnDisabled();
   }
 
   private static void OnFeatureCallback(Action<Feature> action) {
@@ -76,7 +81,6 @@ public class SpeedrunTools : MelonMod {
   }
 
   public override void OnApplicationStart() {
-    Utils.LogDebug("OnApplicationStart");
     Directory.CreateDirectory(Utils.DIR);
 
     Utils.s_prefCategory = MelonPreferences.CreateCategory(Utils.PREF_CATEGORY);
@@ -103,6 +107,7 @@ public class SpeedrunTools : MelonMod {
         EnableFeature(feature);
     }
 
+    Utils.LogDebug("OnApplicationStart");
     OnFeatureCallback(feature => feature.OnApplicationStart());
   }
 

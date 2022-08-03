@@ -1,3 +1,7 @@
+## 2.1.0
+
+Show timer and version during loading screens. Blindfolded speedrun mode.
+
 ## 2.0.1
 
 Reset save when leaving main menu instead of entering so that save resetting lag is not counted by live split. Also keep preferences when leaving speedrun mode.

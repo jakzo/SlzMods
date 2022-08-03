@@ -18,7 +18,8 @@ _Utilities for Boneworks speedrunning._
   - Preferences like height and turn settings are maintained through save state resets and loads
   - Deactivate speedrun mode to restore your original save state
   - You must disable all other mods before enabling any speedrun mode
-  - You can tell that a speedrun mode is enabled based on the color of the Boneworks logo in the loading screen (Steam game version only)
+  - You can tell that a speedrun mode is enabled based on the text added to the loading screen (Steam game version only)
+    - Includes mod version and approximate run time to make splicing harder (don't worry if the time does not match LiveSplit exactly)
 - Make boss claw always patrol to the area near the finish in Streets
   - Boss claw cabin appears _green_ when this feature is on, so that you're aware RNG is being manipulated
 - Teleport to a chosen location to practice parts of a level again
@@ -29,6 +30,7 @@ _Utilities for Boneworks speedrunning._
 - Blindfold (Steam game version only)
   - For practicing and performing blindfolded runs
   - To blindfold yourself, press CTRL + B on the keyboard (game window must be focused)
+    - If you do this during the main menu it will activate "blindfolded speedrun mode" where it will reset your save each time before starting a new game
   - This will make the VR headset display pitch black but the game window will still show the game (for spectating or to see where you are while practicing)
 
 # Installation

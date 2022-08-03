@@ -4,7 +4,6 @@ using Valve.VR;
 using StressLevelZero.Utilities;
 using HarmonyLib;
 using System.Linq;
-using System.Collections.Generic;
 
 namespace SpeedrunTools {
 class FeatureSpeedrun : Feature {
@@ -29,6 +28,12 @@ class FeatureSpeedrun : Feature {
       colorRgb = "4444ee",         resetSaveOnEnable = true,
       resetSaveOnMainMenu = false, resetTimerOnMainMenu = false,
     };
+    public static readonly Mode BLINDFOLD = new Mode() {
+      name = "Blindfold",           color = new Color(0.5f, 0.5f, 0.5f),
+      colorRgb = "888888",          resetSaveOnEnable = true,
+      resetSaveOnMainMenu = true,   resetTimerOnMainMenu = true,
+      blindfoldWhileInLevel = true,
+    };
 
     public string name;
     public Color color;
@@ -39,6 +44,7 @@ class FeatureSpeedrun : Feature {
     public bool resetSaveOnMainMenu;
     public bool resetTimerOnMainMenu;
     public string saveResourceFilename;
+    public bool blindfoldWhileInLevel;
   }
 
   private const string MENU_TEXT_NAME = "SpeedrunTools_MenuText";
@@ -49,6 +55,7 @@ class FeatureSpeedrun : Feature {
   private static Mode s_mode = Mode.DISABLED;
   private static Speedrun.RunTimer s_runTimer = new Speedrun.RunTimer();
   private static Speedrun.Overlay s_overlay = new Speedrun.Overlay();
+  private static FeatureBlindfold s_blindfold = new FeatureBlindfold();
 
   public FeatureSpeedrun() { isAllowedInRuns = true; }
 
@@ -71,6 +78,12 @@ class FeatureSpeedrun : Feature {
         BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX &&
         Utils.GetKeyControl() && Input.GetKey(KeyCode.H),
     Handler = () => ToggleRun(Mode.HUNDRED_PERCENT),
+  };
+  public readonly Hotkey HotkeyToggleBlindfold = new Hotkey() {
+    Predicate = (cl, cr) =>
+        BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX &&
+        Utils.GetKeyControl() && Input.GetKey(KeyCode.B),
+    Handler = () => ToggleRun(Mode.BLINDFOLD),
   };
 
   private static void ToggleRun(Mode mode) {
@@ -122,6 +135,7 @@ class FeatureSpeedrun : Feature {
     var oldData = Data_Manager.Instance.data_player;
     Speedrun.SaveUtilities.LoadData();
     Speedrun.SaveUtilities.RestorePlayerPrefs(oldData);
+    FeatureBlindfold.s_blindfolder.SetBlindfold(false);
     MelonLogger.Msg("Speedrun mode disabled");
   }
 
@@ -152,6 +166,19 @@ class FeatureSpeedrun : Feature {
 
     if (s_mode.resetSaveOnMainMenu && buildIndex == Utils.SCENE_MENU_IDX)
       s_resetSaveOnNewGame = true;
+
+    if (s_mode.blindfoldWhileInLevel) {
+      if (buildIndex == Utils.SCENE_MENU_IDX) {
+        FeatureBlindfold.s_blindfolder.SetBlindfold(false);
+      } else {
+        FeatureBlindfold.s_blindfolder.SetBlindfold(true);
+      }
+    }
+  }
+
+  public override void OnUpdate() {
+    if (s_mode.blindfoldWhileInLevel)
+      FeatureBlindfold.s_blindfolder.OnUpdate();
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
@@ -205,38 +232,37 @@ class FeatureSpeedrun : Feature {
     }
   }
 
-  [HarmonyPatch(typeof(LoadingScreenPackage),
-                nameof(LoadingScreenPackage.StartAlpha))]
-  class LoadingScreenPackage_StartAlpha_Patch {
+  [HarmonyPatch(typeof(CVRCompositor), nameof(CVRCompositor.FadeGrid))]
+  class CVRCompositor_FadeGrid_Patch {
     [HarmonyPrefix()]
-    internal static void Prefix() {
-      s_overlay.Show(string.Join(
-          "\n",
-          new string[] {
-            ColorText(s_mode == Mode.DISABLED ? "Speedrun mode disabled"
-                                              : $"{s_mode.name} mode enabled",
-                      s_mode),
-            $"v{BuildInfo.Version}",
-            s_runTimer.Duration?.ToString(
-                $"{(s_runTimer.Duration.Value.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff"),
+    internal static void Prefix(float fSeconds, bool bFadeIn) {
+      if (bFadeIn) {
+        s_overlay.Show(string.Join(
+            "\n",
+            new string[] {
+              ColorText(s_mode == Mode.DISABLED ? "Speedrun mode disabled"
+                                                : $"{s_mode.name} mode enabled",
+                        s_mode),
+              $"v{BuildInfo.Version}",
+              s_runTimer.Duration?.ToString(
+                  $"{(s_runTimer.Duration.Value.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff"),
+            }
+                .Where(line => line != null)));
+      } else {
+        // Hide overlay a little after level load to make cheating harder
+        System.Threading.Tasks.Task.Delay(new System.TimeSpan(0, 0, 3))
+            .ContinueWith(o => {
+              if (!SceneLoader.loading)
+                s_overlay.Hide();
+            });
+
+        if (s_mode != Mode.DISABLED) {
+          if (BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX &&
+              (s_mode.resetTimerOnMainMenu || !s_runTimer.Duration.HasValue)) {
+            s_runTimer.Reset();
+          } else {
+            s_runTimer.OnLevelStart();
           }
-              .Where(line => line != null)));
-    }
-  }
-
-  [HarmonyPatch(typeof(LoadingScreenPackage),
-                nameof(LoadingScreenPackage.AlphaOverlays))]
-  class LoadingScreenPackage_AlphaOverlays_Patch {
-    [HarmonyPrefix()]
-    internal static void Prefix() {
-      s_overlay.Hide();
-
-      if (s_mode != Mode.DISABLED) {
-        if (s_mode.resetTimerOnMainMenu &&
-            BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX) {
-          s_runTimer.Reset();
-        } else {
-          s_runTimer.OnLevelStart();
         }
       }
     }

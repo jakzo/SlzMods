@@ -1,60 +1,19 @@
 ﻿using MelonLoader;
 using UnityEngine;
-using Valve.VR;
 using StressLevelZero.Utilities;
 using HarmonyLib;
 using System.Linq;
+using SpeedrunTools.Speedruns;
 
 namespace SpeedrunTools.Features {
 class Speedrun : Feature {
-  class Mode {
-    public static readonly Mode DISABLED = new Mode() {
-      color = new Color(0.8f, 0.1f, 0.1f),
-      colorRgb = "cc1111",
-    };
-    public static readonly Mode NORMAL = new Mode() {
-      name = "Speedrun",          color = new Color(0.2f, 0.9f, 0.1f),
-      colorRgb = "22ee11",        resetSaveOnEnable = true,
-      resetSaveOnMainMenu = true, resetTimerOnMainMenu = true,
-    };
-    public static readonly Mode NEWGAME_PLUS = new Mode() {
-      name = "Newgame+ speedrun",  color = new Color(0.9f, 0.9f, 0.1f),
-      colorRgb = "eeee11",         resetSaveOnEnable = false,
-      resetSaveOnMainMenu = false, saveResourceFilename = "NewgamePlusSave.zip",
-      resetTimerOnMainMenu = true,
-    };
-    public static readonly Mode HUNDRED_PERCENT = new Mode() {
-      name = "100% speedrun",      color = new Color(0.3f, 0.3f, 0.9f),
-      colorRgb = "4444ee",         resetSaveOnEnable = true,
-      resetSaveOnMainMenu = false, resetTimerOnMainMenu = false,
-    };
-    public static readonly Mode BLINDFOLD = new Mode() {
-      name = "Blindfold",           color = new Color(0.5f, 0.5f, 0.5f),
-      colorRgb = "888888",          resetSaveOnEnable = true,
-      resetSaveOnMainMenu = true,   resetTimerOnMainMenu = true,
-      blindfoldWhileInLevel = true,
-    };
-
-    public string name;
-    public Color color;
-    // Cannot be generated from color because the builtin Unity util doesn't
-    // work in BW
-    public string colorRgb;
-    public bool resetSaveOnEnable;
-    public bool resetSaveOnMainMenu;
-    public bool resetTimerOnMainMenu;
-    public string saveResourceFilename;
-    public bool blindfoldWhileInLevel;
-  }
-
   private const string MENU_TEXT_NAME = "SpeedrunTools_MenuText";
 
-  private static Speedrun Instance;
+  public static Speedrun Instance;
 
   private bool _didReset = false;
   private bool _resetSaveOnNewGame = false;
   private Data_Player _playerPrefsToRestoreOnLoad;
-  private Mode _mode = Mode.DISABLED;
   private Speedruns.Overlay _overlay = new Speedruns.Overlay();
   private Blindfold _blindfold = new Blindfold();
   private Speedruns.RunTimer _runTimer = new Speedruns.RunTimer();
@@ -101,28 +60,28 @@ class Speedrun : Feature {
     if (GameObject.FindObjectOfType<SceneLoader>() != null)
       return;
 
-    if (_mode == Mode.DISABLED) {
+    if (Mode.CurrentMode == Mode.DISABLED) {
       var illegitimacyReasons = Speedruns.AntiCheat.ComputeRunLegitimacy();
       if (illegitimacyReasons.Count == 0) {
         Speedruns.SaveUtilities.SaveData();
         Speedruns.SaveUtilities.BackupSave();
 
-        _mode = mode;
+        Mode.CurrentMode = mode;
         Mod.s_isRunActive = true;
-        if (_mode.saveResourceFilename != null) {
+        if (Mode.CurrentMode.saveResourceFilename != null) {
           MelonLogger.Msg("Loading newgame+ save");
           _playerPrefsToRestoreOnLoad = Data_Manager.Instance.data_player;
           Speedruns.SaveUtilities.RestoreSaveFileResource(
-              _mode.saveResourceFilename);
+              Mode.CurrentMode.saveResourceFilename);
           Speedruns.SaveUtilities.LoadData();
           _didReset = true;
-        } else if (_mode.resetSaveOnEnable) {
+        } else if (Mode.CurrentMode.resetSaveOnEnable) {
           Speedruns.SaveUtilities.ResetSave();
           _didReset = true;
         }
         Speedruns.SaveUtilities.s_BlockSave = true;
         BoneworksSceneManager.ReloadScene();
-        MelonLogger.Msg($"{_mode.name} mode enabled");
+        MelonLogger.Msg($"{Mode.CurrentMode.name} mode enabled");
       } else {
         var reasonMessages = string.Join(
             "", illegitimacyReasons.Select(reason => $"\n» {reason.Value}"));
@@ -138,7 +97,7 @@ class Speedrun : Feature {
   }
 
   private void DisableSpeedrunMode() {
-    _mode = Mode.DISABLED;
+    Mode.CurrentMode = Mode.DISABLED;
     Mod.s_isRunActive = false;
     Speedruns.SaveUtilities.s_BlockSave = true;
     _resetSaveOnNewGame = false;
@@ -175,21 +134,17 @@ class Speedrun : Feature {
   public override void OnSceneWasLoaded(int buildIndex, string sceneName) {
     Speedruns.SaveUtilities.s_BlockSave = false;
 
-    if (_mode.resetSaveOnMainMenu && buildIndex == Utils.SCENE_MENU_IDX)
+    if (Mode.CurrentMode.resetSaveOnMainMenu &&
+        buildIndex == Utils.SCENE_MENU_IDX)
       _resetSaveOnNewGame = true;
 
-    if (_mode.blindfoldWhileInLevel) {
-      if (buildIndex == Utils.SCENE_MENU_IDX) {
-        Blindfold.s_blindfolder.SetBlindfold(false);
-      } else {
-        Blindfold.s_blindfolder.SetBlindfold(true);
-      }
-    }
+    if (Mode.CurrentMode.OnSceneWasLoaded != null)
+      Mode.CurrentMode.OnSceneWasLoaded(buildIndex);
   }
 
   public override void OnUpdate() {
-    if (_mode.blindfoldWhileInLevel)
-      Blindfold.s_blindfolder.OnUpdate();
+    if (Mode.CurrentMode.OnUpdate != null)
+      Mode.CurrentMode.OnUpdate();
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
@@ -202,16 +157,17 @@ class Speedrun : Feature {
       var text = string.Join(
           "\n",
           new string[] {
-            ColorText(_mode == Mode.DISABLED ? "Speedrun mode disabled"
-                                             : $"{_mode.name} mode enabled",
-                      _mode),
-            $"» You are{(_mode == Mode.DISABLED ? " not" : "")} allowed to submit runs to leaderboard",
-            $"» Practice features are {(_mode == Mode.DISABLED ? "enabled" : "disabled")}",
+            ColorText(Mode.CurrentMode == Mode.DISABLED
+                          ? "Speedrun mode disabled"
+                          : $"{Mode.CurrentMode.name} mode enabled",
+                      Mode.CurrentMode),
+            $"» You are{(Mode.CurrentMode == Mode.DISABLED ? " not" : "")} allowed to submit runs to leaderboard",
+            $"» Practice features are {(Mode.CurrentMode == Mode.DISABLED ? "enabled" : "disabled")}",
             $"» Press A + B on both controllers at once (or CTRL + S) to toggle speedrun mode",
-            _mode == Mode.DISABLED
+            Mode.CurrentMode == Mode.DISABLED
                 ? "» Press CTRL + N for Newgame+ runs or CTRL + H for 100% runs"
                 : null,
-            _didReset ? _mode == Mode.NEWGAME_PLUS
+            _didReset ? Mode.CurrentMode == Mode.NEWGAME_PLUS
                             ? "» Completed save was loaded"
                             : "» Save state was reset"
                       : null,
@@ -223,7 +179,7 @@ class Speedrun : Feature {
   }
 
   public override void OnLoadingScreen(int nextSceneIdx, int prevSceneIdx) {
-    if (_mode == Mode.DISABLED)
+    if (Mode.CurrentMode == Mode.DISABLED)
       _runTimer.Stop();
     else
       _runTimer.OnLevelEnd();
@@ -231,9 +187,10 @@ class Speedrun : Feature {
     _overlay.Show(string.Join(
         "\n",
         new string[] {
-          ColorText(_mode == Mode.DISABLED ? "Speedrun mode disabled"
-                                           : $"{_mode.name} mode enabled",
-                    _mode),
+          ColorText(Mode.CurrentMode == Mode.DISABLED
+                        ? "Speedrun mode disabled"
+                        : $"{Mode.CurrentMode.name} mode enabled",
+                    Mode.CurrentMode),
           $"v{BuildInfo.Version}",
           _runTimer.Duration?.ToString(
               $"{(_runTimer.Duration.Value.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff"),
@@ -249,9 +206,10 @@ class Speedrun : Feature {
             _overlay.Hide();
         });
 
-    if (_mode != Mode.DISABLED) {
+    if (Mode.CurrentMode != Mode.DISABLED) {
       if (BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX &&
-          (_mode.resetTimerOnMainMenu || !_runTimer.Duration.HasValue)) {
+          (Mode.CurrentMode.resetTimerOnMainMenu ||
+           !_runTimer.Duration.HasValue)) {
         _runTimer.Reset();
       } else {
         _runTimer.OnLevelStart();

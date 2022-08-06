@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using HarmonyLib;
+using StressLevelZero.Utilities;
+using Valve.VR;
 
 namespace SpeedrunTools {
 public static class BuildInfo {
@@ -18,15 +21,15 @@ public static class BuildInfo {
   public const string GameName = "BONEWORKS";
 }
 
-public class SpeedrunTools : MelonMod {
+public class Mod : MelonMod {
   private static readonly Feature[] features = {
-    new FeatureSpeedrun(), new FeatureRemoveBossClawRng(),
-    new FeatureTeleport(), new FeatureBlindfold(),
-    // new FeatureReplay(),
-    // new FeatureControlTesting(),
-    // new FeatureFps(),
-    // new FeatureTas(),
-    // new FeatureFixPhysicsRate(),
+    new Features.Speedrun(), new Features.RemoveBossClawRng(),
+    new Features.Teleport(), new Features.Blindfold(),
+    // new Features.Replay(),
+    // new Features.ControlTesting(),
+    // new Features.Fps(),
+    // new Features.Tas(),
+    // new Features.FixPhysicsRate(),
   };
 
   private static List<Feature> enabledFeatures = new List<Feature>();
@@ -37,6 +40,7 @@ public class SpeedrunTools : MelonMod {
   private static Hotkeys s_hotkeys = new Hotkeys();
 
   public static bool s_isRunActive = false;
+  public static GameState s_gameState = new GameState();
 
   private static IEnumerable<Hotkey> GetHotkeys(Feature feature) {
     foreach (var field in feature.GetType().GetFields()) {
@@ -53,6 +57,7 @@ public class SpeedrunTools : MelonMod {
       return;
     MelonLogger.Msg($"Enabling feature: {feature.GetType().Name}");
     enabledFeatures.Add(feature);
+    feature.IsEnabled = true;
     foreach (var hotkey in GetHotkeys(feature))
       s_hotkeys.AddHotkey(feature, hotkey);
     feature.OnEnabled();
@@ -63,6 +68,7 @@ public class SpeedrunTools : MelonMod {
       return;
     MelonLogger.Msg($"Disabling feature: {feature.GetType().Name}");
     enabledFeatures.Remove(feature);
+    feature.IsEnabled = false;
     foreach (var hotkey in GetHotkeys(feature))
       s_hotkeys.RemoveHotkey(hotkey);
     feature.OnDisabled();
@@ -70,7 +76,7 @@ public class SpeedrunTools : MelonMod {
 
   private static void OnFeatureCallback(Action<Feature> action) {
     foreach (var feature in enabledFeatures) {
-      if (s_isRunActive && !feature.isAllowedInRuns)
+      if (s_isRunActive && !feature.IsAllowedInRuns)
         continue;
       try {
         action(feature);
@@ -87,9 +93,9 @@ public class SpeedrunTools : MelonMod {
     Utils.PrefDebug.Create();
     foreach (var feature in features) {
       var name = feature.GetType().Name;
-      var enabledPref =
-          new Pref<bool>() { Id = $"enable{name}", Name = $"Enable {name}",
-                             DefaultValue = true };
+      var enabledPref = new Pref<bool>() { Id = $"enableFeature{name}",
+                                           Name = $"Enable feature: {name}",
+                                           DefaultValue = true };
       enabledPref.Create();
       featureEnabledPrefs[feature] = enabledPref;
 
@@ -138,6 +144,35 @@ public class SpeedrunTools : MelonMod {
 
   public override void OnFixedUpdate() {
     OnFeatureCallback(feature => feature.OnFixedUpdate());
+  }
+
+  [HarmonyPatch(typeof(BoneworksSceneManager),
+                nameof(BoneworksSceneManager.LoadScene),
+                new System.Type[] { typeof(string) })]
+  class BoneworksSceneManager_LoadScene_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix(string sceneName) {
+      s_gameState.nextSceneIdx = Utils.SCENE_INDEXES_BY_NAME[sceneName];
+    }
+  }
+
+  [HarmonyPatch(typeof(CVRCompositor), nameof(CVRCompositor.FadeGrid))]
+  class CVRCompositor_FadeGrid_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix(float fSeconds, bool bFadeIn) {
+      if (bFadeIn) {
+        s_gameState.prevSceneIdx = s_gameState.currentSceneIdx;
+        s_gameState.currentSceneIdx = null;
+        OnFeatureCallback(feature => feature.OnLoadingScreen(
+                              s_gameState.nextSceneIdx.Value,
+                              s_gameState.currentSceneIdx.Value));
+      } else {
+        s_gameState.currentSceneIdx = s_gameState.nextSceneIdx;
+        s_gameState.nextSceneIdx = null;
+        OnFeatureCallback(
+            feature => feature.OnLevelStart(s_gameState.currentSceneIdx.Value));
+      }
+    }
   }
 }
 }

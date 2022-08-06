@@ -1,8 +1,8 @@
 ﻿using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools {
-class FeatureRemoveBossClawRng : Feature {
+namespace SpeedrunTools.Features {
+class RemoveBossClawRng : Feature {
   public readonly Pref<float> PrefX = new Pref<float>() {
     Id = "bossClawX",
     Name =

@@ -6,7 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
-namespace SpeedrunTools.Speedrun {
+namespace SpeedrunTools.Speedruns {
 class SaveUtilities {
   /// Set to true to stop save files from being overwritten by the game
   public static bool s_BlockSave = false;
@@ -150,8 +150,8 @@ class SaveUtilities {
     newData.TextureResolution = oldData.TextureResolution;
     newData.VirtualCrouching = oldData.VirtualCrouching;
 
-    Speedrun.SaveUtilities.SaveData();
-    Speedrun.SaveUtilities.LoadData();
+    SaveData();
+    LoadData();
   }
 
   // Save disabling (used to prevent overwriting of newly copied-in save files

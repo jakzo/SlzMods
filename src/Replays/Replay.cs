@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace SpeedrunTools.Replay {
+namespace SpeedrunTools.Replays {
 class Replay {
   private FileStream _fs;
   private int _framesEndIdx;

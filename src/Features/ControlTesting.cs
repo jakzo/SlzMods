@@ -2,8 +2,8 @@
 using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools {
-class FeatureControlTesting : Feature {
+namespace SpeedrunTools.Features {
+class ControlTesting : Feature {
   private HashSet<string> _pressedKeys = new HashSet<string>();
   private StressLevelZero.Rig.RigManager _rigManager;
 

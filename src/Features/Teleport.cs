@@ -1,8 +1,8 @@
 ﻿using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools {
-class FeatureTeleport : Feature {
+namespace SpeedrunTools.Features {
+class Teleport : Feature {
   private static StressLevelZero.Rig.RigManager s_rigManager;
   private static GameControl s_gameControl;
   private static Vector3? s_teleportPos;

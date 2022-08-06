@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SpeedrunTools.Replay {
+namespace SpeedrunTools.Replays {
 class Constants {
   public const string MAGIC_HEADER = "BwRp";
   public const string REPLAY_EXTENSION = "bwr";

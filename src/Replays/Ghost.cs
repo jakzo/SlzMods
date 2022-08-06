@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace SpeedrunTools.Replay {
+namespace SpeedrunTools.Replays {
 class Ghost {
   private static readonly GameObject s_head = CreateHead();
   private static readonly GameObject s_controllerLeft = CreateController(true);

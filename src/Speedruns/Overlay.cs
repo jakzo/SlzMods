@@ -1,7 +1,7 @@
 using UnityEngine;
 using Valve.VR;
 
-namespace SpeedrunTools.Speedrun {
+namespace SpeedrunTools.Speedruns {
 class Overlay {
   private const string LOADING_TEXT_NAME = "SpeedrunTools_LoadingText";
   private static readonly string OVERLAY_KEY =

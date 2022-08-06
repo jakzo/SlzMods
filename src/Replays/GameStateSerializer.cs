@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using UnityEngine;
 
-namespace SpeedrunTools.Replay {
+namespace SpeedrunTools.Replays {
 class GameStateSerializer {
   private StressLevelZero.Rig.RigManager _rigManager;
   private (Bwr.SettingType, float)[] _prevSettings;

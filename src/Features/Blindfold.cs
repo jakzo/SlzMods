@@ -2,8 +2,8 @@
 using UnityEngine;
 using StressLevelZero.Utilities;
 
-namespace SpeedrunTools {
-public class FeatureBlindfold : Feature {
+namespace SpeedrunTools.Features {
+public class Blindfold : Feature {
   public static Blindfolder s_blindfolder = new Blindfolder();
 
   public readonly Hotkey HotkeyBlindfold =

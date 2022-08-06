@@ -16,10 +16,10 @@ using System.Runtime.InteropServices;
 [assembly:AssemblyVersion(SpeedrunTools.BuildInfo.Version)]
 [assembly:AssemblyFileVersion(SpeedrunTools.BuildInfo.Version)]
 [assembly:NeutralResourcesLanguage("en")]
-[assembly:MelonInfo(
-    typeof(SpeedrunTools.SpeedrunTools), SpeedrunTools.BuildInfo.Name,
-    SpeedrunTools.BuildInfo.Version, SpeedrunTools.BuildInfo.Author,
-    SpeedrunTools.BuildInfo.DownloadLink)]
+[assembly:MelonInfo(typeof(SpeedrunTools.Mod), SpeedrunTools.BuildInfo.Name,
+                    SpeedrunTools.BuildInfo.Version,
+                    SpeedrunTools.BuildInfo.Author,
+                    SpeedrunTools.BuildInfo.DownloadLink)]
 
 [assembly:MelonGame(SpeedrunTools.BuildInfo.Developer,
                     SpeedrunTools.BuildInfo.GameName)]

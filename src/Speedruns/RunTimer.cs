@@ -1,6 +1,6 @@
 using System;
 
-namespace SpeedrunTools.Speedrun {
+namespace SpeedrunTools.Speedruns {
 class RunTimer {
   public TimeSpan? Duration;
 

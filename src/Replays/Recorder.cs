@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using UnityEngine;
 
-namespace SpeedrunTools.Replay {
+namespace SpeedrunTools.Replays {
 class Recorder {
   private static readonly string TEMP_FILENAME =
       $"temp.{Constants.REPLAY_EXTENSION}";
@@ -24,7 +24,6 @@ class Recorder {
   private List<FlatBuffers.Offset<Bwr.Level>> _levels =
       new List<FlatBuffers.Offset<Bwr.Level>>();
   private bool _isLoading = false;
-  private int _currentSceneIdx;
   private float _levelStartTime;
   private int _levelStartFrameOffset;
   private float _relativeStartTime;
@@ -55,7 +54,7 @@ class Recorder {
     MaxFps = maxFps;
     MaxDuration = maxDuration;
 
-    _minFrameTime = 1 / maxFps;
+    _minFrameTime = 1f / MaxFps;
     _startTime = System.DateTime.Now;
     _relativeStartTime = Time.time;
     IsRecording = true;
@@ -101,17 +100,17 @@ class Recorder {
     return FilePath;
   }
 
-  public void OnLoadingScreen() {
+  public void OnLevelEnd(int endedSceneIdx) {
     _serializer.OnSceneChange();
     if (!IsRecording || _isLoading)
       return;
-    _levels.Add(Bwr.Level.CreateLevel(
-        _metaBuilder, _levelStartTime, Time.time - _levelStartTime,
-        _currentSceneIdx, _levelStartFrameOffset));
+    _levels.Add(Bwr.Level.CreateLevel(_metaBuilder, _levelStartTime,
+                                      Time.time - _levelStartTime,
+                                      endedSceneIdx, _levelStartFrameOffset));
     _isLoading = true;
   }
 
-  public void OnSceneChange() {
+  public void OnLevelStart() {
     _serializer.OnSceneChange();
 
     // Resume recording after loading
@@ -122,11 +121,10 @@ class Recorder {
     }
   }
 
-  public void OnUpdate(int currentSceneIdx) {
+  public void OnUpdate() {
     if (!IsRecording)
       return;
 
-    _currentSceneIdx = currentSceneIdx;
     if (Time.time - _relativeStartTime >= MaxDuration) {
       MelonLogger.Warning("Max recording length reached. Stopping recording.");
       Stop();

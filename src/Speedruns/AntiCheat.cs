@@ -2,7 +2,7 @@ using MelonLoader;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace SpeedrunTools.Speedrun {
+namespace SpeedrunTools.Speedruns {
 class AntiCheat {
   private static HashSet<string> ALLOWED_MODS = new HashSet<string>();
   private static HashSet<string> ALLOWED_PLUGINS = new HashSet<string>() {
@@ -18,9 +18,8 @@ class AntiCheat {
   ComputeRunLegitimacy() {
     var illegitimacyReasons = new Dictionary<RunIllegitimacyReason, string>();
 
-    var disallowedMods =
-        MelonHandler.Mods.Where(mod => !(mod is SpeedrunTools) &&
-                                       !ALLOWED_MODS.Contains(mod.Info.Name));
+    var disallowedMods = MelonHandler.Mods.Where(
+        mod => !(mod is Mod) && !ALLOWED_MODS.Contains(mod.Info.Name));
     if (disallowedMods.Count() > 0) {
       var disallowedModNames =
           string.Join(", ", disallowedMods.Select(mod => mod.Info.Name));

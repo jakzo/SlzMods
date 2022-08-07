@@ -1,3 +1,7 @@
+## 2.2.1
+
+Fix gripless on index controllers.
+
 ## 2.2.0
 
 Gripless mode.

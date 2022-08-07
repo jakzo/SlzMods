@@ -24,9 +24,9 @@ public class Gripless : Feature {
 
   public override void OnDisabled() { IsGripDisabled = false; }
 
-  // Controller.CacheInputs()/.ProcessFingers() call the SteamVR_Action API
-  // to get inputs then sets these properties, so we can reset them right
-  // after this call before the game does anything using them
+  // Controller.CacheInputs() call the SteamVR_Action API to get inputs then
+  // sets these properties, so we can reset them right after this call before
+  // the game does anything using them
   [HarmonyPatch(typeof(Controller), nameof(Controller.CacheInputs))]
   class Controller_CacheInputs_Patch {
     [HarmonyPostfix()]
@@ -58,6 +58,20 @@ public class Gripless : Feature {
       __instance._processedMiddle = 0;
       __instance._processedRing = 0;
       __instance._processedPinky = 0;
+    }
+  }
+
+  [HarmonyPatch(typeof(Controller), nameof(Controller.SolveGrip))]
+  class Controller_SolveGrip_Patch {
+    [HarmonyPostfix()]
+    internal static void Postfix(Controller __instance) {
+      if (!IsGripDisabled ||
+          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX)
+        return;
+
+      __instance._gripForce = 0;
+      __instance._solvedGrip = 0;
+      __instance._solvedGripVelocity = 0;
     }
   }
 }

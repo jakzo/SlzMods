@@ -1,3 +1,7 @@
+## 2.2.0
+
+Gripless mode.
+
 ## 2.1.0
 
 Show timer and version during loading screens. Blindfolded speedrun mode.

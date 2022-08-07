@@ -11,10 +11,10 @@ class Tas : Feature {
   //   internal static void Prefix() {}
   // }
 
-  [HarmonyPatch(typeof(Rigidbody), nameof(Time.time))]
-  class Time_time_Patch {
-    [HarmonyPrefix()]
-    internal static void Prefix() {}
-  }
+  // [HarmonyPatch(typeof(Rigidbody), nameof(Time.time))]
+  // class Time_time_Patch {
+  //   [HarmonyPrefix()]
+  //   internal static void Prefix() {}
+  // }
 }
 }

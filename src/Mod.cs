@@ -25,6 +25,7 @@ public class Mod : MelonMod {
   private static readonly Feature[] features = {
     new Features.Speedrun(), new Features.RemoveBossClawRng(),
     new Features.Teleport(), new Features.Blindfold(),
+    new Features.Gripless(),
     // new Features.Replay(),
     // new Features.ControlTesting(),
     // new Features.Fps(),
@@ -39,8 +40,8 @@ public class Mod : MelonMod {
 
   private static Hotkeys s_hotkeys = new Hotkeys();
 
-  public static bool s_isRunActive = false;
-  public static GameState s_gameState = new GameState();
+  public static bool IsRunActive = false;
+  public static GameState GameState = new GameState();
 
   private static IEnumerable<Hotkey> GetHotkeys(Feature feature) {
     foreach (var field in feature.GetType().GetFields()) {
@@ -76,7 +77,7 @@ public class Mod : MelonMod {
 
   private static void OnFeatureCallback(Action<Feature> action) {
     foreach (var feature in enabledFeatures) {
-      if (s_isRunActive && !feature.IsAllowedInRuns)
+      if (IsRunActive && !feature.IsAllowedInRuns)
         continue;
       try {
         action(feature);
@@ -152,7 +153,8 @@ public class Mod : MelonMod {
   class BoneworksSceneManager_LoadScene_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(string sceneName) {
-      s_gameState.nextSceneIdx = Utils.SCENE_INDEXES_BY_NAME[sceneName];
+      Utils.LogDebug($"LoadScene: {sceneName}");
+      GameState.nextSceneIdx = Utils.SCENE_INDEXES_BY_NAME[sceneName];
     }
   }
 
@@ -161,16 +163,16 @@ public class Mod : MelonMod {
     [HarmonyPrefix()]
     internal static void Prefix(float fSeconds, bool bFadeIn) {
       if (bFadeIn) {
-        s_gameState.prevSceneIdx = s_gameState.currentSceneIdx;
-        s_gameState.currentSceneIdx = null;
-        OnFeatureCallback(feature => feature.OnLoadingScreen(
-                              s_gameState.nextSceneIdx.Value,
-                              s_gameState.currentSceneIdx.Value));
-      } else {
-        s_gameState.currentSceneIdx = s_gameState.nextSceneIdx;
-        s_gameState.nextSceneIdx = null;
+        GameState.prevSceneIdx = GameState.currentSceneIdx;
+        GameState.currentSceneIdx = null;
         OnFeatureCallback(
-            feature => feature.OnLevelStart(s_gameState.currentSceneIdx.Value));
+            feature => feature.OnLoadingScreen(GameState.nextSceneIdx ?? 0,
+                                               GameState.currentSceneIdx ?? 0));
+      } else {
+        GameState.currentSceneIdx = GameState.nextSceneIdx;
+        GameState.nextSceneIdx = null;
+        OnFeatureCallback(
+            feature => feature.OnLevelStart(GameState.currentSceneIdx ?? 0));
       }
     }
   }

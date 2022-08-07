@@ -16,6 +16,7 @@ class Utils {
       new Dictionary<string, int>() {
         ["scene_introStart"] = 0,
         ["scene_mainMenu"] = SCENE_MENU_IDX,
+        ["scene_MainMenu"] = SCENE_MENU_IDX,
         ["Main Menu"] = SCENE_MENU_IDX,
         [SCENE_INTRO_NAME] = 2,
         ["scene_breakroom"] = 3,
@@ -127,7 +128,7 @@ public class Hotkeys {
                                              entry.Value.Item2))
                       .ToArray();
     foreach (var (i, hotkey, feature, isDown) in entries) {
-      if (Mod.s_isRunActive && !feature.IsAllowedInRuns)
+      if (Mod.IsRunActive && !feature.IsAllowedInRuns)
         continue;
       if (hotkey.Predicate(_controllers[0], _controllers[1])) {
         if (isDown)

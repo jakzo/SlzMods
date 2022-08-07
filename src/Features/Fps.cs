@@ -25,7 +25,7 @@ class Fps : Feature {
       var updateFps = _updateTimer.GetFps(Time.time).ToString("N1");
       var fixedUpdateFps = _fixedUpdateTimer.GetFps(Time.time).ToString("N1");
       var refreshRate =
-          (1 / (timing.m_flClientFrameIntervalMs / 1000)).ToString("N1");
+          (1f / (timing.m_flClientFrameIntervalMs / 1000f)).ToString("N1");
       MelonLogger.Msg(
           $"FPS Refresh: {refreshRate}, Update: {updateFps}, FixedUpdate: {fixedUpdateFps}");
     }
@@ -64,7 +64,7 @@ class FpsTimer {
     var numFramesInWindow = _idxEnd >= _idxStart
                                 ? _idxEnd - _idxStart
                                 : _times.Length - _idxStart + _idxEnd;
-    return numFramesInWindow / WindowDuration;
+    return (float)numFramesInWindow / WindowDuration;
   }
 }
 }

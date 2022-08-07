@@ -1,5 +1,3 @@
-_Utilities for Boneworks speedrunning._
-
 # Features
 
 - Speedrun mode
@@ -32,6 +30,11 @@ _Utilities for Boneworks speedrunning._
   - To blindfold yourself, press CTRL + B on the keyboard (game window must be focused)
     - If you do this during the main menu it will activate "blindfolded speedrun mode" where it will reset your save each time before starting a new game
   - This will make the VR headset display pitch black but the game window will still show the game (for spectating or to see where you are while practicing)
+- Gripless
+  - For practicing and performing gripless runs (where triggers/finger grips on controllers do nothing and you cannot pick things up)
+  - To enable, press CTRL + G on the keyboard (game window must be focused)
+    - If you do this during the main menu it will activate "gripless speedrun mode" where it will reset your save each time before starting a new game
+  - This will make the controller trigger/finger buttons do nothing in the game so you cannot grab any objects
 
 # Installation
 

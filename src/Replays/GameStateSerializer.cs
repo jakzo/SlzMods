@@ -55,7 +55,7 @@ class GameStateSerializer {
     Bwr.Frame.StartFrame(builder);
     Bwr.Frame.AddTime(builder, Time.time);
 
-    var dataPlayer = Object.FindObjectOfType<Data_Manager>().data_player;
+    var dataPlayer = Data_Manager.Instance.data_player;
     var settings = new(Bwr.SettingType, float)[] {
       (Bwr.SettingType.BELT_RIGHT_SIDE, dataPlayer.beltRightSide ? 1 : 0),
       (Bwr.SettingType.IS_INVERTED, dataPlayer.isInverted ? 1 : 0),

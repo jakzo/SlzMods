@@ -9,7 +9,7 @@ using System.Linq;
 namespace SpeedrunTools.Speedruns {
 class SaveUtilities {
   /// Set to true to stop save files from being overwritten by the game
-  public static bool s_BlockSave = false;
+  public static bool BlockSave = false;
 
   private const int NUM_SLOTS = 5;
 
@@ -159,27 +159,27 @@ class SaveUtilities {
   [HarmonyPatch(typeof(Data_Manager), nameof(Data_Manager.DATA_SAVE))]
   class Data_Manager_DATA_SAVE_Patch {
     [HarmonyPrefix()]
-    internal static bool Prefix() => !s_BlockSave;
+    internal static bool Prefix() => !BlockSave;
   }
   [HarmonyPatch(typeof(ReclaimerData), nameof(ReclaimerData.Save))]
   class ReclaimerData_Save_Patch {
     [HarmonyPrefix()]
-    internal static bool Prefix() => !s_BlockSave;
+    internal static bool Prefix() => !BlockSave;
   }
   [HarmonyPatch(typeof(AmmoData), nameof(AmmoData.Save))]
   class AmmoData_Save_Patch {
     [HarmonyPrefix()]
-    internal static bool Prefix() => !s_BlockSave;
+    internal static bool Prefix() => !BlockSave;
   }
   [HarmonyPatch(typeof(LevelData), nameof(LevelData.Save))]
   class LevelData_Save_Patch {
     [HarmonyPrefix()]
-    internal static bool Prefix() => !s_BlockSave;
+    internal static bool Prefix() => !BlockSave;
   }
   [HarmonyPatch(typeof(TimeTrialData), nameof(TimeTrialData.Save))]
   class TimeTrialData_Save_Patch {
     [HarmonyPrefix()]
-    internal static bool Prefix() => !s_BlockSave;
+    internal static bool Prefix() => !BlockSave;
   }
 }
 }

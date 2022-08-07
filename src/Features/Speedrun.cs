@@ -22,6 +22,7 @@ class Speedrun : Feature {
   public readonly Hotkey HotkeyToggleNewgamePlus;
   public readonly Hotkey HotkeyToggleHundredPercent;
   public readonly Hotkey HotkeyToggleBlindfold;
+  public readonly Hotkey HotkeyToggleGripless;
 
   public Speedrun() {
     if (Instance != null)
@@ -30,7 +31,7 @@ class Speedrun : Feature {
     IsAllowedInRuns = true;
     HotkeyToggleNormal = new Hotkey() {
       Predicate = (cl, cr) =>
-          Mod.s_gameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
+          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
           (cl.GetAButton() && cl.GetBButton() && cr.GetAButton() &&
                cr.GetBButton() ||
            Utils.GetKeyControl() && Input.GetKey(KeyCode.S)),
@@ -38,21 +39,27 @@ class Speedrun : Feature {
     };
     HotkeyToggleNewgamePlus = new Hotkey() {
       Predicate = (cl, cr) =>
-          Mod.s_gameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
+          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
           Utils.GetKeyControl() && Input.GetKey(KeyCode.N),
       Handler = () => ToggleRun(Mode.NEWGAME_PLUS),
     };
     HotkeyToggleHundredPercent = new Hotkey() {
       Predicate = (cl, cr) =>
-          Mod.s_gameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
+          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
           Utils.GetKeyControl() && Input.GetKey(KeyCode.H),
       Handler = () => ToggleRun(Mode.HUNDRED_PERCENT),
     };
     HotkeyToggleBlindfold = new Hotkey() {
       Predicate = (cl, cr) =>
-          Mod.s_gameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
+          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
           Utils.GetKeyControl() && Input.GetKey(KeyCode.B),
       Handler = () => ToggleRun(Mode.BLINDFOLD),
+    };
+    HotkeyToggleGripless = new Hotkey() {
+      Predicate = (cl, cr) =>
+          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.G),
+      Handler = () => ToggleRun(Mode.GRIPLESS),
     };
   }
 
@@ -66,8 +73,10 @@ class Speedrun : Feature {
         Speedruns.SaveUtilities.SaveData();
         Speedruns.SaveUtilities.BackupSave();
 
+        if (mode.OnEnable != null)
+          mode.OnEnable();
         Mode.CurrentMode = mode;
-        Mod.s_isRunActive = true;
+        Mod.IsRunActive = true;
         if (Mode.CurrentMode.saveResourceFilename != null) {
           MelonLogger.Msg("Loading newgame+ save");
           _playerPrefsToRestoreOnLoad = Data_Manager.Instance.data_player;
@@ -79,7 +88,7 @@ class Speedrun : Feature {
           Speedruns.SaveUtilities.ResetSave();
           _didReset = true;
         }
-        Speedruns.SaveUtilities.s_BlockSave = true;
+        Speedruns.SaveUtilities.BlockSave = true;
         BoneworksSceneManager.ReloadScene();
         MelonLogger.Msg($"{Mode.CurrentMode.name} mode enabled");
       } else {
@@ -98,8 +107,8 @@ class Speedrun : Feature {
 
   private void DisableSpeedrunMode() {
     Mode.CurrentMode = Mode.DISABLED;
-    Mod.s_isRunActive = false;
-    Speedruns.SaveUtilities.s_BlockSave = true;
+    Mod.IsRunActive = false;
+    Speedruns.SaveUtilities.BlockSave = true;
     _resetSaveOnNewGame = false;
     Speedruns.SaveUtilities.RestoreSaveBackupIfExists();
     var oldData = Data_Manager.Instance.data_player;
@@ -132,7 +141,7 @@ class Speedrun : Feature {
   }
 
   public override void OnSceneWasLoaded(int buildIndex, string sceneName) {
-    Speedruns.SaveUtilities.s_BlockSave = false;
+    Speedruns.SaveUtilities.BlockSave = false;
 
     if (Mode.CurrentMode.resetSaveOnMainMenu &&
         buildIndex == Utils.SCENE_MENU_IDX)

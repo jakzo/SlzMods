@@ -9,7 +9,6 @@ class Overlay {
 
   private GameObject s_loadingText;
   private ulong s_overlayHandle;
-  private Texture2D s_overlayTexture;
 
   public void Show(string text) {
     if (OpenVR.Overlay == null)

@@ -26,6 +26,7 @@ public class Mod : MelonMod {
     new Features.Speedrun(), new Features.RemoveBossClawRng(),
     new Features.Teleport(), new Features.Blindfold(),
     new Features.Gripless(),
+    // new Features.DebugGunFly(),
     // new Features.Replay(),
     // new Features.ControlTesting(),
     // new Features.Fps(),

@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace SpeedrunTools {
-class FeatureDebugGunFly : Feature {
+namespace SpeedrunTools.Features {
+class DebugGunFly : Feature {
   private int MAX_DATA_LENGTH = 10000;
   private static readonly string CSV_PATH =
       Path.Combine(Utils.DIR, "gun-fly-debug.csv");
@@ -39,7 +39,7 @@ class FeatureDebugGunFly : Feature {
       _FindInDescendants(transform.GetChild(i), name, ref result);
   }
 
-  public FeatureDebugGunFly() {
+  public DebugGunFly() {
     HotkeyToggle = new Hotkey() { Predicate = (cl, cr) =>
                                       _rigManager != null && cr.GetThumbStick(),
                                   Handler = Toggle };
@@ -48,10 +48,12 @@ class FeatureDebugGunFly : Feature {
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     _rigManager = GameObject.FindObjectOfType<RigManager>();
     _weaponReceivers =
-        FindInDescendants(_rigManager.physicsRig.gameObject, "WeaponReciever")
+        FindInDescendants(_rigManager.gameWorldSkeletonRig.gameObject,
+                          "WeaponReciever")
             .Select(wr => wr.GetComponent<StressLevelZero.Props.Weapons
                                               .HandWeaponSlotReciever>())
             .ToArray();
+    MelonLogger.Msg($"found {_weaponReceivers.Count()} weapon recs");
   }
 
   public override void OnFixedUpdate() { AddDataFrame(true); }
@@ -64,9 +66,14 @@ class FeatureDebugGunFly : Feature {
 
     if (_lastFrameTime != 0f) {
       var playerPos = _rigManager.physicsRig.transform.position;
-      var gunReceiver =
-          _weaponReceivers.Where(wr => wr.m_SlottedWeapon != null).First();
-      var gunPos = gunReceiver.m_WeaponHost.transform.position;
+      var receiverWithWeapon =
+          _weaponReceivers.FirstOrDefault(wr => wr.m_SlottedWeapon != null);
+      if (receiverWithWeapon == null) {
+        MelonLogger.Warning("No weapon found, stopping recording");
+        Toggle();
+        return;
+      }
+      var gunPos = receiverWithWeapon.m_WeaponHost.transform.position;
       _data.Add(new float[] { _lastFrameTime, _isLastFrameFixedUpdate ? 1f : 0f,
                               playerPos.x, playerPos.y, playerPos.z, gunPos.x,
                               gunPos.y, gunPos.z });

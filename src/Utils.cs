@@ -103,12 +103,23 @@ public class Hotkeys {
     var controllerObjects =
         UnityEngine.Object
             .FindObjectsOfType<StressLevelZero.Rig.BaseController>();
-    _controllers = new string[] { "left", "right" }
-                       .Select(type => $"Controller ({type})")
-                       .Select(name => controllerObjects.First(
-                                   controller => controller.name == name))
-                       .Where(controller => controller != null)
-                       .ToArray();
+    _controllers =
+        new string[] { "left", "right" }
+            .Select(type => $"Controller ({type})")
+            .Select(name => {
+              try {
+                return controllerObjects.First(controller =>
+                                                   controller.name == name);
+              } catch {
+                var foundControllers = string.Join(
+                    "", controllerObjects.Select(controller =>
+                                                     $"\n- {controller.name}"));
+                MelonLogger.Warning(
+                    $"Could not find {name}. Hotkeys will not work until reloading the level. Found controllers are:{foundControllers}");
+                return new StressLevelZero.Rig.BaseController();
+              }
+            })
+            .ToArray();
   }
 
   public void AddHotkey(Feature feature, Hotkey hotkey) {

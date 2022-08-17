@@ -1,3 +1,11 @@
+## 2.2.2
+
+Fixed load when controllers are missing.
+
+## 2.2.1
+
+Fix gripless on index controllers.
+
 ## 2.2.0
 
 Gripless mode.

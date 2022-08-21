@@ -63,4 +63,4 @@
 #*.RTF   diff=astextplain
 
 # Enable Autosplitter script syntax highlighting in GitHub
-* .asl linguist-language=C\#
+* .asl linguist-language=C#

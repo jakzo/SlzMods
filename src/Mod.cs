@@ -23,9 +23,12 @@ public static class BuildInfo {
 
 public class Mod : MelonMod {
   private static readonly Feature[] features = {
-    new Features.Speedrun(), new Features.RemoveBossClawRng(),
-    new Features.Teleport(), new Features.Blindfold(),
+    new Features.Speedrun(),
+    new Features.RemoveBossClawRng(),
+    new Features.Teleport(),
+    new Features.Blindfold(),
     new Features.Gripless(),
+    new Features.Timer()
     // new Features.DebugGunFly(),
     // new Features.Replay(),
     // new Features.ControlTesting(),
@@ -95,9 +98,10 @@ public class Mod : MelonMod {
     Utils.PrefDebug.Create();
     foreach (var feature in features) {
       var name = feature.GetType().Name;
-      var enabledPref = new Pref<bool>() { Id = $"enableFeature{name}",
-                                           Name = $"Enable feature: {name}",
-                                           DefaultValue = true };
+      var enabledPref =
+          new Pref<bool>() { Id = $"enableFeature{name}",
+                             Name = $"Enable feature: {name}",
+                             DefaultValue = feature.IsEnabledByDefault };
       enabledPref.Create();
       featureEnabledPrefs[feature] = enabledPref;
 

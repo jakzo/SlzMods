@@ -2,28 +2,37 @@ using System;
 
 namespace SpeedrunTools.Speedruns {
 class RunTimer {
-  public TimeSpan? Duration;
+  private DateTime? _relativeStartTime;
+  private DateTime? _pauseTime;
 
-  private DateTime? _levelStart;
+  public bool IsActive { get => _relativeStartTime.HasValue; }
+  public bool IsPaused { get => _pauseTime.HasValue; }
 
   public void Stop() {
-    Duration = null;
-    _levelStart = null;
+    _relativeStartTime = null;
+    _pauseTime = null;
   }
 
-  public void Reset() {
-    Duration = new System.TimeSpan();
-    _levelStart = null;
+  public void Reset(bool pauseAfterReset = false) {
+    _relativeStartTime = DateTime.Now;
+    _pauseTime = pauseAfterReset ? _relativeStartTime : null;
   }
 
-  public void OnLevelStart() { _levelStart = System.DateTime.Now; }
+  public void Pause() {
+    if (_pauseTime.HasValue)
+      return;
+    _pauseTime = DateTime.Now;
+  }
 
-  public void OnLevelEnd() {
-    if (_levelStart.HasValue) {
-      if (Duration.HasValue)
-        Duration += System.DateTime.Now - _levelStart;
-      _levelStart = null;
-    }
+  public void Unpause() {
+    if (!_pauseTime.HasValue)
+      return;
+    _relativeStartTime += DateTime.Now - _pauseTime;
+    _pauseTime = null;
+  }
+
+  public TimeSpan? CalculateDuration() {
+    return (_pauseTime ?? DateTime.Now) - _relativeStartTime;
   }
 }
 }

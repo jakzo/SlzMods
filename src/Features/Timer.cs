@@ -1,6 +1,5 @@
-﻿using MelonLoader;
-using UnityEngine;
-using HarmonyLib;
+﻿using UnityEngine;
+using MelonLoader;
 
 namespace SpeedrunTools.Features {
 // TODO: Try this approach
@@ -10,26 +9,47 @@ namespace SpeedrunTools.Features {
 class Timer : Feature {
   private const string TIMER_TEXT_NAME = "SpeedrunTools_Timer_Text";
 
-  private GameObject _timerText;
   private TMPro.TextMeshPro _tmp;
-  private Speedruns.RunTimer _runTimer = new Speedruns.RunTimer();
+
+  private static bool IsDisabled = false;
+
+  public Timer() {
+    IsAllowedInRuns = true;
+    IsEnabledByDefault = false;
+  }
+
+  public readonly Hotkey HotkeyTeleport =
+      new Hotkey() { Predicate = (cl, cr) => cr.GetThumbStick(),
+                     Handler = () => { IsDisabled = !IsDisabled; } };
 
   public override void OnLevelStart(int sceneIdx) {
     var timerText = GameObject.Find(TIMER_TEXT_NAME);
 
     if (timerText == null) {
       timerText = new GameObject(TIMER_TEXT_NAME);
-      var tmp = timerText.AddComponent<TMPro.TextMeshPro>();
-      tmp.alignment = TMPro.TextAlignmentOptions.TopLeft;
-      tmp.fontSize = 1.5f;
-      tmp.rectTransform.sizeDelta = new Vector2(2, 2);
-      tmp.rectTransform.position = new Vector3(2.65f, 1.8f, 9.6f);
+      _tmp = timerText.AddComponent<TMPro.TextMeshPro>();
+      _tmp.alignment = TMPro.TextAlignmentOptions.BottomRight;
+      _tmp.fontSize = 0.5f;
+      _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
+      var rigManager =
+          GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>();
+      timerText.transform.SetParent(
+          rigManager.ControllerRig.leftController.transform);
+      _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
+      _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
+    } else {
+      _tmp = timerText.GetComponent<TMPro.TextMeshPro>();
     }
-
-    _timerText = timerText;
-    _tmp = _timerText.GetComponent<TMPro.TextMeshPro>();
   }
 
-  public override void OnUpdate() { _tmp.SetText(_runTimer.Duration); }
+  public override void OnUpdate() {
+    if (IsDisabled)
+      return;
+    var duration = Speedrun.Instance.RunTimer.CalculateDuration();
+    if (!duration.HasValue)
+      return;
+    _tmp?.SetText(duration.Value.ToString(
+        $"{(duration.Value.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff"));
+  }
 }
 }

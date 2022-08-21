@@ -162,6 +162,7 @@ public class Hotkey {
 abstract public class Feature {
   public bool IsAllowedInRuns = false;
   public bool IsEnabled = false;
+  public bool IsEnabledByDefault = true;
   public virtual void OnApplicationStart() {}
   public virtual void OnLoadingScreen(int nextSceneIdx, int prevSceneIdx) {}
   public virtual void OnLevelStart(int sceneIdx) {}

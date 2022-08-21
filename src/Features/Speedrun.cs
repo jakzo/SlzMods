@@ -16,7 +16,7 @@ class Speedrun : Feature {
   private Data_Player _playerPrefsToRestoreOnLoad;
   private Speedruns.Overlay _overlay = new Speedruns.Overlay();
   private Blindfold _blindfold = new Blindfold();
-  private Speedruns.RunTimer _runTimer = new Speedruns.RunTimer();
+  public Speedruns.RunTimer RunTimer = new Speedruns.RunTimer();
 
   public readonly Hotkey HotkeyToggleNormal;
   public readonly Hotkey HotkeyToggleNewgamePlus;
@@ -189,10 +189,13 @@ class Speedrun : Feature {
 
   public override void OnLoadingScreen(int nextSceneIdx, int prevSceneIdx) {
     if (Mode.CurrentMode == Mode.DISABLED)
-      _runTimer.Stop();
-    else
-      _runTimer.OnLevelEnd();
+      RunTimer.Stop();
+    else if (RunTimer.IsActive)
+      RunTimer.Pause();
+    else if (nextSceneIdx != Utils.SCENE_MENU_IDX)
+      RunTimer.Reset(true);
 
+    var duration = RunTimer.CalculateDuration();
     _overlay.Show(string.Join(
         "\n",
         new string[] {
@@ -201,8 +204,8 @@ class Speedrun : Feature {
                         : $"{Mode.CurrentMode.name} mode enabled",
                     Mode.CurrentMode),
           $"v{BuildInfo.Version}",
-          _runTimer.Duration?.ToString(
-              $"{(_runTimer.Duration.Value.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff"),
+          duration?.ToString(
+              $"{(duration.Value.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff"),
         }
             .Where(line => line != null)));
   }
@@ -210,20 +213,31 @@ class Speedrun : Feature {
   public override void OnLevelStart(int sceneIdx) {
     // Hide overlay a little after level load to make splicing harder
     System.Threading.Tasks.Task.Delay(new System.TimeSpan(0, 0, 3))
-        .ContinueWith(o => {
-          if (!SceneLoader.loading)
-            _overlay.Hide();
-        });
+        .ContinueWith(o => HideOverlayIfNotLoading());
 
     if (Mode.CurrentMode != Mode.DISABLED) {
-      if (BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX &&
-          (Mode.CurrentMode.resetTimerOnMainMenu ||
-           !_runTimer.Duration.HasValue)) {
-        _runTimer.Reset();
+      var isMainMenu =
+          BoneworksSceneManager.currentSceneIndex == Utils.SCENE_MENU_IDX;
+      if (Mode.CurrentMode.resetTimerOnMainMenu && isMainMenu) {
+        RunTimer.Stop();
       } else {
-        _runTimer.OnLevelStart();
+        // No starting timer on main menu (only unpause in the case of 100%)
+        if (RunTimer.IsActive || isMainMenu)
+          RunTimer.Unpause();
+        else
+          RunTimer.Reset();
       }
     }
+  }
+
+  private void HideOverlayIfNotLoading() {
+    if (!SceneLoader.loading)
+      _overlay.Hide();
+    else
+      // Try again later if SceneLoader still says it's loading so we don't get
+      // stuck with text on the screen during the level
+      System.Threading.Tasks.Task.Delay(new System.TimeSpan(0, 0, 1))
+          .ContinueWith(o => HideOverlayIfNotLoading());
   }
 
   [HarmonyPatch(typeof(BoneworksSceneManager),

@@ -1,6 +1,10 @@
 // Boneworks Speedrunning Discord Server: https://discord.gg/MW2zUcV2Fv
 // Authors: DerkO9, Sychke, jakzo
 
+// Inspiration taken from other autosplitter scripts:
+// https://fatalis.pw/livesplit/asl-list/
+// https://github.com/CryZe/AHatInTimeAutoSplitter/blob/master/AHatInTime.asl
+
 state("BONEWORKS") {
     // sceneIdx = scene name
     //  0 = scene_introStart
@@ -57,23 +61,61 @@ state("BONEWORKS") {
     // You now have a small list of pointers you can use in the Autosplit file 🎉
 }
 
+startup {
+    settings.Add(
+        "settings_gameTimeMsg",
+        true,
+        "Ask if game time should be used when the game opens"
+    );
+}
+
 init {
-    vars.isSceneIdxChanged = false;
+    vars.isWaitingForLoadingScene = false;
     vars.isLoading = false;
+    vars.loadAfter = null;
+    vars.actionOnLoad = "";
+    vars.action = "";
+    
+    if (timer.CurrentTimingMethod == TimingMethod.RealTime && settings["settings_gameTimeMsg"]) {
+        var response = MessageBox.Show(
+            "You are currently comparing against \"real time\" which includes loading screens.\n" +
+                "Would you like to switch to \"game time\"? (recommended)", 
+            "LiveSplit | Boneworks Auto Splitter",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question
+        );
+        if (response == DialogResult.Yes)
+            timer.CurrentTimingMethod = TimingMethod.GameTime;
+    }
 }
 
 update {
-    // TODO: Detect when loading actually starts instead of this so it sets
-    //       isLoading immediately when reloading the scene
+    // TODO: Detect when level reload happens
     if (current.sceneIdx != old.sceneIdx) {
-        vars.isSceneIdxChanged = true;
-        vars.isLoading = true;
+        if (old.sceneIdx != 1) {
+            var isNextLevel = current.sceneIdx == old.sceneIdx + 1;
+            var isGameFinished = current.sceneIdx == 1 && old.sceneIdx == 15;
+            vars.actionOnLoad = isNextLevel || isGameFinished ? "split" : "reset";
+        }
+        vars.isWaitingForLoadingScene = true;
+        vars.loadAfter = DateTime.Now.AddSeconds(0.5f);
     }
-    // loadingScene becomes active about a second after the loading screen shows in the game
-    if (current.activeScene12 == "loadingScene") {
+
+    if (vars.loadAfter != null && DateTime.Now >= vars.loadAfter) {
         vars.isLoading = true;
-        vars.isSceneIdxChanged = false;
-    } else if (!vars.isSceneIdxChanged) {
+        vars.loadAfter = null;
+        vars.action = vars.actionOnLoad;
+        vars.actionOnLoad = "";
+    }
+
+    // loadingScene becomes active about a second after the loading screen shows in the game
+    // We want to set isLoading = false once the active scene changes away from loadingScene
+    if (current.activeScene12 == "loadingScene") {
+        vars.isWaitingForLoadingScene = false;
+        // Make sure this is true (sometimes like throne room scene doesn't change until load screen)
+        // TODO: Find a way to split at throne room without losing a second
+        vars.isLoading = true;
+    } else if (!vars.isWaitingForLoadingScene) {
         vars.isLoading = false;
     }
 }
@@ -83,17 +125,18 @@ isLoading {
 }
 
 start {
-    return old.sceneIdx == 1 && current.sceneIdx == 2;
+    // Start at every non-menu load screen (for individual level runs)
+    return current.sceneIdx > 1 && vars.isLoading && vars.loadAfter == null;
 }
 
 split {
-    var isNextLevel = current.sceneIdx == old.sceneIdx + 1;
-    var isGameFinished = current.sceneIdx == 1 && old.sceneIdx == 15;
-    return vars.isLoading && (isNextLevel || isGameFinished);
+    if (vars.action != "split") return false;
+    vars.action = "";
+    return true;
 }
 
 reset {
-    var isNotNextLevel = current.sceneIdx != old.sceneIdx && current.sceneIdx != old.sceneIdx + 1;
-    var isGameFinished = current.sceneIdx == 1 && old.sceneIdx == 15;
-    return vars.isLoading && isNotNextLevel && !isGameFinished;
+    if (vars.action != "reset") return false;
+    vars.action = "";
+    return true;
 }

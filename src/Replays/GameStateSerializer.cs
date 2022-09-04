@@ -12,6 +12,7 @@ class GameStateSerializer {
   private (Bwr.SettingType, float)[] _prevSettings;
   private byte _buttonsPressedLeft;
   private byte _buttonsPressedRight;
+  private int _skippedFrames = 0;
 
   public void OnSceneChange() { _rigManager = null; }
 
@@ -19,11 +20,13 @@ class GameStateSerializer {
     if (_rigManager == null)
       return;
 
+    _skippedFrames++;
     RegisterButtonPresses(_rigManager.ControllerRig.leftController,
                           ref _buttonsPressedLeft);
     RegisterButtonPresses(_rigManager.ControllerRig.rightController,
                           ref _buttonsPressedRight);
   }
+
   private void
   RegisterButtonPresses(StressLevelZero.Rig.BaseController controller,
                         ref byte pressed) {
@@ -45,18 +48,16 @@ class GameStateSerializer {
       pressed |= (byte)Bwr.ButtonPress.GRABBED_STATE;
   }
 
-  public byte[] BuildFrame() {
+  public byte[] BuildFrame(float secondsElapsed) {
     if (_rigManager == null) {
       _rigManager = Object.FindObjectOfType<StressLevelZero.Rig.RigManager>();
     }
 
     var builder = new FlatBuffers.FlatBufferBuilder(1024);
 
-    Bwr.Frame.StartFrame(builder);
-    Bwr.Frame.AddTime(builder, Time.time);
-
     var dataPlayer = Data_Manager.Instance.data_player;
     var settings = new(Bwr.SettingType, float)[] {
+      (Bwr.SettingType.REFRESH_RATE, TODO),
       (Bwr.SettingType.BELT_RIGHT_SIDE, dataPlayer.beltRightSide ? 1 : 0),
       (Bwr.SettingType.IS_INVERTED, dataPlayer.isInverted ? 1 : 0),
       (Bwr.SettingType.IS_RIGHT_HANDED, dataPlayer.isRightHanded ? 1 : 0),
@@ -81,43 +82,52 @@ class GameStateSerializer {
                   .Where((setting, i) =>
                              setting.Item2 != _prevSettings[i].Item2)
                   .ToArray();
+    FlatBuffers.VectorOffset? changedSettingsOffset = null;
     if (changedSettings.Length > 0) {
       Bwr.Frame.StartChangedSettingsVector(builder, changedSettings.Length);
       foreach (var (type, value) in changedSettings)
         Bwr.ChangedSetting.CreateChangedSetting(builder, type, value);
-      builder.EndVector();
+      changedSettingsOffset = builder.EndVector();
       _prevSettings = settings;
     }
 
-    var hmdTransform = _rigManager.ControllerRig.hmdTransform;
-    var hmdEulerAngles = hmdTransform.eulerAngles;
+    Bwr.Frame.StartFrame(builder);
+    Bwr.Frame.AddTime(builder, secondsElapsed);
+    if (changedSettingsOffset.HasValue)
+      Bwr.Frame.AddChangedSettings(builder, changedSettingsOffset.Value);
+
+    var hmdPosition = _rigManager.ControllerRig.hmdTransform.localPosition;
+    var hmdEulerAngles =
+        _rigManager.ControllerRig.hmdTransform.localEulerAngles;
     var controllerLeft = _rigManager.ControllerRig.leftController;
     var controllerLeftThumbstickAxis = controllerLeft.GetThumbStickAxis();
-    var controllerLeftTransform = controllerLeft.transform;
-    var controllerLeftEulerAngles = controllerLeftTransform.eulerAngles;
+    var controllerLeftPosition = controllerLeft.transform.localPosition;
+    var controllerLeftEulerAngles = controllerLeft.transform.localEulerAngles;
     var controllerRight = _rigManager.ControllerRig.rightController;
     var controllerRightThumbstickAxis = controllerRight.GetThumbStickAxis();
-    var controllerRightTransform = controllerRight.transform;
-    var controllerRightEulerAngles = controllerRightTransform.eulerAngles;
+    var controllerRightPosition = controllerRight.transform.localPosition;
+    var controllerRightEulerAngles = controllerRight.transform.localEulerAngles;
     var vrRoot = _rigManager.ControllerRig.vrRoot;
     Bwr.Frame.AddVrInput(
         builder,
         Bwr.VrInput.CreateVrInput(
-            builder, hmdTransform.position.x, hmdTransform.position.y,
-            hmdTransform.position.z, hmdEulerAngles.x, hmdEulerAngles.y,
-            hmdEulerAngles.z, controllerLeftTransform.position.x,
-            controllerLeftTransform.position.y,
-            controllerLeftTransform.position.z, controllerLeftEulerAngles.x,
-            controllerLeftEulerAngles.y, controllerLeftEulerAngles.z,
-            controllerRightTransform.position.x,
-            controllerRightTransform.position.y,
-            controllerRightTransform.position.z, controllerRightEulerAngles.x,
-            controllerRightEulerAngles.y, controllerRightEulerAngles.z,
-            vrRoot.position.x, vrRoot.position.y, vrRoot.position.z,
-            vrRoot.eulerAngles.y, _buttonsPressedLeft,
-            controllerLeftThumbstickAxis.x, controllerLeftThumbstickAxis.y,
-            _buttonsPressedRight, controllerRightThumbstickAxis.x,
-            controllerRightThumbstickAxis.y));
+            builder, hmdPosition.x, hmdPosition.y, hmdPosition.z,
+            hmdEulerAngles.x, hmdEulerAngles.y, hmdEulerAngles.z,
+            _buttonsPressedLeft, controllerLeftThumbstickAxis.x,
+            controllerLeftThumbstickAxis.y, controllerLeftPosition.x,
+            controllerLeftPosition.y, controllerLeftPosition.z,
+            controllerLeftEulerAngles.x, controllerLeftEulerAngles.y,
+            controllerLeftEulerAngles.z, _buttonsPressedRight,
+            controllerRightThumbstickAxis.x, controllerRightThumbstickAxis.y,
+            controllerRightPosition.x, controllerRightPosition.y,
+            controllerRightPosition.z, controllerRightEulerAngles.x,
+            controllerRightEulerAngles.y, controllerRightEulerAngles.z));
+
+    Bwr.Frame.AddPlayerState(builder,
+                             Bwr.PlayerState.CreatePlayerState(
+                                 builder, vrRoot.position.x, vrRoot.position.y,
+                                 vrRoot.position.z, vrRoot.eulerAngles.y,
+                                 _rigManager.ControllerRig.feetOffset));
 
     var frame = Bwr.Frame.EndFrame(builder);
     builder.Finish(frame.Value);

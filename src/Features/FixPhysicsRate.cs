@@ -7,6 +7,8 @@ class FixPhysicsRate : Feature {
   private Data_Manager _dataManager;
   private int _lastPhysicsRate;
 
+  public FixPhysicsRate() { IsEnabledByDefault = false; }
+
   public override void OnApplicationStart() {
     _steamVrSettings =
         Resources.Load<Valve.VR.SteamVR_Settings>("SteamVR_Settings");

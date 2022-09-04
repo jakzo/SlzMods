@@ -18,49 +18,33 @@ class Speedrun : Feature {
   private Blindfold _blindfold = new Blindfold();
   public Speedruns.RunTimer RunTimer = new Speedruns.RunTimer();
 
-  public readonly Hotkey HotkeyToggleNormal;
-  public readonly Hotkey HotkeyToggleNewgamePlus;
-  public readonly Hotkey HotkeyToggleHundredPercent;
-  public readonly Hotkey HotkeyToggleBlindfold;
-  public readonly Hotkey HotkeyToggleGripless;
-
   public Speedrun() {
     if (Instance != null)
       throw new System.Exception("Only one instance of Speedrun is allowed");
     Instance = this;
     IsAllowedInRuns = true;
-    HotkeyToggleNormal = new Hotkey() {
+
+    // Toggle default speedrun mode (normal)
+    Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) =>
           Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
-          (cl.GetAButton() && cl.GetBButton() && cr.GetAButton() &&
-               cr.GetBButton() ||
-           Utils.GetKeyControl() && Input.GetKey(KeyCode.S)),
+          cl.GetAButton() && cl.GetBButton() && cr.GetAButton() &&
+          cr.GetBButton(),
       Handler = () => ToggleRun(Mode.NORMAL),
-    };
-    HotkeyToggleNewgamePlus = new Hotkey() {
-      Predicate = (cl, cr) =>
-          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
-          Utils.GetKeyControl() && Input.GetKey(KeyCode.N),
-      Handler = () => ToggleRun(Mode.NEWGAME_PLUS),
-    };
-    HotkeyToggleHundredPercent = new Hotkey() {
-      Predicate = (cl, cr) =>
-          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
-          Utils.GetKeyControl() && Input.GetKey(KeyCode.H),
-      Handler = () => ToggleRun(Mode.HUNDRED_PERCENT),
-    };
-    HotkeyToggleBlindfold = new Hotkey() {
-      Predicate = (cl, cr) =>
-          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
-          Utils.GetKeyControl() && Input.GetKey(KeyCode.B),
-      Handler = () => ToggleRun(Mode.BLINDFOLD),
-    };
-    HotkeyToggleGripless = new Hotkey() {
-      Predicate = (cl, cr) =>
-          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
-          Utils.GetKeyControl() && Input.GetKey(KeyCode.G),
-      Handler = () => ToggleRun(Mode.GRIPLESS),
-    };
+    });
+
+    foreach (var mode in new Mode[] {
+               Mode.NORMAL, Mode.NEWGAME_PLUS, Mode.HUNDRED_PERCENT,
+               Mode.BLINDFOLD, Mode.GRIPLESS, Mode.LEFT_CONTROLLER_GRIPLESS,
+               Mode.RIGHT_CONTROLLER_GRIPLESS, Mode.ARMLESS
+             })
+      if (mode.hotkeyKey != KeyCode.None)
+        Hotkeys.Add(new Hotkey() {
+          Predicate = (cl, cr) =>
+              Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX &&
+              Utils.GetKeyControl() && Input.GetKey(mode.hotkeyKey),
+          Handler = () => ToggleRun(mode),
+        });
   }
 
   private void ToggleRun(Mode mode) {
@@ -78,7 +62,7 @@ class Speedrun : Feature {
         Mode.CurrentMode = mode;
         Mod.IsRunActive = true;
         if (Mode.CurrentMode.saveResourceFilename != null) {
-          MelonLogger.Msg("Loading newgame+ save");
+          MelonLogger.Msg("Loading custom save");
           _playerPrefsToRestoreOnLoad = Data_Manager.Instance.data_player;
           Speedruns.SaveUtilities.RestoreSaveFileResource(
               Mode.CurrentMode.saveResourceFilename);
@@ -106,6 +90,8 @@ class Speedrun : Feature {
   }
 
   private void DisableSpeedrunMode() {
+    if (Mode.CurrentMode.OnDisable != null)
+      Mode.CurrentMode.OnDisable();
     Mode.CurrentMode = Mode.DISABLED;
     Mod.IsRunActive = false;
     Speedruns.SaveUtilities.BlockSave = true;
@@ -114,7 +100,6 @@ class Speedrun : Feature {
     var oldData = Data_Manager.Instance.data_player;
     Speedruns.SaveUtilities.LoadData();
     Speedruns.SaveUtilities.RestorePlayerPrefs(oldData);
-    Blindfold.s_blindfolder.SetBlindfold(false);
     MelonLogger.Msg("Speedrun mode disabled");
   }
 
@@ -185,6 +170,9 @@ class Speedrun : Feature {
       UpdateMainMenuText(text);
     }
     _didReset = false;
+
+    if (Mode.CurrentMode.OnSceneWasInitialized != null)
+      Mode.CurrentMode.OnSceneWasInitialized(buildIndex, sceneName);
   }
 
   public override void OnLoadingScreen(int nextSceneIdx, int prevSceneIdx) {

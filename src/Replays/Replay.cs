@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SpeedrunTools.Replays {
 class Replay {
-  private FileStream _fs;
+  private BinaryReader _reader;
   private int _framesEndIdx;
 
   public string FilePath;
@@ -14,30 +14,35 @@ class Replay {
   public Replay(string filePath) {
     FilePath = filePath;
 
-    _fs = File.OpenRead(filePath);
+    _reader = new BinaryReader(File.OpenRead(filePath));
 
-    var headerBytes = new byte[Constants.FILE_START_BYTES.Length];
-    _fs.Read(headerBytes, 0, Constants.FILE_START_BYTES.Length);
-    var magicHeader = headerBytes.Take(Constants.MAGIC_HEADER_BYTES.Length);
-    if (magicHeader.SequenceEqual(Constants.MAGIC_HEADER_BYTES))
+    var magicHeader = _reader.ReadBytes(Constants.MAGIC_HEADER_BYTES.Length);
+    if (!magicHeader.SequenceEqual(Constants.MAGIC_HEADER_BYTES))
       throw new ReplayException("File is not a replay (header mismatch)");
-    var metadataIdx = System.BitConverter.ToInt32(
-        headerBytes, Constants.METADATA_OFFSET_INDEX);
+    var metadataIdx = _reader.ReadInt32();
     if (metadataIdx == 0)
       throw new ReplayException("Metadata missing (incomplete replay file)");
-    if (metadataIdx < 0 || metadataIdx >= _fs.Length)
+    if (metadataIdx < 0 || metadataIdx >= _reader.BaseStream.Length)
       throw new ReplayException("Invalid metadata offset (out of bounds)");
 
     _framesEndIdx = metadataIdx;
-    var metadataBytes = new byte[_fs.Length - metadataIdx];
-    _fs.Read(metadataBytes, metadataIdx, metadataBytes.Length);
+    _reader.BaseStream.Position = metadataIdx;
+    var metadataBytes = _reader.ReadBytes(
+        (int)(_reader.BaseStream.Length - _reader.BaseStream.Position));
+    _reader.BaseStream.Position = Constants.FILE_START_BYTES.Length;
     Metadata = Bwr.Metadata.GetRootAsMetadata(
         new FlatBuffers.ByteBuffer(metadataBytes));
+    _reader.BaseStream.Position = Constants.FILE_START_BYTES.Length;
   }
 
-  public void Close() { _fs.Close(); }
+  public void Close() {
+    if (_reader != null) {
+      _reader.Close();
+      _reader = null;
+    }
+  }
 
-  public FrameReader CreateFrameReader() => new FrameReader(_fs, Metadata,
+  public FrameReader CreateFrameReader() => new FrameReader(_reader, Metadata,
                                                             _framesEndIdx);
 
   public System.DateTime
@@ -51,42 +56,39 @@ class ReplayException : System.Exception {
 }
 
 class FrameReader {
-  private int _idx;
-  private FileStream _fs;
+  private BinaryReader _reader;
   private int _framesEndIdx;
-  private int _levelIdx;
+  private int _nextLevelIdx;
   private Bwr.Level? _nextLevel;
   private Bwr.Metadata _metadata;
 
-  public FrameReader(FileStream fs, Bwr.Metadata metadata, int framesEndIdx) {
-    _fs = fs;
+  public FrameReader(BinaryReader reader, Bwr.Metadata metadata,
+                     int framesEndIdx) {
+    _reader = reader;
     _framesEndIdx = framesEndIdx;
     _metadata = metadata;
-    _levelIdx = 0;
-    _nextLevel = metadata.Levels(_levelIdx);
-  }
-
-  private byte[] _readBytes(int count) {
-    var bytes = new byte[count];
-    _fs.Read(bytes, _idx, count);
-    _idx += count;
-    if (_idx > _framesEndIdx)
-      throw new System.Exception("Invalid frame length (past end)");
-    return bytes;
+    _nextLevelIdx = 0;
+    _nextLevel = metadata.Levels(_nextLevelIdx);
   }
 
   public (int?, Bwr.Frame?) Read() {
-    if (_idx >= _framesEndIdx)
+    if (_reader.BaseStream.Position >= _framesEndIdx)
       return (null, null);
     int? sceneIdx = null;
-    if (_nextLevel.HasValue && _idx >= _nextLevel.Value.FrameOffset) {
-      sceneIdx = _nextLevel.Value.SceneIndex;
-      _nextLevel = _metadata.Levels(++_levelIdx);
+    if (_reader.BaseStream.Position >= _nextLevel?.FrameOffset) {
+      sceneIdx = _nextLevel?.SceneIndex;
+      _nextLevel = ++_nextLevelIdx >= _metadata.LevelsLength
+                       ? null
+                       : _metadata.Levels(_nextLevelIdx);
     }
-    var frameLen = System.BitConverter.ToUInt16(_readBytes(2), 0);
-    var frameBytes = _readBytes(frameLen);
-    return (sceneIdx,
-            Bwr.Frame.GetRootAsFrame(new FlatBuffers.ByteBuffer(frameBytes)));
+    var frameLen = _reader.ReadUInt16();
+    if (frameLen == 0 ||
+        _reader.BaseStream.Position + frameLen > _framesEndIdx) {
+      var reason = frameLen == 0 ? "zero" : "past end";
+      throw new System.Exception($"Invalid frame length ({reason})");
+    }
+    var frameBytes = new FlatBuffers.ByteBuffer(_reader.ReadBytes(frameLen));
+    return (sceneIdx, Bwr.Frame.GetRootAsFrame(frameBytes));
   }
 }
 }

@@ -7,6 +7,7 @@ using System.Reflection;
 using HarmonyLib;
 using StressLevelZero.Utilities;
 using Valve.VR;
+using StressLevelZero.Rig;
 
 namespace SpeedrunTools {
 public static class BuildInfo {
@@ -28,13 +29,15 @@ public class Mod : MelonMod {
     new Features.Teleport(),
     new Features.Blindfold(),
     new Features.Gripless(),
-    new Features.Timer()
+    new Features.Speedometer(),
+    new Features.Timer(),
+    new Features.Replay(),
+    new Features.Armless(),
     // new Features.DebugGunFly(),
-    // new Features.Replay(),
     // new Features.ControlTesting(),
     // new Features.Fps(),
     // new Features.Tas(),
-    // new Features.FixPhysicsRate(),
+    new Features.FixPhysicsRate(),
   };
 
   private static List<Feature> enabledFeatures = new List<Feature>();
@@ -47,23 +50,13 @@ public class Mod : MelonMod {
   public static bool IsRunActive = false;
   public static GameState GameState = new GameState();
 
-  private static IEnumerable<Hotkey> GetHotkeys(Feature feature) {
-    foreach (var field in feature.GetType().GetFields()) {
-      var type = Nullable.GetUnderlyingType(field.FieldType) ?? field.FieldType;
-      if (type == typeof(Hotkey)) {
-        var hotkey = field.GetValue(feature) as Hotkey;
-        yield return hotkey;
-      }
-    }
-  }
-
   private static void EnableFeature(Feature feature) {
     if (enabledFeatures.Contains(feature))
       return;
     MelonLogger.Msg($"Enabling feature: {feature.GetType().Name}");
     enabledFeatures.Add(feature);
     feature.IsEnabled = true;
-    foreach (var hotkey in GetHotkeys(feature))
+    foreach (var hotkey in feature.Hotkeys)
       s_hotkeys.AddHotkey(feature, hotkey);
     feature.OnEnabled();
   }
@@ -74,7 +67,7 @@ public class Mod : MelonMod {
     MelonLogger.Msg($"Disabling feature: {feature.GetType().Name}");
     enabledFeatures.Remove(feature);
     feature.IsEnabled = false;
-    foreach (var hotkey in GetHotkeys(feature))
+    foreach (var hotkey in feature.Hotkeys)
       s_hotkeys.RemoveHotkey(hotkey);
     feature.OnDisabled();
   }
@@ -179,6 +172,33 @@ public class Mod : MelonMod {
         OnFeatureCallback(
             feature => feature.OnLevelStart(GameState.currentSceneIdx ?? 0));
       }
+    }
+  }
+
+  [HarmonyPatch(typeof(Controller), nameof(Controller.CacheInputs))]
+  class Controller_CacheInputs_Patch {
+    [HarmonyPostfix()]
+    internal static void Postfix(Controller __instance) {
+      Features.Gripless.OnCacheInputs(__instance);
+      Features.Armless.OnCacheInputs(__instance);
+    }
+  }
+
+  [HarmonyPatch(typeof(Controller), nameof(Controller.ProcessFingers))]
+  class Controller_ProcessFingers_Patch {
+    [HarmonyPostfix()]
+    internal static void Postfix(Controller __instance) {
+      Features.Gripless.OnProcessFingers(__instance);
+      Features.Armless.OnProcessFingers(__instance);
+    }
+  }
+
+  [HarmonyPatch(typeof(Controller), nameof(Controller.SolveGrip))]
+  class Controller_SolveGrip_Patch {
+    [HarmonyPostfix()]
+    internal static void Postfix(Controller __instance) {
+      Features.Gripless.OnSolveGrip(__instance);
+      Features.Armless.OnSolveGrip(__instance);
     }
   }
 }

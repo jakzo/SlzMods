@@ -23,29 +23,24 @@ class Recorder {
   private System.DateTime _startTime;
   private List<FlatBuffers.Offset<Bwr.Level>> _levels =
       new List<FlatBuffers.Offset<Bwr.Level>>();
-  private bool _isLoading = false;
+  private float? _loadStartTime;
+  private float _prevLoadDuration;
   private float _levelStartTime;
   private int _levelStartFrameOffset;
   private float _relativeStartTime;
   private float _lastFrameTime;
-  private FileStream _fs;
-  private int _fileIdx = 0;
+  private BinaryWriter _writer;
   private FlatBuffers.FlatBufferBuilder _metaBuilder;
   private GameStateSerializer _serializer;
 
   public string FilePath;
 
-  private void WriteFile(byte[] bytes) {
-    // TODO: Should we queue this async?
-    _fs.Write(bytes, _fileIdx, bytes.Length);
-    _fileIdx += bytes.Length;
-  }
-
-  private void CloseFile() {
-    if (_fs == null)
-      return;
-    _fs.Close();
-    _fs = null;
+  private void Close() {
+    if (_writer != null) {
+      _writer.Flush();
+      _writer.Close();
+      _writer = null;
+    }
   }
 
   public Recorder(string filenamePrefix = "run", float maxFps = 5,
@@ -59,16 +54,13 @@ class Recorder {
     _relativeStartTime = Time.time;
     IsRecording = true;
 
-    _levelStartTime = Time.time;
-    _levelStartFrameOffset = _fileIdx;
+    Directory.CreateDirectory(Utils.REPLAYS_DIR);
+    _writer = new BinaryWriter(File.Open(TEMP_FILE_PATH, FileMode.Create));
+    _writer.Write(Constants.FILE_START_BYTES);
 
-    try {
-      File.Delete(TEMP_FILE_PATH);
-    } catch {
-    }
-    _fs = File.Create(TEMP_FILE_PATH);
-    _fileIdx = 0;
-    WriteFile(Constants.FILE_START_BYTES);
+    _levelStartTime = Time.time;
+    _levelStartFrameOffset = (int)_writer.BaseStream.Position;
+    _prevLoadDuration = 0;
 
     _metaBuilder = new FlatBuffers.FlatBufferBuilder(1024);
     _serializer = new GameStateSerializer();
@@ -79,6 +71,9 @@ class Recorder {
       throw new System.Exception("Cannot stop recording when not started.");
     }
 
+    if (!_loadStartTime.HasValue && Mod.GameState.currentSceneIdx.HasValue)
+      OnLevelEnd(Mod.GameState.currentSceneIdx.Value);
+
     IsRecording = false;
     var duration = _lastFrameTime - _relativeStartTime;
 
@@ -86,12 +81,12 @@ class Recorder {
         _metaBuilder, _startTime.ToBinary(), duration,
         Bwr.Metadata.CreateLevelsVector(_metaBuilder, _levels.ToArray()));
     _metaBuilder.Finish(metadata.Value);
-    var metadataOffset = _fileIdx;
-    WriteFile(_metaBuilder.SizedByteArray());
-    _fs.Write(System.BitConverter.GetBytes(metadataOffset),
-              Constants.METADATA_OFFSET_INDEX, sizeof(int));
+    var metadataOffset = (uint)_writer.BaseStream.Position;
+    _writer.Write(_metaBuilder.SizedByteArray());
+    _writer.BaseStream.Position = Constants.METADATA_OFFSET_INDEX;
+    _writer.Write(metadataOffset);
 
-    CloseFile();
+    Close();
     var durationTs = System.TimeSpan.FromSeconds(duration);
     FilePath = Path.Combine(
         Utils.REPLAYS_DIR,
@@ -102,27 +97,38 @@ class Recorder {
 
   public void OnLevelEnd(int endedSceneIdx) {
     _serializer.OnSceneChange();
-    if (!IsRecording || _isLoading)
+    if (!IsRecording || _loadStartTime.HasValue)
       return;
-    _levels.Add(Bwr.Level.CreateLevel(_metaBuilder, _levelStartTime,
-                                      Time.time - _levelStartTime,
-                                      endedSceneIdx, _levelStartFrameOffset));
-    _isLoading = true;
+    _levels.Add(Bwr.Level.CreateLevel(
+        _metaBuilder, _levelStartTime - _relativeStartTime,
+        Time.time - _levelStartTime, _prevLoadDuration, endedSceneIdx,
+        _levelStartFrameOffset));
+    _loadStartTime = Time.time;
   }
 
   public void OnLevelStart() {
     _serializer.OnSceneChange();
 
     // Resume recording after loading
-    if (_isLoading) {
+    if (_loadStartTime.HasValue) {
       _levelStartTime = Time.time;
-      _levelStartFrameOffset = _fileIdx;
-      _isLoading = false;
+      _levelStartFrameOffset = (int)_writer.BaseStream.Position;
+      _prevLoadDuration = _levelStartTime - _loadStartTime.Value;
+      _relativeStartTime += _prevLoadDuration;
+      _loadStartTime = null;
     }
   }
 
   public void OnUpdate() {
     if (!IsRecording)
+      return;
+
+    // Pause recording during loading screens
+    if (_loadStartTime.HasValue)
+      return;
+
+    // Only record frame if time since last frame is greater than max FPS
+    if (Time.time < _lastFrameTime + _minFrameTime)
       return;
 
     if (Time.time - _relativeStartTime >= MaxDuration) {
@@ -131,18 +137,11 @@ class Recorder {
       return;
     }
 
-    // Pause recording during loading screens
-    if (_isLoading)
-      return;
-
-    // Only record frame if time since last frame is greater than max FPS
-    if (Time.time < _lastFrameTime + _minFrameTime)
-      return;
-
     // Record frame
-    var frame = _serializer.BuildFrame();
-    WriteFile(System.BitConverter.GetBytes((ushort)frame.Length));
-    WriteFile(frame);
+    var frame = _serializer.BuildFrame(Time.time - _relativeStartTime);
+    // TODO: Should we queue this async?
+    _writer.Write((ushort)frame.Length);
+    _writer.Write(frame);
     _lastFrameTime = Time.time;
     // Utils.LogDebug($"Recorded frame: {currentSceneIdx}
     // {cam.position.ToString()}");

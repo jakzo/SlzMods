@@ -5,20 +5,23 @@ namespace SpeedrunTools.Features {
 public class Blindfold : Feature {
   public static Blindfolder s_blindfolder = new Blindfolder();
 
-  public readonly Hotkey HotkeyBlindfold =
-      new Hotkey() { Predicate = (cl, cr) => Mod.GameState.currentSceneIdx !=
-                                                 Utils.SCENE_MENU_IDX &&
-                                             Utils.GetKeyControl() &&
-                                             Input.GetKey(KeyCode.B),
-                     Handler = () => {
-                       if (s_blindfolder.IsBlindfolded) {
-                         MelonLogger.Msg("Unblindfolding");
-                         s_blindfolder.SetBlindfold(false);
-                       } else {
-                         MelonLogger.Msg("Blindfolding");
-                         s_blindfolder.SetBlindfold(true);
-                       }
-                     } };
+  public Blindfold() {
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) =>
+          Mod.GameState.currentSceneIdx != Utils.SCENE_MENU_IDX &&
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.B),
+      Handler =
+          () => {
+            if (s_blindfolder.IsBlindfolded) {
+              MelonLogger.Msg("Unblindfolding");
+              s_blindfolder.SetBlindfold(false);
+            } else {
+              MelonLogger.Msg("Blindfolding");
+              s_blindfolder.SetBlindfold(true);
+            }
+          },
+    });
+  }
 
   public override void OnUpdate() { s_blindfolder.OnUpdate(); }
 

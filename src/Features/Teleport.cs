@@ -9,37 +9,44 @@ class Teleport : Feature {
   private static Vector3? s_resetPos;
   private static int s_currentSceneIdx;
 
-  public readonly Hotkey HotkeySet =
-      new Hotkey() { Predicate = (cl, cr) =>
-                         s_rigManager != null &&
-                         s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
-                         cl.GetBButton() && cr.GetBButton(),
-                     Handler = () => {
-                       var pos = Utils.GetPlayerPos(s_rigManager);
-                       MelonLogger.Msg(
-                           $"Setting teleport position: {pos.ToString()}");
-                       s_teleportPos = pos;
-                     } };
+  public Teleport() {
+    // Set position
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => s_rigManager != null &&
+                              s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
+                              cl.GetBButton() && cr.GetBButton(),
+      Handler =
+          () => {
+            var pos = Utils.GetPlayerPos(s_rigManager);
+            MelonLogger.Msg($"Setting teleport position: {pos.ToString()}");
+            s_teleportPos = pos;
+          },
+    });
 
-  public readonly Hotkey HotkeyTeleport =
-      new Hotkey() { Predicate = (cl, cr) =>
-                         s_rigManager != null &&
-                         s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
-                         s_teleportPos.HasValue && cr.GetThumbStick(),
-                     Handler = () => {
-                       MelonLogger.Msg("Teleporting");
-                       s_rigManager.Teleport(s_teleportPos.Value);
-                     } };
+    // Teleport to set position
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => s_rigManager != null &&
+                              s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
+                              s_teleportPos.HasValue && cr.GetThumbStick(),
+      Handler =
+          () => {
+            MelonLogger.Msg("Teleporting");
+            s_rigManager.Teleport(s_teleportPos.Value);
+          },
+    });
 
-  public readonly Hotkey HotkeyReset =
-      new Hotkey() { Predicate = (cl, cr) =>
-                         s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
-                         cl.GetAButton() && cl.GetBButton(),
-                     Handler = () => {
-                       MelonLogger.Msg("Resetting level");
-                       s_resetPos = Utils.GetPlayerPos(s_rigManager);
-                       s_gameControl.RELOADLEVEL();
-                     } };
+    // Reset level state
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
+                              cl.GetAButton() && cl.GetBButton(),
+      Handler =
+          () => {
+            MelonLogger.Msg("Resetting level");
+            s_resetPos = Utils.GetPlayerPos(s_rigManager);
+            s_gameControl.RELOADLEVEL();
+          },
+    });
+  }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     // Init teleport

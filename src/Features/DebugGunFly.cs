@@ -16,7 +16,6 @@ class DebugGunFly : Feature {
                           "PlayerZ", "GunX", "GunY", "GunZ" });
 
   public float UpdateFrequency = 1;
-  public readonly Hotkey HotkeyToggle;
 
   private RigManager _rigManager;
   private StressLevelZero.Props.Weapons
@@ -40,9 +39,10 @@ class DebugGunFly : Feature {
   }
 
   public DebugGunFly() {
-    HotkeyToggle = new Hotkey() { Predicate = (cl, cr) =>
-                                      _rigManager != null && cr.GetThumbStick(),
-                                  Handler = Toggle };
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => _rigManager != null && cr.GetThumbStick(),
+      Handler = Toggle,
+    });
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {

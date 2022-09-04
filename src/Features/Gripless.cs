@@ -1,78 +1,68 @@
 ﻿using MelonLoader;
 using UnityEngine;
-using HarmonyLib;
 using StressLevelZero.Rig;
 
 namespace SpeedrunTools.Features {
 public class Gripless : Feature {
   public static bool IsGripDisabled = false;
 
-  public readonly Hotkey HotkeyGripless =
-      new Hotkey() { Predicate = (cl, cr) => Mod.GameState.currentSceneIdx !=
-                                                 Utils.SCENE_MENU_IDX &&
-                                             Utils.GetKeyControl() &&
-                                             Input.GetKey(KeyCode.G),
-                     Handler = () => {
-                       if (IsGripDisabled) {
-                         MelonLogger.Msg("Enabling grip");
-                         IsGripDisabled = false;
-                       } else {
-                         MelonLogger.Msg("Disabling grip");
-                         IsGripDisabled = true;
-                       }
-                     } };
+  public Gripless() {
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) =>
+          Mod.GameState.currentSceneIdx != Utils.SCENE_MENU_IDX &&
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.G),
+      Handler =
+          () => {
+            if (IsGripDisabled) {
+              MelonLogger.Msg("Enabling grip");
+              IsGripDisabled = false;
+            } else {
+              MelonLogger.Msg("Disabling grip");
+              IsGripDisabled = true;
+            }
+          },
+    });
+  }
 
   public override void OnDisabled() { IsGripDisabled = false; }
 
   // Controller.CacheInputs() call the SteamVR_Action API to get inputs then
   // sets these properties, so we can reset them right after this call before
   // the game does anything using them
-  [HarmonyPatch(typeof(Controller), nameof(Controller.CacheInputs))]
-  class Controller_CacheInputs_Patch {
-    [HarmonyPostfix()]
-    internal static void Postfix(Controller __instance) {
-      if (!IsGripDisabled ||
-          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX)
-        return;
-
-      __instance._primaryAxis = 0;
-      __instance._primaryInteractionButton = false;
-      __instance._primaryInteractionButtonDown = false;
-      __instance._primaryInteractionButtonUp = false;
-      __instance._secondaryInteractionButton = false;
-      __instance._secondaryInteractionButtonDown = false;
-      __instance._secondaryInteractionButtonUp = false;
-      __instance._thumbstickTouch = false;
-    }
+  public static void OnCacheInputs(Controller controller) {
+    if (IsGripDisabled && Mod.GameState.currentSceneIdx != Utils.SCENE_MENU_IDX)
+      CancelGrip(controller);
+  }
+  public static void CancelGrip(Controller controller) {
+    controller._primaryAxis = 0;
+    controller._primaryInteractionButton = false;
+    controller._primaryInteractionButtonDown = false;
+    controller._primaryInteractionButtonUp = false;
+    controller._secondaryInteractionButton = false;
+    controller._secondaryInteractionButtonDown = false;
+    controller._secondaryInteractionButtonUp = false;
+    controller._thumbstickTouch = false;
   }
 
-  [HarmonyPatch(typeof(Controller), nameof(Controller.ProcessFingers))]
-  class Controller_ProcessFingers_Patch {
-    [HarmonyPostfix()]
-    internal static void Postfix(Controller __instance) {
-      if (!IsGripDisabled ||
-          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX)
-        return;
-
-      __instance._processedIndex = 0;
-      __instance._processedMiddle = 0;
-      __instance._processedRing = 0;
-      __instance._processedPinky = 0;
-    }
+  public static void OnProcessFingers(Controller controller) {
+    if (IsGripDisabled && Mod.GameState.currentSceneIdx != Utils.SCENE_MENU_IDX)
+      CancelProcessFingers(controller);
+  }
+  public static void CancelProcessFingers(Controller controller) {
+    controller._processedIndex = 0;
+    controller._processedMiddle = 0;
+    controller._processedRing = 0;
+    controller._processedPinky = 0;
   }
 
-  [HarmonyPatch(typeof(Controller), nameof(Controller.SolveGrip))]
-  class Controller_SolveGrip_Patch {
-    [HarmonyPostfix()]
-    internal static void Postfix(Controller __instance) {
-      if (!IsGripDisabled ||
-          Mod.GameState.currentSceneIdx == Utils.SCENE_MENU_IDX)
-        return;
-
-      __instance._gripForce = 0;
-      __instance._solvedGrip = 0;
-      __instance._solvedGripVelocity = 0;
-    }
+  public static void OnSolveGrip(Controller controller) {
+    if (IsGripDisabled && Mod.GameState.currentSceneIdx != Utils.SCENE_MENU_IDX)
+      CancelSolveGrip(controller);
+  }
+  public static void CancelSolveGrip(Controller controller) {
+    controller._gripForce = 0;
+    controller._solvedGrip = 0;
+    controller._solvedGripVelocity = 0;
   }
 }
 }

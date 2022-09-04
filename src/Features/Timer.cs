@@ -11,16 +11,10 @@ class Timer : Feature {
 
   private TMPro.TextMeshPro _tmp;
 
-  private static bool IsDisabled = false;
-
   public Timer() {
     IsAllowedInRuns = true;
     IsEnabledByDefault = false;
   }
-
-  public readonly Hotkey HotkeyTeleport =
-      new Hotkey() { Predicate = (cl, cr) => cr.GetThumbStick(),
-                     Handler = () => { IsDisabled = !IsDisabled; } };
 
   public override void OnLevelStart(int sceneIdx) {
     var timerText = GameObject.Find(TIMER_TEXT_NAME);
@@ -43,8 +37,6 @@ class Timer : Feature {
   }
 
   public override void OnUpdate() {
-    if (IsDisabled)
-      return;
     var duration = Speedrun.Instance.RunTimer.CalculateDuration();
     if (!duration.HasValue)
       return;

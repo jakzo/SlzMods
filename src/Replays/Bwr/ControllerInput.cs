@@ -9,20 +9,20 @@ using global::System;
 using global::System.Collections.Generic;
 using global::FlatBuffers;
 
-public struct ControllerInputs : IFlatbufferObject
+public struct ControllerInput : IFlatbufferObject
 {
   private Struct __p;
   public ByteBuffer ByteBuffer { get { return __p.bb; } }
   public void __init(int _i, ByteBuffer _bb) { __p = new Struct(_i, _bb); }
-  public ControllerInputs __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
+  public ControllerInput __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   /// Bit field of ButtonPress
   public byte Buttons { get { return __p.bb.Get(__p.bb_pos + 0); } }
   public Bwr.Vector2 Thumbstick { get { return (new Bwr.Vector2()).__assign(__p.bb_pos + 4, __p.bb); } }
-  /// Relative to VR root
+  /// Relative to VR root (play space)
   public Bwr.Transform Position { get { return (new Bwr.Transform()).__assign(__p.bb_pos + 12, __p.bb); } }
 
-  public static Offset<Bwr.ControllerInputs> CreateControllerInputs(FlatBufferBuilder builder, byte Buttons, float thumbstick_X, float thumbstick_Y, float position_position_X, float position_position_Y, float position_position_Z, float position_rotation_euler_X, float position_rotation_euler_Y, float position_rotation_euler_Z) {
+  public static Offset<Bwr.ControllerInput> CreateControllerInput(FlatBufferBuilder builder, byte Buttons, float thumbstick_X, float thumbstick_Y, float position_position_X, float position_position_Y, float position_position_Z, float position_rotation_euler_X, float position_rotation_euler_Y, float position_rotation_euler_Z) {
     builder.Prep(4, 36);
     builder.Prep(4, 24);
     builder.Prep(4, 12);
@@ -38,7 +38,7 @@ public struct ControllerInputs : IFlatbufferObject
     builder.PutFloat(thumbstick_X);
     builder.Pad(3);
     builder.PutByte(Buttons);
-    return new Offset<Bwr.ControllerInputs>(builder.Offset);
+    return new Offset<Bwr.ControllerInput>(builder.Offset);
   }
 };
 

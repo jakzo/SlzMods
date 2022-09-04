@@ -160,6 +160,7 @@ public class Hotkey {
 }
 
 abstract public class Feature {
+  public List<Hotkey> Hotkeys = new List<Hotkey>();
   public bool IsAllowedInRuns = false;
   public bool IsEnabled = false;
   public bool IsEnabledByDefault = true;

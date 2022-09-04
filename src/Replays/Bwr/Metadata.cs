@@ -19,7 +19,9 @@ public struct Metadata : IFlatbufferObject
   public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }
   public Metadata __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
+  /// Real-world time in milliseconds since epoch
   public long StartTime { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetLong(o + __p.bb_pos) : (long)0; } }
+  /// In seconds not including loads
   public float Duration { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public Bwr.Level? Levels(int j) { int o = __p.__offset(8); return o != 0 ? (Bwr.Level?)(new Bwr.Level()).__assign(__p.__indirect(__p.__vector(o) + j * 4), __p.bb) : null; }
   public int LevelsLength { get { int o = __p.__offset(8); return o != 0 ? __p.__vector_len(o) : 0; } }

@@ -1,34 +1,54 @@
 ﻿// === File Format ===
 // "BwRp" = Magic string in ASCII
-// int32 = byte offset of Metadata within the file
+// uint32 = byte offset of Metadata within the file
 // (
 //   uint16 = length of this Frame
 //   Frame
 // ) x 1 or more
 // Metadata
 
+// After modifying this file run:
+// cd src/Replays && flatc --csharp Bwr.fbs
+
 namespace Bwr;
 
 table Metadata {
+  /// Real-world time in milliseconds since epoch
   start_time: int64;
+  /// In seconds not including loads
   duration: float32;
   levels: [Level] (required);
 }
 table Level {
+  /// In seconds since Metadata.start_time not including loads
   start_time: float32;
+  /// In seconds
   duration: float32;
+  /// Time spent loading before this level in seconds
+  load_duration: float32;
+  /// Level number
   scene_index: int32;
-  // Byte offset of first frame of level within the file
+  /// Byte offset of first frame of level within the file
   frame_offset: int32;
 }
 
 table Frame {
+  /// In seconds since start_time not including loads
   time: float32;
+  /// Number of game frames that occurred between this frame and the last
+  skipped_frames: uint8;
+  /// Player settings which changed since the last frame (may be null if none)
   changed_settings: [ChangedSetting];
+  /// Controller inputs
   vr_input: VrInput;
+  /// Player state within the game world
+  player_state: PlayerPosition;
+  /// Items carried by the player (may be null if none)
+  inventory: [ItemInSlot];
 }
 
 enum SettingType: uint8 {
+  REFRESH_RATE,
   BELT_RIGHT_SIDE,
   IS_INVERTED,
   IS_RIGHT_HANDED,
@@ -71,10 +91,9 @@ struct TransformRotY {
   rotation_y: float32;
 }
 
-struct PlayerPosition {
-  headset: Transform;
-  controller_left: Transform;
-  controller_right: Transform;
+struct HeadsetInput {
+  /// Relative to VR root (play space)
+  position: Transform;
 }
 
 enum ButtonPress: uint8 (bit_flags) {
@@ -87,15 +106,40 @@ enum ButtonPress: uint8 (bit_flags) {
   SECONDARY_INTERACTION,
   GRABBED_STATE,
 }
-struct ControllerInputs {
+struct ControllerInput {
   /// Bit field of ButtonPress
   buttons: uint8;
   thumbstick: Vector2;
+  /// Relative to VR root (play space)
+  position: Transform;
 }
 
 struct VrInput {
-  player_position: PlayerPosition;
-  vr_root: TransformRotY;
-  left_controller: ControllerInputs;
-  right_controller: ControllerInputs;
+  headset: HeadsetInput;
+  left_controller: ControllerInput;
+  right_controller: ControllerInput;
+}
+
+struct PlayerPosition {
+  /// Position/rotation of player at their base (feet)
+  root: TransformRotY;
+  /// Amount crouched where X is on toes, X is fully crouched, X is standing normally
+  feet_offset: float32;
+  /// Position of hand (can be different to controller position)
+  left_hand: Transform;
+  /// Position of hand (can be different to controller position)
+  right_hand: Transform;
+}
+
+enum InventorySlot: uint8 {
+  LEFT_SHOULDER,
+  RIGHT_SHOULDER,
+  LEFT_UNDERARM,
+  RIGHT_UNDERARM,
+  BUTT,
+}
+enum Item: uint8 {}
+struct ItemInSlot {
+  slot: InventorySlot;
+  item: Item;
 }

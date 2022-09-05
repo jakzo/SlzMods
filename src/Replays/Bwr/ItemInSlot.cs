@@ -25,7 +25,7 @@ public struct ItemInSlot : IFlatbufferObject
     builder.PutByte((byte)Slot);
     return new Offset<Bwr.ItemInSlot>(builder.Offset);
   }
-};
+}
 
 
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using UnityEngine;
+using Valve.VR;
 
 namespace SpeedrunTools.Replays {
 class GameStateSerializer {
@@ -12,7 +13,7 @@ class GameStateSerializer {
   private (Bwr.SettingType, float)[] _prevSettings;
   private byte _buttonsPressedLeft;
   private byte _buttonsPressedRight;
-  private int _skippedFrames = 0;
+  private int _skippedFrames = -1;
 
   public void OnSceneChange() { _rigManager = null; }
 
@@ -57,7 +58,8 @@ class GameStateSerializer {
 
     var dataPlayer = Data_Manager.Instance.data_player;
     var settings = new(Bwr.SettingType, float)[] {
-      (Bwr.SettingType.REFRESH_RATE, TODO),
+      (Bwr.SettingType.REFRESH_RATE,
+       SteamVR.instance?.hmd_DisplayFrequency ?? 0),
       (Bwr.SettingType.BELT_RIGHT_SIDE, dataPlayer.beltRightSide ? 1 : 0),
       (Bwr.SettingType.IS_INVERTED, dataPlayer.isInverted ? 1 : 0),
       (Bwr.SettingType.IS_RIGHT_HANDED, dataPlayer.isRightHanded ? 1 : 0),
@@ -93,6 +95,9 @@ class GameStateSerializer {
 
     Bwr.Frame.StartFrame(builder);
     Bwr.Frame.AddTime(builder, secondsElapsed);
+    Bwr.Frame.AddSkippedFrames(
+        builder,
+        (byte)Mathf.Clamp(_skippedFrames, byte.MinValue, byte.MaxValue));
     if (changedSettingsOffset.HasValue)
       Bwr.Frame.AddChangedSettings(builder, changedSettingsOffset.Value);
 
@@ -123,16 +128,28 @@ class GameStateSerializer {
             controllerRightPosition.z, controllerRightEulerAngles.x,
             controllerRightEulerAngles.y, controllerRightEulerAngles.z));
 
-    Bwr.Frame.AddPlayerState(builder,
-                             Bwr.PlayerState.CreatePlayerState(
-                                 builder, vrRoot.position.x, vrRoot.position.y,
-                                 vrRoot.position.z, vrRoot.eulerAngles.y,
-                                 _rigManager.ControllerRig.feetOffset));
+    var handLeft = _rigManager.physicsRig.leftHand.palmPositionTransform;
+    var handLeftPosition = handLeft.localPosition;
+    var handLeftEulerAngles = handLeft.localEulerAngles;
+    var handRight = _rigManager.physicsRig.rightHand.palmPositionTransform;
+    var handRightPosition = handRight.localPosition;
+    var handRightEulerAngles = handRight.localEulerAngles;
+    Bwr.Frame.AddPlayerPosition(
+        builder,
+        Bwr.PlayerPosition.CreatePlayerPosition(
+            builder, vrRoot.position.x, vrRoot.position.y, vrRoot.position.z,
+            vrRoot.eulerAngles.y, _rigManager.ControllerRig.feetOffset,
+            handLeftPosition.x, handLeftPosition.y, handLeftPosition.z,
+            handLeftEulerAngles.x, handLeftEulerAngles.y, handLeftEulerAngles.z,
+            handRightPosition.x, handRightPosition.y, handRightPosition.z,
+            handRightEulerAngles.x, handRightEulerAngles.y,
+            handRightEulerAngles.z));
 
     var frame = Bwr.Frame.EndFrame(builder);
     builder.Finish(frame.Value);
 
     _buttonsPressedLeft = _buttonsPressedRight = 0;
+    _skippedFrames = -1;
 
     // Utils.LogDebug($"Recorded frame: {currentSceneIdx}
     // {cam.position.ToString()}");

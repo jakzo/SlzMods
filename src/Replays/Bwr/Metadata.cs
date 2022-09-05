@@ -13,7 +13,7 @@ public struct Metadata : IFlatbufferObject
 {
   private Table __p;
   public ByteBuffer ByteBuffer { get { return __p.bb; } }
-  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_2_0_0(); }
+  public static void ValidateVersion() { FlatBufferConstants.FLATBUFFERS_2_0_8(); }
   public static Metadata GetRootAsMetadata(ByteBuffer _bb) { return GetRootAsMetadata(_bb, new Metadata()); }
   public static Metadata GetRootAsMetadata(ByteBuffer _bb, Metadata obj) { return (obj.__assign(_bb.GetInt(_bb.Position) + _bb.Position, _bb)); }
   public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }
@@ -43,13 +43,15 @@ public struct Metadata : IFlatbufferObject
   public static void AddLevels(FlatBufferBuilder builder, VectorOffset levelsOffset) { builder.AddOffset(2, levelsOffset.Value, 0); }
   public static VectorOffset CreateLevelsVector(FlatBufferBuilder builder, Offset<Bwr.Level>[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddOffset(data[i].Value); return builder.EndVector(); }
   public static VectorOffset CreateLevelsVectorBlock(FlatBufferBuilder builder, Offset<Bwr.Level>[] data) { builder.StartVector(4, data.Length, 4); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateLevelsVectorBlock(FlatBufferBuilder builder, ArraySegment<Offset<Bwr.Level>> data) { builder.StartVector(4, data.Count, 4); builder.Add(data); return builder.EndVector(); }
+  public static VectorOffset CreateLevelsVectorBlock(FlatBufferBuilder builder, IntPtr dataPtr, int sizeInBytes) { builder.StartVector(1, sizeInBytes, 1); builder.Add<Offset<Bwr.Level>>(dataPtr, sizeInBytes); return builder.EndVector(); }
   public static void StartLevelsVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static Offset<Bwr.Metadata> EndMetadata(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     builder.Required(o, 8);  // levels
     return new Offset<Bwr.Metadata>(o);
   }
-};
+}
 
 
 }

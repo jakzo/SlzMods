@@ -20,19 +20,19 @@ public struct ControllerInput : IFlatbufferObject
   public byte Buttons { get { return __p.bb.Get(__p.bb_pos + 0); } }
   public Bwr.Vector2 Thumbstick { get { return (new Bwr.Vector2()).__assign(__p.bb_pos + 4, __p.bb); } }
   /// Relative to VR root (play space)
-  public Bwr.Transform Position { get { return (new Bwr.Transform()).__assign(__p.bb_pos + 12, __p.bb); } }
+  public Bwr.Transform Transform { get { return (new Bwr.Transform()).__assign(__p.bb_pos + 12, __p.bb); } }
 
-  public static Offset<Bwr.ControllerInput> CreateControllerInput(FlatBufferBuilder builder, byte Buttons, float thumbstick_X, float thumbstick_Y, float position_position_X, float position_position_Y, float position_position_Z, float position_rotation_euler_X, float position_rotation_euler_Y, float position_rotation_euler_Z) {
+  public static Offset<Bwr.ControllerInput> CreateControllerInput(FlatBufferBuilder builder, byte Buttons, float thumbstick_X, float thumbstick_Y, float transform_position_X, float transform_position_Y, float transform_position_Z, float transform_rotation_euler_X, float transform_rotation_euler_Y, float transform_rotation_euler_Z) {
     builder.Prep(4, 36);
     builder.Prep(4, 24);
     builder.Prep(4, 12);
-    builder.PutFloat(position_rotation_euler_Z);
-    builder.PutFloat(position_rotation_euler_Y);
-    builder.PutFloat(position_rotation_euler_X);
+    builder.PutFloat(transform_rotation_euler_Z);
+    builder.PutFloat(transform_rotation_euler_Y);
+    builder.PutFloat(transform_rotation_euler_X);
     builder.Prep(4, 12);
-    builder.PutFloat(position_position_Z);
-    builder.PutFloat(position_position_Y);
-    builder.PutFloat(position_position_X);
+    builder.PutFloat(transform_position_Z);
+    builder.PutFloat(transform_position_Y);
+    builder.PutFloat(transform_position_X);
     builder.Prep(4, 8);
     builder.PutFloat(thumbstick_Y);
     builder.PutFloat(thumbstick_X);
@@ -40,7 +40,7 @@ public struct ControllerInput : IFlatbufferObject
     builder.PutByte(Buttons);
     return new Offset<Bwr.ControllerInput>(builder.Offset);
   }
-};
+}
 
 
 }

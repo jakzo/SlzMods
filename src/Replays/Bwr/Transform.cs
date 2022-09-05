@@ -31,7 +31,7 @@ public struct Transform : IFlatbufferObject
     builder.PutFloat(position_X);
     return new Offset<Bwr.Transform>(builder.Offset);
   }
-};
+}
 
 
 }

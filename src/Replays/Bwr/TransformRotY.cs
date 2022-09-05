@@ -28,7 +28,7 @@ public struct TransformRotY : IFlatbufferObject
     builder.PutFloat(position_X);
     return new Offset<Bwr.TransformRotY>(builder.Offset);
   }
-};
+}
 
 
 }

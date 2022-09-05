@@ -2,6 +2,7 @@
   "recommendations": [
     "muhammad-sammy.csharp",
     "esbenp.prettier-vscode",
-    "xaver.clang-format"
+    "mjohns.clang-format",
+    "gaborv.flatbuffers"
   ]
 }

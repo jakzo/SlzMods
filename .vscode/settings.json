@@ -22,6 +22,7 @@
     "leaderboard",
     "Lerp",
     "lerped",
+    "Mathf",
     "msbuild",
     "newfile",
     "Newgame",
@@ -39,6 +40,7 @@
     "speedrunning",
     "Speedruns",
     "steamapps",
+    "steamvr",
     "Teleporting",
     "theatrigon",
     "thumbstick",
@@ -53,7 +55,7 @@
   "files.autoSave": "onFocusChange",
   "clang-format.language.csharp.fallbackStyle": "LLVM",
   "[csharp]": {
-    "editor.defaultFormatter": "xaver.clang-format"
+    "editor.defaultFormatter": "mjohns.clang-format"
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"

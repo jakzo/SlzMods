@@ -8,7 +8,7 @@
 // Metadata
 
 // After modifying this file run:
-// cd src/Replays && flatc --csharp Bwr.fbs
+// cd src/Replays && rm -rf Bwr && flatc --csharp Bwr.fbs && cd ../..
 
 namespace Bwr;
 
@@ -41,8 +41,8 @@ table Frame {
   changed_settings: [ChangedSetting];
   /// Controller inputs
   vr_input: VrInput;
-  /// Player state within the game world
-  player_state: PlayerPosition;
+  /// Player body positions within the game world
+  player_position: PlayerPosition;
   /// Items carried by the player (may be null if none)
   inventory: [ItemInSlot];
 }
@@ -93,7 +93,7 @@ struct TransformRotY {
 
 struct HeadsetInput {
   /// Relative to VR root (play space)
-  position: Transform;
+  transform: Transform;
 }
 
 enum ButtonPress: uint8 (bit_flags) {
@@ -111,7 +111,7 @@ struct ControllerInput {
   buttons: uint8;
   thumbstick: Vector2;
   /// Relative to VR root (play space)
-  position: Transform;
+  transform: Transform;
 }
 
 struct VrInput {
@@ -123,11 +123,11 @@ struct VrInput {
 struct PlayerPosition {
   /// Position/rotation of player at their base (feet)
   root: TransformRotY;
-  /// Amount crouched where X is on toes, X is fully crouched, X is standing normally
+  /// Amount crouched, X is on toes, X is fully crouched, X is standing normally
   feet_offset: float32;
-  /// Position of hand (can be different to controller position)
+  /// Position of hand relative to base (can differ from controller position)
   left_hand: Transform;
-  /// Position of hand (can be different to controller position)
+  /// Position of hand relative to base (can differ from controller position)
   right_hand: Transform;
 }
 

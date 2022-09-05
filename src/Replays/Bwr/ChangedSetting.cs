@@ -26,7 +26,7 @@ public struct ChangedSetting : IFlatbufferObject
     builder.PutByte((byte)Type);
     return new Offset<Bwr.ChangedSetting>(builder.Offset);
   }
-};
+}
 
 
 }

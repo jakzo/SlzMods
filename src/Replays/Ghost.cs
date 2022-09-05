@@ -118,15 +118,14 @@ class Ghost {
       Rig = GhostRig.Create(ghostsContainer.transform, Color.blue);
     var t = (time - _frameCur.Time) / (_frameNext.Value.Time - _frameCur.Time);
     Rig.Head.position = Vector3.Lerp(
-        ToUnityVec3(_frameCur.VrInput.Value.PlayerPosition.Headset.Position),
-        ToUnityVec3(
-            _frameNext.Value.VrInput.Value.PlayerPosition.Headset.Position),
+        ToUnityVec3(_frameCur.VrInput.Value.Headset.Transform.Position),
+        ToUnityVec3(_frameNext.Value.VrInput.Value.Headset.Transform.Position),
         t);
     Rig.Head.rotation = Quaternion.Lerp(
         ToUnityQuaternion(
-            _frameCur.VrInput.Value.PlayerPosition.Headset.RotationEuler),
-        ToUnityQuaternion(_frameNext.Value.VrInput.Value.PlayerPosition.Headset
-                              .RotationEuler),
+            _frameCur.VrInput.Value.Headset.Transform.RotationEuler),
+        ToUnityQuaternion(
+            _frameNext.Value.VrInput.Value.Headset.Transform.RotationEuler),
         t);
   }
 

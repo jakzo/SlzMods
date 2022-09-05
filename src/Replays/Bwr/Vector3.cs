@@ -27,7 +27,7 @@ public struct Vector3 : IFlatbufferObject
     builder.PutFloat(X);
     return new Offset<Bwr.Vector3>(builder.Offset);
   }
-};
+}
 
 
 }

@@ -134,16 +134,16 @@ class GameStateSerializer {
     var handRight = _rigManager.physicsRig.rightHand.palmPositionTransform;
     var handRightPosition = handRight.localPosition;
     var handRightEulerAngles = handRight.localEulerAngles;
-    Bwr.Frame.AddPlayerPosition(
+    var feetPosition = TODO;
+    Bwr.Frame.AddPlayerState(
         builder,
-        Bwr.PlayerPosition.CreatePlayerPosition(
-            builder, vrRoot.position.x, vrRoot.position.y, vrRoot.position.z,
-            vrRoot.eulerAngles.y, _rigManager.ControllerRig.feetOffset,
-            handLeftPosition.x, handLeftPosition.y, handLeftPosition.z,
-            handLeftEulerAngles.x, handLeftEulerAngles.y, handLeftEulerAngles.z,
-            handRightPosition.x, handRightPosition.y, handRightPosition.z,
-            handRightEulerAngles.x, handRightEulerAngles.y,
-            handRightEulerAngles.z));
+        Bwr.PlayerState.CreatePlayerState(
+            builder, hmdPosition.x, hmdPosition.y, hmdPosition.z,
+            vrRoot.eulerAngles.y, handLeftPosition.x, handLeftPosition.y,
+            handLeftPosition.z, handLeftEulerAngles.x, handLeftEulerAngles.y,
+            handLeftEulerAngles.z, handRightPosition.x, handRightPosition.y,
+            handRightPosition.z, handRightEulerAngles.x, handRightEulerAngles.y,
+            handRightEulerAngles.z, _rigManager.ControllerRig.feetOffset));
 
     var frame = Bwr.Frame.EndFrame(builder);
     builder.Finish(frame.Value);

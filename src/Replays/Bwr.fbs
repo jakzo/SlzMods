@@ -41,8 +41,8 @@ table Frame {
   changed_settings: [ChangedSetting];
   /// Controller inputs
   vr_input: VrInput;
-  /// Player body positions within the game world
-  player_position: PlayerPosition;
+  /// Player body positions and state within the game world
+  player_state: PlayerState;
   /// Items carried by the player (may be null if none)
   inventory: [ItemInSlot];
 }
@@ -86,11 +86,6 @@ struct Transform {
   rotation_euler: Vector3;
 }
 
-struct TransformRotY {
-  position: Vector3;
-  rotation_y: float32;
-}
-
 struct HeadsetInput {
   /// Relative to VR root (play space)
   transform: Transform;
@@ -120,13 +115,19 @@ struct VrInput {
   right_controller: ControllerInput;
 }
 
-struct PlayerPosition {
-  /// Amount crouched, 0 is standing normally, 0.15 is on toes, -0.9 is fully crouched
-  feet_offset: float32;
+struct PlayerState {
+  /// Head position within game world
+  head: Vector3;
+  /// Body rotation within game world
+  body_rotation: float32;
   /// Position of hand in game world (can differ from controller position)
   left_hand: Transform;
   /// Position of hand in game world (can differ from controller position)
   right_hand: Transform;
+  /// Position of feet in game world
+  feet: Vector3;
+  /// Virtual crouch amount, 0 = standing normally, -0.9 = min, 0.15 = max
+  feet_offset: float32;
 }
 
 enum InventorySlot: uint8 {

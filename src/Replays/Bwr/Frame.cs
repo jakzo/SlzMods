@@ -28,8 +28,8 @@ public struct Frame : IFlatbufferObject
   public int ChangedSettingsLength { get { int o = __p.__offset(8); return o != 0 ? __p.__vector_len(o) : 0; } }
   /// Controller inputs
   public Bwr.VrInput? VrInput { get { int o = __p.__offset(10); return o != 0 ? (Bwr.VrInput?)(new Bwr.VrInput()).__assign(o + __p.bb_pos, __p.bb) : null; } }
-  /// Player body positions within the game world
-  public Bwr.PlayerPosition? PlayerPosition { get { int o = __p.__offset(12); return o != 0 ? (Bwr.PlayerPosition?)(new Bwr.PlayerPosition()).__assign(o + __p.bb_pos, __p.bb) : null; } }
+  /// Player body positions and state within the game world
+  public Bwr.PlayerState? PlayerState { get { int o = __p.__offset(12); return o != 0 ? (Bwr.PlayerState?)(new Bwr.PlayerState()).__assign(o + __p.bb_pos, __p.bb) : null; } }
   /// Items carried by the player (may be null if none)
   public Bwr.ItemInSlot? Inventory(int j) { int o = __p.__offset(14); return o != 0 ? (Bwr.ItemInSlot?)(new Bwr.ItemInSlot()).__assign(__p.__vector(o) + j * 2, __p.bb) : null; }
   public int InventoryLength { get { int o = __p.__offset(14); return o != 0 ? __p.__vector_len(o) : 0; } }
@@ -40,7 +40,7 @@ public struct Frame : IFlatbufferObject
   public static void AddChangedSettings(FlatBufferBuilder builder, VectorOffset changedSettingsOffset) { builder.AddOffset(2, changedSettingsOffset.Value, 0); }
   public static void StartChangedSettingsVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(8, numElems, 4); }
   public static void AddVrInput(FlatBufferBuilder builder, Offset<Bwr.VrInput> vrInputOffset) { builder.AddStruct(3, vrInputOffset.Value, 0); }
-  public static void AddPlayerPosition(FlatBufferBuilder builder, Offset<Bwr.PlayerPosition> playerPositionOffset) { builder.AddStruct(4, playerPositionOffset.Value, 0); }
+  public static void AddPlayerState(FlatBufferBuilder builder, Offset<Bwr.PlayerState> playerStateOffset) { builder.AddStruct(4, playerStateOffset.Value, 0); }
   public static void AddInventory(FlatBufferBuilder builder, VectorOffset inventoryOffset) { builder.AddOffset(5, inventoryOffset.Value, 0); }
   public static void StartInventoryVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(2, numElems, 1); }
   public static Offset<Bwr.Frame> EndFrame(FlatBufferBuilder builder) {

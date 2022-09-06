@@ -21,19 +21,19 @@ class GhostRigPrefab {
 
   private static GameObject CreateHead() {
     var head = CreateGameObject("Head");
-    AddCubeMesh(ref head, HEAD_WIDTH * -0.5f, HEAD_WIDTH * 0.5f,
-                HEAD_HEIGHT * -0.5f, HEAD_HEIGHT * 0.5f, HEAD_DEPTH * 0.0f,
-                HEAD_DEPTH * 1.0f);
+    Utilities.Geometry.AddCubeMesh(
+        ref head, HEAD_WIDTH * -0.5f, HEAD_WIDTH * 0.5f, HEAD_HEIGHT * -0.5f,
+        HEAD_HEIGHT * 0.5f, HEAD_DEPTH * 0.0f, HEAD_DEPTH * 1.0f);
     return head;
   }
 
   private static GameObject CreateController(bool isLeft) {
     var controller =
         CreateGameObject($"Controller{(isLeft ? "Left" : "Right")}");
-    AddCubeMesh(ref controller, CONTROLLER_WIDTH * -0.5f,
-                CONTROLLER_WIDTH * 0.5f, CONTROLLER_HEIGHT * -0.4f,
-                CONTROLLER_HEIGHT * 0.6f, CONTROLLER_DEPTH * 0.5f,
-                CONTROLLER_DEPTH * -0.5f);
+    Utilities.Geometry.AddCubeMesh(
+        ref controller, CONTROLLER_WIDTH * -0.5f, CONTROLLER_WIDTH * 0.5f,
+        CONTROLLER_HEIGHT * -0.4f, CONTROLLER_HEIGHT * 0.6f,
+        CONTROLLER_DEPTH * 0.5f, CONTROLLER_DEPTH * -0.5f);
     return controller;
   }
 
@@ -45,30 +45,6 @@ class GhostRigPrefab {
     };
     GameObject.DontDestroyOnLoad(go);
     return go;
-  }
-
-  private static void AddCubeMesh(ref GameObject gameObject, float left,
-                                  float right, float top, float bottom,
-                                  float front, float back) {
-    var meshFilter = gameObject.AddComponent<MeshFilter>();
-    meshFilter.mesh.Clear();
-    meshFilter.mesh.vertices = new[] {
-      new Vector3(left, top, back),     new Vector3(right, top, back),
-      new Vector3(right, bottom, back), new Vector3(left, bottom, back),
-      new Vector3(left, bottom, front), new Vector3(right, bottom, front),
-      new Vector3(right, top, front),   new Vector3(left, top, front),
-    };
-    meshFilter.mesh.triangles = new[] {
-      0, 2, 1, 0, 3, 2, // front
-      2, 3, 4, 2, 4, 5, // top
-      1, 2, 5, 1, 5, 6, // right
-      0, 7, 4, 0, 4, 3, // left
-      5, 4, 7, 5, 7, 6, // back
-      0, 6, 7, 0, 1, 6, // bottom
-    };
-    meshFilter.mesh.Optimize();
-    meshFilter.mesh.RecalculateNormals();
-    gameObject.AddComponent<MeshRenderer>();
   }
 }
 

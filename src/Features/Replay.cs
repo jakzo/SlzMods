@@ -22,6 +22,8 @@ class Replay : Feature {
   private static Replays.Ghost s_hotkey_ghost;
 
   public Replay() {
+    IsDev = true;
+
     // Start recording
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => cl.GetBButton() && cr.GetBButton(),

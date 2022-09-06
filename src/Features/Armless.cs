@@ -71,10 +71,8 @@ public class Armless : Feature {
                                     bool alsoSetControllers) {
     SetArmEnabled(true, isLeftArmEnabled);
     SetArmEnabled(false, isRightArmEnabled);
-    if (alsoSetControllers) {
-      IsLeftControllerEnabled = isLeftArmEnabled;
-      IsRightControllerEnabled = isRightArmEnabled;
-    }
+    IsLeftControllerEnabled = !alsoSetControllers || isLeftArmEnabled;
+    IsRightControllerEnabled = !alsoSetControllers || isRightArmEnabled;
   }
 
   public static void SetArmEnabled(bool leftArm, bool isEnabled) {
@@ -95,7 +93,7 @@ public class Armless : Feature {
     hand.GetComponent<Collider>().enabled = isEnabled;
     foreach (var collider in hand.transform.GetComponentsInChildren<Collider>())
       collider.enabled = isEnabled;
-    var armTransform = FindDescendantTransform(
+    var armTransform = Utilities.Unity.FindDescendantTransform(
         rigManager.gameWorldSkeletonRig.gameObject.transform,
         leftArm ? "l_AC_AuxSHJnt" : "r_AC_AuxSHJnt");
     if (armTransform == null)
@@ -111,19 +109,6 @@ public class Armless : Feature {
     hand.palmPositionTransform = isEnabled
                                      ? hand.transform.FindChild("PalmCenter")
                                      : dummyPalm.transform;
-  }
-
-  private static Transform FindDescendantTransform(Transform transform,
-                                                   string name) {
-    if (transform.name == name)
-      return transform;
-    for (var i = 0; i < transform.childCount; i++) {
-      var child = transform.GetChild(i);
-      var result = FindDescendantTransform(child, name);
-      if (result != null)
-        return result;
-    }
-    return null;
   }
 
   private static bool IsControllerEnabled(Controller controller) =>

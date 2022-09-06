@@ -7,6 +7,8 @@ class ControlTesting : Feature {
   private HashSet<string> _pressedKeys = new HashSet<string>();
   private StressLevelZero.Rig.RigManager _rigManager;
 
+  public ControlTesting() { IsDev = true; }
+
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     _rigManager = Object.FindObjectOfType<StressLevelZero.Rig.RigManager>();
   }

@@ -4,6 +4,7 @@ using HarmonyLib;
 
 namespace SpeedrunTools.Features {
 class Tas : Feature {
+  public Tas() { IsDev = true; }
 
   // [HarmonyPatch(typeof(Time), nameof(Time.time))]
   // class Time_time_Patch {

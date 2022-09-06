@@ -7,7 +7,7 @@ class FixPhysicsRate : Feature {
   private Data_Manager _dataManager;
   private int _lastPhysicsRate;
 
-  public FixPhysicsRate() { IsEnabledByDefault = false; }
+  public FixPhysicsRate() { IsDev = true; }
 
   public override void OnApplicationStart() {
     _steamVrSettings =

@@ -13,7 +13,7 @@ class Timer : Feature {
 
   public Timer() {
     IsAllowedInRuns = true;
-    IsEnabledByDefault = false;
+    IsDev = true;
   }
 
   public override void OnLevelStart(int sceneIdx) {

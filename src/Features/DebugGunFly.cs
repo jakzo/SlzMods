@@ -25,20 +25,8 @@ class DebugGunFly : Feature {
   private bool _isLastFrameFixedUpdate = false;
   private bool _isDebugging { get => _data != null; }
 
-  private static GameObject[] FindInDescendants(GameObject root, string name) {
-    var result = new List<GameObject>();
-    _FindInDescendants(root.transform, name, ref result);
-    return result.ToArray();
-  }
-  private static void _FindInDescendants(Transform transform, string name,
-                                         ref List<GameObject> result) {
-    if (transform.name == name)
-      result.Add(transform.gameObject);
-    for (int i = 0, count = transform.childCount; i < count; i++)
-      _FindInDescendants(transform.GetChild(i), name, ref result);
-  }
-
   public DebugGunFly() {
+    IsDev = true;
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => _rigManager != null && cr.GetThumbStick(),
       Handler = Toggle,
@@ -48,8 +36,9 @@ class DebugGunFly : Feature {
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     _rigManager = GameObject.FindObjectOfType<RigManager>();
     _weaponReceivers =
-        FindInDescendants(_rigManager.gameWorldSkeletonRig.gameObject,
-                          "WeaponReciever")
+        Utilities.Unity
+            .FindAllInDescendants(_rigManager.gameWorldSkeletonRig.gameObject,
+                                  "WeaponReciever")
             .Select(wr => wr.GetComponent<StressLevelZero.Props.Weapons
                                               .HandWeaponSlotReciever>())
             .ToArray();

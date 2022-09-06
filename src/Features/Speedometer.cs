@@ -15,7 +15,7 @@ class Speedometer : Feature {
     DefaultValue = 2.0f
   };
 
-  public Speedometer() { IsEnabledByDefault = false; }
+  public Speedometer() { IsDev = true; }
 
   public override void OnLevelStart(int sceneIdx) {
     var windowDuration = PrefWindowDuration.Read();

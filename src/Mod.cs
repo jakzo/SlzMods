@@ -29,14 +29,16 @@ public class Mod : MelonMod {
     new Features.Teleport(),
     new Features.Blindfold(),
     new Features.Gripless(),
+    new Features.Armless(),
+
+    // Dev features
     new Features.Speedometer(),
     new Features.Timer(),
     new Features.Replay(),
-    new Features.Armless(),
-    // new Features.DebugGunFly(),
-    // new Features.ControlTesting(),
-    // new Features.Fps(),
-    // new Features.Tas(),
+    new Features.DebugGunFly(),
+    new Features.ControlTesting(),
+    new Features.Fps(),
+    new Features.Tas(),
     new Features.FixPhysicsRate(),
   };
 
@@ -91,10 +93,12 @@ public class Mod : MelonMod {
     Utils.PrefDebug.Create();
     foreach (var feature in features) {
       var name = feature.GetType().Name;
+      var devText = feature.IsDev ? "Dev" : "";
       var enabledPref =
-          new Pref<bool>() { Id = $"enableFeature{name}",
-                             Name = $"Enable feature: {name}",
-                             DefaultValue = feature.IsEnabledByDefault };
+          new Pref<bool>() { Id = $"enable{devText}Feature{name}",
+                             Name = $"Enable dev feature: {name}",
+                             DefaultValue =
+                                 feature.IsEnabledByDefault && !feature.IsDev };
       enabledPref.Create();
       featureEnabledPrefs[feature] = enabledPref;
 

@@ -9,6 +9,8 @@ class Fps : Feature {
   private FpsTimer _updateTimer = new FpsTimer();
   private float _lastUpdate = 0;
 
+  public Fps() { IsDev = true; }
+
   public override void OnFixedUpdate() { _fixedUpdateTimer.OnFrame(Time.time); }
 
   public override void OnUpdate() {

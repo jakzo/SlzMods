@@ -33,8 +33,6 @@ public class Blindfolder {
 
   public bool IsBlindfolded = false;
 
-  private bool _isInited = false;
-
   public void SetBlindfold(bool blindfolded, float fadeTime = FADE_TIME) {
     var compositor = Valve.VRRenderingPackage.OpenVR.Compositor;
     if (compositor == null)

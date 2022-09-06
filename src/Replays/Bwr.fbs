@@ -121,13 +121,11 @@ struct VrInput {
 }
 
 struct PlayerPosition {
-  /// Position/rotation of player at their base (feet)
-  root: TransformRotY;
-  /// Amount crouched, X is on toes, X is fully crouched, X is standing normally
+  /// Amount crouched, 0 is standing normally, 0.15 is on toes, -0.9 is fully crouched
   feet_offset: float32;
-  /// Position of hand relative to base (can differ from controller position)
+  /// Position of hand in game world (can differ from controller position)
   left_hand: Transform;
-  /// Position of hand relative to base (can differ from controller position)
+  /// Position of hand in game world (can differ from controller position)
   right_hand: Transform;
 }
 

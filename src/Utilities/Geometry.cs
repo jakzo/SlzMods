@@ -92,7 +92,7 @@ public class Geometry {
     var meshFilter = gameObject.AddComponent<MeshFilter>();
     meshFilter.mesh.Clear();
     var circleCoords = Enumerable.Range(0, segments).Select(i => {
-      var angle = (float)segments / (float)i * (float)System.Math.PI * 2f;
+      var angle = (float)i / (float)segments * (float)System.Math.PI * 2f;
       return new Vector2(Mathf.Sin(angle) * radius, Mathf.Cos(angle) * radius);
     });
     meshFilter.mesh.vertices =
@@ -201,7 +201,7 @@ public class Geometry {
       var middlePointIndexCache = new Dictionary<long, int>();
       for (int i = 0; i < subdivisions; i++) {
         var newTriangles = new int[triangles.Length * 4];
-        for (var j = 0; i < triangles.Length; i += 3) {
+        for (var j = 0; j < triangles.Length; j += 3) {
           var i0 = triangles[j];
           var i1 = triangles[j + 1];
           var i2 = triangles[j + 2];
@@ -219,7 +219,7 @@ public class Geometry {
             i2, c, b, // 2
             a,  b, c, // 3
           }
-              .CopyTo(newTriangles, i * 4);
+              .CopyTo(newTriangles, j * 4);
         }
         triangles = newTriangles;
       }

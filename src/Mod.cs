@@ -40,6 +40,7 @@ public class Mod : MelonMod {
     new Features.Fps(),
     new Features.Tas(),
     new Features.FixPhysicsRate(),
+    new Features.DebugColliders(),
   };
 
   private static List<Feature> enabledFeatures = new List<Feature>();
@@ -93,12 +94,13 @@ public class Mod : MelonMod {
     Utils.PrefDebug.Create();
     foreach (var feature in features) {
       var name = feature.GetType().Name;
-      var devText = feature.IsDev ? "Dev" : "";
-      var enabledPref =
-          new Pref<bool>() { Id = $"enable{devText}Feature{name}",
-                             Name = $"Enable dev feature: {name}",
-                             DefaultValue =
-                                 feature.IsEnabledByDefault && !feature.IsDev };
+      var devName = feature.IsDev ? "Dev" : "";
+      var devText = feature.IsDev ? "dev " : "";
+      var enabledPref = new Pref<bool>() {
+        Id = $"enable{devName}Feature{name}",
+        Name = $"Enable {devText}feature: {name}",
+        DefaultValue = feature.IsEnabledByDefault && !feature.IsDev,
+      };
       enabledPref.Create();
       featureEnabledPrefs[feature] = enabledPref;
 

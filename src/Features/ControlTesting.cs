@@ -5,18 +5,13 @@ using UnityEngine;
 namespace SpeedrunTools.Features {
 class ControlTesting : Feature {
   private HashSet<string> _pressedKeys = new HashSet<string>();
-  private StressLevelZero.Rig.RigManager _rigManager;
 
   public ControlTesting() { IsDev = true; }
 
-  public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    _rigManager = Object.FindObjectOfType<StressLevelZero.Rig.RigManager>();
-  }
-
   public override void OnUpdate() {
-    if (_rigManager == null)
+    if (Mod.GameState.rigManager == null)
       return;
-    var controller = _rigManager.ControllerRig.leftController;
+    var controller = Mod.GameState.rigManager.ControllerRig.leftController;
     var keys = new(string, bool)[] {
       ("GetAButton", controller.GetAButton()),
       ("GetBButton", controller.GetBButton()),

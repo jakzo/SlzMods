@@ -31,10 +31,8 @@ class Speedometer : Feature {
       _tmp.alignment = TMPro.TextAlignmentOptions.BottomRight;
       _tmp.fontSize = 0.5f;
       _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-      var rigManager =
-          GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>();
       speedometerText.transform.SetParent(
-          rigManager.ControllerRig.leftController.transform);
+          Mod.GameState.rigManager.ControllerRig.leftController.transform);
       _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
       _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
     } else {

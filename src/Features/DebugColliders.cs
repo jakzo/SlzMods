@@ -6,7 +6,6 @@ using UnityEngine;
 namespace SpeedrunTools.Features {
 class DebugColliders : Feature {
   private DebugColliderPrefabs _prefabs;
-  private StressLevelZero.Rig.RigManager _rigManager;
   private List<(Collider, GameObject)> _colliders;
 
   public readonly Pref<bool> PrefHideBody = new Pref<bool>() {
@@ -18,8 +17,7 @@ class DebugColliders : Feature {
   public DebugColliders() { IsDev = true; }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    _rigManager = Object.FindObjectOfType<StressLevelZero.Rig.RigManager>();
-    if (_rigManager == null) {
+    if (Mod.GameState.rigManager == null) {
       MelonLogger.Warning("Could not find rig manager for debugging colliders");
       return;
     }
@@ -61,7 +59,8 @@ class DebugColliders : Feature {
     if (PrefHideBody.Read())
       foreach (var name in new[] { "Brett@neutral", "Body" }) {
         var transform =
-            _rigManager.gameWorldSkeletonRig.transform.FindChild(name);
+            Mod.GameState.rigManager.gameWorldSkeletonRig.transform.FindChild(
+                name);
         if (transform != null)
           transform.gameObject.active = false;
       }
@@ -117,7 +116,7 @@ class DebugColliders : Feature {
       where T : Collider {
     var colliders = new List<T>();
     Utilities.Unity.FindDescendantComponentsOfType(
-        ref colliders, _rigManager.physicsRig.transform);
+        ref colliders, Mod.GameState.rigManager.physicsRig.transform);
     var activeColliders = colliders.Where(
         collider => collider.enabled && collider.attachedRigidbody != null &&
                     IsPhysicalLayer(collider.gameObject.layer));

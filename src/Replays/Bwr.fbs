@@ -83,6 +83,7 @@ struct Vector3 {
 
 struct Transform {
   position: Vector3;
+  /// Euler rotation in degrees
   rotation_euler: Vector3;
 }
 
@@ -116,18 +117,18 @@ struct VrInput {
 }
 
 struct PlayerState {
-  /// Head position within game world
-  head: Vector3;
-  /// Body rotation within game world
-  body_rotation: float32;
-  /// Position of hand in game world (can differ from controller position)
-  left_hand: Transform;
-  /// Position of hand in game world (can differ from controller position)
-  right_hand: Transform;
-  /// Position of feet in game world
-  feet: Vector3;
+  /// Position of game world skeleton rig (base of feet)
+  body_position: Vector3;
+  /// Rotation in degrees of VR root (thumbstick rotation not HMD)
+  root_rotation: float32;
   /// Virtual crouch amount, 0 = standing normally, -0.9 = min, 0.15 = max
   feet_offset: float32;
+  /// Position of head in game world
+  head_position: Vector3;
+  /// Position of hand in game world
+  left_hand: Transform;
+  /// Position of hand in game world
+  right_hand: Transform;
 }
 
 enum InventorySlot: uint8 {

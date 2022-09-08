@@ -8,8 +8,7 @@ using UnityEngine;
 
 namespace SpeedrunTools.Replays {
 class Recorder {
-  private static readonly string TEMP_FILENAME =
-      $"temp.{Constants.REPLAY_EXTENSION}";
+  private static readonly string TEMP_FILENAME = "temp_replay";
   private static readonly string TEMP_FILE_PATH =
       Path.Combine(Utils.REPLAYS_DIR, TEMP_FILENAME);
 
@@ -19,7 +18,6 @@ class Recorder {
   public float MaxDuration;
 
   private float _minFrameTime;
-  private int _numFrames = 0;
   private System.DateTime _startTime;
   private List<FlatBuffers.Offset<Bwr.Level>> _levels =
       new List<FlatBuffers.Offset<Bwr.Level>>();
@@ -73,6 +71,7 @@ class Recorder {
 
     if (!_loadStartTime.HasValue && Mod.GameState.currentSceneIdx.HasValue)
       OnLevelEnd(Mod.GameState.currentSceneIdx.Value);
+    _loadStartTime = null;
 
     IsRecording = false;
     var duration = _lastFrameTime - _relativeStartTime;
@@ -96,7 +95,6 @@ class Recorder {
   }
 
   public void OnLevelEnd(int endedSceneIdx) {
-    _serializer.OnSceneChange();
     if (!IsRecording || _loadStartTime.HasValue)
       return;
     _levels.Add(Bwr.Level.CreateLevel(
@@ -107,8 +105,6 @@ class Recorder {
   }
 
   public void OnLevelStart() {
-    _serializer.OnSceneChange();
-
     // Resume recording after loading
     if (_loadStartTime.HasValue) {
       _levelStartTime = Time.time;

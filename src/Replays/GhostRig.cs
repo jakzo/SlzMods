@@ -7,43 +7,52 @@ using UnityEngine;
 
 namespace SpeedrunTools.Replays {
 class GhostRigPrefab {
-  private const float HEAD_WIDTH = 0.4f;
-  private const float HEAD_HEIGHT = 0.25f;
-  private const float HEAD_DEPTH = 0.15f;
-  private const float CONTROLLER_WIDTH = 0.15f;
-  private const float CONTROLLER_HEIGHT = 0.20f;
-  private const float CONTROLLER_DEPTH = 0.15f;
+  private const float HEAD_WIDTH = 0.3f;
+  private const float HEAD_HEIGHT = 0.2f;
+  private const float HEAD_DEPTH = 0.1f;
+  private const float CONTROLLER_WIDTH = 0.10f;
+  private const float CONTROLLER_HEIGHT = 0.15f;
+  private const float CONTROLLER_DEPTH = 0.10f;
 
-  public GameObject Root = CreateHead();
-  public GameObject Head = CreateHead();
-  public GameObject ControllerLeft = CreateController(true);
-  public GameObject ControllerRight = CreateController(false);
+  public GameObject Root;
+  public GameObject Head;
+  public GameObject ControllerLeft;
+  public GameObject ControllerRight;
 
-  private static GameObject CreateHead() {
-    var head = CreateGameObject("Head");
+  public GhostRigPrefab() {
+    Root = CreateGameObject("Root", null);
+    Head = CreateHead(Root);
+    ControllerLeft = CreateController(Root, true);
+    ControllerRight = CreateController(Root, false);
+  }
+
+  private static GameObject CreateHead(GameObject root) {
+    var head = CreateGameObject("Head", root);
     Utilities.Geometry.AddCubeMesh(
         ref head, HEAD_WIDTH * -0.5f, HEAD_WIDTH * 0.5f, HEAD_HEIGHT * -0.5f,
-        HEAD_HEIGHT * 0.5f, HEAD_DEPTH * 0.0f, HEAD_DEPTH * 1.0f);
+        HEAD_HEIGHT * 0.5f, HEAD_DEPTH * -1.0f, HEAD_DEPTH * 0.0f);
     return head;
   }
 
-  private static GameObject CreateController(bool isLeft) {
+  private static GameObject CreateController(GameObject root, bool isLeft) {
     var controller =
-        CreateGameObject($"Controller{(isLeft ? "Left" : "Right")}");
+        CreateGameObject($"Controller{(isLeft ? "Left" : "Right")}", root);
     Utilities.Geometry.AddCubeMesh(
         ref controller, CONTROLLER_WIDTH * -0.5f, CONTROLLER_WIDTH * 0.5f,
         CONTROLLER_HEIGHT * -0.4f, CONTROLLER_HEIGHT * 0.6f,
-        CONTROLLER_DEPTH * 0.5f, CONTROLLER_DEPTH * -0.5f);
+        CONTROLLER_DEPTH * -0.5f, CONTROLLER_DEPTH * 0.5f);
     return controller;
   }
 
-  private static GameObject CreateGameObject(string name) {
+  private static GameObject CreateGameObject(string name, GameObject parent) {
     var go = new GameObject($"SpeedrunTools_Ghost_{name}") {
       // https://gamedev.stackexchange.com/questions/71713/how-to-create-a-new-gameobject-without-adding-it-to-the-scene
       // hideFlags = HideFlags.HideInHierarchy,
-      active = false,
+      active = parent != null,
     };
     GameObject.DontDestroyOnLoad(go);
+    if (parent != null)
+      go.transform.SetParent(parent.transform);
     return go;
   }
 }
@@ -72,9 +81,21 @@ class GhostRig {
   }
 
   public void SetColor(Color color) {
-    foreach (var transform in new Transform[] { Head, ControllerLeft,
-                                                ControllerRight })
-      transform.gameObject.GetComponent<MeshRenderer>().material.color = color;
+    foreach (var transform in new[] { Head, ControllerLeft, ControllerRight }) {
+      var material = transform.gameObject.GetComponent<MeshRenderer>().material;
+
+      // Set transparent render mode
+      material.SetFloat("_Mode", 3);
+      material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+      material.SetInt("_DstBlend",
+                      (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+      material.SetInt("_ZWrite", 0);
+      material.DisableKeyword("_ALPHATEST_ON");
+      material.DisableKeyword("_ALPHABLEND_ON");
+      material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+      material.renderQueue = 3000;
+      material.color = color;
+    }
   }
 }
 }

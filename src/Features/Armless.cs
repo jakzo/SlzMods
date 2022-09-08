@@ -76,8 +76,7 @@ public class Armless : Feature {
   }
 
   public static void SetArmEnabled(bool leftArm, bool isEnabled) {
-    var rigManager = Object.FindObjectOfType<StressLevelZero.Rig.RigManager>();
-    if (rigManager == null) {
+    if (Mod.GameState.rigManager == null) {
       if (!isEnabled)
         Utils.LogDebug("Rig manager not found. Not disabling arm.");
       return;
@@ -88,13 +87,13 @@ public class Armless : Feature {
     else
       IsRightArmEnabled = isEnabled;
 
-    var physicsRig = rigManager.physicsRig;
+    var physicsRig = Mod.GameState.rigManager.physicsRig;
     var hand = leftArm ? physicsRig.leftHand : physicsRig.rightHand;
     hand.GetComponent<Collider>().enabled = isEnabled;
     foreach (var collider in hand.transform.GetComponentsInChildren<Collider>())
       collider.enabled = isEnabled;
     var armTransform = Utilities.Unity.FindDescendantTransform(
-        rigManager.gameWorldSkeletonRig.gameObject.transform,
+        Mod.GameState.rigManager.gameWorldSkeletonRig.gameObject.transform,
         leftArm ? "l_AC_AuxSHJnt" : "r_AC_AuxSHJnt");
     if (armTransform == null)
       Utils.LogDebug("Arm bone not found");

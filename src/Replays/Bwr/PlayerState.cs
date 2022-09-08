@@ -16,26 +16,21 @@ public struct PlayerState : IFlatbufferObject
   public void __init(int _i, ByteBuffer _bb) { __p = new Struct(_i, _bb); }
   public PlayerState __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  /// Head position within game world
-  public Bwr.Vector3 Head { get { return (new Bwr.Vector3()).__assign(__p.bb_pos + 0, __p.bb); } }
-  /// Body rotation within game world
-  public float BodyRotation { get { return __p.bb.GetFloat(__p.bb_pos + 12); } }
-  /// Position of hand in game world (can differ from controller position)
-  public Bwr.Transform LeftHand { get { return (new Bwr.Transform()).__assign(__p.bb_pos + 16, __p.bb); } }
-  /// Position of hand in game world (can differ from controller position)
-  public Bwr.Transform RightHand { get { return (new Bwr.Transform()).__assign(__p.bb_pos + 40, __p.bb); } }
-  /// Position of feet in game world
-  public Bwr.Vector3 Feet { get { return (new Bwr.Vector3()).__assign(__p.bb_pos + 64, __p.bb); } }
+  /// Position of game world skeleton rig (base of feet)
+  public Bwr.Vector3 BodyPosition { get { return (new Bwr.Vector3()).__assign(__p.bb_pos + 0, __p.bb); } }
+  /// Base rotation in degrees (of VR root, thumbstick rotation not HMD)
+  public float RootRotation { get { return __p.bb.GetFloat(__p.bb_pos + 12); } }
   /// Virtual crouch amount, 0 = standing normally, -0.9 = min, 0.15 = max
-  public float FeetOffset { get { return __p.bb.GetFloat(__p.bb_pos + 76); } }
+  public float FeetOffset { get { return __p.bb.GetFloat(__p.bb_pos + 16); } }
+  /// Position of head in game world
+  public Bwr.Vector3 HeadPosition { get { return (new Bwr.Vector3()).__assign(__p.bb_pos + 20, __p.bb); } }
+  /// Position of hand in game world
+  public Bwr.Transform LeftHand { get { return (new Bwr.Transform()).__assign(__p.bb_pos + 32, __p.bb); } }
+  /// Position of hand in game world
+  public Bwr.Transform RightHand { get { return (new Bwr.Transform()).__assign(__p.bb_pos + 56, __p.bb); } }
 
-  public static Offset<Bwr.PlayerState> CreatePlayerState(FlatBufferBuilder builder, float head_X, float head_Y, float head_Z, float BodyRotation, float left_hand_position_X, float left_hand_position_Y, float left_hand_position_Z, float left_hand_rotation_euler_X, float left_hand_rotation_euler_Y, float left_hand_rotation_euler_Z, float right_hand_position_X, float right_hand_position_Y, float right_hand_position_Z, float right_hand_rotation_euler_X, float right_hand_rotation_euler_Y, float right_hand_rotation_euler_Z, float feet_X, float feet_Y, float feet_Z, float FeetOffset) {
+  public static Offset<Bwr.PlayerState> CreatePlayerState(FlatBufferBuilder builder, float body_position_X, float body_position_Y, float body_position_Z, float RootRotation, float FeetOffset, float head_position_X, float head_position_Y, float head_position_Z, float left_hand_position_X, float left_hand_position_Y, float left_hand_position_Z, float left_hand_rotation_euler_X, float left_hand_rotation_euler_Y, float left_hand_rotation_euler_Z, float right_hand_position_X, float right_hand_position_Y, float right_hand_position_Z, float right_hand_rotation_euler_X, float right_hand_rotation_euler_Y, float right_hand_rotation_euler_Z) {
     builder.Prep(4, 80);
-    builder.PutFloat(FeetOffset);
-    builder.Prep(4, 12);
-    builder.PutFloat(feet_Z);
-    builder.PutFloat(feet_Y);
-    builder.PutFloat(feet_X);
     builder.Prep(4, 24);
     builder.Prep(4, 12);
     builder.PutFloat(right_hand_rotation_euler_Z);
@@ -54,11 +49,16 @@ public struct PlayerState : IFlatbufferObject
     builder.PutFloat(left_hand_position_Z);
     builder.PutFloat(left_hand_position_Y);
     builder.PutFloat(left_hand_position_X);
-    builder.PutFloat(BodyRotation);
     builder.Prep(4, 12);
-    builder.PutFloat(head_Z);
-    builder.PutFloat(head_Y);
-    builder.PutFloat(head_X);
+    builder.PutFloat(head_position_Z);
+    builder.PutFloat(head_position_Y);
+    builder.PutFloat(head_position_X);
+    builder.PutFloat(FeetOffset);
+    builder.PutFloat(RootRotation);
+    builder.Prep(4, 12);
+    builder.PutFloat(body_position_Z);
+    builder.PutFloat(body_position_Y);
+    builder.PutFloat(body_position_X);
     return new Offset<Bwr.PlayerState>(builder.Offset);
   }
 }

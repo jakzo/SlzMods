@@ -9,23 +9,21 @@ using Valve.VR;
 
 namespace SpeedrunTools.Replays {
 class GameStateSerializer {
-  private StressLevelZero.Rig.RigManager _rigManager;
   private (Bwr.SettingType, float)[] _prevSettings;
   private byte _buttonsPressedLeft;
   private byte _buttonsPressedRight;
   private int _skippedFrames = -1;
 
-  public void OnSceneChange() { _rigManager = null; }
-
   public void OnUpdate() {
-    if (_rigManager == null)
+    if (Mod.GameState.rigManager == null)
       return;
 
     _skippedFrames++;
-    RegisterButtonPresses(_rigManager.ControllerRig.leftController,
+    RegisterButtonPresses(Mod.GameState.rigManager.ControllerRig.leftController,
                           ref _buttonsPressedLeft);
-    RegisterButtonPresses(_rigManager.ControllerRig.rightController,
-                          ref _buttonsPressedRight);
+    RegisterButtonPresses(
+        Mod.GameState.rigManager.ControllerRig.rightController,
+        ref _buttonsPressedRight);
   }
 
   private void
@@ -50,9 +48,9 @@ class GameStateSerializer {
   }
 
   public byte[] BuildFrame(float secondsElapsed) {
-    if (_rigManager == null) {
-      _rigManager = Object.FindObjectOfType<StressLevelZero.Rig.RigManager>();
-    }
+    var rigManager = Mod.GameState.rigManager;
+    if (rigManager == null)
+      throw new System.Exception("No rig manager found");
 
     var builder = new FlatBuffers.FlatBufferBuilder(1024);
 
@@ -101,18 +99,17 @@ class GameStateSerializer {
     if (changedSettingsOffset.HasValue)
       Bwr.Frame.AddChangedSettings(builder, changedSettingsOffset.Value);
 
-    var hmdPosition = _rigManager.ControllerRig.hmdTransform.localPosition;
-    var hmdEulerAngles =
-        _rigManager.ControllerRig.hmdTransform.localEulerAngles;
-    var controllerLeft = _rigManager.ControllerRig.leftController;
+    var hmd = rigManager.ControllerRig.hmdTransform.parent;
+    var hmdPosition = rigManager.ControllerRig._lastTrackedHead;
+    var hmdEulerAngles = hmd.localRotation.eulerAngles;
+    var controllerLeft = rigManager.ControllerRig.leftController;
     var controllerLeftThumbstickAxis = controllerLeft.GetThumbStickAxis();
     var controllerLeftPosition = controllerLeft.transform.localPosition;
     var controllerLeftEulerAngles = controllerLeft.transform.localEulerAngles;
-    var controllerRight = _rigManager.ControllerRig.rightController;
+    var controllerRight = rigManager.ControllerRig.rightController;
     var controllerRightThumbstickAxis = controllerRight.GetThumbStickAxis();
     var controllerRightPosition = controllerRight.transform.localPosition;
     var controllerRightEulerAngles = controllerRight.transform.localEulerAngles;
-    var vrRoot = _rigManager.ControllerRig.vrRoot;
     Bwr.Frame.AddVrInput(
         builder,
         Bwr.VrInput.CreateVrInput(
@@ -128,22 +125,22 @@ class GameStateSerializer {
             controllerRightPosition.z, controllerRightEulerAngles.x,
             controllerRightEulerAngles.y, controllerRightEulerAngles.z));
 
-    var handLeft = _rigManager.physicsRig.leftHand.palmPositionTransform;
-    var handLeftPosition = handLeft.localPosition;
-    var handLeftEulerAngles = handLeft.localEulerAngles;
-    var handRight = _rigManager.physicsRig.rightHand.palmPositionTransform;
-    var handRightPosition = handRight.localPosition;
-    var handRightEulerAngles = handRight.localEulerAngles;
-    var feetPosition = TODO;
+    var bodyPosition = rigManager.gameWorldSkeletonRig.transform.position;
+    var handLeft = rigManager.physicsRig.leftHand.palmPositionTransform;
+    var handLeftEulerAngles = handLeft.eulerAngles;
+    var handRight = rigManager.physicsRig.rightHand.palmPositionTransform;
+    var handRightEulerAngles = handRight.eulerAngles;
     Bwr.Frame.AddPlayerState(
         builder,
         Bwr.PlayerState.CreatePlayerState(
-            builder, hmdPosition.x, hmdPosition.y, hmdPosition.z,
-            vrRoot.eulerAngles.y, handLeftPosition.x, handLeftPosition.y,
-            handLeftPosition.z, handLeftEulerAngles.x, handLeftEulerAngles.y,
-            handLeftEulerAngles.z, handRightPosition.x, handRightPosition.y,
-            handRightPosition.z, handRightEulerAngles.x, handRightEulerAngles.y,
-            handRightEulerAngles.z, _rigManager.ControllerRig.feetOffset));
+            builder, bodyPosition.x, bodyPosition.y, bodyPosition.z,
+            rigManager.ControllerRig.vrRoot.localEulerAngles.y,
+            rigManager.ControllerRig.feetOffset, hmd.position.x, hmd.position.y,
+            hmd.position.z, handLeft.position.x, handLeft.position.y,
+            handLeft.position.z, handLeftEulerAngles.x, handLeftEulerAngles.y,
+            handLeftEulerAngles.z, handRight.position.x, handRight.position.y,
+            handRight.position.z, handRightEulerAngles.x,
+            handRightEulerAngles.y, handRightEulerAngles.z));
 
     var frame = Bwr.Frame.EndFrame(builder);
     builder.Finish(frame.Value);

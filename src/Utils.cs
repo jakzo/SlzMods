@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using StressLevelZero.Rig;
 
 namespace SpeedrunTools {
 class Utils {
@@ -63,9 +64,8 @@ class Utils {
                          Name = "Print debug logs to console",
                          DefaultValue = false };
 
-  public static UnityEngine.Vector3
-  GetPlayerPos(StressLevelZero.Rig.RigManager rigManager) {
-    return rigManager.ControllerRig.transform.position;
+  public static UnityEngine.Vector3 GetPlayerPos() {
+    return Mod.GameState.rigManager.gameWorldSkeletonRig.transform.position;
   }
 
   public static void LogDebug(string msg, params object[] data) {
@@ -97,12 +97,11 @@ interface IPref {
 public class Hotkeys {
   private Dictionary<Hotkey, (Feature, bool)> _hotkeys =
       new Dictionary<Hotkey, (Feature, bool)>();
-  private StressLevelZero.Rig.BaseController[] _controllers;
+  private BaseController[] _controllers;
 
   public void Init() {
     var controllerObjects =
-        UnityEngine.Object
-            .FindObjectsOfType<StressLevelZero.Rig.BaseController>();
+        UnityEngine.Object.FindObjectsOfType<BaseController>();
     _controllers =
         new string[] { "left", "right" }
             .Select(type => $"Controller ({type})")
@@ -116,7 +115,7 @@ public class Hotkeys {
                                                      $"\n- {controller.name}"));
                 MelonLogger.Warning(
                     $"Could not find {name}. Hotkeys will not work until reloading the level. Found controllers are:{foundControllers}");
-                return new StressLevelZero.Rig.BaseController();
+                return new BaseController();
               }
             })
             .ToArray();
@@ -154,8 +153,7 @@ public class Hotkeys {
 }
 
 public class Hotkey {
-  public Func<StressLevelZero.Rig.BaseController,
-              StressLevelZero.Rig.BaseController, bool> Predicate { get; set; }
+  public Func<BaseController, BaseController, bool> Predicate { get; set; }
   public Action Handler { get; set; }
 }
 
@@ -180,5 +178,6 @@ public struct GameState {
   public int? prevSceneIdx;
   public int? currentSceneIdx;
   public int? nextSceneIdx;
+  public RigManager rigManager;
 }
 }

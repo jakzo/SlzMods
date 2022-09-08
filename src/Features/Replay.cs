@@ -66,7 +66,7 @@ class Replay : Feature {
               s_hotkey_replay = null;
               MelonLogger.Msg("Playback stopped");
             } else {
-              s_hotkey_ghost = new Replays.Ghost(s_hotkey_replay);
+              s_hotkey_ghost = new Replays.Ghost(s_hotkey_replay, true);
               s_hotkey_ghost.Start();
               MelonLogger.Msg("Playback started");
             }
@@ -76,16 +76,17 @@ class Replay : Feature {
 
   public override void OnUpdate() {
     s_hotkey_recorder?.OnUpdate();
-    s_hotkey_ghost?.OnUpdate(
-        StressLevelZero.Utilities.BoneworksSceneManager.currentSceneIndex);
+    s_hotkey_ghost?.OnUpdate();
   }
 
   public override void OnLoadingScreen(int nextSceneIdx, int prevSceneIdx) {
     s_hotkey_recorder?.OnLevelEnd(prevSceneIdx);
+    s_hotkey_ghost?.OnLoadingScreen();
   }
 
   public override void OnLevelStart(int sceneIdx) {
     s_hotkey_recorder?.OnLevelStart();
+    s_hotkey_ghost?.OnLevelStart();
   }
 }
 }

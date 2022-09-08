@@ -137,6 +137,7 @@ public class Mod : MelonMod {
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     Utils.LogDebug("OnSceneWasInitialized");
+    GameState.rigManager = Utilities.Boneworks.GetRigManager();
     s_hotkeys.Init();
     OnFeatureCallback(feature =>
                           feature.OnSceneWasInitialized(buildIndex, sceneName));
@@ -168,13 +169,15 @@ public class Mod : MelonMod {
     internal static void Prefix(float fSeconds, bool bFadeIn) {
       if (bFadeIn) {
         GameState.prevSceneIdx = GameState.currentSceneIdx;
+        var prevSceneIdx = GameState.currentSceneIdx ?? 0;
         GameState.currentSceneIdx = null;
-        OnFeatureCallback(
-            feature => feature.OnLoadingScreen(GameState.nextSceneIdx ?? 0,
-                                               GameState.currentSceneIdx ?? 0));
+        GameState.rigManager = null;
+        OnFeatureCallback(feature => feature.OnLoadingScreen(
+                              GameState.nextSceneIdx ?? 0, prevSceneIdx));
       } else {
         GameState.currentSceneIdx = GameState.nextSceneIdx;
         GameState.nextSceneIdx = null;
+        GameState.rigManager = Utilities.Boneworks.GetRigManager();
         OnFeatureCallback(
             feature => feature.OnLevelStart(GameState.currentSceneIdx ?? 0));
       }

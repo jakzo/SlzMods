@@ -46,15 +46,15 @@ public class Geometry {
   }
 
   public static MeshRenderer AddCubeMesh(ref GameObject gameObject, float left,
-                                         float right, float top, float bottom,
-                                         float front, float back) {
+                                         float right, float bottom, float top,
+                                         float back, float front) {
     var meshFilter = gameObject.AddComponent<MeshFilter>();
     meshFilter.mesh.Clear();
     meshFilter.mesh.vertices = new[] {
-      new Vector3(left, top, back),     new Vector3(right, top, back),
-      new Vector3(right, bottom, back), new Vector3(left, bottom, back),
-      new Vector3(left, bottom, front), new Vector3(right, bottom, front),
-      new Vector3(right, top, front),   new Vector3(left, top, front),
+      new Vector3(right, top, back),     new Vector3(left, top, back),
+      new Vector3(left, bottom, back),   new Vector3(right, bottom, back),
+      new Vector3(right, bottom, front), new Vector3(left, bottom, front),
+      new Vector3(left, top, front),     new Vector3(right, top, front),
     };
     meshFilter.mesh.triangles = new[] {
       0, 2, 1, 0, 3, 2, // front

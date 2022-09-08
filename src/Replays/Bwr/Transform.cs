@@ -17,6 +17,7 @@ public struct Transform : IFlatbufferObject
   public Transform __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public Bwr.Vector3 Position { get { return (new Bwr.Vector3()).__assign(__p.bb_pos + 0, __p.bb); } }
+  /// Euler rotation in degrees
   public Bwr.Vector3 RotationEuler { get { return (new Bwr.Vector3()).__assign(__p.bb_pos + 12, __p.bb); } }
 
   public static Offset<Bwr.Transform> CreateTransform(FlatBufferBuilder builder, float position_X, float position_Y, float position_Z, float rotation_euler_X, float rotation_euler_Y, float rotation_euler_Z) {

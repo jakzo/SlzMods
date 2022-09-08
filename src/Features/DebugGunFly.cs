@@ -17,7 +17,6 @@ class DebugGunFly : Feature {
 
   public float UpdateFrequency = 1;
 
-  private RigManager _rigManager;
   private StressLevelZero.Props.Weapons
       .HandWeaponSlotReciever[] _weaponReceivers = {};
   private List<float[]> _data;
@@ -28,17 +27,18 @@ class DebugGunFly : Feature {
   public DebugGunFly() {
     IsDev = true;
     Hotkeys.Add(new Hotkey() {
-      Predicate = (cl, cr) => _rigManager != null && cr.GetThumbStick(),
+      Predicate = (cl, cr) =>
+          Mod.GameState.rigManager != null && cr.GetThumbStick(),
       Handler = Toggle,
     });
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    _rigManager = GameObject.FindObjectOfType<RigManager>();
     _weaponReceivers =
         Utilities.Unity
-            .FindAllInDescendants(_rigManager.gameWorldSkeletonRig.gameObject,
-                                  "WeaponReciever")
+            .FindAllInDescendants(
+                Mod.GameState.rigManager.gameWorldSkeletonRig.gameObject,
+                "WeaponReciever")
             .Select(wr => wr.GetComponent<StressLevelZero.Props.Weapons
                                               .HandWeaponSlotReciever>())
             .ToArray();
@@ -54,7 +54,7 @@ class DebugGunFly : Feature {
       return;
 
     if (_lastFrameTime != 0f) {
-      var playerPos = _rigManager.physicsRig.transform.position;
+      var playerPos = Mod.GameState.rigManager.physicsRig.transform.position;
       var receiverWithWeapon =
           _weaponReceivers.FirstOrDefault(wr => wr.m_SlottedWeapon != null);
       if (receiverWithWeapon == null) {

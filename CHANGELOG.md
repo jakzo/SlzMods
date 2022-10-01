@@ -1,3 +1,7 @@
+## 2.3.0
+
+Added one controller and armless modes. Also added replays as a dev feature that can be enabled via preferences. Various other undocumented dev features have also been added.
+
 ## 2.2.2
 
 Fixed load when controllers are missing.

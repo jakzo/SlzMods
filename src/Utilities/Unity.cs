@@ -39,5 +39,15 @@ public class Unity {
     for (int i = 0, count = transform.childCount; i < count; i++)
       _FindAllInDescendants(transform.GetChild(i), name, ref result);
   }
+
+  public static GameObject[] ChildrenToArray(GameObject parent) {
+    var children = new List<GameObject>();
+    for (var i = 0; i < parent.transform.childCount; i++)
+      children.Add(parent.transform.GetChild(i).gameObject);
+    return children.ToArray();
+  }
+
+  public static Color GenerateColor(int i) =>
+      Color.HSVToRGB(i * 0.064f, 0.9f - i / 16 * 0.3f % 0.8f, 0.9f);
 }
 }

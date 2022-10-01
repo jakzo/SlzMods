@@ -19,28 +19,39 @@ public struct Metadata : IFlatbufferObject
   public void __init(int _i, ByteBuffer _bb) { __p = new Table(_i, _bb); }
   public Metadata __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
+  /// The type of speedrun that was performed
+  public Bwr.GameMode GameMode { get { int o = __p.__offset(4); return o != 0 ? (Bwr.GameMode)__p.bb.Get(o + __p.bb_pos) : Bwr.GameMode.NONE; } }
   /// Real-world time in milliseconds since epoch
-  public long StartTime { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetLong(o + __p.bb_pos) : (long)0; } }
+  public long StartTime { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetLong(o + __p.bb_pos) : (long)0; } }
+  /// Whether the run was completed successfully
+  public bool Completed { get { int o = __p.__offset(8); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
   /// In seconds not including loads
-  public float Duration { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
-  public Bwr.Level? Levels(int j) { int o = __p.__offset(8); return o != 0 ? (Bwr.Level?)(new Bwr.Level()).__assign(__p.__indirect(__p.__vector(o) + j * 4), __p.bb) : null; }
-  public int LevelsLength { get { int o = __p.__offset(8); return o != 0 ? __p.__vector_len(o) : 0; } }
+  public float Duration { get { int o = __p.__offset(10); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  /// Metadata for each played level (in the order they were played through)
+  public Bwr.Level? Levels(int j) { int o = __p.__offset(12); return o != 0 ? (Bwr.Level?)(new Bwr.Level()).__assign(__p.__indirect(__p.__vector(o) + j * 4), __p.bb) : null; }
+  public int LevelsLength { get { int o = __p.__offset(12); return o != 0 ? __p.__vector_len(o) : 0; } }
 
   public static Offset<Bwr.Metadata> CreateMetadata(FlatBufferBuilder builder,
+      Bwr.GameMode game_mode = Bwr.GameMode.NONE,
       long start_time = 0,
+      bool completed = false,
       float duration = 0.0f,
       VectorOffset levelsOffset = default(VectorOffset)) {
-    builder.StartTable(3);
+    builder.StartTable(5);
     Metadata.AddStartTime(builder, start_time);
     Metadata.AddLevels(builder, levelsOffset);
     Metadata.AddDuration(builder, duration);
+    Metadata.AddCompleted(builder, completed);
+    Metadata.AddGameMode(builder, game_mode);
     return Metadata.EndMetadata(builder);
   }
 
-  public static void StartMetadata(FlatBufferBuilder builder) { builder.StartTable(3); }
-  public static void AddStartTime(FlatBufferBuilder builder, long startTime) { builder.AddLong(0, startTime, 0); }
-  public static void AddDuration(FlatBufferBuilder builder, float duration) { builder.AddFloat(1, duration, 0.0f); }
-  public static void AddLevels(FlatBufferBuilder builder, VectorOffset levelsOffset) { builder.AddOffset(2, levelsOffset.Value, 0); }
+  public static void StartMetadata(FlatBufferBuilder builder) { builder.StartTable(5); }
+  public static void AddGameMode(FlatBufferBuilder builder, Bwr.GameMode gameMode) { builder.AddByte(0, (byte)gameMode, 0); }
+  public static void AddStartTime(FlatBufferBuilder builder, long startTime) { builder.AddLong(1, startTime, 0); }
+  public static void AddCompleted(FlatBufferBuilder builder, bool completed) { builder.AddBool(2, completed, false); }
+  public static void AddDuration(FlatBufferBuilder builder, float duration) { builder.AddFloat(3, duration, 0.0f); }
+  public static void AddLevels(FlatBufferBuilder builder, VectorOffset levelsOffset) { builder.AddOffset(4, levelsOffset.Value, 0); }
   public static VectorOffset CreateLevelsVector(FlatBufferBuilder builder, Offset<Bwr.Level>[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddOffset(data[i].Value); return builder.EndVector(); }
   public static VectorOffset CreateLevelsVectorBlock(FlatBufferBuilder builder, Offset<Bwr.Level>[] data) { builder.StartVector(4, data.Length, 4); builder.Add(data); return builder.EndVector(); }
   public static VectorOffset CreateLevelsVectorBlock(FlatBufferBuilder builder, ArraySegment<Offset<Bwr.Level>> data) { builder.StartVector(4, data.Count, 4); builder.Add(data); return builder.EndVector(); }
@@ -48,7 +59,7 @@ public struct Metadata : IFlatbufferObject
   public static void StartLevelsVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static Offset<Bwr.Metadata> EndMetadata(FlatBufferBuilder builder) {
     int o = builder.EndTable();
-    builder.Required(o, 8);  // levels
+    builder.Required(o, 12);  // levels
     return new Offset<Bwr.Metadata>(o);
   }
 }

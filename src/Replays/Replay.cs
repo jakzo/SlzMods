@@ -2,9 +2,11 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using MelonLoader;
 
 namespace SpeedrunTools.Replays {
 class Replay {
+  private FileStream _fileStream;
   private BinaryReader _reader;
   private int _framesEndIdx;
 
@@ -14,7 +16,10 @@ class Replay {
   public Replay(string filePath) {
     FilePath = filePath;
 
-    _reader = new BinaryReader(File.OpenRead(filePath));
+    _fileStream =
+        new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                       FrameReader.BUFFER_SIZE, FileOptions.SequentialScan);
+    _reader = new BinaryReader(_fileStream);
 
     var magicHeader = _reader.ReadBytes(Constants.MAGIC_HEADER_BYTES.Length);
     if (!magicHeader.SequenceEqual(Constants.MAGIC_HEADER_BYTES))
@@ -42,8 +47,8 @@ class Replay {
     }
   }
 
-  public FrameReader CreateFrameReader() => new FrameReader(_reader, Metadata,
-                                                            _framesEndIdx);
+  public FrameReader
+  CreateFrameReader() => new FrameReader(_fileStream, Metadata, _framesEndIdx);
 
   public System.DateTime
   GetStartTime() => System.DateTime.FromBinary(Metadata.StartTime);
@@ -56,39 +61,126 @@ class ReplayException : System.Exception {
 }
 
 class FrameReader {
-  private BinaryReader _reader;
+  // Stores two alternating buffers of this size
+  // Must be larger than the size of a frame
+  public const int BUFFER_SIZE = 128 * 1024;
+
+  private FileStream _fileStream;
+  private Bwr.Metadata _metadata;
   private int _framesEndIdx;
+  private byte[][] _buffers;
+  private int _bufferNum;
+  private int _bufferIdx;
+  private long _fileIdx;
   private int _nextLevelIdx;
   private Bwr.Level? _nextLevel;
-  private Bwr.Metadata _metadata;
 
-  public FrameReader(BinaryReader reader, Bwr.Metadata metadata,
+  public FrameReader(FileStream fileStream, Bwr.Metadata metadata,
                      int framesEndIdx) {
-    _reader = reader;
-    _framesEndIdx = framesEndIdx;
+    _fileStream = fileStream;
     _metadata = metadata;
-    _nextLevelIdx = 0;
-    _nextLevel = metadata.Levels(_nextLevelIdx);
+    _framesEndIdx = framesEndIdx;
+    Seek(metadata.Levels(0).Value.FrameOffset);
   }
 
   public (int?, Bwr.Frame?) Read() {
-    if (_reader.BaseStream.Position >= _framesEndIdx)
+    if (_fileIdx >= _framesEndIdx)
       return (null, null);
     int? sceneIdx = null;
-    if (_reader.BaseStream.Position >= _nextLevel?.FrameOffset) {
+    if (_fileIdx >= _nextLevel?.FrameOffset) {
       sceneIdx = _nextLevel?.SceneIndex;
       _nextLevel = ++_nextLevelIdx >= _metadata.LevelsLength
                        ? null
                        : _metadata.Levels(_nextLevelIdx);
     }
-    var frameLen = _reader.ReadUInt16();
-    if (frameLen == 0 ||
-        _reader.BaseStream.Position + frameLen > _framesEndIdx) {
+    var frameLen = ReadUInt16();
+    if (frameLen == 0 || _fileIdx + frameLen > _framesEndIdx) {
       var reason = frameLen == 0 ? "zero" : "past end";
       throw new System.Exception($"Invalid frame length ({reason})");
     }
-    var frameBytes = new FlatBuffers.ByteBuffer(_reader.ReadBytes(frameLen));
+    var frameBytes = new FlatBuffers.ByteBuffer(ReadBytes(frameLen));
     return (sceneIdx, Bwr.Frame.GetRootAsFrame(frameBytes));
+  }
+
+  public void Seek(long offset) {
+    _fileIdx = _fileStream.Position = offset;
+    _buffers = new byte[][] { new byte[BUFFER_SIZE], new byte[BUFFER_SIZE] };
+    foreach (var buffer in _buffers)
+      _fileStream.Read(buffer, 0, buffer.Length);
+    _bufferNum = _bufferIdx = 0;
+
+    for (var i = 0; i < _metadata.LevelsLength; i++) {
+      var level = _metadata.Levels(i).Value;
+      if (level.FrameOffset > offset) {
+        _nextLevelIdx = i;
+        _nextLevel = level;
+        return;
+      }
+    }
+    _nextLevelIdx = _metadata.LevelsLength;
+    _nextLevel = null;
+  }
+
+  private ushort ReadUInt16() {
+    AssertBufferAvailable(_bufferNum);
+    var buffer1 = _buffers[_bufferNum];
+    int b1 = buffer1[_bufferIdx];
+    if (++_bufferIdx >= buffer1.Length)
+      SwitchBuffer();
+
+    AssertBufferAvailable(_bufferNum);
+    var buffer2 = _buffers[_bufferNum];
+    int b2 = buffer2[_bufferIdx];
+    if (++_bufferIdx >= buffer2.Length)
+      SwitchBuffer();
+
+    _fileIdx += 2;
+    return (ushort)((b2 << 8) | b1);
+  }
+
+  private byte[] ReadBytes(int count) {
+    AssertBufferAvailable(_bufferNum);
+    var result = new byte[count];
+    var bufferRemainingSize = _buffers[_bufferNum].Length - _bufferIdx;
+    if (count < bufferRemainingSize) {
+      System.Array.Copy(_buffers[_bufferNum], _bufferIdx, result, 0, count);
+      _bufferIdx += count;
+    } else {
+      // NOTE: Assumes we only have two buffers and the read is smaller than the
+      // buffer size
+      var firstCopySize = bufferRemainingSize;
+      System.Array.Copy(_buffers[_bufferNum], _bufferIdx, result, 0,
+                        firstCopySize);
+      SwitchBuffer();
+      AssertBufferAvailable(_bufferNum);
+      var secondCopySize = count - firstCopySize;
+      System.Array.Copy(_buffers[_bufferNum], 0, result, firstCopySize,
+                        secondCopySize);
+      _bufferIdx = secondCopySize;
+    }
+    _fileIdx += count;
+    return result;
+  }
+
+  private void SwitchBuffer() {
+    FillBuffer(_bufferNum);
+    if (++_bufferNum >= _buffers.Length)
+      _bufferNum = 0;
+    _bufferIdx = 0;
+  }
+
+  private async void FillBuffer(int bufferNum) {
+    MelonLogger.Msg("Filling buffer");
+    var buffer = _buffers[bufferNum];
+    _buffers[bufferNum] = null;
+    await _fileStream.ReadAsync(buffer, 0, buffer.Length);
+    _buffers[bufferNum] = buffer;
+  }
+
+  private void AssertBufferAvailable(int bufferNum) {
+    if (_buffers[_bufferNum] == null)
+      throw new System.Exception(
+          "Replay data not read from disk in time (frames will be dropped)");
   }
 }
 }

@@ -18,7 +18,7 @@ public struct PlayerState : IFlatbufferObject
 
   /// Position of game world skeleton rig (base of feet)
   public Bwr.Vector3 BodyPosition { get { return (new Bwr.Vector3()).__assign(__p.bb_pos + 0, __p.bb); } }
-  /// Base rotation in degrees (of VR root, thumbstick rotation not HMD)
+  /// Rotation in degrees of VR root (thumbstick rotation not HMD)
   public float RootRotation { get { return __p.bb.GetFloat(__p.bb_pos + 12); } }
   /// Virtual crouch amount, 0 = standing normally, -0.9 = min, 0.15 = max
   public float FeetOffset { get { return __p.bb.GetFloat(__p.bb_pos + 16); } }

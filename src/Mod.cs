@@ -153,6 +153,15 @@ public class Mod : MelonMod {
   }
 
   [HarmonyPatch(typeof(BoneworksSceneManager),
+                nameof(BoneworksSceneManager.LoadNext))]
+  class BoneworksSceneManager_LoadNext_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix() {
+      GameState.didPrevLevelComplete = true;
+    }
+  }
+
+  [HarmonyPatch(typeof(BoneworksSceneManager),
                 nameof(BoneworksSceneManager.LoadScene),
                 new System.Type[] { typeof(string) })]
   class BoneworksSceneManager_LoadScene_Patch {
@@ -180,6 +189,7 @@ public class Mod : MelonMod {
         GameState.rigManager = Utilities.Boneworks.GetRigManager();
         OnFeatureCallback(
             feature => feature.OnLevelStart(GameState.currentSceneIdx ?? 0));
+        GameState.didPrevLevelComplete = false;
       }
     }
   }

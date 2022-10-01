@@ -16,8 +16,10 @@ class Ghost {
   public bool IsPlaying = false;
   public bool IsPaused = false;
   public bool IsFinishedPlaying = false;
+  public System.Func<Transform, GhostRig> CreateRig;
   public bool HideWhenNear;
   public GhostRig Rig;
+  public Color GhostColor;
 
   private FrameReader _frameReader;
   private float _relativeStartTime;
@@ -30,9 +32,13 @@ class Ghost {
   private float _transparencyThresholdFar;
   private float _transparencyThresholdNear;
 
-  public Ghost(Replay replay, bool hideWhenNear) {
+  public Ghost(Replay replay, bool hideWhenNear, Color ghostColor,
+               System.Func<Transform, GhostRig> createRig) {
     Replay = replay;
     HideWhenNear = hideWhenNear;
+    GhostColor = ghostColor;
+    CreateRig = createRig;
+
     _frameReader = replay.CreateFrameReader();
 
     _transparencyThresholdNear =
@@ -76,15 +82,42 @@ class Ghost {
     IsPaused = false;
     IsFinishedPlaying = false;
     if (Rig != null) {
-      Object.Destroy(Rig.Root);
+      Rig.Destroy();
       Rig = null;
     }
+  }
+
+  public void PlayFromSceneIndex(int sceneIdx) {
+    for (var i = 0; i < Replay.Metadata.LevelsLength; i++) {
+      var level = Replay.Metadata.Levels(i).Value;
+      if (level.SceneIndex == sceneIdx) {
+        PlayFromLevel(level);
+        return;
+      }
+    }
+    IsPlaying = IsPaused = IsFinishedPlaying = false;
+  }
+  public void PlayFromLevel(Bwr.Level level) {
+    IsPlaying = true;
+    IsPaused = IsFinishedPlaying = false;
+    _relativeStartTime = Time.time - level.StartTime;
+    _frameReader.Seek(level.FrameOffset);
+    (_, _frameNext) = _frameReader.Read();
+    if (!_frameNext.HasValue) {
+      Stop();
+      return;
+    }
+    _frameCur = _frameNext.Value;
+    _levelIdxCur = level.SceneIndex;
+    int? levelIdx = null;
+    (levelIdx, _frameNext) = _frameReader.Read();
+    _levelIdxNext = levelIdx ?? _levelIdxCur;
   }
 
   public void OnLoadingScreen() {
     _loadStartTime = Time.time;
     if (Rig != null) {
-      Object.Destroy(Rig.Root);
+      Rig.Destroy();
       Rig = null;
     }
   }
@@ -97,58 +130,65 @@ class Ghost {
   }
 
   public void OnUpdate() {
-    _OnUpdate();
+    var time = Time.time - _relativeStartTime;
+    _OnUpdate(time);
 
     if (Rig == null)
       return;
 
-    var ghostTransforms =
-        new[] { Rig.Head, Rig.ControllerLeft, Rig.ControllerRight };
+    var position =
+        _frameNext.HasValue
+            ? Vector3.Lerp(GhostRig.ToUnityVec3(
+                               _frameCur.PlayerState.Value.HeadPosition),
+                           GhostRig.ToUnityVec3(
+                               _frameNext.Value.PlayerState.Value.HeadPosition),
+                           (time - _frameCur.Time) /
+                               (_frameNext.Value.Time - _frameCur.Time))
+            : GhostRig.ToUnityVec3(_frameCur.PlayerState.Value.HeadPosition);
+
     var rigManager = Mod.GameState.rigManager;
-    var sqrDist = rigManager != null
-                      ? (Rig.Head.position -
-                         rigManager.ControllerRig.hmdTransform.position)
-                            .sqrMagnitude
-                      : 1000;
+    var sqrDist =
+        rigManager != null
+            ? (position - rigManager.ControllerRig.hmdTransform.position)
+                  .sqrMagnitude
+            : 1000;
     if (sqrDist < _transparencyThresholdNear) {
-      foreach (var transform in ghostTransforms) {
-        if (!transform.gameObject.active)
-          break;
-        transform.gameObject.active = false;
+      if (Rig.IsVisible) {
+        Rig.SetVisible(false);
+        Rig.IsVisible = false;
       }
       return;
+    }
+    if (!Rig.IsVisible) {
+      Rig.SetVisible(true);
+      Rig.IsVisible = true;
     }
 
     var newAlpha = Mathf.Min((sqrDist - _transparencyThresholdNear) /
                                  _transparencyThresholdFar,
                              1f) /
                    2f;
-    foreach (var transform in ghostTransforms) {
-      transform.gameObject.active = true;
-      var material = transform.GetComponent<MeshRenderer>().material;
-      if (material.color.a == newAlpha)
-        break;
-      material.color = new Color(material.color.r, material.color.g,
-                                 material.color.b, newAlpha);
+    if (Rig.color.a != newAlpha) {
+      var newColor = new Color(Rig.color.r, Rig.color.g, Rig.color.b, newAlpha);
+      Rig.SetColor(newColor);
+      Rig.color = newColor;
     }
   }
 
-  private void _OnUpdate() {
+  private void _OnUpdate(float time) {
     // Pause playback during loading screens
     if (!IsPlaying || _loadStartTime.HasValue)
       return;
 
     // Seek forward until _frameCur is <= now && _frameNext is > now (or none at
     // end)
-    var time = Time.time - _relativeStartTime;
     while (_frameNext?.Time <= time) {
       _frameCur = _frameNext.Value;
       _levelIdxCur = _levelIdxNext;
       int? nextLevelIdx = null;
       (nextLevelIdx, _frameNext) = _frameReader.Read();
-      if (nextLevelIdx.HasValue) {
+      if (nextLevelIdx.HasValue)
         _levelIdxNext = nextLevelIdx.Value;
-      }
     }
     if (!_frameNext.HasValue) {
       Pause();
@@ -161,49 +201,40 @@ class Ghost {
     if (_levelIdxCur != _levelIdxNext ||
         Mod.GameState.currentSceneIdx != _levelIdxCur) {
       if (Rig != null) {
-        Object.Destroy(Rig.Root);
+        Rig.Destroy();
         Rig = null;
       }
       return;
     }
 
-    // Render head lerped between prev and next frames
+    // Render ghost lerped between current and next frames
     var ghostsContainer = GameObject.Find(GHOSTS_CONTAINER_NAME);
     if (ghostsContainer == null)
       ghostsContainer = new GameObject(GHOSTS_CONTAINER_NAME);
-    if (Rig == null)
-      Rig = GhostRig.Create(ghostsContainer.transform,
-                            new Color(0.2f, 0.2f, 0.8f, 0.5f));
-    var t = (time - _frameCur.Time) / (_frameNext.Value.Time - _frameCur.Time);
-    Rig.Head.position = Vector3.Lerp(
-        ToUnityVec3(_frameCur.PlayerState.Value.HeadPosition),
-        ToUnityVec3(_frameNext.Value.PlayerState.Value.HeadPosition), t);
-    Rig.Head.rotation = Quaternion.Lerp(
-        ToUnityQuaternion(
-            _frameCur.VrInput.Value.Headset.Transform.RotationEuler,
-            _frameCur.PlayerState.Value.RootRotation),
-        ToUnityQuaternion(
-            _frameNext.Value.VrInput.Value.Headset.Transform.RotationEuler,
-            _frameNext.Value.PlayerState.Value.RootRotation),
-        t);
-    foreach (var (controller, handCur, handNext) in new[] {
-               (Rig.ControllerLeft, _frameCur.PlayerState.Value.LeftHand,
-                _frameNext.Value.PlayerState.Value.LeftHand),
-               (Rig.ControllerRight, _frameCur.PlayerState.Value.RightHand,
-                _frameNext.Value.PlayerState.Value.RightHand),
-             }) {
-      controller.position = Vector3.Lerp(ToUnityVec3(handCur.Position),
-                                         ToUnityVec3(handNext.Position), t);
-      controller.rotation =
-          Quaternion.Lerp(ToUnityQuaternion(handCur.RotationEuler),
-                          ToUnityQuaternion(handNext.RotationEuler), t);
+    if (Rig == null) {
+      Rig = CreateRig(ghostsContainer.transform);
+      Rig.IsVisible = true;
+      Rig.color = GhostColor;
+      Rig.SetColor(Rig.color);
     }
+    var t = (time - _frameCur.Time) / (_frameNext.Value.Time - _frameCur.Time);
+    Rig.SetState(_frameCur, _frameNext.Value, t);
   }
+}
 
-  static private Vector3
+public abstract class GhostRig {
+  public bool IsVisible;
+  public Color color;
+  public abstract void SetColor(Color color);
+  public abstract void SetState(Bwr.Frame currentFrame, Bwr.Frame nextFrame,
+                                float t);
+  public abstract void SetVisible(bool isVisible);
+  public abstract void Destroy();
+
+  public static Vector3
   ToUnityVec3(Bwr.Vector3 vec) => new Vector3(vec.X, vec.Y, vec.Z);
-  static private Quaternion ToUnityQuaternion(Bwr.Vector3 vec,
-                                              float yOffset = 0) =>
+  public static Quaternion ToUnityQuaternion(Bwr.Vector3 vec,
+                                             float yOffset = 0) =>
       Quaternion.Euler(vec.X, vec.Y + yOffset, vec.Z);
 }
 }

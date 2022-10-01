@@ -17,6 +17,7 @@ class Speedrun : Feature {
   private Speedruns.Overlay _overlay = new Speedruns.Overlay();
   private Blindfold _blindfold = new Blindfold();
   public Speedruns.RunTimer RunTimer = new Speedruns.RunTimer();
+  public bool IsRunComplete = false;
 
   public Speedrun() {
     if (Instance != null)
@@ -199,6 +200,8 @@ class Speedrun : Feature {
   }
 
   public override void OnLevelStart(int sceneIdx) {
+    IsRunComplete = false;
+
     // Hide overlay a little after level load to make splicing harder
     System.Threading.Tasks.Task.Delay(new System.TimeSpan(0, 0, 3))
         .ContinueWith(o => HideOverlayIfNotLoading());
@@ -244,6 +247,17 @@ class Speedrun : Feature {
         else
           Instance.DisableSpeedrunMode();
       }
+    }
+  }
+
+  [HarmonyPatch(typeof(GameControl_ThroneRoom),
+                nameof(GameControl_ThroneRoom.NEXTLEVEL))]
+  class ThroneRoom_NEXTLEVEL_Patch {
+    [HarmonyPrefix()]
+    internal static void Postfix() {
+      if (Mode.CurrentMode.resetTimerOnMainMenu)
+        Speedrun.Instance.IsRunComplete = true;
+      // TODO: Completion condition for 100%
     }
   }
 }

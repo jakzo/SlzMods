@@ -10,7 +10,8 @@ public class Gripless : Feature {
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) =>
           Mod.GameState.currentSceneIdx != Utils.SCENE_MENU_IDX &&
-          Utils.GetKeyControl() && Input.GetKey(KeyCode.G),
+          (Utils.GetKeyControl() && Input.GetKey(KeyCode.G) ||
+           cr.GetThumbStick()),
       Handler =
           () => {
             if (IsGripDisabled) {

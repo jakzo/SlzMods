@@ -178,6 +178,7 @@ public struct GameState {
   public int? prevSceneIdx;
   public int? currentSceneIdx;
   public int? nextSceneIdx;
+  public bool didPrevLevelComplete;
   public RigManager rigManager;
 }
 }

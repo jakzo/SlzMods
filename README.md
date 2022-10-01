@@ -2,7 +2,7 @@
 
 - Speedrun mode
   - Enabling this mode will disable practice features and temporarily alter the save state so that a run will meet the leaderboard submission rules
-  - There are three modes depending on what type of speedrun you are performing:
+  - There are various modes depending on what type of speedrun you are performing:
     - Normal
       - Activate with CTRL + S or by pressing A + B on both controllers
       - In this mode the save state will be reset every time you leave the main menu and start a new game
@@ -35,6 +35,17 @@
   - To enable, press CTRL + G on the keyboard (game window must be focused)
     - If you do this during the main menu it will activate "gripless speedrun mode" where it will reset your save each time before starting a new game
   - This will make the controller trigger/finger buttons do nothing in the game so you cannot grab any objects
+- One controller
+  - Only one controller can be used and inputs from the other will be ignored
+  - Ford's arm will also be removed
+  - The menu button will still work even on the disabled controller
+  - To enable, press CTRL + O on the keyboard (game window must be focused)
+    - This will switch from off -> only left controller -> only right controller -> off -> ...
+    - If you do this during the main menu it will activate "one-controller gripless speedrun mode" where it will reset your save each time before starting a new game
+- Armless
+  - Removes both of Ford's arms
+  - To enable, press CTRL + A on the keyboard (game window must be focused)
+    - If you do this during the main menu it will activate "armless speedrun mode" where it will reset your save each time before starting a new game
 
 # Installation
 

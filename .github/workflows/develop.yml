@@ -21,6 +21,9 @@ jobs:
         run: nuget restore SpeedrunTools.sln
       - name: Build
         run: msbuild /property:Configuration=Release
+      - name: Prepare for release
+        run: |
+          rename ./projects/boneworks/bin/Release/SpeedrunTools.dll ./projects/boneworks/bin/Release/BoneworksSpeedrunTools.dll
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -28,8 +31,8 @@ jobs:
           target_commitish: ${{ github.sha }}
           tag_name: dev_${{ github.run_number }}
           body: >
-            **DO NOT DOWNLOAD** if you are looking for the Speedrun mod. Go to the [Thunderstore listing](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/) for that.
+            **DO NOT DOWNLOAD** if you are looking for the Speedrun mod. Instead go to the Thunderstore listing for [Boneworks](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/) or [Bonelab](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTools/).
 
             This is a testing build used for development of the mod. This contains the most recent changes which are usually untested and broken. Use at your own risk.
           files: |
-            ./bin/Release/SpeedrunTools.dll
+            ./projects/boneworks/bin/Release/BoneworksSpeedrunTools.dll

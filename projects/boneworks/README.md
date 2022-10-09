@@ -65,6 +65,5 @@ Most settings require restarting the level to take effect.
 
 # Links
 
-- Repository: https://github.com/jakzo/BoneworksSpeedrunTools
+- Repository: https://github.com/jakzo/SlzSpeedrunTools
 - Thunderstore: https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/
-- How I reverse engineer the game: https://jakzo.github.io/BoneworksSpeedrunTools/

@@ -13,8 +13,7 @@ string SemverIncrement(string version, int semverTypeIdx) {
 }
 
 void ReleaseProject(string projectRelativePath) {
-
-  var semverTypeArg = Args[0].ToLower();
+  var semverTypeArg = Args[1].ToLower();
   var semverTypeIdx =
       Array.FindIndex(semverTypes, type => type == semverTypeArg);
   if (semverTypeIdx == -1)
@@ -54,7 +53,7 @@ void ReleaseProject(string projectRelativePath) {
   Console.WriteLine("manifest.json and AppVersion.cs version updated");
 
   string changelogPath = $"{projectRelativePath}/CHANGELOG.md";
-  var changelogDescription = Args[1];
+  var changelogDescription = Args[2];
   var oldChangelog = File.ReadAllText(changelogPath);
   var newChangelog =
       $"## {newVersion}\n\n{changelogDescription}\n\n{oldChangelog}";
@@ -71,9 +70,8 @@ void ReleaseProject(string projectRelativePath) {
 }
 
 try {
-  foreach (var projectName in Directory.EnumerateDirectories(PROJECTS_PATH))
-    if (projectName != "common")
-      ReleaseProject(Path.Combine(PROJECTS_PATH, projectName));
+  var projectName = Args[0].ToLower();
+  ReleaseProject(Path.Combine(PROJECTS_PATH, projectName));
 
   Console.WriteLine("All done!");
 } catch (Exception ex) {

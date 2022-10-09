@@ -16,8 +16,7 @@ class Utils {
           DisplayName = "Descent",
         },
       }
-          .Select(level => (level.Id, level))
-          .ToDictionary();
+          .ToDictionary(level => level.Id);
 
   public class Level {
     public string Id;
@@ -32,7 +31,7 @@ class Utils {
                          DefaultValue = false };
 
   public static UnityEngine.Vector3 GetPlayerPos() {
-    return Mod.GameState.rigManager.gameWorldSkeletonRig.transform.position;
+    return Mod.GameState.rigManager.physicsRig.m_head.position;
   }
 
   public static void LogDebug(string msg, params object[] data) {

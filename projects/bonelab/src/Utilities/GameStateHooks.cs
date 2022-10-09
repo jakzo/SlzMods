@@ -1,22 +1,23 @@
 using MelonLoader;
 using HarmonyLib;
-using SLZ.Rig;
+using SLZ.Bonelab;
 
 namespace SpeedrunTools {
 class GameStateHooks {
-  [HarmonyPatch(typeof(BoneworksSceneManager),
-                nameof(BoneworksSceneManager.LoadNext))]
-  class BoneworksSceneManager_LoadNext_Patch {
+  [HarmonyPatch(typeof(BonelabInternalGameControl),
+                nameof(BonelabInternalGameControl.LevelComplete))]
+  class BonelabInternalGameControl_LevelComplete_Patch {
     [HarmonyPrefix()]
-    internal static void Prefix() { GameState.didPrevLevelComplete = true; }
+    internal static void Prefix() { Mod.GameState.didPrevLevelComplete = true; }
   }
 
-  [HarmonyPatch(typeof(BoneworksSceneManager),
-                nameof(BoneworksSceneManager.LoadScene),
+  [HarmonyPatch(typeof(BonelabInternalGameControl),
+                nameof(BonelabInternalGameControl.JustJumpToLevel),
                 new System.Type[] { typeof(string) })]
-  class BoneworksSceneManager_LoadScene_Patch {
+  class BonelabInternalGameControl_JustJumpToLevel_Patch {
     [HarmonyPrefix()]
-    internal static void Prefix(string sceneName) {
+    internal static void
+    Prefix(SLZ.Marrow.Warehouse.LevelCrateReference level) {
       Utils.LogDebug($"LoadScene: {sceneName}");
       GameState.nextSceneIdx = Utils.SCENE_INDEXES_BY_NAME[sceneName];
     }

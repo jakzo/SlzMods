@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using Valve.VR;
 using SLZ.Rig;
 
 namespace SpeedrunTools {
@@ -72,9 +71,7 @@ public class Mod : MelonMod {
     }
   }
 
-  public override void OnApplicationStart() {
-    Directory.CreateDirectory(Utils.DIR);
-
+  public override void OnInitializeMelon() {
     Utils.s_prefCategory = MelonPreferences.CreateCategory(Utils.PREF_CATEGORY);
     Utils.PrefDebug.Create();
     foreach (var feature in features) {
@@ -122,7 +119,7 @@ public class Mod : MelonMod {
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     Utils.LogDebug("OnSceneWasInitialized");
-    GameState.rigManager = Utilities.Boneworks.GetRigManager();
+    GameState.rigManager = Utilities.Bonelab.GetRigManager();
     s_hotkeys.Init();
     OnFeatureCallback(feature =>
                           feature.OnSceneWasInitialized(buildIndex, sceneName));
@@ -135,33 +132,6 @@ public class Mod : MelonMod {
 
   public override void OnFixedUpdate() {
     OnFeatureCallback(feature => feature.OnFixedUpdate());
-  }
-
-  [HarmonyPatch(typeof(Controller), nameof(Controller.CacheInputs))]
-  class Controller_CacheInputs_Patch {
-    [HarmonyPostfix()]
-    internal static void Postfix(Controller __instance) {
-      Features.Gripless.OnCacheInputs(__instance);
-      Features.Armless.OnCacheInputs(__instance);
-    }
-  }
-
-  [HarmonyPatch(typeof(Controller), nameof(Controller.ProcessFingers))]
-  class Controller_ProcessFingers_Patch {
-    [HarmonyPostfix()]
-    internal static void Postfix(Controller __instance) {
-      Features.Gripless.OnProcessFingers(__instance);
-      Features.Armless.OnProcessFingers(__instance);
-    }
-  }
-
-  [HarmonyPatch(typeof(Controller), nameof(Controller.SolveGrip))]
-  class Controller_SolveGrip_Patch {
-    [HarmonyPostfix()]
-    internal static void Postfix(Controller __instance) {
-      Features.Gripless.OnSolveGrip(__instance);
-      Features.Armless.OnSolveGrip(__instance);
-    }
   }
 }
 }

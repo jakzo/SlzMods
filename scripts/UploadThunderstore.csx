@@ -24,10 +24,11 @@ try {
   } else {
     Directory.CreateDirectory(MODS_DIR);
   }
-  var releaseDir = $"{projectRelativePath}/bin/Release";
+  var csprojName = Directory.EnumerateFiles(projectRelativePath)
+                       .First(name => name.EndsWith(".csproj"));
   var binaryName =
-      Directory.EnumerateFiles(releaseDir).First(name => name.EndsWith(".dll"));
-  File.Copy($"{releaseDir}/{binaryName}", MODS_DIR);
+      csprojName.Remove(csprojName.Length - ".csproj".Length) + ".dll";
+  File.Copy($"{projectRelativePath}/bin/Release/{binaryName}", MODS_DIR);
 
   Console.WriteLine("Thunderstore files copied");
 

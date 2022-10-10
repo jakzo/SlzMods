@@ -8,31 +8,38 @@ using System.IO.Compression;
 using Newtonsoft.Json;
 
 try {
-  var newVersion = Args[0];
+  var project = Args[0];
+  var game = Args[1].Trim().ToLower();
+  var newVersion = Args[2];
+  var projectRelativePath = $"projects/{project}";
 
   var readme = File.ReadAllText("README.md");
   var changelog = File.ReadAllText("CHANGELOG.md");
-  File.WriteAllText("thunderstore/README.md",
+  File.WriteAllText($"{projectRelativePath}/thunderstore/README.md",
                     $"{readme}\n# Changelog\n\n{changelog}");
-  const string MODS_DIR = "thunderstore/Mods";
+  var MODS_DIR = $"{projectRelativePath}/thunderstore/Mods";
   if (Directory.Exists(MODS_DIR)) {
     foreach (var file in Directory.GetFiles(MODS_DIR))
       File.Delete(file);
   } else {
     Directory.CreateDirectory(MODS_DIR);
   }
-  File.Copy("bin/Release/SpeedrunTools.dll", MODS_DIR);
+  File.Copy($"{projectRelativePath}/bin/Release/SpeedrunTools.dll", MODS_DIR);
 
   Console.WriteLine("Thunderstore files copied");
 
   var zipFilename = $"SpeedrunTools_{newVersion}.zip";
-  var zipPath = $"thunderstore/{zipFilename}";
+  var zipPath = $"{projectRelativePath}/thunderstore/{zipFilename}";
   using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Create)) {
-    zip.CreateEntryFromFile("thunderstore/manifest.json", "manifest.json");
-    zip.CreateEntryFromFile("thunderstore/icon.png", "icon.png");
-    zip.CreateEntryFromFile("thunderstore/README.md", "README.md");
-    zip.CreateEntryFromFile("thunderstore/Mods/SpeedrunTools.dll",
-                            "Mods/SpeedrunTools.dll");
+    zip.CreateEntryFromFile($"{projectRelativePath}/thunderstore/manifest.json",
+                            "manifest.json");
+    zip.CreateEntryFromFile($"{projectRelativePath}/thunderstore/icon.png",
+                            "icon.png");
+    zip.CreateEntryFromFile($"{projectRelativePath}/thunderstore/README.md",
+                            "README.md");
+    zip.CreateEntryFromFile(
+        $"{projectRelativePath}/thunderstore/Mods/SpeedrunTools.dll",
+        "Mods/SpeedrunTools.dll");
   }
 
   Console.WriteLine("Thunderstore zip file created");
@@ -50,7 +57,7 @@ try {
     var res = await client.SendAsync(new HttpRequestMessage {
       Method = HttpMethod.Post,
       RequestUri =
-          new Uri($"https://boneworks.thunderstore.io/api/experimental{url}"),
+          new Uri($"https://{game}.thunderstore.io/api/experimental{url}"),
       Content = new StringContent(JsonConvert.SerializeObject(body),
                                   Encoding.UTF8, "application/json"),
       Headers =
@@ -90,7 +97,7 @@ try {
     upload_uuid = uuid,
     author_name = "jakzo",
     categories = new string[] { "code-mods" },
-    communities = new string[] { "boneworks" },
+    communities = new string[] { game },
     has_nsfw_content = false,
   });
 

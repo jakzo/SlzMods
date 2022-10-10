@@ -24,7 +24,7 @@ sudo apt install flatbuffers-compiler
 After making changes to `Bwr.fbs` run this to regenerate the `Bwr/*.cs` files:
 
 ```sh
-cd src/Replay && flatc --csharp Bwr.fbs
+cd projects/boneworks/src/Replay && flatc --csharp Bwr.fbs
 ```
 
 ## Build
@@ -33,8 +33,10 @@ cd src/Replay && flatc --csharp Bwr.fbs
 msbuild /property:Configuration=Release
 ```
 
+Uncomment, comment or change the post-build scripts in the `.cspoj` files as necessary (these are the scripts which automatically copy the built mods into your game after building).
+
 ## Branches
 
-The `main` branch contains the latest stable changes (ie. the code that is built and uploaded to Thunderstore). I do my own development on the `develop` branch and every push to this branch creates a dev build (you can see them under releases).
+The `main` branch contains the latest stable changes (ie. the code that is built and uploaded to Thunderstore). I do my own development on the `develop` branch and every push to this branch creates dev builds (you can see them under releases).
 
 In most cases you want to fork from and merge PRs to the `main` branch. However if you're curious you can look at what's happening in the `develop` branch.

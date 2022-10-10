@@ -3,6 +3,9 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
+      project:
+        description: Project folder name (eg. "boneworks" or "bonelab-timer").
+        required: true
       versionBumpType:
         description: Can be MAJOR, MINOR or PATCH.
         required: true
@@ -26,15 +29,16 @@ jobs:
         # run: sudo apt install -y mono-devel flatbuffers-compiler=2.0.6
         run: sudo apt install -y mono-devel
       - name: Install dependencies
-        run: nuget restore SpeedrunTools.sln
+        run: nuget restore SlzSpeedrunTools.sln
       - name: Bump version
         id: bump_version
         env:
+          PROJECT: ${{ github.event.inputs.project }}
           VERSION_BUMP_TYPE: ${{ github.event.inputs.versionBumpType }}
           CHANGELOG_DESCRIPTION: ${{ github.event.inputs.changelogDescription }}
         run: |
           set -eux
-          csi ./scripts/Release.csx "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
+          csi ./scripts/Release.csx "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -44,9 +48,12 @@ jobs:
         run: msbuild /property:Configuration=Release
       - name: Upload to Thunderstore
         env:
+          PROJECT: ${{ github.event.inputs.project }}
           NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
           THUNDERSTORE_API_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
-        run: csi ./scripts/UploadThunderstore.csx "$NEW_VERSION"
+        run: |
+          GAME=$(cat ./projects/${{ github.event.inputs.project }}/game.txt)
+          csi ./scripts/UploadThunderstore.csx "$PROJECT" "$GAME" "$NEW_VERSION"
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -54,5 +61,5 @@ jobs:
           tag_name: ${{ steps.bump_version.outputs.new_version }}
           body: ${{ steps.bump_version.outputs.changelog }}
           files: |
-            ./bin/Release/SpeedrunTools.dll
-            ./thunderstore/SpeedrunTools_${{ steps.bump_version.outputs.new_version }}.zip
+            ./projects/${{ github.event.inputs.project }}/bin/Release/*.dll
+            ./projects/${{ github.event.inputs.project }}/thunderstore/*.zip

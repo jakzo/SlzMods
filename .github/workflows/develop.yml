@@ -23,8 +23,9 @@ jobs:
         run: msbuild /property:Configuration=Release
       - name: Prepare for release
         run: |
-          rename ./projects/boneworks/bin/Release/SpeedrunTools.dll ./projects/boneworks/bin/Release/BoneworksSpeedrunTools.dll
-          rename ./projects/bonelab-timer/bin/Release/SpeedrunTimer.dll ./projects/bonelab-timer/bin/Release/BonelabSpeedrunTimer.dll
+          mkdir ./bin
+          mv ./projects/boneworks/bin/Release/*.dll ./bin/BoneworksSpeedrunTools.dll
+          mv ./projects/bonelab-timer/bin/Release/*.dll ./bin/BonelabSpeedrunTimer.dll
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -38,6 +39,4 @@ jobs:
             - [Bonelab Speedrun Timer](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/).
 
             These are testing builds used for development of the mods. They contain the most recent changes which are usually untested and broken. Use at your own risk.
-          files: |
-            ./projects/boneworks/bin/Release/BoneworksSpeedrunTools.dll
-            ./projects/bonelab-timer/bin/Release/BonelabSpeedrunTimer.dll
+          files: ./bin/*.dll

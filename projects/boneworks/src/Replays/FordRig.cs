@@ -6,7 +6,7 @@ using System.Text;
 using UnityEngine;
 using StressLevelZero.Rig;
 
-namespace SpeedrunTools.Replays {
+namespace Sst.Replays {
 class FordRigPrefab {
   public GameObject Root;
 

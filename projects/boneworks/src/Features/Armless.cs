@@ -3,7 +3,7 @@ using UnityEngine;
 using StressLevelZero.Rig;
 using System.Collections.Generic;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 public class Armless : Feature {
   private static string DUMMY_PALM_NAME = "SpeedrunTools_Armless_DummyPalm";
 

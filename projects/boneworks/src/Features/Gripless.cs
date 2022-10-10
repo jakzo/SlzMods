@@ -2,7 +2,7 @@
 using UnityEngine;
 using StressLevelZero.Rig;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 public class Gripless : Feature {
   public static bool IsGripDisabled = false;
 

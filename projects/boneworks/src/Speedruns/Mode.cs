@@ -1,7 +1,7 @@
 using UnityEngine;
-using SpeedrunTools.Features;
+using Sst.Features;
 
-namespace SpeedrunTools.Speedruns {
+namespace Sst.Speedruns {
 class Mode {
   public static readonly Mode DISABLED = new Mode() {
     replayMode = Bwr.GameMode.NONE,

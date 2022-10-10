@@ -3,23 +3,20 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 
-[assembly:AssemblyTitle(SpeedrunTools.BuildInfo.Name)]
+[assembly:AssemblyTitle(Sst.BuildInfo.Name)]
 [assembly:AssemblyDescription("")]
 [assembly:AssemblyConfiguration("")]
-[assembly:AssemblyCompany(SpeedrunTools.BuildInfo.Company)]
-[assembly:AssemblyProduct(SpeedrunTools.BuildInfo.Name)]
-[assembly:AssemblyCopyright("Created by " + SpeedrunTools.BuildInfo.Author)]
-[assembly:AssemblyTrademark(SpeedrunTools.BuildInfo.Company)]
+[assembly:AssemblyCompany(Sst.BuildInfo.Company)]
+[assembly:AssemblyProduct(Sst.BuildInfo.Name)]
+[assembly:AssemblyCopyright("Created by " + Sst.BuildInfo.Author)]
+[assembly:AssemblyTrademark(Sst.BuildInfo.Company)]
 [assembly:AssemblyCulture("")]
 [assembly:ComVisible(false)]
 //[assembly: Guid("")]
-[assembly:AssemblyVersion(SpeedrunTools.BuildInfo.Version)]
-[assembly:AssemblyFileVersion(SpeedrunTools.BuildInfo.Version)]
+[assembly:AssemblyVersion(Sst.BuildInfo.Version)]
+[assembly:AssemblyFileVersion(Sst.BuildInfo.Version)]
 [assembly:NeutralResourcesLanguage("en")]
-[assembly:MelonInfo(typeof(SpeedrunTools.Mod), SpeedrunTools.BuildInfo.Name,
-                    SpeedrunTools.BuildInfo.Version,
-                    SpeedrunTools.BuildInfo.Author,
-                    SpeedrunTools.BuildInfo.DownloadLink)]
+[assembly:MelonInfo(typeof(Sst.Mod), Sst.BuildInfo.Name, Sst.BuildInfo.Version,
+                    Sst.BuildInfo.Author, Sst.BuildInfo.DownloadLink)]
 
-[assembly:MelonGame(SpeedrunTools.BuildInfo.Developer,
-                    SpeedrunTools.BuildInfo.GameName)]
+[assembly:MelonGame(Sst.BuildInfo.Developer, Sst.BuildInfo.GameName)]

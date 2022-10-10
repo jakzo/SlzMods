@@ -7,14 +7,27 @@ using UnityEngine.SceneManagement;
 using SLZ.Marrow.Warehouse;
 using SLZ.Bonelab;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class SplitsTimer : Feature {
-  private const string SPLITS_TEXT_NAME = "SpeedrunTools_Splits_Text";
-
   private static SplitsTimer Instance;
 
   private TMPro.TextMeshPro _tmp;
   private Splits _splits = new Splits();
+
+  public readonly Pref<bool> PrefHide = new Pref<bool>() {
+    Id = "hide",
+    Name = "Hide in-game timer",
+    Description =
+        "Hides the timer on your wrist. Does not hide loading screen timer.",
+    DefaultValue = false,
+  };
+
+  public readonly Pref<bool> PrefShowUnderWrist = new Pref<bool>() {
+    Id = "showUnderWrist",
+    Name = "Show timer under hand",
+    Description = "Timer is invisible unless you point your wrist upwards.",
+    DefaultValue = false,
+  };
 
   public SplitsTimer() { Instance = this; }
 
@@ -30,48 +43,64 @@ class SplitsTimer : Feature {
     return false;
   }
 
-  public override void OnLevelStart(LevelCrate level) {
-    var splitsText = new GameObject(SPLITS_TEXT_NAME);
-    _tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
-    _tmp.alignment = TMPro.TextAlignmentOptions.BottomRight;
-    _tmp.fontSize = 0.5f;
-    _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-    splitsText.transform.SetParent(
-        Mod.GameState.rigManager.ControllerRig.leftController.transform);
-    _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
-    _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
-
-    _splits.ResumeIfStarted();
-  }
-
   public override void OnLoadingScreen(LevelCrate prevLevel,
                                        LevelCrate nextLevel) {
     if (nextLevel == null)
       return;
 
-    MelonLogger.Msg($"onload next = {nextLevel.Title}");
     if (nextLevel.Title == Utils.LEVEL_TITLE_DESCENT) {
+      Utils.LogDebug("Attempting to start timer");
       if (IsAllowed())
         _splits.ResetAndPause(nextLevel);
     } else if (_splits.TimeStart.HasValue) {
+      Utils.LogDebug("Splitting timer");
       _splits.Pause();
       _splits.Split(nextLevel);
     }
 
     var time = _splits.GetTime();
     if (time.HasValue) {
-      var splitsText = new GameObject(SPLITS_TEXT_NAME);
-      splitsText.layer = LayerMask.NameToLayer("Background");
-      var tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
-      tmp.alignment = TMPro.TextAlignmentOptions.TopRight;
-      tmp.fontSize = 0.5f;
-      tmp.transform.SetParent(GameObject.Find("Main Camera").transform);
-      tmp.rectTransform.sizeDelta = new Vector2(1f, 1f);
-      tmp.rectTransform.localPosition = new Vector3(0, 0, 1);
-      tmp.rectTransform.localRotation = Quaternion.Euler(0, 0, 0);
-      tmp.SetText(
-          $"SpeedrunTimer v{AppVersion.Value}\n{Utils.DurationToString(time.Value)}");
+      RenderLoadingWatermark(time.Value);
+      RenderSplits(_splits);
     }
+  }
+
+  private void RenderLoadingWatermark(System.TimeSpan time) {
+    var splitsText = new GameObject("SpeedrunTimer_Watermark");
+    splitsText.layer = LayerMask.NameToLayer("Background");
+    var tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
+    tmp.alignment = TMPro.TextAlignmentOptions.TopRight;
+    tmp.fontSize = 0.5f;
+    tmp.transform.SetParent(GameObject.Find("Main Camera").transform);
+    tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.8f);
+    tmp.rectTransform.localPosition = new Vector3(0, 0, 1);
+    tmp.rectTransform.localRotation = Quaternion.Euler(0, 0, 0);
+    tmp.SetText(
+        $"{BuildInfo.Name} v{BuildInfo.Version}\n{Utils.DurationToString(time)}");
+  }
+
+  private void RenderSplits(Splits splits) {}
+
+  public override void OnLevelStart(LevelCrate level) {
+    if (!PrefHide.Read()) {
+      var splitsText = new GameObject("SpeedrunTimer_Wrist_Text");
+      _tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
+      _tmp.alignment = TMPro.TextAlignmentOptions.BottomRight;
+      _tmp.fontSize = 0.5f;
+      _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
+      splitsText.transform.SetParent(
+          Mod.GameState.rigManager.ControllerRig.leftController.transform);
+      if (PrefShowUnderWrist.Read()) {
+        // TODO
+        _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
+        _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
+      } else {
+        _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
+        _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
+      }
+    }
+
+    _splits.ResumeIfStarted();
   }
 
   public override void OnUpdate() {
@@ -80,6 +109,15 @@ class SplitsTimer : Feature {
     var time = _splits.GetTime();
     if (time == null)
       return;
+    if (PrefShowUnderWrist.Read()) {
+      // TODO
+      var isHidden = false;
+      if (isHidden) {
+        _tmp.gameObject.active = false;
+        return;
+      }
+    }
+    _tmp.gameObject.active = true;
     _tmp.SetText(Utils.DurationToString(time.Value));
   }
 

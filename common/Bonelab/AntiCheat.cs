@@ -2,7 +2,7 @@ using MelonLoader;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace SpeedrunTools.Utilities {
+namespace Sst.Utilities {
 class AntiCheat {
   private static HashSet<string> ALLOWED_MODS = new HashSet<string>() {
     "MelonPreferencesManager",

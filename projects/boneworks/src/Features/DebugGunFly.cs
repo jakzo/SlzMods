@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class DebugGunFly : Feature {
   private int MAX_DATA_LENGTH = 10000;
   private static readonly string CSV_PATH =

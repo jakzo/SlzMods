@@ -3,9 +3,9 @@ using UnityEngine;
 using StressLevelZero.Utilities;
 using HarmonyLib;
 using System.Linq;
-using SpeedrunTools.Speedruns;
+using Sst.Speedruns;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class Speedrun : Feature {
   private const string MENU_TEXT_NAME = "SpeedrunTools_MenuText";
 

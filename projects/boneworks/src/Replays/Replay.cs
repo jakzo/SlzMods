@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using MelonLoader;
 
-namespace SpeedrunTools.Replays {
+namespace Sst.Replays {
 class Replay {
   private FileStream _fileStream;
   private BinaryReader _reader;

@@ -3,7 +3,7 @@ using System.Linq;
 using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class DebugColliders : Feature {
   private DebugColliderPrefabs _prefabs;
   private List<(Collider, GameObject)> _colliders;

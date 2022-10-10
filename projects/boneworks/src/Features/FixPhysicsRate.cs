@@ -1,7 +1,7 @@
 ﻿using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class FixPhysicsRate : Feature {
   private Valve.VR.SteamVR_Settings _steamVrSettings;
   private Data_Manager _dataManager;

@@ -1,7 +1,7 @@
 ﻿using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 public class Blindfold : Feature {
   public static Blindfolder s_blindfolder = new Blindfolder();
 

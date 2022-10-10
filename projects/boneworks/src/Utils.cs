@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using StressLevelZero.Rig;
 
-namespace SpeedrunTools {
+namespace Sst {
 class Utils {
   public const string PREF_CATEGORY = "SpeedrunTools";
   public static readonly string DIR =

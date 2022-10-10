@@ -6,7 +6,7 @@ using System.Text;
 using UnityEngine;
 using StressLevelZero.Rig;
 
-namespace SpeedrunTools.Replays {
+namespace Sst.Replays {
 class Ghost {
   const string GHOSTS_CONTAINER_NAME = "SpeedrunTools_Ghosts";
   readonly static float TRANSPARENCY_THRESHOLD_FAR = 4;

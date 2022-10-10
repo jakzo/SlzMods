@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using MelonLoader;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 // TODO: Try this approach
 // https://docs.unity3d.com/ScriptReference/Font.RequestCharactersInTexture.html
 // TODO: I think the optimal solution is to use shader code to copy characters

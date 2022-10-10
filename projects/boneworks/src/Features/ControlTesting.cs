@@ -2,7 +2,7 @@
 using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class ControlTesting : Feature {
   private HashSet<string> _pressedKeys = new HashSet<string>();
 

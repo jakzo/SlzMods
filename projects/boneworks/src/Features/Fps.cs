@@ -1,7 +1,7 @@
 ﻿using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class Fps : Feature {
   public float UpdateFrequency = 1;
 

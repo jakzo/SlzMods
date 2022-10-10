@@ -6,7 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
-namespace SpeedrunTools.Speedruns {
+namespace Sst.Speedruns {
 class SaveUtilities {
   /// Set to true to stop save files from being overwritten by the game
   public static bool BlockSave = false;

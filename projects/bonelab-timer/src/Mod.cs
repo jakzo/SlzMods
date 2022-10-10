@@ -9,14 +9,14 @@ using SLZ.Marrow.SceneStreaming;
 using SLZ.Marrow.Warehouse;
 using UnityEngine.SceneManagement;
 
-namespace SpeedrunTools {
+namespace Sst {
 public static class BuildInfo {
-  public const string Name = "SpeedrunTools";
+  public const string Name = "SpeedrunTimer";
   public const string Author = "jakzo";
   public const string Company = null;
   public const string Version = AppVersion.Value;
   public const string DownloadLink =
-      "https://bonelab.thunderstore.io/package/jakzo/SpeedrunTools/";
+      "https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/";
 
   public const string Developer = "Stress Level Zero";
   public const string GameName = "BONELAB";

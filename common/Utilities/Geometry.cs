@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace SpeedrunTools.Utilities {
+namespace Sst.Utilities {
 public class Geometry {
   public static GameObject CreatePrefabCube(string name, Color color,
                                             float left, float right, float top,

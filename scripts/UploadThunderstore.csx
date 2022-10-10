@@ -8,9 +8,10 @@ using System.IO.Compression;
 using Newtonsoft.Json;
 
 try {
-  var game = Args[0].ToLower();
-  var newVersion = Args[1];
-  var projectRelativePath = $"projects/{game}";
+  var project = Args[0];
+  var game = Args[1].Trim().ToLower();
+  var newVersion = Args[2];
+  var projectRelativePath = $"projects/{project}";
 
   var readme = File.ReadAllText("README.md");
   var changelog = File.ReadAllText("CHANGELOG.md");

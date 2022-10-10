@@ -1,7 +1,7 @@
 ﻿using MelonLoader;
 using UnityEngine;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class Teleport : Feature {
   private static GameControl s_gameControl;
   private static Vector3? s_teleportPos;

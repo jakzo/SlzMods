@@ -2,7 +2,7 @@
 using UnityEngine;
 using HarmonyLib;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class Tas : Feature {
   public Tas() { IsDev = true; }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using UnityEngine;
 
-namespace SpeedrunTools.Replays {
+namespace Sst.Replays {
 class Recorder {
   private static readonly string TEMP_FILENAME = "temp_replay";
   private static readonly string TEMP_FILE_PATH =

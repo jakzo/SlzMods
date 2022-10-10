@@ -9,7 +9,7 @@ using StressLevelZero.Utilities;
 using Valve.VR;
 using StressLevelZero.Rig;
 
-namespace SpeedrunTools {
+namespace Sst {
 public static class BuildInfo {
   public const string Name = "SpeedrunTools";
   public const string Author = "jakzo";
@@ -156,9 +156,7 @@ public class Mod : MelonMod {
                 nameof(BoneworksSceneManager.LoadNext))]
   class BoneworksSceneManager_LoadNext_Patch {
     [HarmonyPrefix()]
-    internal static void Prefix() {
-      GameState.didPrevLevelComplete = true;
-    }
+    internal static void Prefix() { GameState.didPrevLevelComplete = true; }
   }
 
   [HarmonyPatch(typeof(BoneworksSceneManager),

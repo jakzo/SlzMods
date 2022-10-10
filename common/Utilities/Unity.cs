@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace SpeedrunTools.Utilities {
+namespace Sst.Utilities {
 public class Unity {
   public static Transform FindDescendantTransform(Transform transform,
                                                   string name) {

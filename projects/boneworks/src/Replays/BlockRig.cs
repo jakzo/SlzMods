@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace SpeedrunTools.Replays {
+namespace Sst.Replays {
 class BlockRigPrefab {
   private const float HEAD_WIDTH = 0.3f;
   private const float HEAD_HEIGHT = 0.2f;

@@ -6,9 +6,9 @@ using System.Linq;
 using SLZ.Rig;
 using SLZ.Marrow.Warehouse;
 
-namespace SpeedrunTools {
+namespace Sst {
 class Utils {
-  public const string PREF_CATEGORY = "SpeedrunTools";
+  public const string PREF_CATEGORY = "SpeedrunTimer";
 
   public const string LEVEL_TITLE_DESCENT = "01 - Descent";
   public const string LEVEL_TITLE_HOME = "14 - Home";
@@ -55,10 +55,11 @@ class Utils {
 class Pref<T> : IPref {
   public string Id { get; set; }
   public string Name;
+  public string Description;
   public T DefaultValue;
 
   public void Create() {
-    Utils.s_prefCategory.CreateEntry(Id, DefaultValue, Name);
+    Utils.s_prefCategory.CreateEntry(Id, DefaultValue, Name, Description);
   }
 
   public T Read() { return Utils.s_prefCategory.GetEntry<T>(Id).Value; }

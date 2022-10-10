@@ -7,7 +7,7 @@ using UnityEngine;
 using Valve.VR;
 using HarmonyLib;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class Replay : Feature {
   public static List<Replays.Replay> AllReplays = new List<Replays.Replay>();
 

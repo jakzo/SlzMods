@@ -1,6 +1,6 @@
 using System;
 
-namespace SpeedrunTools.Speedruns {
+namespace Sst.Speedruns {
 class RunTimer {
   private DateTime? _relativeStartTime;
   private DateTime? _pauseTime;

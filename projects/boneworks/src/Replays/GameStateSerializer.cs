@@ -7,7 +7,7 @@ using System.IO;
 using UnityEngine;
 using Valve.VR;
 
-namespace SpeedrunTools.Replays {
+namespace Sst.Replays {
 class GameStateSerializer {
   private (Bwr.SettingType, float)[] _prevSettings;
   private byte _buttonsPressedLeft;

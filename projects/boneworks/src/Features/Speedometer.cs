@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using MelonLoader;
 
-namespace SpeedrunTools.Features {
+namespace Sst.Features {
 class Speedometer : Feature {
   private const string SPEEDOMETER_TEXT_NAME = "SpeedrunTools_Speedometer_Text";
 

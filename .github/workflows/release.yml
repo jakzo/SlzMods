@@ -60,6 +60,4 @@ jobs:
           target_commitish: ${{ github.sha }}
           tag_name: ${{ steps.bump_version.outputs.new_version }}
           body: ${{ steps.bump_version.outputs.changelog }}
-          files: |
-            ./projects/${{ github.event.inputs.project }}/bin/Release/*.dll
-            ./projects/${{ github.event.inputs.project }}/thunderstore/*.zip
+          files: ./projects/${{ github.event.inputs.project }}/thunderstore/*.zip

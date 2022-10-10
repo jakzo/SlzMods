@@ -13,8 +13,8 @@ try {
   var newVersion = Args[2];
   var projectRelativePath = $"projects/{project}";
 
-  var readme = File.ReadAllText("README.md");
-  var changelog = File.ReadAllText("CHANGELOG.md");
+  var readme = File.ReadAllText($"{projectRelativePath}/README.md");
+  var changelog = File.ReadAllText($"{projectRelativePath}/CHANGELOG.md");
   File.WriteAllText($"{projectRelativePath}/thunderstore/README.md",
                     $"{readme}\n# Changelog\n\n{changelog}");
   var MODS_DIR = $"{projectRelativePath}/thunderstore/Mods";

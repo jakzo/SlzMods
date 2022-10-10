@@ -22,12 +22,12 @@ class SplitsTimer : Feature {
     DefaultValue = false,
   };
 
-  public readonly Pref<bool> PrefShowUnderWrist = new Pref<bool>() {
-    Id = "showUnderWrist",
-    Name = "Show timer under hand",
-    Description = "Timer is invisible unless you point your wrist upwards.",
-    DefaultValue = false,
-  };
+  // public readonly Pref<bool> PrefShowUnderWrist = new Pref<bool>() {
+  //   Id = "showUnderWrist",
+  //   Name = "Show timer under hand",
+  //   Description = "Timer is invisible unless you point your wrist upwards.",
+  //   DefaultValue = false,
+  // };
 
   public SplitsTimer() { Instance = this; }
 
@@ -90,14 +90,14 @@ class SplitsTimer : Feature {
       _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
       splitsText.transform.SetParent(
           Mod.GameState.rigManager.ControllerRig.leftController.transform);
-      if (PrefShowUnderWrist.Read()) {
-        // TODO
-        _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
-        _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
-      } else {
-        _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
-        _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
-      }
+      // if (PrefShowUnderWrist.Read()) {
+      //   // TODO
+      //   _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
+      //   _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
+      // } else {
+      _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
+      _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
+      // }
     }
 
     _splits.ResumeIfStarted();
@@ -109,14 +109,14 @@ class SplitsTimer : Feature {
     var time = _splits.GetTime();
     if (time == null)
       return;
-    if (PrefShowUnderWrist.Read()) {
-      // TODO
-      var isHidden = false;
-      if (isHidden) {
-        _tmp.gameObject.active = false;
-        return;
-      }
-    }
+    // if (PrefShowUnderWrist.Read()) {
+    //   // TODO
+    //   var isHidden = false;
+    //   if (isHidden) {
+    //     _tmp.gameObject.active = false;
+    //     return;
+    //   }
+    // }
     _tmp.gameObject.active = true;
     _tmp.SetText(Utils.DurationToString(time.Value));
   }

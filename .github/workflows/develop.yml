@@ -36,7 +36,8 @@ jobs:
             **DO NOT DOWNLOAD** if you are looking for the Speedrun mod. Instead go to the Thunderstore listings:
 
             - [Boneworks Speedrun Tools](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/)
-            - [Bonelab Speedrun Timer](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/).
+
+            - [Bonelab Speedrun Timer](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/)
 
             These are testing builds used for development of the mods. They contain the most recent changes which are usually untested and broken. Use at your own risk.
           files: ./bin/*.dll

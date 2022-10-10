@@ -24,8 +24,9 @@ try {
   } else {
     Directory.CreateDirectory(MODS_DIR);
   }
-  var csprojName = Directory.EnumerateFiles(projectRelativePath)
-                       .First(name => name.EndsWith(".csproj"));
+  var csprojName =
+      Path.GetFileName(Directory.EnumerateFiles(projectRelativePath)
+                           .First(name => name.EndsWith(".csproj")));
   var binaryName =
       csprojName.Remove(csprojName.Length - ".csproj".Length) + ".dll";
   File.Copy($"{projectRelativePath}/bin/Release/{binaryName}", MODS_DIR);

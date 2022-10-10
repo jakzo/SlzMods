@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.32510.428
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoneworksSpeedrunTools", "projects\boneworks\SpeedrunTools.csproj", "{C33921DC-5778-4EEC-A2D0-E0AE522CC701}"
 EndProject
-Project("{0AD97044-708A-438E-856D-FF9FEE6969C1}") = "BonelabSpeedrunTools", "projects\bonelab\SpeedrunTools.csproj", "{B08C3577-91FF-4261-AA3A-743E011DB435}"
+Project("{0AD97044-708A-438E-856D-FF9FEE6969C1}") = "BonelabSpeedrunTimer", "projects\bonelab-timer\SpeedrunTimer.csproj", "{B08C3577-91FF-4261-AA3A-743E011DB435}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

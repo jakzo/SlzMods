@@ -18,12 +18,13 @@ jobs:
       - name: Set up toolchain
         run: sudo apt install -y mono-devel flatbuffers-compiler
       - name: Install dependencies
-        run: nuget restore SpeedrunTools.sln
+        run: nuget restore SlzSpeedrunTools.sln
       - name: Build
         run: msbuild /property:Configuration=Release
       - name: Prepare for release
         run: |
           rename ./projects/boneworks/bin/Release/SpeedrunTools.dll ./projects/boneworks/bin/Release/BoneworksSpeedrunTools.dll
+          rename ./projects/bonelab-timer/bin/Release/SpeedrunTimer.dll ./projects/bonelab-timer/bin/Release/BonelabSpeedrunTimer.dll
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -31,8 +32,12 @@ jobs:
           target_commitish: ${{ github.sha }}
           tag_name: dev_${{ github.run_number }}
           body: >
-            **DO NOT DOWNLOAD** if you are looking for the Speedrun mod. Instead go to the Thunderstore listing for [Boneworks](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/) or [Bonelab](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTools/).
+            **DO NOT DOWNLOAD** if you are looking for the Speedrun mod. Instead go to the Thunderstore listings:
 
-            This is a testing build used for development of the mod. This contains the most recent changes which are usually untested and broken. Use at your own risk.
+            - [Boneworks Speedrun Tools](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/)
+            - [Bonelab Speedrun Timer](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/).
+
+            These are testing builds used for development of the mods. They contain the most recent changes which are usually untested and broken. Use at your own risk.
           files: |
             ./projects/boneworks/bin/Release/BoneworksSpeedrunTools.dll
+            ./projects/bonelab-timer/bin/Release/BonelabSpeedrunTimer.dll

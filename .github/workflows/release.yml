@@ -29,7 +29,7 @@ jobs:
         # run: sudo apt install -y mono-devel flatbuffers-compiler=2.0.6
         run: sudo apt install -y mono-devel
       - name: Install dependencies
-        run: nuget restore SpeedrunTools.sln
+        run: nuget restore SlzSpeedrunTools.sln
       - name: Bump version
         id: bump_version
         env:

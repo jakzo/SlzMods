@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using SLZ.Rig;
+using SLZ.Marrow.SceneStreaming;
+using SLZ.Marrow.Warehouse;
+using UnityEngine.SceneManagement;
 
 namespace SpeedrunTools {
 public static class BuildInfo {
@@ -22,10 +24,13 @@ public static class BuildInfo {
 
 public class Mod : MelonMod {
   private static readonly Feature[] features = {
-    new Features.Splits(),
+    new Features.SplitsTimer(),
 
     // Dev features
   };
+
+  public static Mod Instance;
+  public Mod() { Instance = this; }
 
   private static List<Feature> enabledFeatures = new List<Feature>();
 
@@ -36,6 +41,7 @@ public class Mod : MelonMod {
 
   public static bool IsRunActive = false;
   public static GameState GameState = new GameState();
+  private Scene? _activeLoadingScene;
 
   private static void EnableFeature(Feature feature) {
     if (enabledFeatures.Contains(feature))
@@ -100,12 +106,18 @@ public class Mod : MelonMod {
         EnableFeature(feature);
     }
 
-    Utils.LogDebug("OnApplicationStart");
-    OnFeatureCallback(feature => feature.OnApplicationStart());
+    SceneManager.activeSceneChanged +=
+        new System.Action<Scene, Scene>(OnActiveSceneChanged);
+
+    Utils.LogDebug("OnInitialize");
+    OnFeatureCallback(feature => feature.OnInitialize());
   }
 
-  public override void OnSceneWasLoaded(int buildIndex, string sceneName) {
-    Utils.LogDebug("OnSceneWasLoaded");
+  private void DoLevelStart() {
+    GameState.currentLevel = GameState.nextLevel;
+    GameState.nextLevel = null;
+    GameState.rigManager = Utilities.Bonelab.GetRigManager();
+
     foreach (var feature in features) {
       if (featureEnabledPrefs[feature].Read()) {
         EnableFeature(feature);
@@ -113,25 +125,51 @@ public class Mod : MelonMod {
         DisableFeature(feature);
       }
     }
-    OnFeatureCallback(feature =>
-                          feature.OnSceneWasLoaded(buildIndex, sceneName));
-  }
 
-  public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    Utils.LogDebug("OnSceneWasInitialized");
-    GameState.rigManager = Utilities.Bonelab.GetRigManager();
     s_hotkeys.Init();
-    OnFeatureCallback(feature =>
-                          feature.OnSceneWasInitialized(buildIndex, sceneName));
+
+    OnFeatureCallback(feature => feature.OnLevelStart(GameState.currentLevel));
   }
 
   public override void OnUpdate() {
+    if (_activeLoadingScene.HasValue && !_activeLoadingScene.Value.isLoaded) {
+      _activeLoadingScene = null;
+
+      if (GameState.currentLevel == null && GameState.nextLevel != null)
+        DoLevelStart();
+    }
+
     s_hotkeys.OnUpdate();
     OnFeatureCallback(feature => feature.OnUpdate());
   }
 
   public override void OnFixedUpdate() {
     OnFeatureCallback(feature => feature.OnFixedUpdate());
+  }
+
+  private void OnActiveSceneChanged(Scene prevScene, Scene nextScene) {
+    if (nextScene.name ==
+        SceneStreamer._session.LoadLevel?.MainScene.AssetGUID) {
+      Utils.LogDebug("Load screen detected");
+      if (_activeLoadingScene == null)
+        _activeLoadingScene = nextScene;
+
+      GameState.prevLevel = GameState.currentLevel;
+      GameState.currentLevel = null;
+      OnFeatureCallback(feature => feature.OnLoadingScreen(
+                            GameState.prevLevel, GameState.nextLevel));
+    }
+  }
+
+  [HarmonyPatch(typeof(SceneStreamer), nameof(SceneStreamer.Load),
+                new System.Type[] { typeof(LevelCrateReference),
+                                    typeof(LevelCrateReference) })]
+  class SceneStreamer_Load_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix(LevelCrateReference level) {
+      Utils.LogDebug($"Load: {level.Crate.Title}");
+      GameState.nextLevel = level.Crate;
+    }
   }
 }
 }

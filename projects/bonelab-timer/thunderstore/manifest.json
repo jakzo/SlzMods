@@ -1,7 +1,7 @@
 {
-  "name": "SpeedrunTools",
+  "name": "SpeedrunTimer",
   "version_number": "0.0.0",
-  "description": "Utilities for Bonelab speedrunning.",
+  "description": "Timer for Bonelab speedruns.",
   "website_url": "https://github.com/jakzo/SlzSpeedrunTools",
   "dependencies": ["LavaGang-MelonLoader-0.5.6"]
 }

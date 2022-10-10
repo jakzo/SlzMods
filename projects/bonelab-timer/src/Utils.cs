@@ -4,10 +4,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SLZ.Rig;
+using SLZ.Marrow.Warehouse;
 
 namespace SpeedrunTools {
 class Utils {
   public const string PREF_CATEGORY = "SpeedrunTools";
+
+  public const string LEVEL_TITLE_DESCENT = "01 - Descent";
+  public const string LEVEL_TITLE_HOME = "14 - Home";
+  public const string LOADING_SCENE_NAME = "77da2b1cce998aa4fb4fc76a7fd80e05";
 
   public Dictionary<string, Level> Levels =
       new[] {
@@ -42,6 +47,9 @@ class Utils {
   public static bool GetKeyControl() =>
       UnityEngine.Input.GetKey(UnityEngine.KeyCode.LeftControl) ||
       UnityEngine.Input.GetKey(UnityEngine.KeyCode.RightControl);
+
+  public static string DurationToString(TimeSpan duration) => duration.ToString(
+      $"{(duration.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff");
 }
 
 class Pref<T> : IPref {
@@ -129,11 +137,10 @@ abstract public class Feature {
   public bool IsEnabled = false;
   public bool IsEnabledByDefault = true;
   public bool IsDev = false;
-  public virtual void OnApplicationStart() {}
-  public virtual void OnLoadingScreen(int nextSceneIdx, int prevSceneIdx) {}
-  public virtual void OnLevelStart(int sceneIdx) {}
-  public virtual void OnSceneWasLoaded(int buildIndex, string sceneName) {}
-  public virtual void OnSceneWasInitialized(int buildIndex, string sceneName) {}
+  public virtual void OnInitialize() {}
+  public virtual void OnLoadingScreen(LevelCrate nextLevel,
+                                      LevelCrate prevLevel) {}
+  public virtual void OnLevelStart(LevelCrate level) {}
   public virtual void OnUpdate() {}
   public virtual void OnFixedUpdate() {}
   public virtual void OnEnabled() {}
@@ -141,9 +148,9 @@ abstract public class Feature {
 }
 
 public struct GameState {
-  public int? prevSceneIdx;
-  public int? currentSceneIdx;
-  public int? nextSceneIdx;
+  public LevelCrate prevLevel;
+  public LevelCrate currentLevel;
+  public LevelCrate nextLevel;
   public bool didPrevLevelComplete;
   public RigManager rigManager;
 }

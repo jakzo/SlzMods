@@ -24,8 +24,8 @@ jobs:
       - name: Prepare for release
         run: |
           mkdir ./bin
-          mv ./projects/boneworks/bin/Release/*.dll ./bin/BoneworksSpeedrunTools.dll
-          mv ./projects/bonelab-timer/bin/Release/*.dll ./bin/BonelabSpeedrunTimer.dll
+          mv ./projects/boneworks/bin/Release/SpeedrunTools.dll ./bin/BoneworksSpeedrunTools.dll
+          mv ./projects/bonelab-timer/bin/Release/SpeedrunTimer.dll ./bin/BonelabSpeedrunTimer.dll
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:

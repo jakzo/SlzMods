@@ -24,7 +24,10 @@ try {
   } else {
     Directory.CreateDirectory(MODS_DIR);
   }
-  File.Copy($"{projectRelativePath}/bin/Release/SpeedrunTools.dll", MODS_DIR);
+  var releaseDir = $"{projectRelativePath}/bin/Release";
+  var binaryName =
+      Directory.EnumerateFiles(releaseDir).First(name => name.EndsWith(".dll"));
+  File.Copy($"{releaseDir}/{binaryName}", MODS_DIR);
 
   Console.WriteLine("Thunderstore files copied");
 
@@ -38,8 +41,8 @@ try {
     zip.CreateEntryFromFile($"{projectRelativePath}/thunderstore/README.md",
                             "README.md");
     zip.CreateEntryFromFile(
-        $"{projectRelativePath}/thunderstore/Mods/SpeedrunTools.dll",
-        "Mods/SpeedrunTools.dll");
+        $"{projectRelativePath}/thunderstore/Mods/{binaryName}",
+        $"Mods/{binaryName}");
   }
 
   Console.WriteLine("Thunderstore zip file created");

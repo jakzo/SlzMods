@@ -1,5 +1,4 @@
 const string PROJECTS_PATH = "projects";
-const string APP_VERSION_PATH = "AppVersion.cs";
 
 string[] semverTypes = { "major", "minor", "patch" };
 
@@ -31,7 +30,8 @@ void ReleaseProject(string projectRelativePath) {
                                           manifestEndIdx - manifestStartIdx);
   var newVersion = SemverIncrement(oldVersion, semverTypeIdx);
 
-  var appCode = File.ReadAllText(APP_VERSION_PATH);
+  var appVersionPath = Path.Combine(projectRelativePath, "AppVersion.cs");
+  var appCode = File.ReadAllText(appVersionPath);
   const string APP_VERSION_SEARCH_TERM = "Value = \"";
   var appStartIdx = appCode.IndexOf(APP_VERSION_SEARCH_TERM);
   if (appStartIdx == -1)
@@ -46,9 +46,9 @@ void ReleaseProject(string projectRelativePath) {
   File.WriteAllText(manifestPath, manifestJson.Substring(0, manifestStartIdx) +
                                       newVersion +
                                       manifestJson.Substring(manifestEndIdx));
-  File.WriteAllText(APP_VERSION_PATH, appCode.Substring(0, appStartIdx) +
-                                          newVersion +
-                                          appCode.Substring(appEndIdx));
+  File.WriteAllText(appVersionPath, appCode.Substring(0, appStartIdx) +
+                                        newVersion +
+                                        appCode.Substring(appEndIdx));
 
   Console.WriteLine("manifest.json and AppVersion.cs version updated");
 

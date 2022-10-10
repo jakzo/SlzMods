@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoneworksSpeedrunTools", "p
 EndProject
 Project("{0AD97044-708A-438E-856D-FF9FEE6969C1}") = "BonelabSpeedrunTimer", "projects\bonelab-timer\SpeedrunTimer.csproj", "{B08C3577-91FF-4261-AA3A-743E011DB435}"
 EndProject
+Project("{99DBB66E-FA56-4346-93A6-D79BF4F507FD}") = "Scripts", "scripts\Scripts.csproj", "{6BC0F889-1E24-441C-BA97-2B1896B7AD26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,6 +24,11 @@ Global
 		{B08C3577-91FF-4261-AA3A-743E011DB435}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B08C3577-91FF-4261-AA3A-743E011DB435}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B08C3577-91FF-4261-AA3A-743E011DB435}.Release|Any CPU.Build.0 = Release|Any CPU
+		
+		{6BC0F889-1E24-441C-BA97-2B1896B7AD26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BC0F889-1E24-441C-BA97-2B1896B7AD26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BC0F889-1E24-441C-BA97-2B1896B7AD26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BC0F889-1E24-441C-BA97-2B1896B7AD26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

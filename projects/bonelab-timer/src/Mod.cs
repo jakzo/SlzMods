@@ -7,7 +7,6 @@ using System.Reflection;
 using HarmonyLib;
 using SLZ.Marrow.SceneStreaming;
 using SLZ.Marrow.Warehouse;
-using UnityEngine.SceneManagement;
 
 namespace Sst {
 public static class BuildInfo {
@@ -41,7 +40,7 @@ public class Mod : MelonMod {
 
   public static bool IsRunActive = false;
   public static GameState GameState = new GameState();
-  private Scene? _activeLoadingScene;
+  private LoadingScene _activeLoadingScene;
 
   private static void EnableFeature(Feature feature) {
     if (enabledFeatures.Contains(feature))
@@ -106,11 +105,26 @@ public class Mod : MelonMod {
         EnableFeature(feature);
     }
 
-    SceneManager.activeSceneChanged +=
-        new System.Action<Scene, Scene>(OnActiveSceneChanged);
-
     Utils.LogDebug("OnInitialize");
     OnFeatureCallback(feature => feature.OnInitialize());
+  }
+
+  public override void OnUpdate() {
+    if (_activeLoadingScene != null &&
+        !_activeLoadingScene.gameObject.scene.isLoaded) {
+      Utils.LogDebug("loading scene unloaded");
+      _activeLoadingScene = null;
+
+      if (GameState.currentLevel == null && GameState.nextLevel != null)
+        DoLevelStart();
+    }
+
+    s_hotkeys.OnUpdate();
+    OnFeatureCallback(feature => feature.OnUpdate());
+  }
+
+  public override void OnFixedUpdate() {
+    OnFeatureCallback(feature => feature.OnFixedUpdate());
   }
 
   private void DoLevelStart() {
@@ -131,36 +145,6 @@ public class Mod : MelonMod {
     OnFeatureCallback(feature => feature.OnLevelStart(GameState.currentLevel));
   }
 
-  public override void OnUpdate() {
-    if (_activeLoadingScene.HasValue && !_activeLoadingScene.Value.isLoaded) {
-      _activeLoadingScene = null;
-
-      if (GameState.currentLevel == null && GameState.nextLevel != null)
-        DoLevelStart();
-    }
-
-    s_hotkeys.OnUpdate();
-    OnFeatureCallback(feature => feature.OnUpdate());
-  }
-
-  public override void OnFixedUpdate() {
-    OnFeatureCallback(feature => feature.OnFixedUpdate());
-  }
-
-  private void OnActiveSceneChanged(Scene prevScene, Scene nextScene) {
-    if (nextScene.name ==
-        SceneStreamer._session.LoadLevel?.MainScene.AssetGUID) {
-      Utils.LogDebug("Load screen detected");
-      if (_activeLoadingScene == null)
-        _activeLoadingScene = nextScene;
-
-      GameState.prevLevel = GameState.currentLevel;
-      GameState.currentLevel = null;
-      OnFeatureCallback(feature => feature.OnLoadingScreen(
-                            GameState.prevLevel, GameState.nextLevel));
-    }
-  }
-
   [HarmonyPatch(typeof(SceneStreamer), nameof(SceneStreamer.Load),
                 new System.Type[] { typeof(LevelCrateReference),
                                     typeof(LevelCrateReference) })]
@@ -169,6 +153,19 @@ public class Mod : MelonMod {
     internal static void Prefix(LevelCrateReference level) {
       Utils.LogDebug($"Load: {level.Crate.Title}");
       GameState.nextLevel = level.Crate;
+    }
+  }
+
+  [HarmonyPatch(typeof(LoadingScene), nameof(LoadingScene.Start))]
+  class LoadingScene_Start_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix(LoadingScene __instance) {
+      Utils.LogDebug("LoadingScene.Start()");
+      Instance._activeLoadingScene = __instance;
+      GameState.prevLevel = GameState.currentLevel;
+      GameState.currentLevel = null;
+      OnFeatureCallback(feature => feature.OnLoadingScreen(
+                            GameState.prevLevel, GameState.nextLevel));
     }
   }
 }

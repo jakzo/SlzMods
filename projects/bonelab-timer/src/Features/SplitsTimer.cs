@@ -13,6 +13,40 @@ class SplitsTimer : Feature {
   private TMPro.TextMeshPro _tmp;
   private Splits _splits = new Splits();
 
+  private static byte[] LivesplitState = {
+    // 0 = Magic string start
+    0xD4,
+    0xE2,
+    0x03,
+    0x34,
+    0xC2,
+    0xDF,
+    0x63,
+    0x24,
+    // 8 = IsLoading
+    0,
+    // 9 = LevelIdx
+    0,
+    // 10 = IsSittingInTaxi
+    0,
+    // 11 = Magic string end
+    0x67,
+    0x10,
+    0xA6,
+    0x12,
+    0x3D,
+    0xE1,
+    0x75,
+    0xBD,
+  };
+
+  private void SetLivesplitState(bool isLoading, byte levelIdx,
+                                 bool isSittingInTaxi) {
+    LivesplitState[8] = (byte)(isLoading ? 1 : 0);
+    LivesplitState[9] = levelIdx;
+    LivesplitState[10] = (byte)(isSittingInTaxi ? 1 : 0);
+  }
+
   public readonly Pref<bool> PrefHide = new Pref<bool>() {
     Id = "hide",
     Name = "Hide in-game timer",
@@ -46,6 +80,8 @@ class SplitsTimer : Feature {
                                        LevelCrate nextLevel) {
     if (nextLevel == null)
       return;
+
+    SetLivesplitState(true, 123, false);
 
     if (nextLevel.Title == Utils.LEVEL_TITLE_DESCENT) {
       Utils.LogDebug("Attempting to start timer");
@@ -81,6 +117,8 @@ class SplitsTimer : Feature {
   private void RenderSplits(Splits splits) {}
 
   public override void OnLevelStart(LevelCrate level) {
+    SetLivesplitState(false, 123, false);
+
     if (!PrefHide.Read()) {
       var splitsText = new GameObject("SpeedrunTimer_Wrist_Text");
       _tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
@@ -121,6 +159,7 @@ class SplitsTimer : Feature {
   }
 
   public void Finish() {
+    SetLivesplitState(false, 123, true);
     _splits.Pause();
     MelonLogger.Msg($"Stopping timer at: {_splits.GetTime()}");
     if (_tmp != null)
@@ -206,5 +245,48 @@ class SplitsTimer : Feature {
       }
     }
   }
+
+  //   private class LivesplitPipe : System.IDisposable {
+  //     private List<(NamedPipeServerStream, StreamWriter)> _pipes =
+  //         new List<(NamedPipeServerStream, StreamWriter)>();
+
+  //     public LivesplitPipe() { CreateNewPipe(); }
+
+  //     private void CreateNewPipe() {
+  //      var thread= new Thread(() => {
+  //         var pipe =
+  //             new NamedPipeServerStream("BonelabSpeedrunTimer",
+  //             PipeDirection.Out);
+  //      Utils.LogDebug("Waiting for connection on new pipe");
+  //      pipe.WaitForConnection();
+  //      CreateNewPipe();
+  //      _pipes.Add((pipe, new StreamWriter(pipe)));
+  //     });
+  //     thread.IsBackground = true;
+  //     thread.Start();
+  //   }
+
+  //   public void Dispose() {
+  //     foreach (var (pipe, writer) in _pipes)
+  //       writer.Dispose();
+  //   }
+
+  //   private void WritePipe(string message) {
+  //     Utils.LogDebug($"WritePipe (pipeCount={_pipes.Count}): {message}");
+  //     foreach (var (pipe, writer) in _pipes) {
+  //       if (!pipe.IsConnected)
+  //         continue;
+  //       try {
+  //         writer.WriteLine(message);
+  //         writer.Flush();
+  //       } catch (IOException err) {
+  //         MelonLogger.Error("Pipe error:", err.Message);
+  //       }
+  //     }
+  //   }
+
+  //   public void OnLoading(string levelName) { WritePipe($":L:{levelName}"); }
+  //   public void OnStart(string levelName) { WritePipe($":S:{levelName}"); }
+  // }
 }
 }

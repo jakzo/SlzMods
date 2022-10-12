@@ -19,6 +19,7 @@ class AntiCheat {
   public static Dictionary<RunIllegitimacyReason, string>
   ComputeRunLegitimacy() {
     var illegitimacyReasons = new Dictionary<RunIllegitimacyReason, string>();
+    return illegitimacyReasons;
 
     var disallowedMods = MelonMod.RegisteredMelons.Where(
         mod => !(mod is Mod) && !ALLOWED_MODS.Contains(mod.Info.Name));

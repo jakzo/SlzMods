@@ -1,3 +1,7 @@
+## 0.0.2
+
+Fix bug on Steam version not allowing references to Scene type.
+
 ## 0.0.1
 
 Initial release. Timer appears on wrist and in loading screens. Automatically starts in Descent, pauses on load and ends when sitting in the taxi.

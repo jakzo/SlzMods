@@ -10,6 +10,21 @@ Timer for Bonelab speedruns.
 
 This mod cannot be used on Quest yet.
 
+## Livesplit Integration
+
+Because no Livesplit autosplitter exists for the game yet and it's hard to create one, there is an autosplitter which is controlled by this mod. To install it:
+
+- Download the [BonelabSpeedrunTimer.asl](https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/projects/bonelab-timer/scripts/BonelabSpeedrunTimer.asl) autosplitter (right click on [this link](https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/projects/bonelab-timer/scripts/BonelabSpeedrunTimer.asl) -> save link)
+- Start Livesplit and edit layout settings (right click -> edit layout)
+- Click the `+` icon and select "control" -> "scriptable auto splitter"
+- Click the "layout settings" button then select the "scriptable auto splitter" tab
+- Click the "browse" button and select the BonelabSpeedrunTimer.asl file you downloaded
+- If it worked you should see some options appear
+
+By default the autosplitter will pause during loading screens, split every time the level changes (not on level reload) or when sitting in the taxi and reset when exiting the taxi or changing levels after sitting in the taxi. Create your splits accordingly.
+
+If you've set up the autosplitter you may not want the in-game timer anymore. You can disable it by setting the `hide` option to `true` (see instructions below).
+
 # Configuration
 
 You can change some settings by editing the file at `BONELAB/MelonLoader/MelonPreferences.cfg` or by using MelonPreferencesManager:

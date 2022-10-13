@@ -14,8 +14,9 @@ class SplitsTimer : Feature {
   private Splits _splits = new Splits();
 
   private static byte[] LivesplitState = {
-    // 0 = Magic string start
-    0xD4,
+    // 0 = magic string start
+    // Signature is set dynamically to avoid finding this hardcoded array
+    0x00, // 0xD4
     0xE2,
     0x03,
     0x34,
@@ -23,28 +24,24 @@ class SplitsTimer : Feature {
     0xDF,
     0x63,
     0x24,
-    // 8 = IsLoading
-    0,
-    // 9 = LevelIdx
-    0,
-    // 10 = IsSittingInTaxi
-    0,
-    // 11 = Magic string end
-    0x67,
-    0x10,
-    0xA6,
-    0x12,
-    0x3D,
-    0xE1,
-    0x75,
-    0xBD,
+    // 8.0   = isLoading
+    // 8.1   = isSittingInTaxi
+    // 8.2-7 = unused
+    0x00,
+    // 9 = levelIdx
+    0x00,
+    // 10 = unused
+    0x00,
+    // 11 = unused
+    0x00,
   };
 
-  private void SetLivesplitState(bool isLoading, byte levelIdx,
-                                 bool isSittingInTaxi) {
-    LivesplitState[8] = (byte)(isLoading ? 1 : 0);
-    LivesplitState[9] = levelIdx;
-    LivesplitState[10] = (byte)(isSittingInTaxi ? 1 : 0);
+  private void SetLivesplitState(bool isLoading, bool isSittingInTaxi,
+                                 string levelTitle = "") {
+    LivesplitState[0] = 0xD4;
+    LivesplitState[8] =
+        (byte)((isLoading ? 1 : 0) << 0 | (isSittingInTaxi ? 1 : 0) << 1);
+    LivesplitState[9] = Utilities.Levels.GetIndex(levelTitle);
   }
 
   public readonly Pref<bool> PrefHide = new Pref<bool>() {
@@ -62,7 +59,10 @@ class SplitsTimer : Feature {
   //   DefaultValue = false,
   // };
 
-  public SplitsTimer() { Instance = this; }
+  public SplitsTimer() {
+    Instance = this;
+    SetLivesplitState(false, false);
+  }
 
   private bool IsAllowed() {
     var illegitimacyReasons = Utilities.AntiCheat.ComputeRunLegitimacy();
@@ -81,7 +81,7 @@ class SplitsTimer : Feature {
     if (nextLevel == null)
       return;
 
-    SetLivesplitState(true, 123, false);
+    SetLivesplitState(true, false, nextLevel.Title);
 
     if (nextLevel.Title == Utils.LEVEL_TITLE_DESCENT) {
       Utils.LogDebug("Attempting to start timer");
@@ -117,7 +117,7 @@ class SplitsTimer : Feature {
   private void RenderSplits(Splits splits) {}
 
   public override void OnLevelStart(LevelCrate level) {
-    SetLivesplitState(false, 123, false);
+    SetLivesplitState(false, false, level.Title);
 
     if (!PrefHide.Read()) {
       var splitsText = new GameObject("SpeedrunTimer_Wrist_Text");
@@ -159,7 +159,7 @@ class SplitsTimer : Feature {
   }
 
   public void Finish() {
-    SetLivesplitState(false, 123, true);
+    SetLivesplitState(false, true, Mod.GameState.currentLevel?.Title ?? "");
     _splits.Pause();
     MelonLogger.Msg($"Stopping timer at: {_splits.GetTime()}");
     if (_tmp != null)

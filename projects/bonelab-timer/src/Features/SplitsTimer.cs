@@ -13,6 +13,37 @@ class SplitsTimer : Feature {
   private TMPro.TextMeshPro _tmp;
   private Splits _splits = new Splits();
 
+  private static byte[] LivesplitState = {
+    // 0 = magic string start
+    // Signature is set dynamically to avoid finding this hardcoded array
+    0x00, // 0xD4
+    0xE2,
+    0x03,
+    0x34,
+    0xC2,
+    0xDF,
+    0x63,
+    0x24,
+    // 8.0   = isLoading
+    // 8.1   = isSittingInTaxi
+    // 8.2-7 = unused
+    0x00,
+    // 9 = levelIdx
+    0x00,
+    // 10 = unused
+    0x00,
+    // 11 = unused
+    0x00,
+  };
+
+  private void SetLivesplitState(bool isLoading, bool isSittingInTaxi,
+                                 string levelTitle = "") {
+    LivesplitState[0] = 0xD4;
+    LivesplitState[8] =
+        (byte)((isLoading ? 1 : 0) << 0 | (isSittingInTaxi ? 1 : 0) << 1);
+    LivesplitState[9] = Utilities.Levels.GetIndex(levelTitle);
+  }
+
   public readonly Pref<bool> PrefHide = new Pref<bool>() {
     Id = "hide",
     Name = "Hide in-game timer",
@@ -28,7 +59,10 @@ class SplitsTimer : Feature {
   //   DefaultValue = false,
   // };
 
-  public SplitsTimer() { Instance = this; }
+  public SplitsTimer() {
+    Instance = this;
+    SetLivesplitState(false, false);
+  }
 
   private bool IsAllowed() {
     var illegitimacyReasons = Utilities.AntiCheat.ComputeRunLegitimacy();
@@ -46,6 +80,8 @@ class SplitsTimer : Feature {
                                        LevelCrate nextLevel) {
     if (nextLevel == null)
       return;
+
+    SetLivesplitState(true, false, nextLevel.Title);
 
     if (nextLevel.Title == Utils.LEVEL_TITLE_DESCENT) {
       Utils.LogDebug("Attempting to start timer");
@@ -81,6 +117,8 @@ class SplitsTimer : Feature {
   private void RenderSplits(Splits splits) {}
 
   public override void OnLevelStart(LevelCrate level) {
+    SetLivesplitState(false, false, level.Title);
+
     if (!PrefHide.Read()) {
       var splitsText = new GameObject("SpeedrunTimer_Wrist_Text");
       _tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
@@ -121,6 +159,7 @@ class SplitsTimer : Feature {
   }
 
   public void Finish() {
+    SetLivesplitState(false, true, Mod.GameState.currentLevel?.Title ?? "");
     _splits.Pause();
     MelonLogger.Msg($"Stopping timer at: {_splits.GetTime()}");
     if (_tmp != null)
@@ -206,5 +245,48 @@ class SplitsTimer : Feature {
       }
     }
   }
+
+  //   private class LivesplitPipe : System.IDisposable {
+  //     private List<(NamedPipeServerStream, StreamWriter)> _pipes =
+  //         new List<(NamedPipeServerStream, StreamWriter)>();
+
+  //     public LivesplitPipe() { CreateNewPipe(); }
+
+  //     private void CreateNewPipe() {
+  //      var thread= new Thread(() => {
+  //         var pipe =
+  //             new NamedPipeServerStream("BonelabSpeedrunTimer",
+  //             PipeDirection.Out);
+  //      Utils.LogDebug("Waiting for connection on new pipe");
+  //      pipe.WaitForConnection();
+  //      CreateNewPipe();
+  //      _pipes.Add((pipe, new StreamWriter(pipe)));
+  //     });
+  //     thread.IsBackground = true;
+  //     thread.Start();
+  //   }
+
+  //   public void Dispose() {
+  //     foreach (var (pipe, writer) in _pipes)
+  //       writer.Dispose();
+  //   }
+
+  //   private void WritePipe(string message) {
+  //     Utils.LogDebug($"WritePipe (pipeCount={_pipes.Count}): {message}");
+  //     foreach (var (pipe, writer) in _pipes) {
+  //       if (!pipe.IsConnected)
+  //         continue;
+  //       try {
+  //         writer.WriteLine(message);
+  //         writer.Flush();
+  //       } catch (IOException err) {
+  //         MelonLogger.Error("Pipe error:", err.Message);
+  //       }
+  //     }
+  //   }
+
+  //   public void OnLoading(string levelName) { WritePipe($":L:{levelName}"); }
+  //   public void OnStart(string levelName) { WritePipe($":S:{levelName}"); }
+  // }
 }
 }

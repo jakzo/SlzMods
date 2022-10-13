@@ -24,8 +24,6 @@ public static class BuildInfo {
 public class Mod : MelonMod {
   private static readonly Feature[] features = {
     new Features.SplitsTimer(),
-
-    // Dev features
   };
 
   public static Mod Instance;

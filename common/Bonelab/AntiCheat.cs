@@ -5,6 +5,7 @@ using System.Collections.Generic;
 namespace Sst.Utilities {
 class AntiCheat {
   private static HashSet<string> ALLOWED_MODS = new HashSet<string>() {
+    "LoadMirror",
     "MelonPreferencesManager",
   };
   private static HashSet<string> ALLOWED_PLUGINS = new HashSet<string>() {
@@ -19,8 +20,8 @@ class AntiCheat {
   public static Dictionary<RunIllegitimacyReason, string>
   ComputeRunLegitimacy() {
     var illegitimacyReasons = new Dictionary<RunIllegitimacyReason, string>();
-    return illegitimacyReasons;
 
+#if !DEBUG
     var disallowedMods = MelonMod.RegisteredMelons.Where(
         mod => !(mod is Mod) && !ALLOWED_MODS.Contains(mod.Info.Name));
     if (disallowedMods.Count() > 0) {
@@ -38,6 +39,7 @@ class AntiCheat {
       illegitimacyReasons[RunIllegitimacyReason.DISALLOWED_PLUGINS] =
           $"Disallowed plugins are active: {string.Join(", ", disallowedPluginNames)}";
     }
+#endif
 
     return illegitimacyReasons;
   }

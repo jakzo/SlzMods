@@ -12,7 +12,7 @@ This mod cannot be used on Quest yet.
 
 ## Livesplit Integration
 
-Because no Livesplit autosplitter exists for the game yet and it's hard to create one, there is an autosplitter which is controlled by this mod. To install it:
+Because no Livesplit autosplitter exists for the game yet and it's hard to create one, there is an autosplitter which is controlled by this mod. For the autosplitter to work, this mod must be installed and running. To set up the autosplitter:
 
 - Download the [BonelabSpeedrunTimer.asl](https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/projects/bonelab-timer/scripts/BonelabSpeedrunTimer.asl) autosplitter (right click on [this link](https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/projects/bonelab-timer/scripts/BonelabSpeedrunTimer.asl) -> save link)
 - Start Livesplit and edit layout settings (right click -> edit layout)
@@ -36,5 +36,5 @@ Most settings require restarting the level to take effect.
 
 # Links
 
-- Repository: https://github.com/jakzo/SlzSpeedrunTools
+- Repository: https://github.com/jakzo/SlzSpeedrunTools/projects/bonelab-timer
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/

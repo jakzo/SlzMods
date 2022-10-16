@@ -7,8 +7,8 @@
     <ProjectGuid>{B08C3577-91FF-4261-AA3A-743E011DB435}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SpeedrunTimer</RootNamespace>
-    <AssemblyName>SpeedrunTimer</AssemblyName>
+    <RootNamespace>LoadMirror</RootNamespace>
+    <AssemblyName>LoadMirror</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -98,8 +98,8 @@
   <ItemGroup>
     <Compile Include="AppVersion.cs" />
     <Compile Include="src/**/*.cs" />
-    <Compile Include="../../common/Bonelab/**/*.cs" />
     <Compile Include="../../common/Utilities/Metadata.cs" />
+    <Compile Include="../../common/Utilities/Dbg.cs" />
 
     <!-- <Compile Include="snippets/**/*.cs" /> -->
   </ItemGroup>

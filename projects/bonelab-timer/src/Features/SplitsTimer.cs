@@ -111,7 +111,7 @@ class SplitsTimer : Feature {
     tmp.rectTransform.localPosition = new Vector3(0, 0, 1);
     tmp.rectTransform.localRotation = Quaternion.Euler(0, 0, 0);
     tmp.SetText(
-        $"{BuildInfo.Name} v{BuildInfo.Version}\n{Utils.DurationToString(time)}");
+        $"{BuildInfo.Name} v{AppVersion.Value}\n{Utils.DurationToString(time)}");
   }
 
   private void RenderSplits(Splits splits) {}

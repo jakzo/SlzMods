@@ -31,7 +31,6 @@ init {
     vars.isSittingInTaxi = false;
     vars.nextLevelIdx = 0;
     vars.watcher = null;
-    vars.state = (uint)1000;
 
     var startTime = DateTime.Now;
     var target = new SigScanTarget(8, "D4 E2 03 34 C2 DF 63 24 ?? ?? ?? ??");
@@ -66,7 +65,7 @@ init {
             }
 
             vars.Log("Could not find SpeedrunTimer mod, retrying...");
-            Thread.Sleep(10000 - (DateTime.Now - startTime).Milliseconds);
+            Thread.Sleep(15000 - (DateTime.Now - startTime).Milliseconds);
         }
     } while (vars.watcher == null);
 

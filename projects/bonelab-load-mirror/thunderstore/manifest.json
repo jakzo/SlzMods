@@ -1,0 +1,7 @@
+{
+  "name": "LoadMirror",
+  "version_number": "0.0.0",
+  "description": "Shows the headset view during loading screens instead of a still image.",
+  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/projects/bonelab-load-mirror",
+  "dependencies": ["LavaGang-MelonLoader-0.5.6"]
+}

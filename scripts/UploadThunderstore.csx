@@ -33,7 +33,7 @@ try {
 
   Console.WriteLine("Thunderstore files copied");
 
-  var zipFilename = $"SpeedrunTools_{newVersion}.zip";
+  var zipFilename = $"Mod_v{newVersion}.zip";
   var zipPath = $"{projectRelativePath}/thunderstore/{zipFilename}";
   using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Create)) {
     zip.CreateEntryFromFile($"{projectRelativePath}/thunderstore/manifest.json",

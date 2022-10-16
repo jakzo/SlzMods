@@ -26,6 +26,7 @@ jobs:
           mkdir ./bin
           mv ./projects/boneworks/bin/Release/SpeedrunTools.dll ./bin/BoneworksSpeedrunTools.dll
           mv ./projects/bonelab-timer/bin/Release/SpeedrunTimer.dll ./bin/BonelabSpeedrunTimer.dll
+          mv ./projects/bonelab-load-mirror/bin/Release/LoadMirror.dll ./bin/BonelabLoadMirror.dll
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -38,6 +39,8 @@ jobs:
             - [Boneworks Speedrun Tools](https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/)
 
             - [Bonelab Speedrun Timer](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/)
+
+            - [Bonelab Load Mirror](https://bonelab.thunderstore.io/package/jakzo/LoadMirror/)
 
             These are testing builds used for development of the mods. They contain the most recent changes which are usually untested and broken. Use at your own risk.
           files: ./bin/*.dll

@@ -99,13 +99,18 @@ try {
 
   await Post<object>($"/usermedia/{uuid}/finish-upload/", new { parts });
   Console.WriteLine($"Upload finished");
-  await Post<object>("/submission/submit/", new {
+
+  var submitUrl = "/submission/submit/";
+  var submitBody = new {
     upload_uuid = uuid,
     author_name = "jakzo",
     categories = new string[] { "code-mods" },
     communities = new string[] { game },
     has_nsfw_content = false,
-  });
+  };
+  Console.WriteLine(
+      $"Submitting with: POST {submitUrl} {JsonConvert.SerializeObject(submitBody)}")
+      await Post<object>(submitUrl, submitBody);
 
   Console.WriteLine("Submitted to Thunderstore");
 } catch (Exception ex) {

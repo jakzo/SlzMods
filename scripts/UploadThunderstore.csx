@@ -98,6 +98,7 @@ try {
   Console.WriteLine($"Uploaded {zipFilename} to Thunderstore with UUID {uuid}");
 
   await Post<object>($"/usermedia/{uuid}/finish-upload/", new { parts });
+  Console.WriteLine($"Upload finished");
   await Post<object>("/submission/submit/", new {
     upload_uuid = uuid,
     author_name = "jakzo",

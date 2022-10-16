@@ -109,8 +109,8 @@ try {
     has_nsfw_content = false,
   };
   Console.WriteLine(
-      $"Submitting with: POST {submitUrl} {JsonConvert.SerializeObject(submitBody)}")
-      await Post<object>(submitUrl, submitBody);
+      $"Submitting with: POST {submitUrl} {JsonConvert.SerializeObject(submitBody)}");
+  await Post<object>(submitUrl, submitBody);
 
   Console.WriteLine("Submitted to Thunderstore");
 } catch (Exception ex) {

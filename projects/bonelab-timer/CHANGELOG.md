@@ -1,3 +1,7 @@
+## 0.1.0
+
+Livesplit autosplitter integration.
+
 ## 0.0.2
 
 Fix bug on Steam version not allowing references to Scene type.

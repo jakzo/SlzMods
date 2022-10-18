@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: nuget restore SlzSpeedrunTools.sln
       - name: Build
-        run: msbuild /property:Configuration=Release
+        run: msbuild
       - name: Prepare for release
         run: |
           mkdir ./bin

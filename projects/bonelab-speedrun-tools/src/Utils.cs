@@ -8,7 +8,7 @@ using SLZ.Marrow.Warehouse;
 
 namespace Sst {
 class Utils {
-  public const string PREF_CATEGORY = "SpeedrunTimer";
+  public const string PREF_CATEGORY = "SpeedrunTools";
 
   public const string LEVEL_TITLE_DESCENT = "01 - Descent";
   public const string LEVEL_TITLE_HOME = "14 - Home";

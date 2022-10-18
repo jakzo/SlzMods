@@ -109,3 +109,11 @@ split {
 reset {
     return settings["splitAtTaxi"] && vars.prevSittingInTaxi && !vars.isSittingInTaxi;
 }
+
+onStart {
+    timer.IsGameTimePaused = true;
+}
+
+exit {
+    timer.IsGameTimePaused = true;
+}

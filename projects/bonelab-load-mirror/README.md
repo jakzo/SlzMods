@@ -8,11 +8,9 @@ Shows the headset view during loading screens instead of a still image.
   - Steam: `C:\Program Files (x86)\Steam\steamapps\common\BONELAB\BONELAB`
   - Oculus: `C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab`
 
-Note: this doesn't work with fisheye spectator camera yet.
-
 ## Why?
 
-Speedruns require videos including the headset view of loading screens to make splicing harder. This mod allows people to record the game window instead of setting up SteamVR or Oculus mirrors which reduce performance and can even be impossible to do in some situations (eg. using Virtual Desktop on Quest to play the Oculus version of the game).
+Speedruns require videos including the headset view of loading screens to make splicing harder. This mod allows people to record the game window instead of setting up SteamVR or Oculus mirrors which reduce performance and can even be impossible to do in some situations (eg. using Virtual Desktop on Quest to play the Oculus version of the game). It also allows recording speedruns using the fisheye spectator camera.
 
 # Links
 

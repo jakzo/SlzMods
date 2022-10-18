@@ -2,11 +2,6 @@ using System.Collections.Generic;
 
 namespace Sst.Utilities {
 class Levels {
-  public const string TITLE_DESCENT = "01 - Descent";
-  // public const string TITLE_HOME = "14 - Home";
-  // public const string LOADING_SCENE_NAME =
-  // "77da2b1cce998aa4fb4fc76a7fd80e05";
-
   public static Dictionary<string, byte> TitleToIndex =
       new Dictionary<string, byte>() {
         ["01 - Descent"] = 1,

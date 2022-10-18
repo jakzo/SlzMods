@@ -1,6 +1,7 @@
 ﻿using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.XR;
 using SLZ.Data;
 using SLZ.Data.SaveData;
 
@@ -20,10 +21,13 @@ public class Mod : MelonMod {
         MelonLogger.Warning("2D_Overlay not found in loading screen");
       }
 
+      // Turn XR game rendering back on when loading while spectator cam is set
+      // to fisheye (automatically turns back off after loading finishes)
       var spectatorCameraMode =
           DataManager.Instance._settings.SpectatorSettings.SpectatorCameraMode;
-      // TODO: != passthrough?
       if (spectatorCameraMode == SpectatorCameraMode.Fisheye) {
+        Dbg.Log("XRSettings.gameViewRenderMode = GameViewRenderMode.BothEyes");
+        XRSettings.gameViewRenderMode = GameViewRenderMode.LeftEye;
       }
     }
   }

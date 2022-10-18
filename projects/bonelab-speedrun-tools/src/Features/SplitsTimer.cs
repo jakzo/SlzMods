@@ -101,7 +101,7 @@ class SplitsTimer : Feature {
   }
 
   private void RenderLoadingWatermark(System.TimeSpan time) {
-    var splitsText = new GameObject("SpeedrunTimer_Watermark");
+    var splitsText = new GameObject("SpeedrunTools_Watermark");
     splitsText.layer = LayerMask.NameToLayer("Background");
     var tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
     tmp.alignment = TMPro.TextAlignmentOptions.TopRight;
@@ -110,8 +110,12 @@ class SplitsTimer : Feature {
     tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.8f);
     tmp.rectTransform.localPosition = new Vector3(0, 0, 1);
     tmp.rectTransform.localRotation = Quaternion.Euler(0, 0, 0);
+    var debugText = "";
+#if DEBUG
+    debugText = " DEBUG";
+#endif
     tmp.SetText(
-        $"{BuildInfo.Name} v{AppVersion.Value}\n{Utils.DurationToString(time)}");
+        $"{BuildInfo.Name} v{AppVersion.Value}{debugText}\n{Utils.DurationToString(time)}");
   }
 
   private void RenderSplits(Splits splits) {}
@@ -120,7 +124,7 @@ class SplitsTimer : Feature {
     SetLivesplitState(false, false, level.Title);
 
     if (!PrefHide.Read()) {
-      var splitsText = new GameObject("SpeedrunTimer_Wrist_Text");
+      var splitsText = new GameObject("SpeedrunTools_Wrist_Text");
       _tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
       _tmp.alignment = TMPro.TextAlignmentOptions.BottomRight;
       _tmp.fontSize = 0.5f;
@@ -255,7 +259,7 @@ class SplitsTimer : Feature {
   //     private void CreateNewPipe() {
   //      var thread= new Thread(() => {
   //         var pipe =
-  //             new NamedPipeServerStream("BonelabSpeedrunTimer",
+  //             new NamedPipeServerStream("BonelabSpeedrunTools",
   //             PipeDirection.Out);
   //      Utils.LogDebug("Waiting for connection on new pipe");
   //      pipe.WaitForConnection();

@@ -2,9 +2,12 @@ using System.Collections.Generic;
 
 namespace Sst.Utilities {
 class Levels {
+  public const string TITLE_DESCENT = "01 - Descent";
+  public const string TITLE_MONOGON_MOTORWAY = "10 - Monogon Motorway";
+
   public static Dictionary<string, byte> TitleToIndex =
       new Dictionary<string, byte>() {
-        ["01 - Descent"] = 1,
+        [TITLE_DESCENT] = 1,
         ["02 - BONELAB Hub"] = 2,
         ["03 - LongRun"] = 3,
         ["04 - Mine Dive"] = 4,
@@ -13,7 +16,7 @@ class Levels {
         ["07 - Sprint Bridge 04"] = 7,
         ["08 - Magma Gate"] = 8,
         ["09- MoonBase"] = 9,
-        ["10 - Monogon Motorway"] = 10,
+        [TITLE_MONOGON_MOTORWAY] = 10,
         ["11 - Pillar Climb"] = 11,
         ["12 - Big Anomaly B"] = 12,
         ["13 - Ascent"] = 13,

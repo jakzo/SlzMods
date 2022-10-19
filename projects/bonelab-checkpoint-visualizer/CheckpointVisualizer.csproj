@@ -7,8 +7,8 @@
     <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SpeedrunTools</RootNamespace>
-    <AssemblyName>SpeedrunTools</AssemblyName>
+    <RootNamespace>LoadMirror</RootNamespace>
+    <AssemblyName>LoadMirror</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -94,12 +94,19 @@
       <HintPath>C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\MelonLoader\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
       <HintPath>..\..\references\bonelab\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.XR">
+      <HintPath>C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\MelonLoader\Managed\UnityEngine.VRModule.dll</HintPath>
+      <HintPath>..\..\references\bonelab\UnityEngine.VRModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppVersion.cs" />
     <Compile Include="src/**/*.cs" />
-    <Compile Include="../../common/Bonelab/**/*.cs" />
     <Compile Include="../../common/Utilities/Metadata.cs" />
+    <Compile Include="../../common/Utilities/Dbg.cs" />
+    <Compile Include="../../common/Utilities/Collider.cs" />
+    <Compile Include="../../common/Utilities/Geometry.cs" />
+    <Compile Include="../../common/Bonelab/Levels.cs" />
 
     <!-- <Compile Include="snippets/**/*.cs" /> -->
   </ItemGroup>

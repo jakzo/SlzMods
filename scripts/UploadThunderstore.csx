@@ -18,7 +18,8 @@ try {
   File.WriteAllText($"{projectRelativePath}/thunderstore/README.md",
                     $"{readme}\n# Changelog\n\n{changelog}");
   var MODS_DIR = $"{projectRelativePath}/thunderstore/Mods";
-  Directory.Delete(MODS_DIR, true);
+  if (Directory.Exists(MODS_DIR))
+    Directory.Delete(MODS_DIR, true);
   Directory.CreateDirectory(MODS_DIR);
   var binaryName = $"{project}.dll";
   File.Copy($"{projectRelativePath}/bin/Release/{binaryName}", MODS_DIR);

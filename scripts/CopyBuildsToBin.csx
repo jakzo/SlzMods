@@ -1,7 +1,9 @@
+const string BIN_DIR = "bin";
+
 void CopyBuildsToBin() {
-  var binDir = "bin";
-  Directory.Delete(binDir, true);
-  Directory.CreateDirectory(binDir);
+  if (Directory.Exists(BIN_DIR))
+    Directory.Delete(BIN_DIR, true);
+  Directory.CreateDirectory(BIN_DIR);
 
   var projectsDirRelative = "projects";
   foreach (var gameDir in Directory.EnumerateDirectories(projectsDirRelative)) {
@@ -11,7 +13,7 @@ void CopyBuildsToBin() {
       var buildFilename = $"{projectDir}.dll";
       var buildFile = Path.Combine(gameDirRelative, projectDir, "bin", "Debug",
                                    buildFilename);
-      File.Copy(buildFile, Path.Combine(binDir, $"{gameDir}{buildFilename}"));
+      File.Copy(buildFile, Path.Combine(BIN_DIR, $"{gameDir}{buildFilename}"));
     }
   }
 }

@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 
 namespace Sst.Utilities {
-public class Unity {
+public static class Unity {
   public static Transform FindDescendantTransform(Transform transform,
                                                   string name) {
     if (transform.name == name)
@@ -49,5 +49,9 @@ public class Unity {
 
   public static Color GenerateColor(int i) =>
       Color.HSVToRGB(i * 0.064f, 0.9f - i / 16 * 0.3f % 0.8f, 0.9f);
+
+  public static Shader FindShader(string name) =>
+      Resources.FindObjectsOfTypeAll<Shader>().First(shader => shader.name ==
+                                                               name);
 }
 }

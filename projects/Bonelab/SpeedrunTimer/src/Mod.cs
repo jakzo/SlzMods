@@ -12,7 +12,7 @@ namespace Sst {
 public class Mod : MelonMod {
   public const string PREF_CATEGORY_ID = BuildInfo.Name;
 
-  private static SplitsTimer _timer;
+  private static SplitsTimer _timer = new SplitsTimer();
   private bool _isDisabled = false;
   private LoadingScene _activeLoadingScene;
 

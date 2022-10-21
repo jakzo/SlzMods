@@ -27,7 +27,7 @@ public class Mod : MelonMod {
           DataManager.Instance._settings.SpectatorSettings.SpectatorCameraMode;
       if (spectatorCameraMode == SpectatorCameraMode.Fisheye) {
         Dbg.Log("XRSettings.gameViewRenderMode = GameViewRenderMode.BothEyes");
-        XRSettings.gameViewRenderMode = GameViewRenderMode.LeftEye;
+        XRSettings.gameViewRenderMode = GameViewRenderMode.BothEyes;
       }
     }
   }

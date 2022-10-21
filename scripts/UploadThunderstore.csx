@@ -8,32 +8,24 @@ using System.IO.Compression;
 using Newtonsoft.Json;
 
 try {
-  var project = Args[0];
-  var game = Args[1].Trim().ToLower();
+  var game = Args[0];
+  var project = Args[1];
   var newVersion = Args[2];
-  var projectRelativePath = $"projects/{project}";
+  var projectRelativePath = Path.Combine("projects", game, project);
 
   var readme = File.ReadAllText($"{projectRelativePath}/README.md");
   var changelog = File.ReadAllText($"{projectRelativePath}/CHANGELOG.md");
   File.WriteAllText($"{projectRelativePath}/thunderstore/README.md",
                     $"{readme}\n# Changelog\n\n{changelog}");
   var MODS_DIR = $"{projectRelativePath}/thunderstore/Mods";
-  if (Directory.Exists(MODS_DIR)) {
-    foreach (var file in Directory.GetFiles(MODS_DIR))
-      File.Delete(file);
-  } else {
-    Directory.CreateDirectory(MODS_DIR);
-  }
-  var csprojName =
-      Path.GetFileName(Directory.EnumerateFiles(projectRelativePath)
-                           .First(name => name.EndsWith(".csproj")));
-  var binaryName =
-      csprojName.Remove(csprojName.Length - ".csproj".Length) + ".dll";
+  Directory.Delete(MODS_DIR, true);
+  Directory.CreateDirectory(MODS_DIR);
+  var binaryName = $"{project}.dll";
   File.Copy($"{projectRelativePath}/bin/Release/{binaryName}", MODS_DIR);
 
   Console.WriteLine("Thunderstore files copied");
 
-  var zipFilename = $"Mod_v{newVersion}.zip";
+  var zipFilename = $"{game}{project}_v{newVersion}.zip";
   var zipPath = $"{projectRelativePath}/thunderstore/{zipFilename}";
   using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Create)) {
     zip.CreateEntryFromFile($"{projectRelativePath}/thunderstore/manifest.json",
@@ -61,8 +53,8 @@ try {
   async Task<T> Post<T>(string url, object body) {
     var res = await client.SendAsync(new HttpRequestMessage {
       Method = HttpMethod.Post,
-      RequestUri =
-          new Uri($"https://{game}.thunderstore.io/api/experimental{url}"),
+      RequestUri = new Uri(
+          $"https://{game.ToLower()}.thunderstore.io/api/experimental{url}"),
       Content = new StringContent(JsonConvert.SerializeObject(body),
                                   Encoding.UTF8, "application/json"),
       Headers =
@@ -98,14 +90,14 @@ try {
   Console.WriteLine($"Uploaded {zipFilename} to Thunderstore with UUID {uuid}");
 
   await Post<object>($"/usermedia/{uuid}/finish-upload/", new { parts });
-  Console.WriteLine($"Upload finished");
+  Console.WriteLine("Upload finished");
 
   var submitUrl = "/submission/submit/";
   var submitBody = new {
     upload_uuid = uuid,
     author_name = "jakzo",
     categories = new string[] { "code-mods" },
-    communities = new string[] { game },
+    communities = new string[] { game.ToLower() },
     has_nsfw_content = false,
   };
   Console.WriteLine(

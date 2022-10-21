@@ -1,5 +1,3 @@
-const string PROJECTS_PATH = "projects";
-
 string[] semverTypes = { "major", "minor", "patch" };
 
 string SemverIncrement(string version, int semverTypeIdx) {
@@ -11,12 +9,24 @@ string SemverIncrement(string version, int semverTypeIdx) {
   return String.Join(".", parts);
 }
 
-void ReleaseProject(string projectRelativePath) {
-  var semverTypeArg = Args[1].ToLower();
+void ReleaseProject(string gameName, string projectName, string semverTypeArg,
+                    string changelogDescription) {
   var semverTypeIdx =
       Array.FindIndex(semverTypes, type => type == semverTypeArg);
   if (semverTypeIdx == -1)
     throw new Exception($"Unknown semver increment type: {semverTypeArg}");
+
+  var projectRelativePath = Path.Combine("projects", gameName, projectName);
+  var appVersionPath = Path.Combine(projectRelativePath, "AppVersion.cs");
+  var appCode = File.ReadAllText(appVersionPath);
+  const string APP_VERSION_SEARCH_TERM = "Value = \"";
+  var appStartIdx = appCode.IndexOf(APP_VERSION_SEARCH_TERM);
+  if (appStartIdx == -1)
+    throw new Exception("App version not found");
+  appStartIdx += APP_VERSION_SEARCH_TERM.Length;
+  var appEndIdx = appCode.IndexOf("\"", appStartIdx);
+  var oldVersion = appCode.Substring(appStartIdx, appEndIdx - appStartIdx);
+  var newVersion = SemverIncrement(oldVersion, semverTypeIdx);
 
   string manifestPath = $"{projectRelativePath}/thunderstore/manifest.json";
   var manifestJson = File.ReadAllText(manifestPath);
@@ -26,18 +36,6 @@ void ReleaseProject(string projectRelativePath) {
     throw new Exception("Manifest version not found");
   manifestStartIdx += MANIFEST_SEARCH_TERM.Length;
   var manifestEndIdx = manifestJson.IndexOf("\"", manifestStartIdx);
-  var oldVersion = manifestJson.Substring(manifestStartIdx,
-                                          manifestEndIdx - manifestStartIdx);
-  var newVersion = SemverIncrement(oldVersion, semverTypeIdx);
-
-  var appVersionPath = Path.Combine(projectRelativePath, "AppVersion.cs");
-  var appCode = File.ReadAllText(appVersionPath);
-  const string APP_VERSION_SEARCH_TERM = "Value = \"";
-  var appStartIdx = appCode.IndexOf(APP_VERSION_SEARCH_TERM);
-  if (appStartIdx == -1)
-    throw new Exception("App version not found");
-  appStartIdx += APP_VERSION_SEARCH_TERM.Length;
-  var appEndIdx = appCode.IndexOf("\"", appStartIdx);
 
   Console.WriteLine($"Old version = {oldVersion}");
   Console.WriteLine($"Version increment type = {semverTypeArg}");
@@ -50,10 +48,9 @@ void ReleaseProject(string projectRelativePath) {
                                         newVersion +
                                         appCode.Substring(appEndIdx));
 
-  Console.WriteLine("manifest.json and AppVersion.cs version updated");
+  Console.WriteLine("AppVersion.cs and manifest.json version updated");
 
   string changelogPath = $"{projectRelativePath}/CHANGELOG.md";
-  var changelogDescription = Args[2];
   var oldChangelog = File.ReadAllText(changelogPath);
   var newChangelog =
       $"## {newVersion}\n\n{changelogDescription}\n\n{oldChangelog}";
@@ -70,8 +67,11 @@ void ReleaseProject(string projectRelativePath) {
 }
 
 try {
-  var projectName = Args[0].ToLower();
-  ReleaseProject(Path.Combine(PROJECTS_PATH, projectName));
+  var gameName = Args[0];
+  var projectName = Args[1];
+  var semverTypeArg = Args[2].ToLower();
+  var changelogDescription = Args[3];
+  ReleaseProject(gameName, projectName, semverTypeArg, changelogDescription);
 
   Console.WriteLine("All done!");
 } catch (Exception ex) {

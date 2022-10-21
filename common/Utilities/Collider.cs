@@ -18,16 +18,14 @@ static class Collider {
 
   public static GameObject Visualize(GameObject parent,
                                      UnityEngine.Collider collider, Color color,
-                                     bool enableTransparency = false) {
+                                     Shader shader = null) {
     GameObject visualization;
 
     switch (collider) {
     case BoxCollider boxCollider: {
       visualization = GameObject.Instantiate(DebugColliderPrefabs.BOX,
                                              collider.gameObject.transform);
-      visualization.GetComponent<MeshRenderer>().material.color = color;
-      if (enableTransparency)
-        Geometry.EnableTransparency(visualization);
+      SetMaterial(visualization, color, shader);
       visualization.active = true;
       break;
     }
@@ -35,9 +33,7 @@ static class Collider {
     case SphereCollider sphereCollider: {
       visualization = GameObject.Instantiate(
           DebugColliderPrefabs.SPHERE, sphereCollider.gameObject.transform);
-      visualization.GetComponent<MeshRenderer>().material.color = color;
-      if (enableTransparency)
-        Geometry.EnableTransparency(visualization);
+      SetMaterial(visualization, color, shader);
       visualization.active = true;
       break;
     }
@@ -46,22 +42,16 @@ static class Collider {
       visualization = new GameObject("DebugCapsuleCollider");
       var cylinder = GameObject.Instantiate(DebugColliderPrefabs.CYLINDER,
                                             visualization.transform);
-      cylinder.GetComponent<MeshRenderer>().material.color = color;
-      if (enableTransparency)
-        Geometry.EnableTransparency(cylinder);
+      SetMaterial(cylinder, color, shader);
       cylinder.active = true;
       var endA = GameObject.Instantiate(DebugColliderPrefabs.SPHERE,
                                         visualization.transform);
-      endA.GetComponent<MeshRenderer>().material.color = color;
-      if (enableTransparency)
-        Geometry.EnableTransparency(endA);
+      SetMaterial(endA, color, shader);
       endA.active = true;
       endA.transform.localPosition = new Vector3(0, -0.5f, 0);
       var endB = GameObject.Instantiate(DebugColliderPrefabs.SPHERE,
                                         visualization.transform);
-      endB.GetComponent<MeshRenderer>().material.color = color;
-      if (enableTransparency)
-        Geometry.EnableTransparency(endB);
+      SetMaterial(endB, color, shader);
       endB.active = true;
       endB.transform.localPosition = new Vector3(0, 0.5f, 0);
       visualization.transform.SetParent(capsuleCollider.gameObject.transform);
@@ -114,6 +104,18 @@ static class Collider {
       break;
     }
     }
+  }
+
+  private static void SetMaterial(GameObject gameObject, Color color,
+                                  Shader shader = null) {
+    var meshRenderer = gameObject.GetComponent<MeshRenderer>();
+    meshRenderer.shadowCastingMode =
+        UnityEngine.Rendering.ShadowCastingMode.Off;
+    meshRenderer.receiveShadows = false;
+    var material = meshRenderer.material;
+    if (shader != null)
+      material.shader = shader;
+    material.color = color;
   }
 }
 }

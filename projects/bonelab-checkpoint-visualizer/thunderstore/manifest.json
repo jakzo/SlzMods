@@ -1,7 +1,0 @@
-{
-  "name": "CheckpointVisualizer",
-  "version_number": "0.0.0",
-  "description": "Visibly shows checkpoints in Monogon Motorway.",
-  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/projects/bonelab-checkpoint-visualizer",
-  "dependencies": ["LavaGang-MelonLoader-0.5.6"]
-}

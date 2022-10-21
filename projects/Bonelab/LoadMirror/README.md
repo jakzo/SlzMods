@@ -1,4 +1,4 @@
-Visibly shows checkpoints in Monogon Motorway.
+Shows the headset view during loading screens instead of a still image.
 
 # Installation
 
@@ -10,7 +10,7 @@ Visibly shows checkpoints in Monogon Motorway.
 
 ## Why?
 
-Speedruns require videos including the headset view of loading screens to make splicing harder. This mod allows people to record the game window instead of setting up SteamVR or Oculus mirrors which reduce performance and can even be impossible to do in some situations (eg. using Virtual Desktop on Quest to play the Oculus version of the game). It also allows recording speedruns using the fisheye spectator camera.
+Speedruns require videos including the headset view of loading screens to make splicing harder. This mod allows people to record the game window instead of setting up SteamVR or Oculus mirrors which reduce performance and can even be impossible to do in some situations (eg. using Virtual Desktop on Quest to play the Oculus version of the game). It also allows recording speedruns using the fisheye spectator camera with motion smoothing.
 
 # Links
 

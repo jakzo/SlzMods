@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32510.428
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoneworksSpeedrunTools", "projects\boneworks\SpeedrunTools.csproj", "{C33921DC-5778-4EEC-A2D0-E0AE522CC701}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoneworksSpeedrunTools", "projects\Boneworks\SpeedrunTools\SpeedrunTools.csproj", "{C33921DC-5778-4EEC-A2D0-E0AE522CC701}"
 EndProject
-Project("{0AD97044-708A-438E-856D-FF9FEE6969C1}") = "BonelabSpeedrunTimer", "projects\bonelab-timer\SpeedrunTimer.csproj", "{B08C3577-91FF-4261-AA3A-743E011DB435}"
+Project("{0AD97044-708A-438E-856D-FF9FEE6969C1}") = "BonelabSpeedrunTimer", "projects\Bonelab\SpeedrunTimer\SpeedrunTimer.csproj", "{B08C3577-91FF-4261-AA3A-743E011DB435}"
 EndProject
-Project("{F1C8139F-39C2-4068-8B18-F132176B4927}") = "BonelabLoadMirror", "projects\bonelab-load-mirror\LoadMirror.csproj", "{414B0492-E904-4644-8C0A-1367CBD13CD7}"
+Project("{F1C8139F-39C2-4068-8B18-F132176B4927}") = "BonelabLoadMirror", "projects\Bonelab\LoadMirror\LoadMirror.csproj", "{414B0492-E904-4644-8C0A-1367CBD13CD7}"
 EndProject
-Project("{41206316-80DA-4916-83F7-B62DE64B316D}") = "BonelabCheckpointVisualizer", "projects\bonelab-checkpoint-visualizer\CheckpointVisualizer.csproj", "{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}"
+Project("{41206316-80DA-4916-83F7-B62DE64B316D}") = "BonelabCheckpointVisualizer", "projects\Bonelab\CheckpointVisualizer\CheckpointVisualizer.csproj", "{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}"
 EndProject
 Project("{99DBB66E-FA56-4346-93A6-D79BF4F507FD}") = "Scripts", "scripts\Scripts.csproj", "{6BC0F889-1E24-441C-BA97-2B1896B7AD26}"
 EndProject

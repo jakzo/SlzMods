@@ -62,8 +62,9 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
   var escapedChangelog = changelogDescription.Replace("%", "'%25'")
                              .Replace("\n", "'%0A'")
                              .Replace("\r", "'%0D'");
-  Console.WriteLine($"::set-output name=new_version::{newVersion}");
-  Console.WriteLine($"::set-output name=changelog::{escapedChangelog}");
+  var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
+  File.AppendAllText(githubOutput, $"new_version={newVersion}\n");
+  File.AppendAllText(githubOutput, $"changelog={escapedChangelog}\n");
 }
 
 try {

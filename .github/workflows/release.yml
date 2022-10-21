@@ -62,6 +62,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           target_commitish: ${{ github.sha }}
-          tag_name: "${{ github.event.inputs.game }}${{ github.event.inputs.project }} v${{ steps.bump_version.outputs.new_version }}"
+          tag_name: "${{ github.event.inputs.game }}${{ github.event.inputs.project }}_v${{ steps.bump_version.outputs.new_version }}"
           body: ${{ steps.bump_version.outputs.changelog }}
           files: ./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}/thunderstore/*.zip

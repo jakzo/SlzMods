@@ -24,7 +24,7 @@ class SplitsTimer {
 
   public SplitsTimer() {
     Instance = this;
-    Livesplit.SetState(false, false);
+    Livesplit.SetState(true, false);
   }
 
   public void OnInitialize() {

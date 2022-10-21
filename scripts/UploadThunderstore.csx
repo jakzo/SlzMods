@@ -63,7 +63,13 @@ try {
             { "Authorization", $"Bearer {AUTH_TOKEN}" },
           },
     });
-    res.EnsureSuccessStatusCode();
+    try {
+      res.EnsureSuccessStatusCode();
+    } catch (Exception ex) {
+      Console.WriteLine(
+          $"Error contents: {await res.Content.ReadAsStringAsync()}");
+      throw ex;
+    }
     var resText = await res.Content.ReadAsStringAsync();
     return JsonConvert.DeserializeObject<T>(resText);
   }

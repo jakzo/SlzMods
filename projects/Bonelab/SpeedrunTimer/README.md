@@ -36,5 +36,5 @@ Most settings require restarting the level to take effect.
 
 # Links
 
-- Repository: https://github.com/jakzo/SlzSpeedrunTools/projects/bonelab-timer
+- Repository: https://github.com/jakzo/SlzSpeedrunTools/projects/Bonelab/SpeedrunTimer
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/

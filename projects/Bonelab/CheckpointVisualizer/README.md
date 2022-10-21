@@ -14,5 +14,5 @@ Speedruns require videos including the headset view of loading screens to make s
 
 # Links
 
-- Repository: https://github.com/jakzo/SlzSpeedrunTools/projects/bonelab-load-mirror
-- Thunderstore: https://bonelab.thunderstore.io/package/jakzo/LoadMirror/
+- Repository: https://github.com/jakzo/SlzSpeedrunTools/projects/Bonelab/CheckpointVisualizer
+- Thunderstore: https://bonelab.thunderstore.io/package/jakzo/CheckpointVisualizer/

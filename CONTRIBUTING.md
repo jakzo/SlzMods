@@ -6,6 +6,14 @@ Contributions are welcome! Feel free to open a PR for small fixes or open an iss
 - Use [VSCode](https://code.visualstudio.com/download)
 - Install the [C# extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) (it should prompt you after opening the project in VSCode)
 
+## Creating a new mod
+
+Generate code with:
+
+```sh
+csi ./scripts/CreateNewProject.csx "game" "ProjectName" "Description of project."
+```
+
 ## Modifying replay Flatbuffer spec
 
 Make sure the Flatbuffers CLI is installed. Easiest way is using a package manager like [Chocolatey](https://chocolatey.org/) or [Homebrew](https://brew.sh/).

@@ -1,6 +1,7 @@
-/projects/*/thunderstore/*.dll
-/projects/*/thunderstore/README.md
-/projects/*/thunderstore/*.zip
+/projects/*/*/thunderstore/*.dll
+/projects/*/*/thunderstore/Mods/
+/projects/*/*/thunderstore/README.md
+/projects/*/*/thunderstore/*.zip
 
 
 ## Ignore Visual Studio temporary files, build results, and

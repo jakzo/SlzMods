@@ -1,3 +1,7 @@
+## 0.1.2
+
+Fixed link to autosplitter in readme.
+
 ## 0.1.1
 
 Fix anticheat, allow load mirror mod and improve Livesplit integration.

@@ -2,7 +2,6 @@
 state("BONELAB_Steam_Windows64") {}
 state("BONELAB_Oculus_Windows64") {}
 
-
 startup {
   vars.Log = (Action<object>)(output => print("[BonelabSpeedrunTimer ASL] " + output));
 
@@ -70,15 +69,15 @@ init {
   } while (vars.watcher == null);
 
   if (timer.CurrentTimingMethod == TimingMethod.RealTime && settings["gameTimeMsg"]) {
-      var response = MessageBox.Show(
-          "You are currently comparing against \"real time\" which means you will not be able to " +
-            "submit to the leaderboard.\nWould you like to switch to \"game time\"?", 
-          "LiveSplit | BonelabSpeedrunTimer Auto Splitter",
-          MessageBoxButtons.YesNo,
-          MessageBoxIcon.Question
-      );
-      if (response == DialogResult.Yes)
-          timer.CurrentTimingMethod = TimingMethod.GameTime;
+    var response = MessageBox.Show(
+      "You are currently comparing against \"real time\" which means you will not be able to " +
+        "submit to the leaderboard.\nWould you like to switch to \"game time\"?", 
+      "LiveSplit | BonelabSpeedrunTimer Auto Splitter",
+      MessageBoxButtons.YesNo,
+      MessageBoxIcon.Question
+    );
+    if (response == DialogResult.Yes)
+      timer.CurrentTimingMethod = TimingMethod.GameTime;
   }
 }
 

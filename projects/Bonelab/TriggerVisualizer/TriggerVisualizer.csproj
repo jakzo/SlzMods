@@ -94,7 +94,7 @@
     <Compile Include="../../../common/Utilities/Unity.cs" />
     <Compile Include="../../../common/Bonelab/Bonelab.cs" />
 
-    <Compile Include="../../../snippets/**/*.cs" />
+    <!-- <Compile Include="../../../snippets/**/*.cs" /> -->
   </ItemGroup>
   <!-- <ItemGroup>
     <EmbeddedResource Include="resources/*" />

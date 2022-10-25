@@ -1,13 +1,13 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <ProjectGuid>{C33921DC-5778-4EEC-A2D0-E0AE522CC701}</ProjectGuid>
+    <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SpeedrunTools</RootNamespace>
-    <AssemblyName>SpeedrunTools</AssemblyName>
+    <RootNamespace>Speedometer</RootNamespace>
+    <AssemblyName>Speedometer</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -42,57 +42,65 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\references\boneworks\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="SLZ.Marrow">
+      <HintPath>..\..\..\references\bonelab\SLZ.Marrow.dll</HintPath>
+    </Reference>
+    <Reference Include="SLZ.Marrow.SDK">
+      <HintPath>..\..\..\references\bonelab\SLZ.Marrow.SDK.dll</HintPath>
     </Reference>
     <Reference Include="Il2Cppmscorlib">
-      <HintPath>..\..\..\references\boneworks\Il2Cppmscorlib.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\Il2Cppmscorlib.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>..\..\..\references\boneworks\MelonLoader.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="Harmony">
-      <HintPath>..\..\..\references\boneworks\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="SteamVR">
-      <HintPath>..\..\..\references\boneworks\SteamVR.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="UnhollowerBaseLib">
-      <HintPath>..\..\..\references\boneworks\UnhollowerBaseLib.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\UnhollowerBaseLib.dll</HintPath>
     </Reference>
     <Reference Include="UnhollowerRuntimeLib">
-      <HintPath>..\..\..\references\boneworks\UnhollowerRuntimeLib.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\UnhollowerRuntimeLib.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\..\references\boneworks\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\..\references\boneworks\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\..\references\boneworks\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\..\references\boneworks\TextMeshPro.dll</HintPath>
+      <HintPath>..\..\..\references\bonelab\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Input">
+      <HintPath>..\..\..\references\bonelab\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.XR">
+      <HintPath>..\..\..\references\bonelab\UnityEngine.VRModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppVersion.cs" />
     <Compile Include="src/**/*.cs" />
-    <Compile Include="Properties/*.cs" />
-    <Compile Include="../../../common/FlatBuffers/**/*.cs" />
-    <Compile Include="../../../common/Utilities/**/*.cs" />
+    <Compile Include="../../../common/Utilities/Metadata.cs" />
+    <Compile Include="../../../common/Utilities/Dbg.cs" />
+    <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
+    <Compile Include="../../../common/Bonelab/Bonelab.cs" />
+
+    <!-- <Compile Include="snippets/**/*.cs" /> -->
   </ItemGroup>
-  <ItemGroup>
+  <!-- <ItemGroup>
     <EmbeddedResource Include="resources/*" />
-  </ItemGroup>
+  </ItemGroup> -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <!-- <PostBuildEvent>
-      COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
-    </PostBuildEvent> -->
-    <!-- <PostBuildEvent>
-      COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
-      "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\BONEWORKS.exe"&amp; exit 0
-    </PostBuildEvent> -->
+    <PostBuildEvent>
+      COPY "$(TargetPath)" "C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods"
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

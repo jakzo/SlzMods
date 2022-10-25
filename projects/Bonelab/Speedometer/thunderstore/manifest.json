@@ -1,0 +1,7 @@
+{
+  "name": "Speedometer",
+  "version_number": "0.0.0",
+  "description": "Shows how fast you're moving.",
+  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/projects/Bonelab/Speedometer",
+  "dependencies": ["LavaGang-MelonLoader-0.5.6"]
+}

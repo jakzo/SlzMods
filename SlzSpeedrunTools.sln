@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32510.428
@@ -13,12 +13,27 @@ Project("{F1C8139F-39C2-4068-8B18-F132176B4927}") = "BonelabLoadMirror", "projec
 EndProject
 Project("{41206316-80DA-4916-83F7-B62DE64B316D}") = "BonelabCheckpointVisualizer", "projects\Bonelab\CheckpointVisualizer\CheckpointVisualizer.csproj", "{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}"
 EndProject
+Project("{A77AD18C-82A4-3107-655C-6F76A32BF0C7}") = "TriggerVisualizer", "projects\Bonelab\TriggerVisualizer\TriggerVisualizer.csproj", "{45597236-D204-FB65-8805-8DB16C22A62F}"
+EndProjectProject("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "Speedometer", "projects\Bonelab\Speedometer\Speedometer.csproj", "{F13040F5-2641-6465-6E4A-FF7C0DA26BDF}"
+EndProject
+
+
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
     Debug|Any CPU = Debug|Any CPU
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Release|Any CPU.Build.0 = Release|Any CPU
+
+    {45597236-D204-FB65-8805-8DB16C22A62F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {45597236-D204-FB65-8805-8DB16C22A62F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {45597236-D204-FB65-8805-8DB16C22A62F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {45597236-D204-FB65-8805-8DB16C22A62F}.Release|Any CPU.Build.0 = Release|Any CPU
+
     {6BC0F889-1E24-441C-BA97-2B1896B7AD26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {6BC0F889-1E24-441C-BA97-2B1896B7AD26}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {6BC0F889-1E24-441C-BA97-2B1896B7AD26}.Release|Any CPU.ActiveCfg = Release|Any CPU

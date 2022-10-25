@@ -8,7 +8,7 @@ static class LevelHooks {
   public static LevelCrate PrevLevel;
   public static LevelCrate CurrentLevel;
   public static LevelCrate NextLevel;
-  public static bool IsLoading;
+  public static bool IsLoading { get => _activeLoadingScene != null; }
 
   public static UnityEvent<LevelCrate> OnLoad = new UnityEvent<LevelCrate>();
   public static UnityEvent<LevelCrate> OnLevelStart =

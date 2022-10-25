@@ -10,5 +10,5 @@ Visibly shows checkpoints in Monogon Motorway.
 
 # Links
 
-- Repository: https://github.com/jakzo/SlzSpeedrunTools/projects/Bonelab/CheckpointVisualizer
+- Source code: https://github.com/jakzo/SlzSpeedrunTools/projects/Bonelab/CheckpointVisualizer
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/CheckpointVisualizer/

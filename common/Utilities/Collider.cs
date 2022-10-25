@@ -24,7 +24,7 @@ static class Collider {
     switch (collider) {
     case BoxCollider boxCollider: {
       visualization = GameObject.Instantiate(DebugColliderPrefabs.BOX,
-                                             collider.gameObject.transform);
+                                             boxCollider.gameObject.transform);
       SetMaterial(visualization, color, shader);
       visualization.active = true;
       break;

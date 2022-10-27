@@ -16,6 +16,8 @@ EndProject
 Project("{A77AD18C-82A4-3107-655C-6F76A32BF0C7}") = "TriggerVisualizer", "projects\Bonelab\TriggerVisualizer\TriggerVisualizer.csproj", "{45597236-D204-FB65-8805-8DB16C22A62F}"
 EndProjectProject("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "Speedometer", "projects\Bonelab\Speedometer\Speedometer.csproj", "{F13040F5-2641-6465-6E4A-FF7C0DA26BDF}"
 EndProject
+Project("{B16878A1-7B40-FDAE-503A-6DFEC289D113}") = "CompletionistHelper", "projects\Bonelab\CompletionistHelper\CompletionistHelper.csproj", "{56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}"
+EndProject
 
 
 Global
@@ -24,6 +26,11 @@ Global
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}.Release|Any CPU.Build.0 = Release|Any CPU
+
     {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Release|Any CPU.ActiveCfg = Release|Any CPU

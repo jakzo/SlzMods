@@ -5,7 +5,7 @@ using SLZ.Rig;
 
 namespace Sst {
 public class Mod : MelonMod {
-  private const string SPEEDOMETER_TEXT_NAME = "SpeedrunTools_Speedometer_Text";
+  private const string SPEEDOMETER_TEXT_NAME = "Speedometer";
 
   private MelonPreferences_Entry<float> _prefWindowDuration;
   private TMPro.TextMeshPro _tmp;
@@ -31,15 +31,7 @@ public class Mod : MelonMod {
     };
 
     _rigManager = Utilities.Bonelab.GetRigManager();
-    var speedometerText = new GameObject(SPEEDOMETER_TEXT_NAME);
-    _tmp = speedometerText.AddComponent<TMPro.TextMeshPro>();
-    _tmp.alignment = TMPro.TextAlignmentOptions.BottomRight;
-    _tmp.fontSize = 0.5f;
-    _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-    speedometerText.transform.SetParent(
-        _rigManager.ControllerRig.leftController.transform);
-    _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
-    _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
+    _tmp = Utilities.Bonelab.CreateTextOnWrist(SPEEDOMETER_TEXT_NAME);
   }
 
   public override void OnUpdate() {

@@ -10,5 +10,5 @@ Fixes bug where ammo sometimes doesn't spawn after breaking ammo crates.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/projects/Bonelab/AmmoBugFix
+- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/AmmoBugFix
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/AmmoBugFix/

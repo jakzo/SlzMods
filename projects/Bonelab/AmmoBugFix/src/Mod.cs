@@ -20,22 +20,6 @@ public class Mod : MelonMod {
 
   public override void OnInitializeMelon() { Dbg.Init(BuildInfo.NAME); }
 
-  // ---
-  public override void OnSceneWasInitialized(int buildindex, string sceneName) {
-    if (!sceneName.ToUpper().Contains("BOOTSTRAP"))
-      return;
-    AssetWarehouse.OnReady(new System.Action(() => {
-      var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
-          c => c.Title == "Museum Basement");
-      var bootstrapper = GameObject.FindObjectOfType<
-          SLZ.Marrow.SceneStreaming.SceneBootstrapper_Bonelab>();
-      var crateRef = new LevelCrateReference(crate.Barcode.ID);
-      bootstrapper.VoidG114CrateRef = crateRef;
-      bootstrapper.MenuHollowCrateRef = crateRef;
-    }));
-  }
-  // ---
-
   [HarmonyPatch(typeof(ObjectDestructable),
                 nameof(ObjectDestructable.TakeDamage))]
   class ObjectDestructable_TakeDamage_Patch {

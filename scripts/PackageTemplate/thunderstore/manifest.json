@@ -1,7 +1,7 @@
 {
-  "name": "{{NAME}}",
+  "name": "$$NAME$$",
   "version_number": "0.0.0",
-  "description": "{{DESCRIPTION}}",
-  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/projects/{{GAME_CAPITALIZED}}/{{NAME}}",
+  "description": "$$DESCRIPTION$$",
+  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/projects/$$GAME_CAPITALIZED$$/$$NAME$$",
   "dependencies": ["LavaGang-MelonLoader-0.5.6"]
 }

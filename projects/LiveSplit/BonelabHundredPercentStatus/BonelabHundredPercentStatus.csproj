@@ -6,8 +6,8 @@
     <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Speedometer</RootNamespace>
-    <AssemblyName>Speedometer</AssemblyName>
+    <RootNamespace>BonelabHundredPercentStatus</RootNamespace>
+    <AssemblyName>BonelabHundredPercentStatus</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -35,68 +35,26 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\references\bonelab\Assembly-CSharp.dll</HintPath>
+    <Reference Include="LiveSplit.Core">
+      <HintPath>..\..\..\references\LiveSplit\LiveSplit.Core.dll</HintPath>
     </Reference>
-    <Reference Include="SLZ.Marrow">
-      <HintPath>..\..\..\references\bonelab\SLZ.Marrow.dll</HintPath>
-    </Reference>
-    <Reference Include="SLZ.Marrow.SDK">
-      <HintPath>..\..\..\references\bonelab\SLZ.Marrow.SDK.dll</HintPath>
-    </Reference>
-    <Reference Include="Il2Cppmscorlib">
-      <HintPath>..\..\..\references\bonelab\Il2Cppmscorlib.dll</HintPath>
-    </Reference>
-    <Reference Include="MelonLoader">
-      <HintPath>..\..\..\references\bonelab\MelonLoader.dll</HintPath>
-    </Reference>
-    <Reference Include="Harmony">
-      <HintPath>..\..\..\references\bonelab\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="UnhollowerBaseLib">
-      <HintPath>..\..\..\references\bonelab\UnhollowerBaseLib.dll</HintPath>
-    </Reference>
-    <Reference Include="UnhollowerRuntimeLib">
-      <HintPath>..\..\..\references\bonelab\UnhollowerRuntimeLib.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.PhysicsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\..\references\bonelab\Unity.TextMeshPro.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Input">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.InputLegacyModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.XR">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.VRModule.dll</HintPath>
+    <Reference Include="UpdateManager">
+      <HintPath>..\..\..\references\LiveSplit\UpdateManager.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppVersion.cs" />
-    <Compile Include="src/**/*.cs" />
+    <!-- <Compile Include="src/**/*.cs" /> -->
     <Compile Include="../../../common/Utilities/Metadata.cs" />
-    <Compile Include="../../../common/Utilities/Dbg.cs" />
-    <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
-    <Compile Include="../../../common/Bonelab/Bonelab.cs" />
-
-    <!-- <Compile Include="snippets/**/*.cs" /> -->
   </ItemGroup>
-  <!-- <ItemGroup>
-    <EmbeddedResource Include="resources/*" />
-  </ItemGroup> -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <!-- <PostBuildEvent>

@@ -33,7 +33,7 @@ static class LevelHooks {
       _activeLoadingScene = __instance;
       PrevLevel = CurrentLevel;
       CurrentLevel = null;
-      NextLevel = SceneStreamer._session._level.Crate;
+      NextLevel = SceneStreamer.Session.Level;
       Dbg.Log($"LoadingScene_Start_Patch, next level = {NextLevel.Title}");
       OnLoad.Invoke(NextLevel);
     }

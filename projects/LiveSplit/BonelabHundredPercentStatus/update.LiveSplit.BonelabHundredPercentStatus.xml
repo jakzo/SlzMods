@@ -1,0 +1,12 @@
+<updates>
+    <update version="0.0.1">
+        <files>
+            <file path="bin/Release/BonelabHundredPercentStatus.dll" status="changed" />
+        </files>
+        <changelog>
+            <change>
+                Initial release.
+            </change>
+        </changelog>
+    </update>
+</updates>

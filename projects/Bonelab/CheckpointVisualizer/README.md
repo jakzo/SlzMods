@@ -1,5 +1,7 @@
 Visibly shows checkpoints in Monogon Motorway.
 
+Also loads the game straight into Monogon Motorway for convenience.
+
 # Installation
 
 - Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.5 or newer is installed in Bonelab

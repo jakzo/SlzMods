@@ -23,12 +23,12 @@ void CreateNewProject() {
   var projectUuid = GenerateUuid();
   var solutionContents = File.ReadAllText("SlzSpeedrunTools.sln");
   var lastProjectIdx =
-      solutionContents.LastIndexOf("EndProject") + "EndProject".Length + 1;
+      solutionContents.LastIndexOf("EndProject") + "EndProject".Length + 2;
   var projectConfigIdx = solutionContents.LastIndexOf(PROJECT_CONFIG_SECTION) +
                          PROJECT_CONFIG_SECTION.Length;
   var newSolutionContents =
       solutionContents.Substring(0, lastProjectIdx) +
-      $"Project(\"{{{GenerateUuid()}}}\") = \"{templateVars.Name}\", \"projects\\{templateVars.GameCapitalized}\\{templateVars.Name}\\{templateVars.Name}.csproj\", \"{{{projectUuid}}}\"\nEndProject\n" +
+      $"Project(\"{{{GenerateUuid()}}}\") = \"{templateVars.Name}\", \"projects\\{templateVars.GameCapitalized}\\{templateVars.Name}\\{templateVars.Name}.csproj\", \"{{{projectUuid}}}\"\r\nEndProject\r\n" +
       solutionContents.Substring(lastProjectIdx,
                                  projectConfigIdx - lastProjectIdx) +
       string.Join(
@@ -84,7 +84,7 @@ class TemplateVars {
   }
 
   public string ReplaceContents(string contents) =>
-      Regex.Replace(contents, @"{{(\w*)}}", (match) => {
+      Regex.Replace(contents, @"\$\$(\w*)\$\$", (match) => {
         switch (match.Groups[1].Value.ToUpper()) {
         case "NAME":
           return Name;

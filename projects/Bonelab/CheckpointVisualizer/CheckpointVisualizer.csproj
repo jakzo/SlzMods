@@ -93,6 +93,7 @@
     <Compile Include="../../../common/Utilities/Geometry.cs" />
     <Compile Include="../../../common/Utilities/Unity.cs" />
     <Compile Include="../../../common/Bonelab/Levels.cs" />
+    <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
 
     <!-- <Compile Include="snippets/**/*.cs" /> -->
   </ItemGroup>

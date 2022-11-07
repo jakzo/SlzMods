@@ -18,13 +18,16 @@ public class Mod : MelonMod {
   private TriggerLasers[] _checkpointTriggers;
   private UnityEngine.Collider[] _checkpointColliders;
   private GameObject[] _renderedColliders;
-  private LoadingScene _activeLoadingScene;
   private Shader _shader;
   private float _setupAfter = 0;
 
   public Mod() { Instance = this; }
 
-  public override void OnInitializeMelon() { Dbg.Init(BuildInfo.NAME); }
+  public override void OnInitializeMelon() {
+    Dbg.Init(BuildInfo.NAME);
+    Utilities.LevelHooks.OnLevelStart.AddListener(
+        new System.Action<LevelCrate>(OnLevelStart));
+  }
 
   // ---
   public override void OnSceneWasInitialized(int buildindex, string sceneName) {
@@ -43,23 +46,20 @@ public class Mod : MelonMod {
   // ---
 
   public override void OnUpdate() {
-    if (_activeLoadingScene != null &&
-        !_activeLoadingScene.gameObject.scene.isLoaded) {
-      _activeLoadingScene = null;
-      if (SceneStreamer._session._level.Crate.Title ==
-          Utilities.Levels.TITLE_MONOGON_MOTORWAY) {
-        _setupAfter = Time.time + 2;
-        Dbg.Log($"setup scheduled for {_setupAfter}");
-      }
-    }
-
     if (_setupAfter != 0 && _setupAfter < Time.time) {
       _setupAfter = 0;
-      OnLevelStart();
+      OnMonogonMotorwayStart();
     }
   }
 
-  public void OnLevelStart() {
+  private void OnLevelStart(LevelCrate level) {
+    if (level.Title == Utilities.Levels.TITLE_MONOGON_MOTORWAY) {
+      _setupAfter = Time.time + 2;
+      Dbg.Log($"setup scheduled for {_setupAfter}");
+    }
+  }
+
+  private void OnMonogonMotorwayStart() {
     Dbg.Log("OnLevelStart");
     // TODO: How do we get transparency to work using the color alpha?
     _shader = Utilities.Unity.FindShader("SLZ/Highlighter");
@@ -114,14 +114,5 @@ public class Mod : MelonMod {
       Utilities.Collider.Visualize(collider.gameObject, collider,
                                    isTriggered? COLOR_GREEN: COLOR_RED,
                                    _shader);
-
-  [HarmonyPatch(typeof(LoadingScene), nameof(LoadingScene.Start))]
-  class LoadingScene_Start_Patch {
-    [HarmonyPrefix()]
-    internal static void Prefix(LoadingScene __instance) {
-      Dbg.Log("LoadingScene_Start_Patch");
-      Instance._activeLoadingScene = __instance;
-    }
-  }
 }
 }

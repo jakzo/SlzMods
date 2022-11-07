@@ -20,6 +20,22 @@ public class Mod : MelonMod {
 
   public override void OnInitializeMelon() { Dbg.Init(BuildInfo.NAME); }
 
+  // ---
+  public override void OnSceneWasInitialized(int buildindex, string sceneName) {
+    if (!sceneName.ToUpper().Contains("BOOTSTRAP"))
+      return;
+    AssetWarehouse.OnReady(new System.Action(() => {
+      var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
+          c => c.Title == "Museum Basement");
+      var bootstrapper = GameObject.FindObjectOfType<
+          SLZ.Marrow.SceneStreaming.SceneBootstrapper_Bonelab>();
+      var crateRef = new LevelCrateReference(crate.Barcode.ID);
+      bootstrapper.VoidG114CrateRef = crateRef;
+      bootstrapper.MenuHollowCrateRef = crateRef;
+    }));
+  }
+  // ---
+
   [HarmonyPatch(typeof(ObjectDestructable),
                 nameof(ObjectDestructable.TakeDamage))]
   class ObjectDestructable_TakeDamage_Patch {
@@ -27,10 +43,7 @@ public class Mod : MelonMod {
     internal static void Prefix(ObjectDestructable __instance) {
       Dbg.Log("ObjectDestructable_TakeDamage_Patch");
       if (__instance.lootTable == null ||
-          __instance.lootTable.items.Any(item => {
-            var tags = item?.spawnable?.crateRef?.Crate?.Tags;
-            return tags != null && tags.Count != 1 && tags[0] != "Ammo";
-          }))
+          !__instance.lootTable.name.StartsWith("AmmoCrateTable_"))
         return;
 
       Dbg.Log("Ammo crate took damage");
@@ -44,29 +57,26 @@ public class Mod : MelonMod {
 
     [HarmonyPostfix()]
     internal static void Postfix(ObjectDestructable __instance) {
-      if (!_damagedAmmoCrates.Contains(__instance) || !__instance._isDead)
+      if (!_damagedAmmoCrates.Contains(__instance))
         return;
       _damagedAmmoCrates.Remove(__instance);
 
+      if (!__instance._isDead)
+        return;
+
       Dbg.Log(
           $"Ammo crate destroyed at {__instance.spawnTarget.position.ToString()}");
-      var ammoPickups = GameObject.FindObjectsOfType<AmmoPickupProxy>();
-      Dbg.Log($"Found {ammoPickups.Length} AmmoPickupProxys");
-      if (ammoPickups.Any(ap => ap.transform.position ==
-                                __instance.spawnTarget.position)) {
+      // Returns the last object created which should be the spawned one
+      var lastAmmoPickup = GameObject.FindObjectOfType<AmmoPickupProxy>();
+      // TODO: Will the position always exactly match or could there be float
+      // rounding errors?
+      if (lastAmmoPickup != null &&
+          (lastAmmoPickup.transform.position - __instance.spawnTarget.position)
+                  .sqrMagnitude < 0.0001f) {
         Dbg.Log("Spawned ammo found");
         return;
       }
-
-      // TODO: Will the position always exactly match or could there be float
-      // rounding errors?
-      if (ammoPickups.Any(
-              ap => (ap.transform.position - __instance.spawnTarget.position)
-                        .sqrMagnitude < 0.0001f)) {
-        MelonLogger.Warning(
-            "Spawned ammo found only after accounting for rounding error");
-        return;
-      }
+      // UnityEngine.GameObject.FindObjectOfType<SLZ.AmmoPickupProxy>().name;
 
       Dbg.Log("No spawned ammo found, spawning replacement now");
       _nullableVector.value = __instance.spawnTarget.lossyScale;

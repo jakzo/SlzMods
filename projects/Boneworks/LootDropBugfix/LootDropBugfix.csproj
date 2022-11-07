@@ -1,17 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <ProjectGuid>{C33921DC-5778-4EEC-A2D0-E0AE522CC701}</ProjectGuid>
+    <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SpeedrunTools</RootNamespace>
-    <AssemblyName>SpeedrunTools</AssemblyName>
+    <RootNamespace>LootDropBugfix</RootNamespace>
+    <AssemblyName>LootDropBugfix</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -53,9 +54,6 @@
     <Reference Include="Harmony">
       <HintPath>..\..\..\references\boneworks\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="SteamVR">
-      <HintPath>..\..\..\references\boneworks\SteamVR.dll</HintPath>
-    </Reference>
     <Reference Include="UnhollowerBaseLib">
       <HintPath>..\..\..\references\boneworks\UnhollowerBaseLib.dll</HintPath>
     </Reference>
@@ -71,31 +69,18 @@
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\..\references\boneworks\UnityEngine.UI.dll</HintPath>
     </Reference>
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\..\references\boneworks\TextMeshPro.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppVersion.cs" />
     <Compile Include="src/**/*.cs" />
-    <Compile Include="Properties/*.cs" />
-    <Compile Include="../../../common/FlatBuffers/**/*.cs" />
-    <Compile Include="../../../common/Utilities/Dbg.cs" />
-    <Compile Include="../../../common/Utilities/Geometry.cs" />
     <Compile Include="../../../common/Utilities/Metadata.cs" />
-    <Compile Include="../../../common/Utilities/Unity.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="resources/*" />
+    <Compile Include="../../../common/Utilities/Dbg.cs" />
+    <Compile Include="../../../common/Utilities/Il2cppNullable.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <!-- <PostBuildEvent>
+    <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
-    </PostBuildEvent> -->
-    <!-- <PostBuildEvent>
-      COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
-      "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\BONEWORKS.exe"&amp; exit 0
-    </PostBuildEvent> -->
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

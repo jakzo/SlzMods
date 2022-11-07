@@ -28,7 +28,7 @@ void CreateNewProject() {
                          PROJECT_CONFIG_SECTION.Length;
   var newSolutionContents =
       solutionContents.Substring(0, lastProjectIdx) +
-      $"Project(\"{{{GenerateUuid()}}}\") = \"{templateVars.Name}\", \"projects\\{templateVars.GameCapitalized}\\{templateVars.Name}\\{templateVars.Name}.csproj\", \"{{{projectUuid}}}\"\r\nEndProject\r\n" +
+      $"\r\nProject(\"{{{GenerateUuid()}}}\") = \"{templateVars.Name}\", \"projects\\{templateVars.GameCapitalized}\\{templateVars.Name}\\{templateVars.Name}.csproj\", \"{{{projectUuid}}}\"\r\nEndProject" +
       solutionContents.Substring(lastProjectIdx,
                                  projectConfigIdx - lastProjectIdx) +
       string.Join(

@@ -26,7 +26,6 @@ public class Mod : MelonMod {
            TextMeshPro text)[] _hudSlots;
   private TextMeshPro _completionText;
   private TextMeshPro _achievementText;
-  private RigManager _rigManager;
   private List<Collectible> _collectibles = new List<Collectible>();
   private HashSet<string> _unlockedAchievements = new HashSet<string>();
   private int _totalNumUnlocks = 0;
@@ -108,8 +107,7 @@ public class Mod : MelonMod {
     TypesPrefCategory =
         MelonPreferences.CreateCategory("TypesToShow", "Types to show");
 
-    Utilities.LevelHooks.OnLevelStart.AddListener(
-        new System.Action<LevelCrate>(level => ShowHud()));
+    Utilities.LevelHooks.OnLevelStart += level => ShowHud();
 
     CollectibleType.Initialize(TypesPrefCategory);
     AchievementTracker.Initialize();
@@ -129,8 +127,6 @@ public class Mod : MelonMod {
                          AchievementTracker.AllAchievements.Count &&
                      _progress.IsComplete;
 
-    var lightAmmoCount = AmmoInventory.Instance.GetCartridgeCount("light");
-
     return string.Join("\n", new[] {
       $"Arena: {(_progress.Arena * 100):N1}%",
       $"Avatar: {(_progress.Avatar * 100):N1}%",
@@ -147,7 +143,6 @@ public class Mod : MelonMod {
       $"Has body log: {hasBodyLog}",
       $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.AllAchievements.Count}",
       $"Unlocks: {numUnlocked} / {_totalNumUnlocks}",
-      $"Light ammo boxes: {lightAmmoCount / 40}.{lightAmmoCount % 40}",
     });
   }
 
@@ -157,10 +152,12 @@ public class Mod : MelonMod {
         AchievementTracker.AllAchievements
             .Where(entry => !AchievementTracker.Unlocked.Contains(entry.Key))
             .Take(NUM_DISPLAYED_ACHIEVEMENTS)
+            .Reverse()
             .Select(entry => $"\n{entry.Value}"));
     var unlockedAchievements = string.Join(
         "", AchievementTracker.Unlocked.Reverse()
                 .Take(NUM_DISPLAYED_ACHIEVEMENTS)
+                .Reverse()
                 .Select(id => {
                   string name;
                   AchievementTracker.AllAchievements.TryGetValue(id, out name);
@@ -170,17 +167,16 @@ public class Mod : MelonMod {
   }
 
   public override void OnUpdate() {
-    Utilities.LevelHooks.OnUpdate();
-
-    if (!Utilities.LevelHooks.CurrentLevel || _hudSlots == null)
+    if (!Utilities.LevelHooks.IsLoading || _hudSlots == null)
       return;
 
     RollingRefresh();
 
     foreach (var collectible in _collectibles)
-      collectible.Distance = Vector3.Distance(
-          _rigManager.ControllerRig.leftController.transform.position,
-          collectible.GameObject.transform.position);
+      collectible.Distance =
+          Vector3.Distance(Utilities.LevelHooks.RigManager.ControllerRig
+                               .leftController.transform.position,
+                           collectible.GameObject.transform.position);
     _collectibles.Sort((x, y) => {
       var delta = x.Distance - y.Distance;
       return delta > 0 ? 1 : delta < 0 ? -1 : 0;
@@ -210,9 +206,9 @@ public class Mod : MelonMod {
   private void ShowHud() {
     _refreshStart = 0;
     _refreshIndex = 0;
-    _rigManager = Utilities.Bonelab.GetRigManager();
     var hud = new GameObject("CompletionistHud");
-    Utilities.Bonelab.DockToWrist(hud, new Vector3(), _rigManager);
+    Utilities.Bonelab.DockToWrist(hud, new Vector3(),
+                                  Utilities.LevelHooks.RigManager);
     _hudSlots =
         Enumerable.Range(0, NUM_HUD_SLOTS)
             .Select(i => {

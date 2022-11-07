@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
@@ -25,8 +26,7 @@ public class Mod : MelonMod {
 
   public override void OnInitializeMelon() {
     Dbg.Init(BuildInfo.NAME);
-    Utilities.LevelHooks.OnLevelStart.AddListener(
-        new System.Action<LevelCrate>(OnLevelStart));
+    Utilities.LevelHooks.OnLevelStart += OnLevelStart;
   }
 
   // ---

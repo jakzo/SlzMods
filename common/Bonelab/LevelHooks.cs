@@ -1,41 +1,46 @@
+using System;
 using UnityEngine.Events;
 using HarmonyLib;
 using SLZ.Marrow.Warehouse;
 using SLZ.Marrow.SceneStreaming;
+using SLZ.Rig;
 
 namespace Sst.Utilities {
 static class LevelHooks {
   public static LevelCrate PrevLevel;
   public static LevelCrate CurrentLevel;
   public static LevelCrate NextLevel;
-  public static bool IsLoading { get => _activeLoadingScene != null; }
+  public static RigManager RigManager;
+  public static bool IsLoading { get => !CurrentLevel; }
 
-  public static UnityEvent<LevelCrate> OnLoad = new UnityEvent<LevelCrate>();
-  public static UnityEvent<LevelCrate> OnLevelStart =
-      new UnityEvent<LevelCrate>();
+  public static event Action<LevelCrate> OnLoad;
+  public static event Action<LevelCrate> OnLevelStart;
 
-  private static LoadingScene _activeLoadingScene;
-
-  public static void OnUpdate() {
-    if (_activeLoadingScene != null &&
-        !_activeLoadingScene.gameObject.scene.isLoaded) {
-      _activeLoadingScene = null;
+  [HarmonyPatch(typeof(RigManager), nameof(RigManager.Awake))]
+  class RigManager_Awake_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix(RigManager __instance) {
+      Dbg.Log($"RigManager_Awake_Patch");
       CurrentLevel = NextLevel;
       NextLevel = null;
-      OnLevelStart.Invoke(CurrentLevel);
+      RigManager = __instance;
+      OnLevelStart(CurrentLevel);
     }
   }
 
-  [HarmonyPatch(typeof(LoadingScene), nameof(LoadingScene.Start))]
-  class LoadingScene_Start_Patch {
+  [HarmonyPatch(
+      typeof(SceneStreamer), nameof(SceneStreamer.Load),
+      new Type[] { typeof(LevelCrateReference), typeof(LevelCrateReference) })]
+  class SceneStreamer_Load_Patch {
     [HarmonyPrefix()]
-    internal static void Prefix(LoadingScene __instance) {
-      _activeLoadingScene = __instance;
+    internal static void Prefix(LevelCrateReference level) {
+      var nextLevel = level.Crate;
+      Dbg.Log($"SceneStreamer_Load_Patch, next level = {nextLevel?.Title}");
       PrevLevel = CurrentLevel;
       CurrentLevel = null;
-      NextLevel = SceneStreamer.Session.Level;
-      Dbg.Log($"LoadingScene_Start_Patch, next level = {NextLevel.Title}");
-      OnLoad.Invoke(NextLevel);
+      NextLevel = nextLevel;
+      RigManager = null;
+      OnLoad(NextLevel);
     }
   }
 }

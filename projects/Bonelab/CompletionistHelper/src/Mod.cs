@@ -205,8 +205,6 @@ public class Mod : MelonMod {
 
     _completionText.SetText(GetCompletionText());
     _achievementText.SetText(GetAchievementText());
-
-    DestroyAmmoBox();
   }
 
   private void ShowHud() {
@@ -271,71 +269,5 @@ public class Mod : MelonMod {
     _achievementText.transform.localPosition = new Vector3(-0.1f, 0, 0);
     _achievementText.transform.localRotation = Quaternion.identity;
   }
-
-  // ---
-  // [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
-  // class LootTableData_GetLootItem_Patch {
-  //   [HarmonyPostfix()]
-  //   internal static void Postfix(Spawnable __result) {
-  //     Dbg.Log(
-  //         $"LootTableData_GetLootItem_Patch:
-  //         {__result?.crateRef?.Crate?.Title}");
-  //   }
-  // }
-
-  [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
-  class LootTableData_GetLootItem_Patch {
-    [HarmonyFinalizer()]
-    internal static void Finalizer() {
-      Dbg.Log("LootTableData_GetLootItem_Patch");
-    }
-  }
-
-  public override void OnSceneWasInitialized(int buildindex, string sceneName) {
-    if (!sceneName.ToUpper().Contains("BOOTSTRAP"))
-      return;
-    AssetWarehouse.OnReady(new System.Action(() => {
-      var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
-          c => c.Title == "Museum Basement");
-      var bootstrapper = GameObject.FindObjectOfType<
-          SLZ.Marrow.SceneStreaming.SceneBootstrapper_Bonelab>();
-      var crateRef = new LevelCrateReference(crate.Barcode.ID);
-      bootstrapper.VoidG114CrateRef = crateRef;
-      bootstrapper.MenuHollowCrateRef = crateRef;
-    }));
-  }
-
-  private float _lastDestroyTime = 0;
-  private void DestroyAmmoBox() {
-    if (Time.time - _lastDestroyTime < 0.5f)
-      return;
-    _lastDestroyTime = Time.time;
-    foreach (var od in GameObject
-                 .FindObjectsOfType<SLZ.Props.ObjectDestructable>()) {
-      if (!od.name.StartsWith("dest_ammoBoxLight Variant"))
-        continue;
-
-      od.TakeDamage(Vector3.one, 999, false, AttackType.Piercing);
-      break;
-    }
-  }
-
-  // private void Snippet() {
-  //   foreach (var od in UnityEngine.GameObject
-  //                .FindObjectsOfType<SLZ.Props.ObjectDestructable>()) {
-  //     if (!od.name.StartsWith("dest_ammoBoxLight Variant"))
-  //       continue;
-
-  //     // if (od.lootTable == null ||
-  //     //     !od.lootTable.items.All(item =>
-  //     // item.spawnable?.crateRef?.Crate?.Title
-  //     //                                 == "Ammo Box Light"))
-  //     //   continue;
-
-  //     od.TakeDamage(Vector3.one, 999, false,
-  //                   SLZ.Marrow.Data.AttackType.Piercing);
-  //   }
-  // }
-  // ---
 }
 }

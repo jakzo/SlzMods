@@ -19,8 +19,7 @@ public class Mod : MelonMod {
     _prefWindowDuration = category.CreateEntry(
         "windowDuration", 0.1f, "Number of seconds to average the speed over");
 
-    Utilities.LevelHooks.OnLevelStart.AddListener(
-        new System.Action<LevelCrate>(OnLevelStart));
+    Utilities.LevelHooks.OnLevelStart += OnLevelStart;
   }
 
   public void OnLevelStart(LevelCrate level) {
@@ -35,8 +34,6 @@ public class Mod : MelonMod {
   }
 
   public override void OnUpdate() {
-    Utilities.LevelHooks.OnUpdate();
-
     if (Utilities.LevelHooks.IsLoading || _speedTracker == null)
       return;
 

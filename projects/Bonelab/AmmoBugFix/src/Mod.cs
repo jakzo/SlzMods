@@ -50,17 +50,16 @@ public class Mod : MelonMod {
 
       Dbg.Log(
           $"Ammo crate destroyed at {__instance.spawnTarget.position.ToString()}");
-      // Returns the last object created which should be the spawned one
-      var lastAmmoPickup = GameObject.FindObjectOfType<AmmoPickupProxy>();
+
       // TODO: Will the position always exactly match or could there be float
       // rounding errors?
-      if (lastAmmoPickup != null &&
-          (lastAmmoPickup.transform.position - __instance.spawnTarget.position)
-                  .sqrMagnitude < 0.0001f) {
+      var ammoPickups = GameObject.FindObjectsOfType<AmmoPickupProxy>().Where(
+          ap => (ap.transform.position - __instance.spawnTarget.position)
+                    .sqrMagnitude < 0.000001f);
+      if (ammoPickups.Count() > 0) {
         Dbg.Log("Spawned ammo found");
         return;
       }
-      // UnityEngine.GameObject.FindObjectOfType<SLZ.AmmoPickupProxy>().name;
 
       Dbg.Log("No spawned ammo found, spawning replacement now");
       _nullableVector.value = __instance.spawnTarget.lossyScale;

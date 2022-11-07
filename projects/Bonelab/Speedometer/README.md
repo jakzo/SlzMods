@@ -14,5 +14,5 @@ Displays your speed in meters per second over your left hand. It supports averag
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/projects/Bonelab/Speedometer
+- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/Speedometer
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/Speedometer/

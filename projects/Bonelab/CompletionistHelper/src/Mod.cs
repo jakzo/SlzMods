@@ -26,7 +26,6 @@ public class Mod : MelonMod {
            TextMeshPro text)[] _hudSlots;
   private TextMeshPro _completionText;
   private TextMeshPro _achievementText;
-  private RigManager _rigManager;
   private List<Collectible> _collectibles = new List<Collectible>();
   private HashSet<string> _unlockedAchievements = new HashSet<string>();
   private int _totalNumUnlocks = 0;
@@ -108,8 +107,7 @@ public class Mod : MelonMod {
     TypesPrefCategory =
         MelonPreferences.CreateCategory("TypesToShow", "Types to show");
 
-    Utilities.LevelHooks.OnLevelStart.AddListener(
-        new System.Action<LevelCrate>(level => ShowHud()));
+    Utilities.LevelHooks.OnLevelStart += level => ShowHud();
 
     CollectibleType.Initialize(TypesPrefCategory);
     AchievementTracker.Initialize();
@@ -129,8 +127,6 @@ public class Mod : MelonMod {
                          AchievementTracker.AllAchievements.Count &&
                      _progress.IsComplete;
 
-    var lightAmmoCount = AmmoInventory.Instance.GetCartridgeCount("light");
-
     return string.Join("\n", new[] {
       $"Arena: {(_progress.Arena * 100):N1}%",
       $"Avatar: {(_progress.Avatar * 100):N1}%",
@@ -147,7 +143,6 @@ public class Mod : MelonMod {
       $"Has body log: {hasBodyLog}",
       $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.AllAchievements.Count}",
       $"Unlocks: {numUnlocked} / {_totalNumUnlocks}",
-      $"Light ammo boxes: {lightAmmoCount / 40}.{lightAmmoCount % 40}",
     });
   }
 
@@ -157,10 +152,12 @@ public class Mod : MelonMod {
         AchievementTracker.AllAchievements
             .Where(entry => !AchievementTracker.Unlocked.Contains(entry.Key))
             .Take(NUM_DISPLAYED_ACHIEVEMENTS)
+            .Reverse()
             .Select(entry => $"\n{entry.Value}"));
     var unlockedAchievements = string.Join(
         "", AchievementTracker.Unlocked.Reverse()
                 .Take(NUM_DISPLAYED_ACHIEVEMENTS)
+                .Reverse()
                 .Select(id => {
                   string name;
                   AchievementTracker.AllAchievements.TryGetValue(id, out name);
@@ -170,17 +167,16 @@ public class Mod : MelonMod {
   }
 
   public override void OnUpdate() {
-    Utilities.LevelHooks.OnUpdate();
-
-    if (!Utilities.LevelHooks.CurrentLevel || _hudSlots == null)
+    if (!Utilities.LevelHooks.IsLoading || _hudSlots == null)
       return;
 
     RollingRefresh();
 
     foreach (var collectible in _collectibles)
-      collectible.Distance = Vector3.Distance(
-          _rigManager.ControllerRig.leftController.transform.position,
-          collectible.GameObject.transform.position);
+      collectible.Distance =
+          Vector3.Distance(Utilities.LevelHooks.RigManager.ControllerRig
+                               .leftController.transform.position,
+                           collectible.GameObject.transform.position);
     _collectibles.Sort((x, y) => {
       var delta = x.Distance - y.Distance;
       return delta > 0 ? 1 : delta < 0 ? -1 : 0;
@@ -205,16 +201,14 @@ public class Mod : MelonMod {
 
     _completionText.SetText(GetCompletionText());
     _achievementText.SetText(GetAchievementText());
-
-    DestroyAmmoBox();
   }
 
   private void ShowHud() {
     _refreshStart = 0;
     _refreshIndex = 0;
-    _rigManager = Utilities.Bonelab.GetRigManager();
     var hud = new GameObject("CompletionistHud");
-    Utilities.Bonelab.DockToWrist(hud, new Vector3(), _rigManager);
+    Utilities.Bonelab.DockToWrist(hud, new Vector3(),
+                                  Utilities.LevelHooks.RigManager);
     _hudSlots =
         Enumerable.Range(0, NUM_HUD_SLOTS)
             .Select(i => {
@@ -271,71 +265,5 @@ public class Mod : MelonMod {
     _achievementText.transform.localPosition = new Vector3(-0.1f, 0, 0);
     _achievementText.transform.localRotation = Quaternion.identity;
   }
-
-  // ---
-  // [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
-  // class LootTableData_GetLootItem_Patch {
-  //   [HarmonyPostfix()]
-  //   internal static void Postfix(Spawnable __result) {
-  //     Dbg.Log(
-  //         $"LootTableData_GetLootItem_Patch:
-  //         {__result?.crateRef?.Crate?.Title}");
-  //   }
-  // }
-
-  [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
-  class LootTableData_GetLootItem_Patch {
-    [HarmonyFinalizer()]
-    internal static void Finalizer() {
-      Dbg.Log("LootTableData_GetLootItem_Patch");
-    }
-  }
-
-  public override void OnSceneWasInitialized(int buildindex, string sceneName) {
-    if (!sceneName.ToUpper().Contains("BOOTSTRAP"))
-      return;
-    AssetWarehouse.OnReady(new System.Action(() => {
-      var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
-          c => c.Title == "Museum Basement");
-      var bootstrapper = GameObject.FindObjectOfType<
-          SLZ.Marrow.SceneStreaming.SceneBootstrapper_Bonelab>();
-      var crateRef = new LevelCrateReference(crate.Barcode.ID);
-      bootstrapper.VoidG114CrateRef = crateRef;
-      bootstrapper.MenuHollowCrateRef = crateRef;
-    }));
-  }
-
-  private float _lastDestroyTime = 0;
-  private void DestroyAmmoBox() {
-    if (Time.time - _lastDestroyTime < 0.5f)
-      return;
-    _lastDestroyTime = Time.time;
-    foreach (var od in GameObject
-                 .FindObjectsOfType<SLZ.Props.ObjectDestructable>()) {
-      if (!od.name.StartsWith("dest_ammoBoxLight Variant"))
-        continue;
-
-      od.TakeDamage(Vector3.one, 999, false, AttackType.Piercing);
-      break;
-    }
-  }
-
-  // private void Snippet() {
-  //   foreach (var od in UnityEngine.GameObject
-  //                .FindObjectsOfType<SLZ.Props.ObjectDestructable>()) {
-  //     if (!od.name.StartsWith("dest_ammoBoxLight Variant"))
-  //       continue;
-
-  //     // if (od.lootTable == null ||
-  //     //     !od.lootTable.items.All(item =>
-  //     // item.spawnable?.crateRef?.Crate?.Title
-  //     //                                 == "Ammo Box Light"))
-  //     //   continue;
-
-  //     od.TakeDamage(Vector3.one, 999, false,
-  //                   SLZ.Marrow.Data.AttackType.Piercing);
-  //   }
-  // }
-  // ---
 }
 }

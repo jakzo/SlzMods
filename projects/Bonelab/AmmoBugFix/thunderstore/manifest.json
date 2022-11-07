@@ -1,7 +1,7 @@
 {
   "name": "AmmoBugFix",
-  "version_number": "0.0.0",
+  "version_number": "1.0.2",
   "description": "Fixes bug where ammo sometimes doesn't spawn after breaking ammo crates.",
-  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/projects/Bonelab/AmmoBugFix",
+  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/AmmoBugFix",
   "dependencies": ["LavaGang-MelonLoader-0.5.6"]
 }

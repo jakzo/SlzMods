@@ -20,11 +20,12 @@ using System.Runtime.InteropServices;
     typeof(Sst.LootDropBugfix.Mod), Sst.LootDropBugfix.BuildInfo.NAME,
     Sst.LootDropBugfix.AppVersion.Value, Sst.Metadata.AUTHOR,
     "https://boneworks.thunderstore.io/package/jakzo/LootDropBugfix/")]
-[assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
+[assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME_BONEWORKS)]
 
 namespace Sst.LootDropBugfix {
 public static class BuildInfo {
   public const string NAME = "LootDropBugfix";
-  public const string DESCRIPTION = "Fixes bug where dropped loot sometimes does not spawn.";
+  public const string DESCRIPTION =
+      "Fixes bug where dropped loot sometimes does not spawn.";
 }
 }

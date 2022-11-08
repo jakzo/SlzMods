@@ -5,7 +5,6 @@ using HarmonyLib;
 using UnityEngine;
 using StressLevelZero.Props;
 using StressLevelZero.Pool;
-using StressLevelZero.Data;
 
 namespace Sst.LootDropBugfix {
 public class Mod : MelonMod {
@@ -49,27 +48,25 @@ public class Mod : MelonMod {
       }
 
       foreach (var collider in Physics.OverlapSphere(spawnTarget.position,
-                                                     0.001f)) {
-        if (lootItems.Any(item => collider.gameObject.name.StartsWith(
-                              item.spawnable.name))) {
+                                                     0.5f)) {
+        var topLevelObject = collider.transform;
+        while (topLevelObject.parent)
+          topLevelObject = topLevelObject.parent;
+        var distSqr =
+            (topLevelObject.position - spawnTarget.position).sqrMagnitude;
+        if (distSqr < 0.0001f &&
+            lootItems.Any(item => topLevelObject.name.StartsWith(
+                              item.spawnable.prefab.name))) {
           Dbg.Log("Spawned item found");
           return;
         }
       }
 
-      var targetNum = Random.value * 100f;
-      var currentNum = 0f;
-      var replacement = lootItems
-                            .First(item => {
-                              currentNum += item.percentage;
-                              return currentNum >= targetNum;
-                            })
-                            .spawnable;
+      var replacement = __instance.lootTable.GetLootItem();
       Dbg.Log(
-          $"No spawned item found, spawning replacement now: {replacement.name}");
-      PoolManager.Spawn(replacement.name, spawnTarget.position,
-                        spawnTarget.rotation, spawnTarget.lossyScale,
-                        _nullableTrue);
+          $"No spawned item found, spawning replacement now: {replacement.title}");
+      PoolManager.Spawn(replacement.title, spawnTarget.position,
+                        Quaternion.identity, _nullableTrue);
     }
   }
 }

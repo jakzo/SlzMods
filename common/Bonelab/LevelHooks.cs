@@ -24,7 +24,7 @@ static class LevelHooks {
       CurrentLevel = NextLevel;
       NextLevel = null;
       RigManager = __instance;
-      OnLevelStart(CurrentLevel);
+      OnLevelStart?.Invoke(CurrentLevel);
     }
   }
 
@@ -40,7 +40,7 @@ static class LevelHooks {
       CurrentLevel = null;
       NextLevel = nextLevel;
       RigManager = null;
-      OnLoad(NextLevel);
+      OnLoad?.Invoke(NextLevel);
     }
   }
 }

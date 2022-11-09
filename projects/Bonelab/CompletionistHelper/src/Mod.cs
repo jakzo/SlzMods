@@ -167,23 +167,26 @@ public class Mod : MelonMod {
   }
 
   public override void OnUpdate() {
-    if (!Utilities.LevelHooks.IsLoading || _hudSlots == null)
+    if (Utilities.LevelHooks.IsLoading || _hudSlots == null)
       return;
 
     RollingRefresh();
 
     foreach (var collectible in _collectibles)
       collectible.Distance =
-          Vector3.Distance(Utilities.LevelHooks.RigManager.ControllerRig
-                               .leftController.transform.position,
-                           collectible.GameObject.transform.position);
+          collectible.ShouldShow()
+              ? Vector3.Distance(Utilities.LevelHooks.RigManager.ControllerRig
+                                     .leftController.transform.position,
+                                 collectible.GameObject.transform.position)
+              : float.PositiveInfinity;
     _collectibles.Sort((x, y) => {
       var delta = x.Distance - y.Distance;
       return delta > 0 ? 1 : delta < 0 ? -1 : 0;
     });
 
     var displayedCollectibles =
-        _collectibles.Where(collectible => collectible.ShouldShow())
+        _collectibles
+            .Where(collectible => collectible.Distance < float.PositiveInfinity)
             .Take(NUM_HUD_SLOTS)
             .ToArray();
     for (var i = 0; i < _hudSlots.Length; i++) {

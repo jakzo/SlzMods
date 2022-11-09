@@ -8,17 +8,92 @@ using SLZ.Marrow.Warehouse;
 using SLZ;
 using SLZ.Marrow.Pool;
 using SLZ.Marrow.SceneStreaming;
+using SLZ.Bonelab;
+using SLZ.Marrow.Data;
 
 namespace Sst.AmmoBugFix {
 public class Mod : MelonMod {
-  protected static HashSet<ObjectDestructable> _damagedAmmoCrates =
-      new HashSet<ObjectDestructable>();
+  protected const int FRAMES_TO_WAIT = 1;
+
   protected static Il2CppSystem.Nullable<Vector3> _nullableVector =
-      new Utilities.Il2CppNullable<Vector3>(new Vector3());
+      new Utilities.Il2CppNullable<Vector3>(null);
   protected static Il2CppSystem.Nullable<int> _nullableInt =
       new Utilities.Il2CppNullable<int>(null);
 
+  protected static HashSet<ObjectDestructable> _damagedAmmoCrates =
+      new HashSet<ObjectDestructable>();
+  protected static HashSet<DestroyedAmmoCrate> _destroyedAmmoCrates =
+      new HashSet<DestroyedAmmoCrate>();
+
+  protected class DestroyedAmmoCrate {
+    public float TimeDestroyed;
+    public Vector3 SpawnPosition;
+    public Quaternion SpawnRotation;
+    public ObjectDestructable ObjectDestructable;
+    public Spawnable Spawnable;
+    public PlacerSaver PlacerSaver;
+    public int FramesWaited = 0;
+  }
+
   public override void OnInitializeMelon() { Dbg.Init(BuildInfo.NAME); }
+
+  public override void OnLateUpdate() {
+    foreach (var dac in _destroyedAmmoCrates.ToArray()) {
+      var saveableId = dac.PlacerSaver?.Saveable.UniqueId;
+      Dbg.Log($"our saveable id = {saveableId}");
+      var spawnedAmmoFound =
+          GameObject.FindObjectsOfType<AmmoPickupProxy>().Any(ap => {
+            Dbg.Log(
+                $"{ap.name} saveable id = {ap.GetComponent<Saveable>()?.UniqueId}, we have saveableId = {saveableId != null}, is equal = {ap.GetComponent<Saveable>()?.UniqueId == saveableId}");
+            if (saveableId != null &&
+                ap.GetComponent<Saveable>()?.UniqueId == saveableId)
+              return true;
+
+            // TODO: Will the position always exactly match or could there be
+            // float rounding errors?
+            var distSqr =
+                (ap.transform.position - dac.SpawnPosition).sqrMagnitude;
+            // Dbg.Log($"Checking ammo {ap.name} at distSqr = {distSqr}");
+            return distSqr < 1e-9;
+          });
+      if (spawnedAmmoFound) {
+        Dbg.Log("Spawned ammo found");
+        _destroyedAmmoCrates.Remove(dac);
+        return;
+      }
+
+      var isSpawnableLoaded = dac.Spawnable.crateRef.Crate.MainAsset.IsDone;
+      if (!isSpawnableLoaded) {
+        // TODO: Is there a way we can identify the ammo spawned after loading
+        // (other than saveable ID)? Because position seems to not work after
+        // load, though losing non-saveable ammo isn't a huge deal
+        Dbg.Log("Ammo asset not loaded");
+        // Better to possibly miss replacing an unsaveable ammo than always
+        // spawn duplicates
+        if (dac.PlacerSaver == null)
+          _destroyedAmmoCrates.Remove(dac);
+        return;
+      }
+
+      if (dac.FramesWaited++ < FRAMES_TO_WAIT) {
+        Dbg.Log("Waiting another frame");
+        return;
+      }
+
+      MelonLogger.Warning(
+          $"No spawned ammo found, spawning replacement now: {dac.Spawnable.crateRef.Crate.Title}");
+      _destroyedAmmoCrates.Remove(dac);
+      AssetSpawner.Spawn(
+          dac.Spawnable, dac.SpawnPosition, dac.SpawnRotation, _nullableVector,
+          false, _nullableInt, new System.Action<GameObject>(ammoBox => {
+            if (dac.PlacerSaver != null) {
+              Dbg.Log("Calling PlacerSaver.OnAmmoCrateLootSpawned");
+              dac.PlacerSaver.OnAmmoCrateLootSpawned(dac.ObjectDestructable,
+                                                     dac.Spawnable, ammoBox);
+            }
+          }));
+    }
+  }
 
   [HarmonyPatch(typeof(ObjectDestructable),
                 nameof(ObjectDestructable.TakeDamage))]
@@ -51,22 +126,14 @@ public class Mod : MelonMod {
       Dbg.Log(
           $"Ammo crate destroyed at {__instance.spawnTarget.position.ToString()}");
 
-      // TODO: Will the position always exactly match or could there be float
-      // rounding errors?
-      var ammoPickups = GameObject.FindObjectsOfType<AmmoPickupProxy>().Where(
-          ap => (ap.transform.position - __instance.spawnTarget.position)
-                    .sqrMagnitude < 0.000001f);
-      if (ammoPickups.Count() > 0) {
-        Dbg.Log("Spawned ammo found");
-        return;
-      }
-
-      Dbg.Log("No spawned ammo found, spawning replacement now");
-      _nullableVector.value = __instance.spawnTarget.lossyScale;
-      AssetSpawner.Spawn(__instance.lootTable.GetLootItem(),
-                         __instance.spawnTarget.position,
-                         __instance.spawnTarget.rotation, _nullableVector,
-                         false, _nullableInt);
+      _destroyedAmmoCrates.Add(new DestroyedAmmoCrate() {
+        TimeDestroyed = Time.time,
+        SpawnPosition = __instance.spawnTarget.position,
+        SpawnRotation = __instance.spawnTarget.rotation,
+        ObjectDestructable = __instance,
+        Spawnable = __instance.lootTable.GetLootItem(),
+        PlacerSaver = __instance.GetComponent<PlacerSaver>(),
+      });
     }
   }
 
@@ -74,8 +141,11 @@ public class Mod : MelonMod {
                 new System.Type[] { typeof(LevelCrateReference),
                                     typeof(LevelCrateReference) })]
   class SceneStreamer_Load_Patch {
-    [HarmonyPrefix()]
-    internal static void Prefix() { _damagedAmmoCrates.Clear(); }
+    [HarmonyPostfix()]
+    internal static void Postfix() {
+      _damagedAmmoCrates.Clear();
+      _destroyedAmmoCrates.Clear();
+    }
   }
 }
 }

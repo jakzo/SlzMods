@@ -91,12 +91,7 @@
     <Compile Include="../../../common/Utilities/Dbg.cs" />
     <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
     <Compile Include="../../../common/Bonelab/Bonelab.cs" />
-
-    <!-- <Compile Include="snippets/**/*.cs" /> -->
   </ItemGroup>
-  <!-- <ItemGroup>
-    <EmbeddedResource Include="resources/*" />
-  </ItemGroup> -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <!-- <PostBuildEvent>

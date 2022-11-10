@@ -4,13 +4,8 @@ using System.Linq;
 using UnityEngine;
 using TMPro;
 using MelonLoader;
-using HarmonyLib;
 using SLZ.Marrow.Warehouse;
-using SLZ.Rig;
 using SLZ.Data;
-using SLZ.Player;
-using SLZ.Marrow.Data;
-using SLZ.Marrow.Pool;
 
 namespace Sst {
 public class Mod : MelonMod {
@@ -39,9 +34,6 @@ public class Mod : MelonMod {
         new Action[] {
           () => { _progress.Refresh(); },
           () => {
-            // var filter = new ICrateFilter<Crate>(
-            //     new
-            //     CrateFilters.UnlockableAndNotRedactedCrateFilter().Pointer);
             var filter = new CrateFilters.UnlockableAndNotRedactedCrateFilter()
                              .Cast<ICrateFilter<Crate>>();
             _totalNumUnlocks =
@@ -210,8 +202,7 @@ public class Mod : MelonMod {
     _refreshStart = 0;
     _refreshIndex = 0;
     var hud = new GameObject("CompletionistHud");
-    Utilities.Bonelab.DockToWrist(hud, new Vector3(),
-                                  Utilities.LevelHooks.RigManager);
+    Utilities.Bonelab.DockToWrist(hud, Utilities.LevelHooks.RigManager);
     _hudSlots =
         Enumerable.Range(0, NUM_HUD_SLOTS)
             .Select(i => {

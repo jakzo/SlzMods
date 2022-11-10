@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using MelonLoader;
+using SLZ.Bonelab;
 
 namespace Sst {
 class Collectible {
@@ -11,7 +12,7 @@ class Collectible {
   public float Distance;
 
   public bool
-  ShouldShow() => !GameObject.WasCollected &&
+  ShouldShow() => GameObject != null &&
                   !IsInPool(GameObject) && GameObject.scene.isLoaded;
 
   private static bool IsInPool(GameObject gameObject) =>
@@ -96,16 +97,12 @@ class CollectibleType {
   public CollectibleType(string name, bool onlyDisplayInCampaign,
                          Func<IEnumerable<MonoBehaviour>> findAll) {
     Name = name;
-    FindAll = () => onlyDisplayInCampaign && !IsInCampaignLevel()
-                        ? new MonoBehaviour[] {}
-                        : findAll().ToArray();
-  }
-
-  private static bool IsInCampaignLevel() {
-    var barcode = Utilities.LevelHooks.CurrentLevel?.Barcode.ID;
-    if (barcode == null)
-      return false;
-    return Utilities.Levels.CAMPAIGN_LEVEL_BARCODES.Contains(barcode);
+    FindAll = () => findAll()
+                        .Where(obj => {
+                          var saveable = obj.GetComponent<Saveable>();
+                          return !saveable || saveable.Data != "yoinked";
+                        })
+                        .ToArray();
   }
 }
 }

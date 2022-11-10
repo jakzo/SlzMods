@@ -1,23 +1,30 @@
 using MelonLoader;
 using UnityEngine;
 using SLZ.Marrow.Warehouse;
-using SLZ.Rig;
 
-namespace Sst {
+namespace Sst.Speedometer {
 public class Mod : MelonMod {
   private const string SPEEDOMETER_TEXT_NAME = "Speedometer";
 
+  private enum Units { MS, KPH, MPH }
+
+  private MelonPreferences_Entry<bool> _prefRightHand;
+  private MelonPreferences_Entry<Units> _prefUnits;
   private MelonPreferences_Entry<float> _prefWindowDuration;
   private TMPro.TextMeshPro _tmp;
   private SpeedTracker _speedTracker;
-  private RigManager _rigManager;
 
   public override void OnInitializeMelon() {
     Dbg.Init(BuildInfo.NAME);
 
     var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
+    _prefRightHand = category.CreateEntry(
+        "right_hand", false,
+        "Show speed reading on right hand instead of left");
+    _prefUnits =
+        category.CreateEntry("units", Units.MS, "Units to measure speed in");
     _prefWindowDuration = category.CreateEntry(
-        "windowDuration", 0.1f, "Number of seconds to average the speed over");
+        "window_duration", 0.1f, "Number of seconds to average the speed over");
 
     Utilities.LevelHooks.OnLevelStart += OnLevelStart;
   }
@@ -29,57 +36,29 @@ public class Mod : MelonMod {
       BufferSize = Mathf.CeilToInt(windowDuration * 240),
     };
 
-    _rigManager = Utilities.Bonelab.GetRigManager();
-    _tmp = Utilities.Bonelab.CreateTextOnWrist(SPEEDOMETER_TEXT_NAME);
+    _tmp = Utilities.Bonelab.CreateTextOnWrist(SPEEDOMETER_TEXT_NAME,
+                                               _prefRightHand.Value);
   }
 
   public override void OnUpdate() {
     if (Utilities.LevelHooks.IsLoading || _speedTracker == null)
       return;
 
-    var pos = _rigManager.physicsRig.m_head.position;
+    var pos = Utilities.LevelHooks.RigManager.physicsRig.m_head.position;
     _speedTracker.OnFrame(Time.time, pos.x, pos.z);
-    _tmp?.SetText($"{_speedTracker.GetSpeed():N2}m/s");
-  }
-}
-
-class SpeedTracker {
-  public int BufferSize = 1000;
-  public float WindowDuration = 1;
-
-  private (float, float, float)[] _frames;
-  private int _idxStart = 0;
-  private int _idxEnd = 0;
-
-  public SpeedTracker() { _frames = new(float, float, float)[BufferSize]; }
-
-  public void OnFrame(float time, float posX, float posZ) {
-    _frames[_idxEnd] = (time, posX, posZ);
-    _idxEnd++;
-    if (_idxEnd >= _frames.Length)
-      _idxEnd = 0;
-    if (_idxEnd == _idxStart) {
-      _idxStart++;
-      if (_idxStart >= _frames.Length)
-        _idxStart = 0;
-    }
+    _tmp?.SetText(GetSpeedText(_speedTracker.GetSpeed()));
   }
 
-  public float GetSpeed() {
-    if (_idxEnd == _idxStart)
-      return 0;
-    var frameEnd = _frames[(_idxEnd <= 0 ? _frames.Length : _idxEnd) - 1];
-    var windowStart = frameEnd.Item1 - WindowDuration;
-    while (_idxStart != _idxEnd && _frames[_idxStart].Item1 < windowStart) {
-      _idxStart++;
-      if (_idxStart >= _frames.Length)
-        _idxStart = 0;
+  private string GetSpeedText(float speedMs) {
+    switch (_prefUnits.Value) {
+    default:
+    case Units.MS:
+      return $"{speedMs:N2}m/s";
+    case Units.KPH:
+      return $"{(speedMs * 3.6f):N1}kph";
+    case Units.MPH:
+      return $"{(speedMs * 2.237f):N1}mph";
     }
-    var frameStart = _frames[_idxStart];
-    var dx = frameEnd.Item2 - frameStart.Item2;
-    var dz = frameEnd.Item3 - frameStart.Item3;
-    var duration = frameEnd.Item1 - frameStart.Item1;
-    return Mathf.Sqrt(dx * dx + dz * dz) / duration;
   }
 }
 }

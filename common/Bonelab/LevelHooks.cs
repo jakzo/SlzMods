@@ -42,5 +42,18 @@ static class LevelHooks {
       OnLoad?.Invoke(NextLevel);
     }
   }
+
+  [HarmonyPatch(typeof(SceneStreamer), nameof(SceneStreamer.Reload))]
+  class SceneStreamer_Reload_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix() {
+      Dbg.Log("SceneStreamer_Reload_Patch");
+      PrevLevel = CurrentLevel;
+      CurrentLevel = null;
+      NextLevel = CurrentLevel;
+      RigManager = null;
+      OnLoad?.Invoke(NextLevel);
+    }
+  }
 }
 }

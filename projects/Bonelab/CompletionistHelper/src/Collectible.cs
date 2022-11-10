@@ -94,15 +94,16 @@ class CollectibleType {
   public string Name;
   public Func<MonoBehaviour[]> FindAll;
   public MelonPreferences_Entry<bool> Pref;
-  public CollectibleType(string name, bool onlyDisplayInCampaign,
+  public CollectibleType(string name, bool mustBeSaveable,
                          Func<IEnumerable<MonoBehaviour>> findAll) {
     Name = name;
-    FindAll = () => findAll()
-                        .Where(obj => {
-                          var saveable = obj.GetComponent<Saveable>();
-                          return !saveable || saveable.Data != "yoinked";
-                        })
-                        .ToArray();
+    FindAll = () =>
+        findAll()
+            .Where(obj => {
+              var saveable = obj.GetComponent<Saveable>();
+              return saveable ? saveable.Data != "yoinked" : !mustBeSaveable;
+            })
+            .ToArray();
   }
 }
 }

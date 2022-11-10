@@ -16,26 +16,25 @@ public class Bonelab {
   }
 
   public static void DockToWrist(GameObject gameObject,
-                                 Vector3 positionOffset = new Vector3(),
-                                 RigManager rigManager = null) {
+                                 RigManager rigManager = null,
+                                 bool rightHand = false) {
     if (!rigManager)
       rigManager = GetRigManager();
-    gameObject.transform.SetParent(
-        rigManager.ControllerRig.leftController.transform);
-    gameObject.transform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
-    gameObject.transform.localRotation = Quaternion.Euler(46f, 356f, 3f);
-    gameObject.transform.localPosition +=
-        gameObject.transform.localRotation * positionOffset;
+    var hand = rightHand ? rigManager.physicsRig.rightHand
+                         : rigManager.physicsRig.leftHand;
+    gameObject.transform.SetParent(hand.transform);
+    gameObject.transform.localPosition = new Vector3(-0.31f, 0.3f, 0f);
+    gameObject.transform.localRotation = Quaternion.Euler(32f, 4f, 3f);
   }
 
-  public static TextMeshPro
-  CreateTextOnWrist(string name, Vector3 positionOffset = new Vector3()) {
+  public static TextMeshPro CreateTextOnWrist(string name,
+                                              bool rightHand = false) {
     var text = new GameObject(name);
     var tmp = text.AddComponent<TMPro.TextMeshPro>();
     tmp.alignment = TMPro.TextAlignmentOptions.BottomRight;
     tmp.fontSize = 0.5f;
     tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-    DockToWrist(text, positionOffset);
+    DockToWrist(text, null, rightHand);
     return tmp;
   }
 }

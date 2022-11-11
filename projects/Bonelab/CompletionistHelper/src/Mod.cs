@@ -41,12 +41,12 @@ public class Mod : MelonMod {
                     .Filter(AssetWarehouse.Instance.GetCrates(), filter)
                     .Count;
           },
-          () => {
-            // Il2CppSystem.Collections.Generic
-            //     .Dictionary<string, Il2CppSystem.Object> levelState = null;
-            // DataManager.ActiveSave?.Progression.LevelState.TryGetValue(
-            //     Utilities.LevelHooks.CurrentLevel.name, out levelState);
-          },
+          // () => {
+          //   Il2CppSystem.Collections.Generic
+          //       .Dictionary<string, Il2CppSystem.Object> levelState = null;
+          //   DataManager.ActiveSave?.Progression.LevelState.TryGetValue(
+          //       Utilities.LevelHooks.CurrentLevel.name, out levelState);
+          // },
         }
             .Concat(CollectibleType.CacheActions)
             .Concat(CollectibleType.ALL.Select<CollectibleType, Action>(
@@ -61,7 +61,7 @@ public class Mod : MelonMod {
                       Type = collectibleType,
                       GameObject = component.gameObject,
                     };
-                    if (!collectible.ShouldShow())
+                    if (!CollectibleType.ShouldShow(collectible.GameObject))
                       continue;
 
                     // if (levelState != null) {
@@ -166,7 +166,7 @@ public class Mod : MelonMod {
 
     foreach (var collectible in _collectibles)
       collectible.Distance =
-          collectible.ShouldShow()
+          CollectibleType.ShouldShow(collectible.GameObject)
               ? Vector3.Distance(Utilities.LevelHooks.RigManager.ControllerRig
                                      .leftController.transform.position,
                                  collectible.GameObject.transform.position)

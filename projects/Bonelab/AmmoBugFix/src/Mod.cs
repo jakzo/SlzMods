@@ -3,13 +3,12 @@ using System.Linq;
 using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
-using SLZ.Props;
-using SLZ.Marrow.Warehouse;
 using SLZ;
-using SLZ.Marrow.Pool;
-using SLZ.Marrow.SceneStreaming;
+using SLZ.Rig;
+using SLZ.Props;
 using SLZ.Bonelab;
 using SLZ.Marrow.Data;
+using SLZ.Marrow.Pool;
 
 namespace Sst.AmmoBugFix {
 public class Mod : MelonMod {
@@ -40,11 +39,8 @@ public class Mod : MelonMod {
   public override void OnLateUpdate() {
     foreach (var dac in _destroyedAmmoCrates.ToArray()) {
       var saveableId = dac.PlacerSaver?.Saveable.UniqueId;
-      Dbg.Log($"our saveable id = {saveableId}");
       var spawnedAmmoFound =
           GameObject.FindObjectsOfType<AmmoPickupProxy>().Any(ap => {
-            Dbg.Log(
-                $"{ap.name} saveable id = {ap.GetComponent<Saveable>()?.UniqueId}, we have saveableId = {saveableId != null}, is equal = {ap.GetComponent<Saveable>()?.UniqueId == saveableId}");
             if (saveableId != null &&
                 ap.GetComponent<Saveable>()?.UniqueId == saveableId)
               return true;
@@ -137,10 +133,8 @@ public class Mod : MelonMod {
     }
   }
 
-  [HarmonyPatch(typeof(SceneStreamer), nameof(SceneStreamer.Load),
-                new System.Type[] { typeof(LevelCrateReference),
-                                    typeof(LevelCrateReference) })]
-  class SceneStreamer_Load_Patch {
+  [HarmonyPatch(typeof(RigManager), nameof(RigManager.Awake))]
+  class RigManager_Awake_Patch {
     [HarmonyPostfix()]
     internal static void Postfix() {
       _damagedAmmoCrates.Clear();

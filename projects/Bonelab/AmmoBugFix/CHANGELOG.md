@@ -1,3 +1,7 @@
+## 1.1.0
+
+Fix respawned ammo not being saved when collected.
+
 ## 1.0.2
 
 Fixed duplicate ammo spawning sometimes.

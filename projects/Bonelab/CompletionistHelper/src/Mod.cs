@@ -10,7 +10,7 @@ using SLZ.Data;
 namespace Sst {
 public class Mod : MelonMod {
   private const string HUD_TEXT_NAME = "CompletionistHud";
-  private const float REFRESH_FREQUENCY = 1;
+  private const float REFRESH_FREQUENCY = 15;
   private const int NUM_HUD_SLOTS = 5;
   private const int NUM_DISPLAYED_ACHIEVEMENTS = 5;
   private const float MAX_PROGRESS = 0.95f;

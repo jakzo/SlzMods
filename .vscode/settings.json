@@ -47,6 +47,7 @@
     "renderable",
     "RGSS",
     "Rigidbody",
+    "Saveables",
     "softprops",
     "spawnable",
     "Speedrun",
@@ -62,7 +63,8 @@
     "Unlockable",
     "usermedia",
     "vcontroller",
-    "xaver"
+    "xaver",
+    "yoinked"
   ],
   "omnisharp.useModernNet": false,
   "editor.formatOnSave": true,

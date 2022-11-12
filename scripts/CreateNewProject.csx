@@ -23,12 +23,12 @@ void CreateNewProject() {
   var projectUuid = GenerateUuid();
   var solutionContents = File.ReadAllText("SlzSpeedrunTools.sln");
   var lastProjectIdx =
-      solutionContents.LastIndexOf("EndProject") + "EndProject".Length + 2;
+      solutionContents.LastIndexOf("EndProject") + "EndProject".Length;
   var projectConfigIdx = solutionContents.LastIndexOf(PROJECT_CONFIG_SECTION) +
                          PROJECT_CONFIG_SECTION.Length;
   var newSolutionContents =
       solutionContents.Substring(0, lastProjectIdx) +
-      $"\r\nProject(\"{{{GenerateUuid()}}}\") = \"{templateVars.Name}\", \"projects\\{templateVars.GameCapitalized}\\{templateVars.Name}\\{templateVars.Name}.csproj\", \"{{{projectUuid}}}\"\r\nEndProject" +
+      $"\nProject(\"{{{GenerateUuid()}}}\") = \"{templateVars.GameCapitalized}{templateVars.Name}\", \"projects\\{templateVars.GameCapitalized}\\{templateVars.Name}\\{templateVars.Name}.csproj\", \"{{{projectUuid}}}\"\nEndProject" +
       solutionContents.Substring(lastProjectIdx,
                                  projectConfigIdx - lastProjectIdx) +
       string.Join(

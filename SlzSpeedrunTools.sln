@@ -13,17 +13,19 @@ Project("{F1C8139F-39C2-4068-8B18-F132176B4927}") = "BonelabLoadMirror", "projec
 EndProject
 Project("{41206316-80DA-4916-83F7-B62DE64B316D}") = "BonelabCheckpointVisualizer", "projects\Bonelab\CheckpointVisualizer\CheckpointVisualizer.csproj", "{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}"
 EndProject
-Project("{A77AD18C-82A4-3107-655C-6F76A32BF0C7}") = "TriggerVisualizer", "projects\Bonelab\TriggerVisualizer\TriggerVisualizer.csproj", "{45597236-D204-FB65-8805-8DB16C22A62F}"
+Project("{A77AD18C-82A4-3107-655C-6F76A32BF0C7}") = "BonelabTriggerVisualizer", "projects\Bonelab\TriggerVisualizer\TriggerVisualizer.csproj", "{45597236-D204-FB65-8805-8DB16C22A62F}"
 EndProject
-Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "Speedometer", "projects\Bonelab\Speedometer\Speedometer.csproj", "{F13040F5-2641-6465-6E4A-FF7C0DA26BDF}"
+Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabSpeedometer", "projects\Bonelab\Speedometer\Speedometer.csproj", "{F13040F5-2641-6465-6E4A-FF7C0DA26BDF}"
 EndProject
-Project("{B16878A1-7B40-FDAE-503A-6DFEC289D113}") = "CompletionistHelper", "projects\Bonelab\CompletionistHelper\CompletionistHelper.csproj", "{56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}"
+Project("{B16878A1-7B40-FDAE-503A-6DFEC289D113}") = "BonelabCompletionistHelper", "projects\Bonelab\CompletionistHelper\CompletionistHelper.csproj", "{56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}"
 EndProject
 Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB07}") = "BonelabHundredPercentStatus", "projects\LiveSplit\BonelabHundredPercentStatus\BonelabHundredPercentStatus.csproj", "{E782BFCA-90AA-A92F-22E9-85589F10913B}"
 EndProject
-Project("{81FCC4E8-8A09-AD74-7CAB-31A3DCAD4264}") = "AmmoBugFix", "projects\Bonelab\AmmoBugFix\AmmoBugFix.csproj", "{59614574-AE6C-55D4-024A-21B97605D6F1}"
+Project("{81FCC4E8-8A09-AD74-7CAB-31A3DCAD4264}") = "BonelabAmmoBugFix", "projects\Bonelab\AmmoBugFix\AmmoBugFix.csproj", "{59614574-AE6C-55D4-024A-21B97605D6F1}"
 EndProject
-Project("{C8D343BD-EF6E-9631-972E-B4219D723E51}") = "LootDropBugfix", "projects\Boneworks\LootDropBugfix\LootDropBugfix.csproj", "{C6766168-937D-D108-4DB1-5BCAF3D7376F}"
+Project("{C8D343BD-EF6E-9631-972E-B4219D723E51}") = "BoneworksLootDropBugfix", "projects\Boneworks\LootDropBugfix\LootDropBugfix.csproj", "{C6766168-937D-D108-4DB1-5BCAF3D7376F}"
+EndProject
+Project("{F24D5D50-5E53-31D8-AF5C-2040F7BE2926}") = "BonelabLootDropBugfix", "projects\Bonelab\LootDropBugfix\LootDropBugfix.csproj", "{792FC5C9-C984-EBB2-E2C2-86AB4D227675}"
 EndProject
 
 Global
@@ -32,6 +34,11 @@ Global
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {792FC5C9-C984-EBB2-E2C2-86AB4D227675}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {792FC5C9-C984-EBB2-E2C2-86AB4D227675}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {792FC5C9-C984-EBB2-E2C2-86AB4D227675}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {792FC5C9-C984-EBB2-E2C2-86AB4D227675}.Release|Any CPU.Build.0 = Release|Any CPU
+
     {C6766168-937D-D108-4DB1-5BCAF3D7376F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {C6766168-937D-D108-4DB1-5BCAF3D7376F}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {C6766168-937D-D108-4DB1-5BCAF3D7376F}.Release|Any CPU.ActiveCfg = Release|Any CPU

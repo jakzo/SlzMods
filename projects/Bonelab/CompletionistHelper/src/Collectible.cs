@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using MelonLoader;
 using SLZ.Bonelab;
@@ -20,13 +21,13 @@ class CollectibleType {
           gc => ShouldShow(gc.gameObject) && !gc.used &&
                 !_unlockedCrateBarcodes.Contains(gc.selectedCrate.Barcode.ID)));
   public static CollectibleType GACHA_PLACER = new CollectibleType(
-      "Gacha placer", false,
+      "Gacha spawn point", false,
       () => _cachedGachaPlacers.Where(
           gp => ShouldShow(gp.gameObject) && !gp.onlyPlaceIfBeatGame &&
                 !gp.cratePlacer.placed &&
                 !_unlockedCrateBarcodes.Contains(gp.unlockCrate.Barcode.ID)));
   public static CollectibleType GACHA_PLACER_FINISHED = new CollectibleType(
-      "Gacha placer (after beating game)", false,
+      "Gacha spawn point (after beating game)", false,
       () => _cachedGachaPlacers.Where(
           gp => ShouldShow(gp.gameObject) && gp.onlyPlaceIfBeatGame &&
                 !gp.cratePlacer.placed &&
@@ -46,9 +47,9 @@ class CollectibleType {
 
   private static Func<IEnumerable<Saveable>> FindSaveables(string name) {
     var prefix = $"{name} [";
-    return () => _cachedSaveables.Where(obj => ShouldShow(obj.gameObject) &&
-                                               obj.name.StartsWith(prefix) &&
-                                               obj.Data != "yoinked");
+    return () => _cachedSaveables.Where(
+               obj => obj != null && obj.name.StartsWith(prefix) &&
+                      obj.Data != "yoinked" && ShouldShow(obj.gameObject));
   }
 
   private static GachaCapsule[] _cachedGachaCapsules;
@@ -68,8 +69,9 @@ class CollectibleType {
     () => { EnabledTypes = ALL.Where(type => type.Pref.Value).ToArray(); },
     () => {
       _unlockedCrateBarcodes = DataManager.ActiveSave.Unlocks.Unlocks._entries
-                                   .Select(entry => entry.key)
-                                   .ToHashSet();
+                                   ?.Select(entry => entry.key)
+                                   .ToHashSet() ??
+                               new HashSet<string>();
     },
     () => {
       _cachedGachaCapsules = Resources.FindObjectsOfTypeAll<GachaCapsule>();
@@ -83,7 +85,8 @@ class CollectibleType {
   public static void Initialize(MelonPreferences_Category prefsCategory) {
     foreach (var type in ALL)
       type.Pref = prefsCategory.CreateEntry(
-          type.Name.ToLower().Replace(' ', '_'), true, type.Name);
+          Regex.Replace(type.Name.ToLower().Replace(' ', '_'), @"[()]", ""),
+          true, type.Name);
   }
 
   public static bool ShouldShow(GameObject gameObject) =>

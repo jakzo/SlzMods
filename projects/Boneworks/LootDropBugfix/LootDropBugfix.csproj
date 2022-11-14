@@ -75,7 +75,7 @@
     <Compile Include="src/**/*.cs" />
     <Compile Include="../../../common/Utilities/Metadata.cs" />
     <Compile Include="../../../common/Utilities/Dbg.cs" />
-    <Compile Include="../../../common/Boneworks/Il2cppNullable.cs" />
+    <Compile Include="../../../common/Boneworks/Il2CppNullable.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">

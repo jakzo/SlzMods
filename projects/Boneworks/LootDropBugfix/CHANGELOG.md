@@ -1,3 +1,7 @@
+## 1.1.3
+
+Fix spawning replacements
+
 ## 1.1.2
 
 Handle loot spawning before loading finishes.

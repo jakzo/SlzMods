@@ -2,7 +2,6 @@ Loop
 {
   IfWinExist, BONELAB
   {
-    MsgBox, Start
     IfWinNotExist, ahk_exe obs64.exe
     {
       Run "C:\Program Files\obs-studio\bin\64bit\obs64.exe" "--enable-gpu" "--enable-media-stream" "--startstreaming" "--startvirtualcam", C:\Program Files\obs-studio\bin\64bit

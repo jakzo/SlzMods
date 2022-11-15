@@ -18,18 +18,18 @@ class CollectibleType {
   public static CollectibleType GACHA_CAPSULE = new CollectibleType(
       "Gacha capsule", false,
       () => _cachedGachaCapsules.Where(
-          gc => ShouldShow(gc.gameObject) && !gc.used &&
+          gc => ShouldShow(gc) && !gc.used &&
                 !_unlockedCrateBarcodes.Contains(gc.selectedCrate.Barcode.ID)));
   public static CollectibleType GACHA_PLACER = new CollectibleType(
       "Gacha spawn point", false,
       () => _cachedGachaPlacers.Where(
-          gp => ShouldShow(gp.gameObject) && !gp.onlyPlaceIfBeatGame &&
+          gp => ShouldShow(gp) && !gp.onlyPlaceIfBeatGame &&
                 !gp.cratePlacer.placed &&
                 !_unlockedCrateBarcodes.Contains(gp.unlockCrate.Barcode.ID)));
   public static CollectibleType GACHA_PLACER_FINISHED = new CollectibleType(
       "Gacha spawn point (after beating game)", false,
       () => _cachedGachaPlacers.Where(
-          gp => ShouldShow(gp.gameObject) && gp.onlyPlaceIfBeatGame &&
+          gp => ShouldShow(gp) && gp.onlyPlaceIfBeatGame &&
                 !gp.cratePlacer.placed &&
                 !_unlockedCrateBarcodes.Contains(gp.unlockCrate.Barcode.ID)));
   public static CollectibleType AMMO_LIGHT = new CollectibleType(
@@ -47,9 +47,9 @@ class CollectibleType {
 
   private static Func<IEnumerable<Saveable>> FindSaveables(string name) {
     var prefix = $"{name} [";
-    return () => _cachedSaveables.Where(
-               obj => obj != null && obj.name.StartsWith(prefix) &&
-                      obj.Data != "yoinked" && ShouldShow(obj.gameObject));
+    return () => _cachedSaveables.Where(obj => ShouldShow(obj) &&
+                                               obj.name.StartsWith(prefix) &&
+                                               obj.Data != "yoinked");
   }
 
   private static GachaCapsule[] _cachedGachaCapsules;
@@ -89,8 +89,11 @@ class CollectibleType {
           true, type.Name);
   }
 
-  public static bool ShouldShow(GameObject gameObject) =>
-      gameObject != null && !IsInPool(gameObject) && gameObject.scene.isLoaded;
+  public static bool ShouldShow(Component obj) => obj != null &&
+                                                  ShouldShow(obj.gameObject);
+  public static bool
+  ShouldShow(GameObject obj) => obj != null &&
+                                !IsInPool(obj) && obj.scene.isLoaded;
 
   private static bool IsInPool(GameObject gameObject) =>
       gameObject.transform.parent

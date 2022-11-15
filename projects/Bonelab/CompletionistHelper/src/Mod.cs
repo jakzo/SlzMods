@@ -199,6 +199,7 @@ public class Mod : MelonMod {
   }
 
   private void ShowHud() {
+    Dbg.Log("ShowHud()");
     _refreshStart = 0;
     _refreshIndex = 0;
     var hud = new GameObject("CompletionistHud");

@@ -1,3 +1,7 @@
+## 1.1.1
+
+Fix bad loot chance calculation.
+
 ## 1.1.0
 
 Make replacement items saveable and log warnings on replacement.

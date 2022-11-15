@@ -1,3 +1,7 @@
+## 1.1.2
+
+Handle loot spawning before loading finishes.
+
 ## 1.1.1
 
 Fix bad loot chance calculation.

@@ -28,8 +28,15 @@ public class Mod : MelonMod {
   public override void OnLateUpdate() {
     if (_isLoading)
       return;
-    foreach (var (obj, title, position) in _replacementsToSpawn)
-      SpawnReplacement(obj, title, position);
+
+    while (_replacementsToSpawn.Count > 0) {
+      var (obj, title, position) = _replacementsToSpawn.Dequeue();
+      try {
+        SpawnReplacement(obj, title, position);
+      } catch (Exception ex) {
+        MelonLogger.Error(ex);
+      }
+    }
   }
 
   [HarmonyPatch(typeof(ObjectDestructable),

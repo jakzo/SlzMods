@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using MelonLoader;
 using HarmonyLib;
@@ -6,15 +7,49 @@ using UnityEngine;
 using StressLevelZero;
 using StressLevelZero.Props;
 using StressLevelZero.Pool;
-using StressLevelZero.Combat;
 
 namespace Sst.LootDropBugfix {
 public class Mod : MelonMod {
-  protected static bool? _nullableTrue = true;
-  protected static Il2CppSystem.Nullable<bool> _spawnAutoEnable =
+  private static bool? _nullableTrue = true;
+  private static Il2CppSystem.Nullable<bool> _spawnAutoEnable =
       new Utilities.Il2CppNullable<bool>(_nullableTrue);
 
+  private static Queue<(ObjectDestructable, string, Vector3)>
+      _replacementsToSpawn = new Queue<(ObjectDestructable, string, Vector3)>();
+  private static bool _isLoading = false;
+
   public override void OnApplicationStart() { Dbg.Init(BuildInfo.NAME); }
+
+  public override void BONEWORKS_OnLoadingScreen() { _isLoading = true; }
+  public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
+    _isLoading = false;
+  }
+
+  public override void OnLateUpdate() {
+    if (_isLoading)
+      return;
+    foreach (var (obj, title, position) in _replacementsToSpawn)
+      SpawnReplacement(obj, title, position);
+  }
+
+  [HarmonyPatch(typeof(ObjectDestructable),
+                nameof(ObjectDestructable.TakeDamage))]
+  class ObjectDestructable_TakeDamage_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix(ObjectDestructable __instance,
+                                out bool __state) {
+      __state = !__instance._isDead && __instance.lootTable?.items.Length > 0;
+      if (__state)
+        Dbg.Log("Lootable object damaged");
+    }
+
+    [HarmonyFinalizer()]
+    internal static void Finalizer(ObjectDestructable __instance,
+                                   bool __state) {
+      if (__state && __instance._isDead)
+        HandleDestroyedLootable(__instance);
+    }
+  }
 
   private static void HandleDestroyedLootable(ObjectDestructable obj) {
     var spawnPosition = obj.spawnTarget.position;
@@ -30,7 +65,17 @@ public class Mod : MelonMod {
       return;
     }
 
-    SpawnReplacement(obj, spawnPosition);
+    QueueSpawnReplacement(obj, spawnPosition);
+  }
+
+  private static void QueueSpawnReplacement(ObjectDestructable obj,
+                                            Vector3 spawnPosition) {
+    var replacement = obj.lootTable.GetLootItem();
+    if (replacement == null)
+      throw new Exception("GetLootItem returned null");
+    MelonLogger.Warning(
+        $"No spawned item found, spawning replacement now: {replacement.title}");
+    _replacementsToSpawn.AddItem((obj, replacement.title, spawnPosition));
   }
 
   private static bool IsLootGuaranteed(ObjectDestructable obj) {
@@ -53,7 +98,6 @@ public class Mod : MelonMod {
           IsAmmoCrate(obj)
               ? (topLevelObject.position - spawnPosition).sqrMagnitude < 1e-9
               : true;
-      var distSqr = (topLevelObject.position - spawnPosition).sqrMagnitude;
       if (isCorrectPosition &&
           obj.lootTable.items.Any(item => topLevelObject.name.StartsWith(
                                       item.spawnable.prefab.name))) {
@@ -63,20 +107,21 @@ public class Mod : MelonMod {
     return false;
   }
 
-  private static void SpawnReplacement(ObjectDestructable obj,
+  private static void SpawnReplacement(ObjectDestructable obj, string title,
                                        Vector3 spawnPosition) {
-    var replacement = obj.lootTable.GetLootItem();
-    if (replacement == null)
-      throw new Exception("GetLootItem returned null");
-    MelonLogger.Warning(
-        $"No spawned item found, spawning replacement now: {replacement.title}");
-    var spawnedItem = PoolManager.Spawn(replacement.title, spawnPosition,
+    Dbg.Log($"Spawning replacement: {title} @ {spawnPosition}");
+    var spawnedItem = PoolManager.Spawn(title, spawnPosition,
                                         Quaternion.identity, _spawnAutoEnable);
     MakeSaveable(obj, spawnedItem);
   }
 
   private static void MakeSaveable(ObjectDestructable obj,
                                    GameObject spawnedItem) {
+    if (obj == null) {
+      MelonLogger.Warning(
+          "Destructable became null before the replacement could be made saveable");
+      return;
+    }
     var saveItem = obj.GetComponent<SaveItem>();
     if (saveItem == null || !IsAmmoCrate(obj))
       return;
@@ -86,24 +131,5 @@ public class Mod : MelonMod {
 
   private static bool IsAmmoCrate(ObjectDestructable obj) =>
       obj.lootTable.name.StartsWith("AmmoCrateTable_");
-
-  [HarmonyPatch(typeof(ObjectDestructable),
-                nameof(ObjectDestructable.TakeDamage))]
-  class ObjectDestructable_TakeDamage_Patch {
-    [HarmonyPrefix()]
-    internal static void Prefix(ObjectDestructable __instance,
-                                out bool __state) {
-      __state = !__instance._isDead && __instance.lootTable?.items.Length > 0;
-      if (__state)
-        Dbg.Log("Lootable object damaged");
-    }
-
-    [HarmonyFinalizer()]
-    internal static void Finalizer(ObjectDestructable __instance,
-                                   bool __state) {
-      if (__state && __instance._isDead)
-        HandleDestroyedLootable(__instance);
-    }
-  }
 }
 }

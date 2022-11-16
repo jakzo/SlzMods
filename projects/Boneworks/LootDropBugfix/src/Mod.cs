@@ -61,7 +61,8 @@ public class Mod : MelonMod {
                             25)
                 .ToArray();
         if (ammoCrates.Length > 0) {
-          ammoCrates[0].transform.position =
+          _toBreak = ammoCrates[0];
+          _toBreak.transform.position =
               head.position + head.rotation * new Vector3(0, 0, 2);
         }
       }

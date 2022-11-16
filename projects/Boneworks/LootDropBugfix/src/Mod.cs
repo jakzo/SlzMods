@@ -49,7 +49,10 @@ public class Mod : MelonMod {
                      .physicsRig.m_head;
       var ammoCrates =
           GameObject.FindObjectsOfType<ObjectDestructable>()
-              .Where(obj => obj.lootTable != null && IsAmmoCrate(obj))
+              .Where(obj =>
+                         obj.lootTable != null && IsAmmoCrate(obj) &&
+                         (obj.transform.position - head.position).sqrMagnitude <
+                             25)
               .ToArray();
       if (ammoCrates.Length > 0) {
         ammoCrates[0].transform.position =

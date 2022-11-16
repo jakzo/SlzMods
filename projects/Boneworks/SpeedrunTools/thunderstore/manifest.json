@@ -1,6 +1,6 @@
 {
   "name": "SpeedrunTools",
-  "version_number": "2.3.0",
+  "version_number": "2.3.1",
   "description": "Utilities for Boneworks speedrunning.",
   "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Boneworks/SpeedrunTools",
   "dependencies": ["LavaGang-MelonLoader-0.5.1"]

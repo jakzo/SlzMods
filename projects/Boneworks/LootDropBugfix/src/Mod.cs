@@ -45,23 +45,31 @@ public class Mod : MelonMod {
     // ---
     if (Time.time - _lastUpdate > 0.5f) {
       _lastUpdate = Time.time;
-      var head = GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>()
-                     .physicsRig.m_head;
-      var ammoCrates =
-          GameObject.FindObjectsOfType<ObjectDestructable>()
-              .Where(obj =>
-                         obj.lootTable != null && IsAmmoCrate(obj) &&
-                         (obj.transform.position - head.position).sqrMagnitude >
-                             25)
-              .ToArray();
-      if (ammoCrates.Length > 0) {
-        ammoCrates[0].transform.position =
-            head.position + head.rotation * new Vector3(0, 0, 2);
+      if (_toBreak) {
+        _toBreak.TakeDamage(Vector3.back, 100, false,
+                            StressLevelZero.Combat.AttackType.Piercing);
+        _toBreak = null;
+      } else {
+        var head = GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>()
+                       .physicsRig.m_head;
+        var ammoCrates =
+            GameObject.FindObjectsOfType<ObjectDestructable>()
+                .Where(
+                    obj =>
+                        obj.lootTable != null && IsAmmoCrate(obj) &&
+                        (obj.transform.position - head.position).sqrMagnitude >
+                            25)
+                .ToArray();
+        if (ammoCrates.Length > 0) {
+          ammoCrates[0].transform.position =
+              head.position + head.rotation * new Vector3(0, 0, 2);
+        }
       }
     }
     // ---
   }
   private float _lastUpdate = 0;
+  private ObjectDestructable _toBreak;
 
   [HarmonyPatch(typeof(ObjectDestructable),
                 nameof(ObjectDestructable.TakeDamage))]

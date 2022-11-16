@@ -43,7 +43,7 @@ public class Mod : MelonMod {
     }
 
     // ---
-    if (Time.time - _lastUpdate > 0.5f) {
+    if (Time.time - _lastUpdate > 0.5f && !_replacedAmmo) {
       _lastUpdate = Time.time;
       if (_toBreak) {
         _toBreak.TakeDamage(Vector3.back, 100, false,
@@ -74,6 +74,7 @@ public class Mod : MelonMod {
   }
   private float _lastUpdate = 0;
   private ObjectDestructable _toBreak;
+  private static bool _replacedAmmo = false;
 
   [HarmonyPatch(typeof(ObjectDestructable),
                 nameof(ObjectDestructable.TakeDamage))]
@@ -156,6 +157,7 @@ public class Mod : MelonMod {
     var spawnedItem = PoolManager.Spawn(title, spawnPosition,
                                         Quaternion.identity, _spawnAutoEnable);
     MakeSaveable(obj, spawnedItem);
+    _replacedAmmo = true;
   }
 
   private static void MakeSaveable(ObjectDestructable obj,

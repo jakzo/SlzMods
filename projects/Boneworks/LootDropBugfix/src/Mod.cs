@@ -41,7 +41,23 @@ public class Mod : MelonMod {
         MelonLogger.Error(ex);
       }
     }
+
+    // ---
+    if (Time.time - _lastUpdate > 0.5f) {
+      _lastUpdate = Time.time;
+      var head = GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>()
+                     .physicsRig.m_head;
+      var ammoCrates = GameObject.FindObjectsOfType<ObjectDestructable>()
+                           .Where(IsAmmoCrate)
+                           .ToArray();
+      if (ammoCrates.Length > 0) {
+        ammoCrates[0].transform.position =
+            head.position + head.rotation * new Vector3(0, 0, 2);
+      }
+    }
+    // ---
   }
+  private float _lastUpdate = 0;
 
   [HarmonyPatch(typeof(ObjectDestructable),
                 nameof(ObjectDestructable.TakeDamage))]

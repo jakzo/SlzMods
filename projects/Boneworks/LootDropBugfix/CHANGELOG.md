@@ -1,3 +1,7 @@
+## 1.2.0
+
+Fixes. Everything *should* work now.
+
 ## 1.1.3
 
 Fix spawning replacements

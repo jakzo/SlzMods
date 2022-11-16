@@ -20,9 +20,13 @@ public class Mod : MelonMod {
 
   public override void OnApplicationStart() { Dbg.Init(BuildInfo.NAME); }
 
-  public override void BONEWORKS_OnLoadingScreen() { _isLoading = true; }
+  public override void BONEWORKS_OnLoadingScreen() {
+    _isLoading = true;
+    Dbg.Log("_isLoading = true");
+  }
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     _isLoading = false;
+    Dbg.Log("_isLoading = false");
   }
 
   public override void OnLateUpdate() {
@@ -82,7 +86,7 @@ public class Mod : MelonMod {
       throw new Exception("GetLootItem returned null");
     MelonLogger.Warning(
         $"No spawned item found, spawning replacement now: {replacement.title}");
-    _replacementsToSpawn.AddItem((obj, replacement.title, spawnPosition));
+    _replacementsToSpawn.Enqueue((obj, replacement.title, spawnPosition));
   }
 
   private static bool IsLootGuaranteed(ObjectDestructable obj) {

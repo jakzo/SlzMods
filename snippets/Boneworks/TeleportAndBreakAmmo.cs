@@ -41,7 +41,40 @@ public class Mod : MelonMod {
         MelonLogger.Error(ex);
       }
     }
+
+    // ---
+    if (Time.time - _lastUpdate > 0.5f && !_replacedAmmo) {
+      _lastUpdate = Time.time;
+      if (_toBreak) {
+        _toBreak.TakeDamage(Vector3.back, 100, false,
+                            StressLevelZero.Combat.AttackType.Piercing);
+        _toBreak = null;
+      } else {
+        foreach (var ammo in GameObject
+                     .FindObjectsOfType<StressLevelZero.AmmoPickup>())
+          GameObject.Destroy(ammo.transform.parent.gameObject);
+        var head = GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>()
+                       .physicsRig.m_head;
+        var ammoCrates =
+            GameObject.FindObjectsOfType<ObjectDestructable>()
+                .Where(
+                    obj =>
+                        obj.lootTable != null && IsAmmoCrate(obj) &&
+                        (obj.transform.position - head.position).sqrMagnitude >
+                            25)
+                .ToArray();
+        if (ammoCrates.Length > 0) {
+          _toBreak = ammoCrates[0];
+          _toBreak.transform.position =
+              head.position + head.rotation * new Vector3(0, 0, 2);
+        }
+      }
+    }
+    // ---
   }
+  private float _lastUpdate = 0;
+  private ObjectDestructable _toBreak;
+  private static bool _replacedAmmo = false;
 
   [HarmonyPatch(typeof(ObjectDestructable),
                 nameof(ObjectDestructable.TakeDamage))]
@@ -120,10 +153,11 @@ public class Mod : MelonMod {
 
   private static void SpawnReplacement(ObjectDestructable obj, string title,
                                        Vector3 spawnPosition) {
-    Dbg.Log($"Spawning replacement: {title} @ {spawnPosition.ToString()}");
+    Dbg.Log($"Spawning replacement: {title} @ {spawnPosition}");
     var spawnedItem = PoolManager.Spawn(title, spawnPosition,
                                         Quaternion.identity, _spawnAutoEnable);
     MakeSaveable(obj, spawnedItem);
+    _replacedAmmo = true;
   }
 
   private static void MakeSaveable(ObjectDestructable obj,

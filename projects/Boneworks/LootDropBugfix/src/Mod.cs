@@ -47,9 +47,10 @@ public class Mod : MelonMod {
       _lastUpdate = Time.time;
       var head = GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>()
                      .physicsRig.m_head;
-      var ammoCrates = GameObject.FindObjectsOfType<ObjectDestructable>()
-                           .Where(IsAmmoCrate)
-                           .ToArray();
+      var ammoCrates =
+          GameObject.FindObjectsOfType<ObjectDestructable>()
+              .Where(obj => obj.lootTable != null && IsAmmoCrate(obj))
+              .ToArray();
       if (ammoCrates.Length > 0) {
         ammoCrates[0].transform.position =
             head.position + head.rotation * new Vector3(0, 0, 2);

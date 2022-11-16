@@ -50,6 +50,9 @@ public class Mod : MelonMod {
                             StressLevelZero.Combat.AttackType.Piercing);
         _toBreak = null;
       } else {
+        foreach (var ammo in GameObject
+                     .FindObjectsOfType<StressLevelZero.AmmoPickupProxy>())
+          GameObject.Destroy(ammo.gameObject);
         var head = GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>()
                        .physicsRig.m_head;
         var ammoCrates =

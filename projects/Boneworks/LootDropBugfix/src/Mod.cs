@@ -51,8 +51,8 @@ public class Mod : MelonMod {
         _toBreak = null;
       } else {
         foreach (var ammo in GameObject
-                     .FindObjectsOfType<StressLevelZero.AmmoPickupProxy>())
-          GameObject.Destroy(ammo.gameObject);
+                     .FindObjectsOfType<StressLevelZero.AmmoPickup>())
+          GameObject.Destroy(ammo.transform.parent.gameObject);
         var head = GameObject.FindObjectOfType<StressLevelZero.Rig.RigManager>()
                        .physicsRig.m_head;
         var ammoCrates =

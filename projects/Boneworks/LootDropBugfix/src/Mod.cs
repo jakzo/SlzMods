@@ -51,7 +51,7 @@ public class Mod : MelonMod {
           GameObject.FindObjectsOfType<ObjectDestructable>()
               .Where(obj =>
                          obj.lootTable != null && IsAmmoCrate(obj) &&
-                         (obj.transform.position - head.position).sqrMagnitude <
+                         (obj.transform.position - head.position).sqrMagnitude >
                              25)
               .ToArray();
       if (ammoCrates.Length > 0) {

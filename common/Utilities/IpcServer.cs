@@ -102,11 +102,5 @@ public class Server : IDisposable {
       Console.Error.WriteLine("Failed to run event", ex);
     }
   }
-
-  class ReadState {
-    public NamedPipeServerStream stream;
-    public byte[] buffer;
-    public StringBuilder sb;
-  }
 }
 }

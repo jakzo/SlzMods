@@ -1,3 +1,7 @@
+## 2.3.1
+
+[LootDropBugfix](https://boneworks.thunderstore.io/package/jakzo/LootDropBugfix/) is now an allowed mod for speedruns.
+
 ## 2.3.0
 
 Added one controller and armless modes. Also added replays as a dev feature that can be enabled via preferences. Various other undocumented dev features have also been added.

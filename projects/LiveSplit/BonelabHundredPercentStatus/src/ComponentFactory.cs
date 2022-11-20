@@ -6,12 +6,12 @@ public class ComponentFactory : IComponentFactory {
   public string ComponentName => "BonelabHundredPercentStatus";
 
   public string Description =>
-      Sst.BonelabHundredPercentStatus.BuildInfo.DESCRIPTION;
+      Sst.Livesplit.BonelabHundredPercentStatus.BuildInfo.DESCRIPTION;
 
   public ComponentCategory Category => ComponentCategory.Other;
 
   public IComponent Create(LiveSplitState state) =>
-      new Sst.BonelabHundredPercentStatus.Component(state);
+      new Sst.Livesplit.BonelabHundredPercentStatus.Component(state);
 
   public string UpdateName => ComponentName;
 
@@ -22,6 +22,6 @@ public class ComponentFactory : IComponentFactory {
       UpdateURL + "/update.LiveSplit.BonelabHundredPercentStatus.xml";
 
   public Version Version =>
-      Version.Parse(Sst.BonelabHundredPercentStatus.AppVersion.Value);
+      Version.Parse(Sst.Livesplit.BonelabHundredPercentStatus.AppVersion.Value);
 }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,8 @@ using SLZ.Data;
 
 namespace Sst {
 static class AchievementTracker {
+  public static event Action<string, string> OnUnlock;
+
   public static string SAVE_PATH;
 
   public static HashSet<string> Unlocked = new HashSet<string>();
@@ -29,6 +32,7 @@ static class AchievementTracker {
 
     Unlocked.Add(id);
     SaveUnlockedToFile().ContinueWith(task => {});
+    OnUnlock?.Invoke(id, AllAchievements[id]);
   }
 
   private static async Task SaveUnlockedToFile() {

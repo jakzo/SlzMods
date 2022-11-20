@@ -4,43 +4,35 @@ using System.Linq;
 using UnityEngine;
 using TMPro;
 using MelonLoader;
-using SLZ.Marrow.Warehouse;
 using SLZ.Data;
+using Newtonsoft.Json;
+using Sst.Common.Bonelab;
 
 namespace Sst {
 public class Mod : MelonMod {
   private const string HUD_TEXT_NAME = "CompletionistHud";
-  private const float REFRESH_FREQUENCY = 15;
+  private const float REFRESH_FREQUENCY = 1;
   private const int NUM_HUD_SLOTS = 5;
   private const int NUM_DISPLAYED_ACHIEVEMENTS = 5;
-  private const float MAX_PROGRESS = 0.95f;
 
   public static MelonPreferences_Category TypesPrefCategory;
 
   private (GameObject container, GameObject arrow,
            TextMeshPro text)[] _hudSlots;
-  private TextMeshPro _completionText;
-  private TextMeshPro _achievementText;
+  private TextMeshPro _completionTmp;
+  private TextMeshPro _achievementTmp;
   private List<Collectible> _collectibles = new List<Collectible>();
-  private HashSet<string> _unlockedAchievements = new HashSet<string>();
-  private int _totalNumUnlocks = 0;
-  private Progress _progress = new Progress();
+  private static Progress _progress = new Progress();
   private Action[] _refreshActions;
   private float _refreshStart = 0;
   private int _refreshIndex = 0;
+  private Common.Ipc.Server _server;
+  private string _prevCompletionText;
 
   public Mod() {
     _refreshActions =
         new Action[] {
           () => { _progress.Refresh(); },
-          () => {
-            var filter = new CrateFilters.UnlockableAndNotRedactedCrateFilter()
-                             .Cast<ICrateFilter<Crate>>();
-            _totalNumUnlocks =
-                AssetWarehouseExtensions
-                    .Filter(AssetWarehouse.Instance.GetCrates(), filter)
-                    .Count;
-          },
           // () => {
           //   Il2CppSystem.Collections.Generic
           //       .Dictionary<string, Il2CppSystem.Object> levelState = null;
@@ -99,10 +91,32 @@ public class Mod : MelonMod {
     TypesPrefCategory =
         MelonPreferences.CreateCategory("TypesToShow", "Types to show");
 
-    Utilities.LevelHooks.OnLevelStart += level => ShowHud();
+    Utilities.LevelHooks.OnLoad += level => {
+      SendState();
+      _prevCompletionText = null;
+    };
+    Utilities.LevelHooks.OnLevelStart += level => {
+      SendState();
+      ShowHud();
+    };
+    AchievementTracker.OnUnlock += (id, name) => SendState(new GameState() {
+      achievementsJustUnlocked = new string[] { name },
+    });
+    CapsuleTracker.OnUnlock += (id, name) => SendState(new GameState() {
+      capsulesJustUnlocked = new string[] { name },
+    });
 
     CollectibleType.Initialize(TypesPrefCategory);
     AchievementTracker.Initialize();
+
+    _server = new Common.Ipc.Server(HundredPercent.NAMED_PIPE);
+    SendState();
+  }
+
+  public override void OnDeinitializeMelon() { _server.Dispose(); }
+
+  private void SendState(GameState state = null) {
+    _server.Send(JsonConvert.SerializeObject(state ?? new GameState()));
   }
 
   private string GetCompletionText() {
@@ -110,14 +124,14 @@ public class Mod : MelonMod {
     if (activeSave == null)
       return "";
 
-    var numUnlocked = activeSave.Unlocks.Unlocks.Count;
     var isGameBeat = activeSave.Progression.BeatGame;
     var hasBodyLog = activeSave.Progression.HasBodyLog;
-    var isComplete = isGameBeat && hasBodyLog &&
-                     numUnlocked >= _totalNumUnlocks &&
-                     AchievementTracker.Unlocked.Count >=
-                         AchievementTracker.AllAchievements.Count &&
-                     _progress.IsComplete;
+    var isComplete =
+        isGameBeat && hasBodyLog &&
+        CapsuleTracker.Unlocked.Count >= CapsuleTracker.NumTotalUnlocks &&
+        AchievementTracker.Unlocked.Count >=
+            AchievementTracker.AllAchievements.Count &&
+        _progress.IsComplete;
 
     return string.Join("\n", new[] {
       $"Arena: {(_progress.Arena * 100):N1}%",
@@ -134,7 +148,7 @@ public class Mod : MelonMod {
       $"Beat game: {isGameBeat}",
       $"Has body log: {hasBodyLog}",
       $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.AllAchievements.Count}",
-      $"Unlocks: {numUnlocked} / {_totalNumUnlocks}",
+      $"Unlocks: {CapsuleTracker.Unlocked.Count} / {CapsuleTracker.NumTotalUnlocks}",
     });
   }
 
@@ -163,7 +177,19 @@ public class Mod : MelonMod {
       return;
 
     RollingRefresh();
+    SortCollectibles();
+    DisplayCollectibles();
 
+    var completionText = GetCompletionText();
+    if (completionText != _prevCompletionText) {
+      _completionTmp.SetText(completionText);
+      _prevCompletionText = completionText;
+      SendState();
+    }
+    _achievementTmp.SetText(GetAchievementText());
+  }
+
+  private void SortCollectibles() {
     foreach (var collectible in _collectibles)
       collectible.Distance =
           CollectibleType.ShouldShow(collectible.GameObject)
@@ -175,7 +201,9 @@ public class Mod : MelonMod {
       var delta = x.Distance - y.Distance;
       return delta > 0 ? 1 : delta < 0 ? -1 : 0;
     });
+  }
 
+  private void DisplayCollectibles() {
     var displayedCollectibles =
         _collectibles
             .Where(collectible => collectible.Distance < float.PositiveInfinity)
@@ -193,9 +221,6 @@ public class Mod : MelonMod {
       arrow.transform.LookAt(collectible.GameObject.transform);
       text.SetText($"{collectible.Distance:N1}m {collectible.Type.Name}");
     }
-
-    _completionText.SetText(GetCompletionText());
-    _achievementText.SetText(GetAchievementText());
   }
 
   private void ShowHud() {
@@ -244,21 +269,36 @@ public class Mod : MelonMod {
 
     var completionTextGo = new GameObject("CompletionistHudCompletionText");
     completionTextGo.transform.SetParent(hud.transform);
-    _completionText = completionTextGo.AddComponent<TextMeshPro>();
-    _completionText.alignment = TextAlignmentOptions.BottomLeft;
-    _completionText.fontSize = 0.2f;
-    _completionText.rectTransform.sizeDelta = new Vector2(0.3f, 0.3f);
-    _completionText.transform.localPosition = new Vector3(0.2f, 0, 0);
-    _completionText.transform.localRotation = Quaternion.identity;
+    _completionTmp = completionTextGo.AddComponent<TextMeshPro>();
+    _completionTmp.alignment = TextAlignmentOptions.BottomLeft;
+    _completionTmp.fontSize = 0.2f;
+    _completionTmp.rectTransform.sizeDelta = new Vector2(0.3f, 0.3f);
+    _completionTmp.transform.localPosition = new Vector3(0.2f, 0, 0);
+    _completionTmp.transform.localRotation = Quaternion.identity;
 
     var achievementTextGo = new GameObject("CompletionistHudAchievementText");
     achievementTextGo.transform.SetParent(hud.transform);
-    _achievementText = achievementTextGo.AddComponent<TextMeshPro>();
-    _achievementText.alignment = TextAlignmentOptions.BottomLeft;
-    _achievementText.fontSize = 0.2f;
-    _achievementText.rectTransform.sizeDelta = new Vector2(0.3f, 0.3f);
-    _achievementText.transform.localPosition = new Vector3(-0.1f, 0, 0);
-    _achievementText.transform.localRotation = Quaternion.identity;
+    _achievementTmp = achievementTextGo.AddComponent<TextMeshPro>();
+    _achievementTmp.alignment = TextAlignmentOptions.BottomLeft;
+    _achievementTmp.fontSize = 0.2f;
+    _achievementTmp.rectTransform.sizeDelta = new Vector2(0.3f, 0.3f);
+    _achievementTmp.transform.localPosition = new Vector3(-0.1f, 0, 0);
+    _achievementTmp.transform.localRotation = Quaternion.identity;
+  }
+
+  class GameState : HundredPercent.GameState {
+    public GameState() {
+      isLoading = Utilities.LevelHooks.IsLoading;
+      levelName =
+          (Utilities.LevelHooks.CurrentLevel ?? Utilities.LevelHooks.NextLevel)
+              .Title;
+      capsulesUnlocked = CapsuleTracker.Unlocked.Count;
+      capsulesTotal = CapsuleTracker.NumTotalUnlocks;
+      achievementsUnlocked = AchievementTracker.Unlocked.Count;
+      achievementsTotal = AchievementTracker.AllAchievements.Count;
+      percentageComplete = _progress.Total;
+      percentageTotal = Progress.MAX_PROGRESS;
+    }
   }
 }
 }

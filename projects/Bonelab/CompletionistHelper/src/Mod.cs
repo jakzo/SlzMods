@@ -108,6 +108,8 @@ public class Mod : MelonMod {
     CapsuleTracker.Initialize();
 
     _server = new Common.Ipc.Server(HundredPercent.NAMED_PIPE);
+    _server.OnClientConnected += () => Dbg.Log("OnClientConnected");
+    _server.OnClientDisconnected += () => Dbg.Log("OnClientDisconnected");
     SendState();
   }
 

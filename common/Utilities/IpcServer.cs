@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Text;
+using MelonLoader;
 
 namespace Sst.Common.Ipc {
 public class Server : IDisposable {
@@ -75,7 +76,7 @@ public class Server : IDisposable {
         }
       }
     } catch (Exception ex) {
-      Console.Error.WriteLine("Pipe server failed", ex);
+      MelonLogger.Error($"Pipe server failed: {ex.ToString()}");
     }
   }
 
@@ -87,7 +88,7 @@ public class Server : IDisposable {
         SafeInvoke(() => OnClientDisconnected?.Invoke());
       }
     } catch (Exception ex) {
-      Console.Error.WriteLine("Failed to stop pipe server", ex);
+      MelonLogger.Error($"Failed to stop pipe server: {ex.ToString()}");
     } finally {
       stream.Close();
       stream.Dispose();
@@ -98,7 +99,7 @@ public class Server : IDisposable {
     try {
       action();
     } catch (Exception ex) {
-      Console.Error.WriteLine("Failed to run event", ex);
+      MelonLogger.Error($"Failed to run event: {ex.ToString()}");
     }
   }
 }

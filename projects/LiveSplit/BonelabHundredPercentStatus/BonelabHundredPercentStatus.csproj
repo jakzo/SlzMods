@@ -46,6 +46,9 @@
     <Reference Include="LiveSplit.Core">
       <HintPath>..\..\..\references\LiveSplit\LiveSplit.Core.dll</HintPath>
     </Reference>
+    <Reference Include="LiveSplit.AutoSplittingRuntime">
+      <HintPath>..\..\..\references\LiveSplit\LiveSplit.AutoSplittingRuntime.dll</HintPath>
+    </Reference>
     <Reference Include="UpdateManager">
       <HintPath>..\..\..\references\LiveSplit\UpdateManager.dll</HintPath>
     </Reference>
@@ -59,11 +62,14 @@
     <Compile Include="../../../common/Utilities/Metadata.cs" />
     <Compile Include="../../../common/Utilities/IpcClient.cs" />
     <Compile Include="../../../common/Bonelab/HundredPercent.cs" />
+    <Compile Include="../../../common/Bonelab/Levels.cs" />
+    <Compile Include="../../../common/LiveSplit/Logger.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <!-- <PostBuildEvent>
-      COPY "$(TargetPath)" "C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods"
-    </PostBuildEvent> -->
+    <PostBuildEvent>
+      COPY "$(TargetPath)" "C:\Livesplit\Components\LiveSplit.BonelabHundredPercentStatus.dll"
+      COPY "$(TargetPath)\..\..\..\..\..\..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll" "C:\Livesplit\Components\Newtonsoft.Json.dll"
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

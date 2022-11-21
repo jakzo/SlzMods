@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Sst.Common.Bonelab;
+using Sst.Common.LiveSplit;
 
 namespace Sst.Livesplit.BonelabHundredPercentStatus {
 class BonelabStateUpdater : IDisposable {
@@ -15,39 +16,42 @@ class BonelabStateUpdater : IDisposable {
   public BonelabStateUpdater() {
     _client = new Common.Ipc.Client(HundredPercent.NAMED_PIPE);
     _client.OnMessageReceived += OnMessage;
-    Console.WriteLine("Listening for Bonelab state change");
+    Log.Info("Listening for Bonelab state change");
   }
 
   public void Dispose() { _client.Dispose(); }
 
   private void OnMessage(string message) {
-    var receivedState = ParseLine(message);
-    if (receivedState == null)
-      return;
-    State = receivedState;
-    if (receivedState.capsulesJustUnlocked != null)
-      foreach (var name in receivedState.capsulesJustUnlocked)
-        Events.Add(new CompletionEvent() {
-          time = DateTime.Now,
-          type = CompletionEventType.CAPSULE,
-          name = name,
-        });
-    if (receivedState.achievementsJustUnlocked != null)
-      foreach (var name in receivedState.achievementsJustUnlocked)
-        Events.Add(new CompletionEvent() {
-          time = DateTime.Now,
-          type = CompletionEventType.ACHIEVEMENT,
-          name = name,
-        });
-    OnReceivedState?.Invoke(receivedState);
+    try {
+      var receivedState = ParseLine(message);
+      if (receivedState == null)
+        return;
+      State = receivedState;
+      if (receivedState.capsulesJustUnlocked != null)
+        foreach (var name in receivedState.capsulesJustUnlocked)
+          Events.Add(new CompletionEvent() {
+            time = DateTime.Now,
+            type = CompletionEventType.CAPSULE,
+            name = name,
+          });
+      if (receivedState.achievementsJustUnlocked != null)
+        foreach (var name in receivedState.achievementsJustUnlocked)
+          Events.Add(new CompletionEvent() {
+            time = DateTime.Now,
+            type = CompletionEventType.ACHIEVEMENT,
+            name = name,
+          });
+      OnReceivedState?.Invoke(receivedState);
+    } catch (Exception ex) {
+      Log.Info($"ex: {ex.ToString()}");
+    }
   }
 
   private HundredPercent.GameState ParseLine(string line) {
     try {
       return JsonConvert.DeserializeObject<HundredPercent.GameState>(line);
     } catch (Exception err) {
-      Console.Error.WriteLine(
-          $"Error reading pipe message as JSON: {err.Message}");
+      Log.Error($"Error reading pipe message as JSON: {err.Message}");
       return null;
     }
   }

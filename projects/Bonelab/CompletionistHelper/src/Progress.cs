@@ -1,3 +1,4 @@
+using Sst.Utilities;
 using SLZ.Marrow.Warehouse;
 
 namespace Sst {
@@ -22,33 +23,33 @@ class Progress {
     if (!_menuProgressControl) {
       _menuProgressControl = new MenuProgressControl();
       _menuProgressControl.descentCrate =
-          new LevelCrateReference("c2534c5a-4197-4879-8cd3-4a695363656e");
+          new LevelCrateReference(Levels.Barcodes.DESCENT);
       _menuProgressControl.hubCrate =
-          new LevelCrateReference("c2534c5a-6b79-40ec-8e98-e58c5363656e");
+          new LevelCrateReference(Levels.Barcodes.HUB);
       _menuProgressControl.longRunCrate =
-          new LevelCrateReference("c2534c5a-56a6-40ab-a8ce-23074c657665");
+          new LevelCrateReference(Levels.Barcodes.LONG_RUN);
       _menuProgressControl.mineDiveCrate =
-          new LevelCrateReference("c2534c5a-54df-470b-baaf-741f4c657665");
+          new LevelCrateReference(Levels.Barcodes.MINE_DIVE);
       _menuProgressControl.bigAnomalyACrate =
-          new LevelCrateReference("c2534c5a-7601-4443-bdfe-7f235363656e");
+          new LevelCrateReference(Levels.Barcodes.BIG_ANOMALY_A);
       _menuProgressControl.streetPuncherCrate =
-          new LevelCrateReference("SLZ.BONELAB.Content.Level.LevelStreetPunch");
+          new LevelCrateReference(Levels.Barcodes.STREET_PUNCHER);
       _menuProgressControl.sprintBridgeCrate =
-          new LevelCrateReference("SLZ.BONELAB.Content.Level.SprintBridge04");
+          new LevelCrateReference(Levels.Barcodes.SPRINT_BRIDGE);
       _menuProgressControl.magmaGateCrate =
-          new LevelCrateReference("SLZ.BONELAB.Content.Level.SceneMagmaGate");
+          new LevelCrateReference(Levels.Barcodes.MAGMA_GATE);
       _menuProgressControl.moonBaseCrate =
-          new LevelCrateReference("SLZ.BONELAB.Content.Level.MoonBase");
+          new LevelCrateReference(Levels.Barcodes.MOON_BASE);
       _menuProgressControl.motorwayCrate =
-          new LevelCrateReference("SLZ.BONELAB.Content.Level.LevelKartRace");
+          new LevelCrateReference(Levels.TITLE_MONOGON_MOTORWAY);
       _menuProgressControl.pillarCrate =
-          new LevelCrateReference("c2534c5a-c056-4883-ac79-e051426f6964");
+          new LevelCrateReference(Levels.Barcodes.PILLAR);
       _menuProgressControl.bigAnomalyBCrate =
-          new LevelCrateReference("SLZ.BONELAB.Content.Level.LevelBigAnomalyB");
+          new LevelCrateReference(Levels.Barcodes.BIG_ANOMALY_B);
       _menuProgressControl.ascentCrate =
-          new LevelCrateReference("c2534c5a-db71-49cf-b694-24584c657665");
+          new LevelCrateReference(Levels.Barcodes.ASCENT);
       _menuProgressControl.outroCrate =
-          new LevelCrateReference("SLZ.BONELAB.Content.Level.LevelOutro");
+          new LevelCrateReference(Levels.Barcodes.OUTRO);
     }
 
     Total = _menuProgressControl.SolveCompletePercent();

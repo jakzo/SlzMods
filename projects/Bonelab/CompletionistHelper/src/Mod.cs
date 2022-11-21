@@ -108,6 +108,7 @@ public class Mod : MelonMod {
 
     CollectibleType.Initialize(TypesPrefCategory);
     AchievementTracker.Initialize();
+    CapsuleTracker.Initialize();
 
     _server = new Common.Ipc.Server(HundredPercent.NAMED_PIPE);
     SendState();
@@ -116,7 +117,9 @@ public class Mod : MelonMod {
   public override void OnDeinitializeMelon() { _server.Dispose(); }
 
   private void SendState(GameState state = null) {
-    _server.Send(JsonConvert.SerializeObject(state ?? new GameState()));
+    var str = JsonConvert.SerializeObject(state ?? new GameState());
+    Dbg.Log($"SendState: {str}");
+    _server.Send(str);
   }
 
   private string GetCompletionText() {
@@ -289,9 +292,9 @@ public class Mod : MelonMod {
   class GameState : HundredPercent.GameState {
     public GameState() {
       isLoading = Utilities.LevelHooks.IsLoading;
-      levelName =
+      levelBarcode =
           (Utilities.LevelHooks.CurrentLevel ?? Utilities.LevelHooks.NextLevel)
-              .Title;
+              ?.Barcode.ID;
       capsulesUnlocked = CapsuleTracker.Unlocked.Count;
       capsulesTotal = CapsuleTracker.NumTotalUnlocks;
       achievementsUnlocked = AchievementTracker.Unlocked.Count;

@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using SLZ.Marrow.Warehouse;
 
 namespace Sst.Utilities {
-class Levels {
+public class Levels {
   public const string TITLE_DESCENT = "01 - Descent";
   public const string TITLE_MONOGON_MOTORWAY = "10 - Monogon Motorway";
 
@@ -52,44 +51,36 @@ class Levels {
     return index;
   }
 
-  public static LevelCrateReference CRATE_DESCENT =
-      new LevelCrateReference("c2534c5a-4197-4879-8cd3-4a695363656e");
-  public static LevelCrateReference CRATE_HUB =
-      new LevelCrateReference("c2534c5a-6b79-40ec-8e98-e58c5363656e");
-  public static LevelCrateReference CRATE_LONG_RUN =
-      new LevelCrateReference("c2534c5a-56a6-40ab-a8ce-23074c657665");
-  public static LevelCrateReference CRATE_MINE_DIVE =
-      new LevelCrateReference("c2534c5a-54df-470b-baaf-741f4c657665");
-  public static LevelCrateReference CRATE_BIG_ANOMALY_A =
-      new LevelCrateReference("c2534c5a-7601-4443-bdfe-7f235363656e");
-  public static LevelCrateReference CRATE_STREET_PUNCHER =
-      new LevelCrateReference("SLZ.BONELAB.Content.Level.LevelStreetPunch");
-  public static LevelCrateReference CRATE_SPRINT_BRIDGE =
-      new LevelCrateReference("SLZ.BONELAB.Content.Level.SprintBridge04");
-  public static LevelCrateReference CRATE_MAGMA_GATE =
-      new LevelCrateReference("SLZ.BONELAB.Content.Level.SceneMagmaGate");
-  public static LevelCrateReference CRATE_MOON_BASE =
-      new LevelCrateReference("SLZ.BONELAB.Content.Level.MoonBase");
-  public static LevelCrateReference CRATE_MONOGON_MOTORWAY =
-      new LevelCrateReference("SLZ.BONELAB.Content.Level.LevelKartRace");
-  public static LevelCrateReference CRATE_PILLAR =
-      new LevelCrateReference("c2534c5a-c056-4883-ac79-e051426f6964");
-  public static LevelCrateReference CRATE_BIG_ANOMALY_B =
-      new LevelCrateReference("SLZ.BONELAB.Content.Level.LevelBigAnomalyB");
-  public static LevelCrateReference CRATE_ASCENT =
-      new LevelCrateReference("c2534c5a-db71-49cf-b694-24584c657665");
-  public static LevelCrateReference CRATE_OUTRO =
-      new LevelCrateReference("SLZ.BONELAB.Content.Level.LevelOutro");
+  public class Barcodes {
+    public const string DESCENT = "c2534c5a-4197-4879-8cd3-4a695363656e";
+    public const string HUB = "c2534c5a-6b79-40ec-8e98-e58c5363656e";
+    public const string LONG_RUN = "c2534c5a-56a6-40ab-a8ce-23074c657665";
+    public const string MINE_DIVE = "c2534c5a-54df-470b-baaf-741f4c657665";
+    public const string BIG_ANOMALY_A = "c2534c5a-7601-4443-bdfe-7f235363656e";
+    public const string STREET_PUNCHER =
+        "SLZ.BONELAB.Content.Level.LevelStreetPunch";
+    public const string SPRINT_BRIDGE =
+        "SLZ.BONELAB.Content.Level.SprintBridge04";
+    public const string MAGMA_GATE = "SLZ.BONELAB.Content.Level.SceneMagmaGate";
+    public const string MOON_BASE = "SLZ.BONELAB.Content.Level.MoonBase";
+    public const string MONOGON_MOTORWAY =
+        "SLZ.BONELAB.Content.Level.LevelKartRace";
+    public const string PILLAR = "c2534c5a-c056-4883-ac79-e051426f6964";
+    public const string BIG_ANOMALY_B =
+        "SLZ.BONELAB.Content.Level.LevelBigAnomalyB";
+    public const string ASCENT = "c2534c5a-db71-49cf-b694-24584c657665";
+    public const string OUTRO = "SLZ.BONELAB.Content.Level.LevelOutro";
+  }
 
-  public static LevelCrateReference[] CAMPAIGN_LEVELS = {
-    CRATE_DESCENT,          CRATE_HUB,           CRATE_LONG_RUN,
-    CRATE_MINE_DIVE,        CRATE_BIG_ANOMALY_A, CRATE_STREET_PUNCHER,
-    CRATE_SPRINT_BRIDGE,    CRATE_MAGMA_GATE,    CRATE_MOON_BASE,
-    CRATE_MONOGON_MOTORWAY, CRATE_PILLAR,        CRATE_BIG_ANOMALY_B,
-    CRATE_ASCENT,           CRATE_OUTRO,
+  public static string[] CAMPAIGN_LEVEL_BARCODES = {
+    Barcodes.DESCENT,          Barcodes.HUB,           Barcodes.LONG_RUN,
+    Barcodes.MINE_DIVE,        Barcodes.BIG_ANOMALY_A, Barcodes.STREET_PUNCHER,
+    Barcodes.SPRINT_BRIDGE,    Barcodes.MAGMA_GATE,    Barcodes.MOON_BASE,
+    Barcodes.MONOGON_MOTORWAY, Barcodes.PILLAR,        Barcodes.BIG_ANOMALY_B,
+    Barcodes.ASCENT,           Barcodes.OUTRO,
   };
 
-  public static HashSet<string> CAMPAIGN_LEVEL_BARCODES =
-      CAMPAIGN_LEVELS.Select(level => level.Barcode.ID).ToHashSet();
+  public static HashSet<string> CAMPAIGN_LEVEL_BARCODES_SET =
+      CAMPAIGN_LEVEL_BARCODES.ToHashSet();
 }
 }

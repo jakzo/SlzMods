@@ -12,7 +12,7 @@ public class Dbg {
 
   public static void Log(string msg, params object[] data) {
     if (_prefPrintDebugLogs.Value)
-      MelonLogger.Msg($"dbg: {msg}", data);
+      MelonLogger.Msg($"dbg: {msg}");
   }
 }
 }

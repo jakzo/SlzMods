@@ -21,7 +21,8 @@ public class Client : IDisposable {
     Name = name;
     Listen().ContinueWith(task => {
       if (task.Exception != null)
-        Console.Error.WriteLine("Pipe client listen failed", task.Exception);
+        Console.Error.WriteLine(
+            $"Pipe client listen failed: {task.Exception.ToString()}");
     });
   }
 
@@ -41,7 +42,7 @@ public class Client : IDisposable {
     try {
       Stream.WaitForPipeDrain();
     } catch (Exception ex) {
-      Console.Error.WriteLine("Failed to stop pipe client", ex);
+      Console.Error.WriteLine($"Failed to stop pipe client: {ex.ToString()}");
     } finally {
       Stream.Close();
       Stream.Dispose();
@@ -56,6 +57,7 @@ public class Client : IDisposable {
       await Stream.ConnectAsync();
       if (_isDisposed)
         return;
+      Stream.ReadMode = PipeTransmissionMode.Message;
       SafeInvoke(() => OnConnected?.Invoke());
 
       StringBuilder sb = null;
@@ -85,7 +87,7 @@ public class Client : IDisposable {
     try {
       action();
     } catch (Exception ex) {
-      Console.Error.WriteLine("Failed to run event", ex);
+      Console.Error.WriteLine($"Failed to run event: {ex.ToString()}");
     }
   }
 }

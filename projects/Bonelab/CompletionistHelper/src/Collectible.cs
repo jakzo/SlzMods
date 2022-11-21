@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using MelonLoader;
-using SLZ.Bonelab;
+using SLZ;
 using SLZ.Data;
 
 namespace Sst {
@@ -32,29 +32,30 @@ class CollectibleType {
           gp => ShouldShow(gp) && gp.onlyPlaceIfBeatGame &&
                 !gp.cratePlacer.placed &&
                 !_unlockedCrateBarcodes.Contains(gp.unlockCrate.Barcode.ID)));
-  public static CollectibleType AMMO_LIGHT = new CollectibleType(
-      "Light ammo", true, FindSaveables("prop_ammoBox_light"));
+  public static CollectibleType AMMO_LIGHT =
+      new CollectibleType("Light ammo", true, FindAmmo("prop_ammoBox_light"));
   public static CollectibleType AMMO_LIGHT_CRATE = new CollectibleType(
-      "Light ammo crate", true, FindSaveables("dest_ammoBoxLight Variant"));
-  public static CollectibleType AMMO_MEDIUM = new CollectibleType(
-      "Medium ammo", true, FindSaveables("prop_ammoBox_med"));
+      "Light ammo crate", true, FindAmmo("dest_ammoBoxLight Variant"));
+  public static CollectibleType AMMO_MEDIUM =
+      new CollectibleType("Medium ammo", true, FindAmmo("prop_ammoBox_med"));
   public static CollectibleType AMMO_MEDIUM_CRATE = new CollectibleType(
-      "Medium ammo crate", true, FindSaveables("dest_ammoBoxMedium Variant"));
-  public static CollectibleType AMMO_HEAVY = new CollectibleType(
-      "Heavy ammo", true, FindSaveables("prop_ammoBox_hvy"));
+      "Medium ammo crate", true, FindAmmo("dest_ammoBoxMedium Variant"));
+  public static CollectibleType AMMO_HEAVY =
+      new CollectibleType("Heavy ammo", true, FindAmmo("prop_ammoBox_hvy"));
   public static CollectibleType AMMO_HEAVY_CRATE = new CollectibleType(
-      "Heavy ammo crate", true, FindSaveables("dest_ammoBoxHeavy Variant"));
+      "Heavy ammo crate", true, FindAmmo("dest_ammoBoxHeavy Variant"));
 
-  private static Func<IEnumerable<Saveable>> FindSaveables(string name) {
+  private static Func<IEnumerable<AmmoPickupProxy>> FindAmmo(string name) {
     var prefix = $"{name} [";
-    return () => _cachedSaveables.Where(obj => ShouldShow(obj) &&
-                                               obj.name.StartsWith(prefix) &&
-                                               obj.Data != "yoinked");
+    return () => _cachedAmmoPickupProxys.Where(
+               obj => Utilities.Levels.CAMPAIGN_LEVEL_BARCODES_SET.Contains(
+                          Utilities.LevelHooks.CurrentLevel.Barcode.ID) &&
+                      ShouldShow(obj) && obj.name.StartsWith(prefix));
   }
 
   private static GachaCapsule[] _cachedGachaCapsules;
   private static GachaPlacer[] _cachedGachaPlacers;
-  private static Saveable[] _cachedSaveables;
+  private static AmmoPickupProxy[] _cachedAmmoPickupProxys;
   private static HashSet<string> _unlockedCrateBarcodes;
 
   public static CollectibleType[] ALL = {
@@ -79,7 +80,10 @@ class CollectibleType {
     () => {
       _cachedGachaPlacers = Resources.FindObjectsOfTypeAll<GachaPlacer>();
     },
-    () => { _cachedSaveables = Resources.FindObjectsOfTypeAll<Saveable>(); },
+    () => {
+      _cachedAmmoPickupProxys =
+          Resources.FindObjectsOfTypeAll<AmmoPickupProxy>();
+    },
   };
 
   public static void Initialize(MelonPreferences_Category prefsCategory) {
@@ -95,9 +99,10 @@ class CollectibleType {
   ShouldShow(GameObject obj) => obj != null &&
                                 !IsInPool(obj) && obj.scene.isLoaded;
 
-  private static bool IsInPool(GameObject gameObject) =>
-      gameObject.transform.parent
-      && gameObject.transform.parent.name.StartsWith("Pool -");
+  private static bool IsInPool(GameObject gameObject) {
+    var parent = gameObject.transform.parent;
+    return parent && parent.name.StartsWith("Pool -");
+  }
 
   public string Name;
   public Func<MonoBehaviour[]> FindAll;

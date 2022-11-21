@@ -20,7 +20,8 @@ static class LevelHooks {
     [HarmonyPrefix()]
     internal static void Prefix(RigManager __instance) {
       Dbg.Log($"RigManager_Awake_Patch");
-      CurrentLevel = NextLevel;
+      if (NextLevel)
+        CurrentLevel = NextLevel;
       NextLevel = null;
       RigManager = __instance;
       OnLevelStart?.Invoke(CurrentLevel);
@@ -35,7 +36,8 @@ static class LevelHooks {
     internal static void Prefix(LevelCrateReference level) {
       var nextLevel = level.Crate;
       Dbg.Log($"SceneStreamer_Load_Patch, next level = {nextLevel?.Title}");
-      PrevLevel = CurrentLevel;
+      if (CurrentLevel)
+        PrevLevel = CurrentLevel;
       CurrentLevel = null;
       NextLevel = nextLevel;
       RigManager = null;
@@ -50,7 +52,8 @@ static class LevelHooks {
       Dbg.Log("SceneStreamer_Reload_Patch");
       PrevLevel = CurrentLevel;
       CurrentLevel = null;
-      NextLevel = CurrentLevel;
+      if (CurrentLevel)
+        NextLevel = CurrentLevel;
       RigManager = null;
       OnLoad?.Invoke(NextLevel);
     }

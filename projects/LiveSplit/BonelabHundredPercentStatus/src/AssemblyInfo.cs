@@ -1,15 +1,13 @@
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
+using LiveSplit.UI.Components;
 
-[assembly:AssemblyTitle(
-    Sst.Livesplit.BonelabHundredPercentStatus.BuildInfo.NAME)]
-[assembly:AssemblyDescription(
-    Sst.Livesplit.BonelabHundredPercentStatus.BuildInfo.DESCRIPTION)]
+[assembly:AssemblyTitle(Sst.BuildInfo.NAME)]
+[assembly:AssemblyDescription(Sst.BuildInfo.DESCRIPTION)]
 [assembly:AssemblyConfiguration("")]
 [assembly:AssemblyCompany(Sst.Metadata.COMPANY)]
-[assembly:AssemblyProduct(
-    Sst.Livesplit.BonelabHundredPercentStatus.BuildInfo.NAME)]
+[assembly:AssemblyProduct(Sst.BuildInfo.NAME)]
 [assembly:AssemblyCopyright("Created by " + Sst.Metadata.AUTHOR)]
 [assembly:AssemblyTrademark(Sst.Metadata.COMPANY)]
 [assembly:AssemblyCulture("")]
@@ -20,8 +18,9 @@ using System.Runtime.InteropServices;
 [assembly:AssemblyFileVersion(
     Sst.Livesplit.BonelabHundredPercentStatus.AppVersion.Value)]
 [assembly:NeutralResourcesLanguage("en")]
+[assembly:ComponentFactory(typeof(LiveSplit.UI.Components.Factory))]
 
-namespace Sst.Livesplit.BonelabHundredPercentStatus {
+namespace Sst {
 public static class BuildInfo {
   public const string NAME = "BonelabHundredPercentStatus";
   public const string DESCRIPTION =

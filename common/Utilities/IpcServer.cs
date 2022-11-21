@@ -3,7 +3,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Sst.Common.Ipc {
 public class Server : IDisposable {

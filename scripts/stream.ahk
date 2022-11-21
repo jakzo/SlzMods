@@ -40,6 +40,7 @@ Loop
         }
         If A_TickCount - start >= 60000
         {
+          WinActivate, ahk_exe obs64.exe
           WinClose, ahk_exe obs64.exe
           WinWait, Exit OBS?, , 5
           If !ErrorLevel

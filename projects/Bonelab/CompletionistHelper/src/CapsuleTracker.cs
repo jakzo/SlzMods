@@ -10,7 +10,7 @@ static class CapsuleTracker {
   public static event Action<string, string> OnUnlock;
 
   public static HashSet<string> Unlocked;
-  public static int NumTotalUnlocks;
+  public static int NumTotalUnlocks = 0;
 
   public static void Initialize() {
     InitUnlocks();
@@ -25,11 +25,13 @@ static class CapsuleTracker {
         Unlocked.Add(unlock.key);
     }
 
-    var filter = new CrateFilters.UnlockableAndNotRedactedCrateFilter()
-                     .Cast<ICrateFilter<Crate>>();
-    NumTotalUnlocks = AssetWarehouseExtensions
-                          .Filter(AssetWarehouse.Instance.GetCrates(), filter)
-                          .Count;
+    if (AssetWarehouse.Instance != null) {
+      var filter = new CrateFilters.UnlockableAndNotRedactedCrateFilter()
+                       .Cast<ICrateFilter<Crate>>();
+      NumTotalUnlocks = AssetWarehouseExtensions
+                            .Filter(AssetWarehouse.Instance.GetCrates(), filter)
+                            .Count;
+    }
   }
 
   private static void Unlock(string id) {

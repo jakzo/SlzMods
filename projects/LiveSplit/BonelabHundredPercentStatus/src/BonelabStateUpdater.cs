@@ -15,6 +15,8 @@ class BonelabStateUpdater : IDisposable {
 
   public BonelabStateUpdater() {
     _client = new Common.Ipc.Client(HundredPercent.NAMED_PIPE);
+    _client.OnConnected += () => Log.Info("Connected");
+    _client.OnDisconnected += () => Log.Info("Disconnected");
     _client.OnMessageReceived += OnMessage;
     Log.Info("Listening for Bonelab state change");
   }
@@ -23,6 +25,7 @@ class BonelabStateUpdater : IDisposable {
 
   private void OnMessage(string message) {
     try {
+      Log.Info($"Received: {message}");
       var receivedState = ParseLine(message);
       if (receivedState == null)
         return;
@@ -43,7 +46,7 @@ class BonelabStateUpdater : IDisposable {
           });
       OnReceivedState?.Invoke(receivedState);
     } catch (Exception ex) {
-      Log.Info($"ex: {ex.ToString()}");
+      Log.Error($"ONMessage error: {ex.ToString()}");
     }
   }
 

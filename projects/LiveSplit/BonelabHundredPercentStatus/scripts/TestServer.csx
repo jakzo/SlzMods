@@ -8,6 +8,7 @@ using Sst.Common.Bonelab;
 
 try {
   var server = new Sst.Common.Ipc.Server(HundredPercent.NAMED_PIPE);
+
   var state = new HundredPercent.GameState() {
     isLoading = false,           levelBarcode = null,
     capsulesUnlocked = 0,        capsulesTotal = 174,
@@ -35,7 +36,12 @@ try {
     Console.Write(".");
   };
 
-  server.OnClientConnected += () => Console.Write("\nClient connected");
+  server.OnClientConnected += () => {
+    Console.Write("\nClient connected");
+    // server.Send(
+    //     "{\"isComplete\":false,\"isLoading\":false,\"levelBarcode\":\"c2534c5a-de61-4df9-8f6c-416954726547\",\"capsulesUnlocked\":111,\"capsulesTotal\":174,\"capsulesJustUnlocked\":[\"Gym
+    //     D6\"],\"achievementsUnlocked\":37,\"achievementsTotal\":57,\"achievementsJustUnlocked\":null,\"percentageComplete\":0.760238051,\"percentageTotal\":0.95}");
+  };
   server.OnClientDisconnected += () => Console.Write("\nClient disconnected");
 
   while (true)

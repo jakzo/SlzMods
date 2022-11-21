@@ -27,7 +27,7 @@ public class Mod : MelonMod {
   private float _refreshStart = 0;
   private int _refreshIndex = 0;
   private Common.Ipc.Server _server;
-  private string _prevCompletionText;
+  private GameState _lastSentState;
 
   public Mod() {
     _refreshActions =
@@ -91,10 +91,7 @@ public class Mod : MelonMod {
     TypesPrefCategory =
         MelonPreferences.CreateCategory("TypesToShow", "Types to show");
 
-    Utilities.LevelHooks.OnLoad += level => {
-      SendState();
-      _prevCompletionText = null;
-    };
+    Utilities.LevelHooks.OnLoad += level => SendState();
     Utilities.LevelHooks.OnLevelStart += level => {
       SendState();
       ShowHud();
@@ -117,10 +114,25 @@ public class Mod : MelonMod {
   public override void OnDeinitializeMelon() { _server.Dispose(); }
 
   private void SendState(GameState state = null) {
-    var str = JsonConvert.SerializeObject(state ?? new GameState());
+    var sentState = state ?? new GameState();
+    _lastSentState = sentState;
+    var str = JsonConvert.SerializeObject(sentState);
     Dbg.Log($"SendState: {str}");
     _server.Send(str);
   }
+
+  private bool HasStateChanged(GameState state) =>
+      _lastSentState == null || state.achievementsJustUnlocked != null
+      || state.achievementsTotal != _lastSentState.achievementsTotal
+      || state.achievementsUnlocked != _lastSentState.achievementsUnlocked
+      || state.capsulesJustUnlocked != null
+      || state.capsulesTotal != _lastSentState.capsulesTotal
+      || state.capsulesUnlocked != _lastSentState.capsulesUnlocked
+      || state.isComplete != _lastSentState.isComplete
+      || state.isLoading != _lastSentState.isLoading
+      || state.levelBarcode != _lastSentState.levelBarcode
+      || state.percentageComplete != _lastSentState.percentageComplete
+      || state.percentageTotal != _lastSentState.percentageTotal;
 
   private string GetCompletionText() {
     var activeSave = DataManager.ActiveSave;
@@ -183,12 +195,11 @@ public class Mod : MelonMod {
     SortCollectibles();
     DisplayCollectibles();
 
-    var completionText = GetCompletionText();
-    if (completionText != _prevCompletionText) {
-      _completionTmp.SetText(completionText);
-      _prevCompletionText = completionText;
-      SendState();
-    }
+    var state = new GameState();
+    if (HasStateChanged(state))
+      SendState(state);
+
+    _completionTmp.SetText(GetCompletionText());
     _achievementTmp.SetText(GetAchievementText());
   }
 
@@ -291,6 +302,7 @@ public class Mod : MelonMod {
 
   class GameState : HundredPercent.GameState {
     public GameState() {
+      isComplete = false;
       isLoading = Utilities.LevelHooks.IsLoading;
       levelBarcode =
           (Utilities.LevelHooks.CurrentLevel ?? Utilities.LevelHooks.NextLevel)

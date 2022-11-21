@@ -39,6 +39,7 @@ public class Client : IDisposable {
   }
 
   private void CloseStream() {
+    var wasConnected = Stream.IsConnected;
     try {
       Stream.WaitForPipeDrain();
     } catch (Exception ex) {
@@ -46,7 +47,8 @@ public class Client : IDisposable {
     } finally {
       Stream.Close();
       Stream.Dispose();
-      SafeInvoke(() => OnDisconnected?.Invoke());
+      if (wasConnected)
+        SafeInvoke(() => OnDisconnected?.Invoke());
     }
   }
 

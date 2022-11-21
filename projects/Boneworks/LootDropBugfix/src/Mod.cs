@@ -14,8 +14,9 @@ public class Mod : MelonMod {
   private static Il2CppSystem.Nullable<bool> _spawnAutoEnable =
       new Utilities.Il2CppNullable<bool>(_nullableTrue);
 
-  private static Queue<(ObjectDestructable, string, Vector3)>
-      _replacementsToSpawn = new Queue<(ObjectDestructable, string, Vector3)>();
+  private static Queue<(ObjectDestructable, string, string, Vector3)>
+      _replacementsToSpawn =
+          new Queue<(ObjectDestructable, string, string, Vector3)>();
   private static bool _isLoading = false;
 
   public override void OnApplicationStart() { Dbg.Init(BuildInfo.NAME); }
@@ -34,9 +35,9 @@ public class Mod : MelonMod {
       return;
 
     while (_replacementsToSpawn.Count > 0) {
-      var (obj, title, position) = _replacementsToSpawn.Dequeue();
+      var (obj, title, prefabName, position) = _replacementsToSpawn.Dequeue();
       try {
-        SpawnReplacement(obj, title, position);
+        SpawnReplacement(obj, title, prefabName, position);
       } catch (Exception ex) {
         MelonLogger.Error(ex);
       }
@@ -71,12 +72,26 @@ public class Mod : MelonMod {
       return;
     }
 
-    if (IsSpawnedItemPresent(obj, spawnPosition)) {
+    var prefixes =
+        obj.lootTable.items.Select(item => item.spawnable.prefab.name);
+    // TODO: Why is the position only correct for ammo? We could miss some
+    // bugged loot spawns if another of the loot objects are nearby
+    if (IsSpawnedItemPresent(prefixes, spawnPosition, IsAmmoCrate(obj))) {
       Dbg.Log("Spawned item found");
       return;
     }
 
     QueueSpawnReplacement(obj, spawnPosition);
+  }
+
+  private static void RetryIfNotSpawned(ObjectDestructable obj, string title,
+                                        string prefabName, Vector3 pos) {
+    if (IsSpawnedItemPresent(new string[] { prefabName }, pos, true))
+      return;
+
+    Dbg.Log(
+        $"{title} not found @ {pos.ToString()}, queueing for respawn again");
+    _replacementsToSpawn.Enqueue((obj, title, prefabName, pos));
   }
 
   private static void QueueSpawnReplacement(ObjectDestructable obj,
@@ -86,7 +101,8 @@ public class Mod : MelonMod {
       throw new Exception("GetLootItem returned null");
     MelonLogger.Warning(
         $"No spawned item found, spawning replacement now: {replacement.title}");
-    _replacementsToSpawn.Enqueue((obj, replacement.title, spawnPosition));
+    _replacementsToSpawn.Enqueue(
+        (obj, replacement.title, replacement.prefab.name, spawnPosition));
   }
 
   private static bool IsLootGuaranteed(ObjectDestructable obj) {
@@ -95,8 +111,9 @@ public class Mod : MelonMod {
     return totalPercentage >= 100f;
   }
 
-  private static bool IsSpawnedItemPresent(ObjectDestructable obj,
-                                           Vector3 spawnPosition) {
+  private static bool IsSpawnedItemPresent(IEnumerable<string> itemPrefixes,
+                                           Vector3 spawnPosition,
+                                           bool checkPosition) {
     foreach (var collider in Physics.OverlapSphere(spawnPosition, 0.5f)) {
       var topLevelObject = collider.transform;
       while (topLevelObject.parent)
@@ -104,14 +121,10 @@ public class Mod : MelonMod {
       Dbg.Log(
           $"Nearby object: {topLevelObject.name} @ {topLevelObject.position.ToString()}");
       var isCorrectPosition =
-          // TODO: Why is the position only correct for ammo? We could miss some
-          // bugged loot spawns if another of the loot objects are nearby
-          IsAmmoCrate(obj)
-              ? (topLevelObject.position - spawnPosition).sqrMagnitude < 1e-9
-              : true;
+          !checkPosition ||
+          (topLevelObject.position - spawnPosition).sqrMagnitude < 1e-9;
       if (isCorrectPosition &&
-          obj.lootTable.items.Any(item => topLevelObject.name.StartsWith(
-                                      item.spawnable.prefab.name))) {
+          itemPrefixes.Any(prefix => topLevelObject.name.StartsWith(prefix))) {
         return true;
       }
     }
@@ -119,11 +132,19 @@ public class Mod : MelonMod {
   }
 
   private static void SpawnReplacement(ObjectDestructable obj, string title,
+                                       string prefabName,
                                        Vector3 spawnPosition) {
     Dbg.Log($"Spawning replacement: {title} @ {spawnPosition.ToString()}");
     var spawnedItem = PoolManager.Spawn(title, spawnPosition,
                                         Quaternion.identity, _spawnAutoEnable);
     MakeSaveable(obj, spawnedItem);
+
+    if (spawnedItem != null)
+      Dbg.Log(
+          $"Replacement: {spawnedItem.name}, active={spawnedItem.active}, pool={spawnedItem.transform.parent?.name.StartsWith("Pool")}");
+    else
+      Dbg.Log("Spawned replacement is null!");
+    RetryIfNotSpawned(obj, title, prefabName, spawnPosition);
   }
 
   private static void MakeSaveable(ObjectDestructable obj,

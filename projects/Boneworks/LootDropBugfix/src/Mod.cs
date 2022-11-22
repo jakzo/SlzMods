@@ -18,20 +18,13 @@ public class Mod : MelonMod {
 
   private static HashSet<Replacement> _replacementsToSpawn =
       new HashSet<Replacement>();
-
-  private bool _isLoading = false;
-  private static Replacement _omniReplacement;
-  private static GameObject _omniCapsule;
-  private static int _numFramesOmniCapsuleWasAlive = 0;
+  private static bool _isLoading = false;
 
   public override void OnApplicationStart() { Dbg.Init(BuildInfo.NAME); }
 
   public override void BONEWORKS_OnLoadingScreen() {
     _isLoading = true;
     _replacementsToSpawn.Clear();
-    _omniCapsule = null;
-    _omniReplacement = null;
-    _numFramesOmniCapsuleWasAlive = 0;
     Dbg.Log("_isLoading = true");
   }
 
@@ -43,16 +36,6 @@ public class Mod : MelonMod {
   public override void OnLateUpdate() {
     if (_isLoading)
       return;
-
-    if (_omniReplacement != null) {
-      if (_omniCapsule == null || !_omniCapsule.active) {
-        Dbg.Log(
-            $"Omni capsule has despawned! It lasted {_numFramesOmniCapsuleWasAlive} frames");
-        _replacementsToSpawn.Add(_omniReplacement);
-      } else {
-        _numFramesOmniCapsuleWasAlive++;
-      }
-    }
 
     var replacements =
         _replacementsToSpawn
@@ -73,17 +56,26 @@ public class Mod : MelonMod {
   class ObjectDestructable_TakeDamage_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(ObjectDestructable __instance,
-                                out bool __state) {
-      __state = !__instance._isDead && __instance.lootTable?.items.Length > 0;
-      if (__state)
+                                out float __state) {
+      if (_isLoading) {
+        __state = __instance._health;
+      } else if (!__instance._isDead &&
+                 __instance.lootTable?.items.Length > 0) {
+        __state = 1f;
         Dbg.Log("Lootable object damaged");
+      } else {
+        __state = 0f;
+      }
     }
 
     [HarmonyFinalizer()]
     internal static void Finalizer(ObjectDestructable __instance,
-                                   bool __state) {
-      if (__state && __instance._isDead)
+                                   float __state) {
+      if (_isLoading) {
+        __instance._health = __state;
+      } else if (__state != 0 && __instance._isDead) {
         HandleDestroyedLootable(__instance);
+      }
     }
   }
 
@@ -176,12 +168,6 @@ public class Mod : MelonMod {
           $"Replacement: {spawnedItem.name}, active={spawnedItem.active}, pool={spawnedItem.transform.parent?.name.StartsWith("Pool") ?? false}");
     else
       Dbg.Log("Spawned replacement is null!");
-
-    if (replacement.title == "Capsule Omni Turret") {
-      _omniReplacement = replacement;
-      _omniCapsule = spawnedItem;
-      _numFramesOmniCapsuleWasAlive = 0;
-    }
 
     // TODO: Are we sure we will never need this?
     // RetryIfNotSpawned(replacement);

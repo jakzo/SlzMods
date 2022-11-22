@@ -55,10 +55,14 @@ public class Mod : MelonMod {
                 nameof(ObjectDestructable.TakeDamage))]
   class ObjectDestructable_TakeDamage_Patch {
     [HarmonyPrefix()]
-    internal static void Prefix(ObjectDestructable __instance,
+    internal static void Prefix(ObjectDestructable __instance, float damage,
                                 out float __state) {
       if (_isLoading) {
+        if (damage > __instance._health)
+          Dbg.Log(
+              $"Item would have broken but is indestructible before load: {__instance.name}");
         __state = __instance._health;
+        __instance._health = float.PositiveInfinity;
       } else if (!__instance._isDead &&
                  __instance.lootTable?.items.Length > 0) {
         __state = 1f;

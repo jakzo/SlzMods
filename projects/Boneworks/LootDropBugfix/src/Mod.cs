@@ -18,24 +18,41 @@ public class Mod : MelonMod {
 
   private static HashSet<Replacement> _replacementsToSpawn =
       new HashSet<Replacement>();
-  private static float _loadingFinishTime = 0f;
+
+  private bool _isLoading = false;
+  private static Replacement _omniReplacement;
+  private static GameObject _omniCapsule;
+  private static int _numFramesOmniCapsuleWasAlive = 0;
 
   public override void OnApplicationStart() { Dbg.Init(BuildInfo.NAME); }
 
   public override void BONEWORKS_OnLoadingScreen() {
-    _loadingFinishTime = float.PositiveInfinity;
+    _isLoading = true;
     _replacementsToSpawn.Clear();
-    Dbg.Log($"Loading");
+    _omniCapsule = null;
+    _omniReplacement = null;
+    _numFramesOmniCapsuleWasAlive = 0;
+    Dbg.Log("_isLoading = true");
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    _loadingFinishTime = Time.time + WAIT_AFTER_LOAD;
-    Dbg.Log($"Loading finishing in {WAIT_AFTER_LOAD} seconds");
+    _isLoading = false;
+    Dbg.Log("_isLoading = false");
   }
 
   public override void OnLateUpdate() {
-    if (_loadingFinishTime <= Time.time)
+    if (_isLoading)
       return;
+
+    if (_omniReplacement != null) {
+      if (_omniCapsule == null || !_omniCapsule.active) {
+        Dbg.Log(
+            $"Omni capsule has despawned! It lasted {_numFramesOmniCapsuleWasAlive} frames");
+        _replacementsToSpawn.Add(_omniReplacement);
+      } else {
+        _numFramesOmniCapsuleWasAlive++;
+      }
+    }
 
     var replacements =
         _replacementsToSpawn
@@ -156,9 +173,15 @@ public class Mod : MelonMod {
 
     if (spawnedItem != null)
       Dbg.Log(
-          $"Replacement: {spawnedItem.name}, active={spawnedItem.active}, pool={spawnedItem.transform.parent?.name.StartsWith("Pool")}");
+          $"Replacement: {spawnedItem.name}, active={spawnedItem.active}, pool={spawnedItem.transform.parent?.name.StartsWith("Pool") ?? false}");
     else
       Dbg.Log("Spawned replacement is null!");
+
+    if (replacement.title == "Capsule Omni Turret") {
+      _omniReplacement = replacement;
+      _omniCapsule = spawnedItem;
+      _numFramesOmniCapsuleWasAlive = 0;
+    }
 
     // TODO: Are we sure we will never need this?
     // RetryIfNotSpawned(replacement);

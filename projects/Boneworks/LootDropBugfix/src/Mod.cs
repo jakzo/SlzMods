@@ -103,17 +103,24 @@ public class Mod : MelonMod {
 
   private static void QueueSpawnReplacement(ObjectDestructable obj,
                                             Vector3 spawnPosition) {
-    var replacement = obj.lootTable.GetLootItem();
-    if (replacement == null)
+    var item = obj.lootTable.GetLootItem();
+    if (item == null)
       throw new Exception("GetLootItem returned null");
-    MelonLogger.Warning(
-        $"No spawned item found, spawning replacement now: {replacement.title}");
-    _replacementsToSpawn.Add(new Replacement() {
+    var replacement = new Replacement() {
       obj = obj,
-      title = replacement.title,
-      prefabName = replacement.prefab.name,
+      title = item.title,
+      prefabName = item.prefab.name,
       spawnPosition = spawnPosition,
-    });
+    };
+    if (replacement.title == "Capsule Omni Turret") {
+      replacement.timeToSpawnAt = Time.time + 10f;
+      MelonLogger.Warning(
+          $"No spawned item found, because it is {replacement.title} will spawn in 10 seconds");
+    } else {
+      MelonLogger.Warning(
+          $"No spawned item found, spawning replacement now: {replacement.title}");
+    }
+    _replacementsToSpawn.Add(replacement);
   }
 
   private static bool IsLootGuaranteed(ObjectDestructable obj) {
@@ -157,7 +164,9 @@ public class Mod : MelonMod {
           $"Replacement: {spawnedItem.name}, active={spawnedItem.active}, pool={spawnedItem.transform.parent?.name.StartsWith("Pool")}");
     else
       Dbg.Log("Spawned replacement is null!");
-    RetryIfNotSpawned(replacement);
+
+    // TODO: Are we sure we will never need this?
+    // RetryIfNotSpawned(replacement);
   }
 
   private static void MakeSaveable(ObjectDestructable obj,

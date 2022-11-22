@@ -10,29 +10,31 @@ using StressLevelZero.Pool;
 
 namespace Sst.LootDropBugfix {
 public class Mod : MelonMod {
+  private const float WAIT_AFTER_LOAD = 5f;
+
   private static bool? _nullableTrue = true;
   private static Il2CppSystem.Nullable<bool> _spawnAutoEnable =
       new Utilities.Il2CppNullable<bool>(_nullableTrue);
 
   private static HashSet<Replacement> _replacementsToSpawn =
       new HashSet<Replacement>();
-  private static bool _isLoading = false;
+  private static float _loadingFinishTime = 0f;
 
   public override void OnApplicationStart() { Dbg.Init(BuildInfo.NAME); }
 
   public override void BONEWORKS_OnLoadingScreen() {
-    _isLoading = true;
-    Dbg.Log("_isLoading = true");
+    _loadingFinishTime = float.PositiveInfinity;
     _replacementsToSpawn.Clear();
+    Dbg.Log($"Loading");
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    _isLoading = false;
-    Dbg.Log("_isLoading = false");
+    _loadingFinishTime = Time.time + WAIT_AFTER_LOAD;
+    Dbg.Log($"Loading finishing in {WAIT_AFTER_LOAD} seconds");
   }
 
   public override void OnLateUpdate() {
-    if (_isLoading)
+    if (_loadingFinishTime <= Time.time)
       return;
 
     var replacements =
@@ -106,21 +108,14 @@ public class Mod : MelonMod {
     var item = obj.lootTable.GetLootItem();
     if (item == null)
       throw new Exception("GetLootItem returned null");
-    var replacement = new Replacement() {
+    MelonLogger.Warning(
+        $"No spawned item found, spawning replacement now: {item.title}");
+    _replacementsToSpawn.Add(new Replacement() {
       obj = obj,
       title = item.title,
       prefabName = item.prefab.name,
       spawnPosition = spawnPosition,
-    };
-    if (replacement.title == "Capsule Omni Turret") {
-      replacement.timeToSpawnAt = Time.time + 10f;
-      MelonLogger.Warning(
-          $"No spawned item found, because it is {replacement.title} will spawn in 10 seconds");
-    } else {
-      MelonLogger.Warning(
-          $"No spawned item found, spawning replacement now: {replacement.title}");
-    }
-    _replacementsToSpawn.Add(replacement);
+    });
   }
 
   private static bool IsLootGuaranteed(ObjectDestructable obj) {

@@ -20,7 +20,10 @@ public class Mod : MelonMod {
       new HashSet<Replacement>();
   private static bool _isLoading = false;
 
-  public override void OnApplicationStart() { Dbg.Init(BuildInfo.NAME); }
+  public override void OnApplicationStart() {
+    Dbg.Init(BuildInfo.NAME);
+    AmmoDebugger.Initialize();
+  }
 
   public override void BONEWORKS_OnLoadingScreen() {
     _isLoading = true;
@@ -49,6 +52,8 @@ public class Mod : MelonMod {
         MelonLogger.Error(ex);
       }
     }
+
+    AmmoDebugger.OnUpdate();
   }
 
   [HarmonyPatch(typeof(ObjectDestructable),
@@ -175,6 +180,8 @@ public class Mod : MelonMod {
 
     // TODO: Are we sure we will never need this?
     // RetryIfNotSpawned(replacement);
+
+    AmmoDebugger.OnAmmoReplaced();
   }
 
   private static void MakeSaveable(ObjectDestructable obj,
@@ -191,7 +198,7 @@ public class Mod : MelonMod {
     saveItem.OnSpawn(spawnedItem);
   }
 
-  private static bool IsAmmoCrate(ObjectDestructable obj) =>
+  public static bool IsAmmoCrate(ObjectDestructable obj) =>
       obj.lootTable.name.StartsWith("AmmoCrateTable_");
 }
 

@@ -1,3 +1,7 @@
+## 1.3.0
+
+Items are now indestructible before load finishes (to prevent the bonebox in Runoff breaking). Also adds a setting to test ammo drops (continuously teleports ammo crates to the player and breaks them until a loot drop bug is encountered).
+
 ## 1.2.0
 
 Fixes. Everything *should* work now.

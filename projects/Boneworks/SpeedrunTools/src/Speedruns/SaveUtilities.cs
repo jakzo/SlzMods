@@ -1,6 +1,7 @@
 using MelonLoader;
 using HarmonyLib;
 using StressLevelZero.Data;
+using StressLevelZero.Arena;
 using UnityEngine;
 using System.IO;
 using System.IO.Compression;
@@ -53,6 +54,36 @@ class SaveUtilities {
     }
   }
 
+  // TODO: Option 1
+  private static Arena_DataManager
+  GetArenaDataManager() => new Arena_DataManager();
+
+  // TODO: Option 2
+  [HarmonyPatch(typeof(Arena_DataManager), nameof(Arena_DataManager.Awake))]
+  class Arena_DataManager_Awake_Patch {
+    [HarmonyPostfix()]
+    internal static void Postfix(Arena_DataManager __instance) {
+      if (!_shouldResetArena)
+        return;
+      __instance.arenaStats = new Arena_Stats();
+      __instance.SaveArenaPlayer();
+      // TODO: Set false when switching modes
+      _shouldResetArena = false;
+    }
+  }
+  private static bool _shouldResetArena = false;
+
+  // TODO: Option 3
+  private void ResetArena() {
+    var arenaDataPath = new Arena_DataManager().arenaDataPath;
+    if (File.Exists(arenaDataPath))
+      File.Delete(arenaDataPath);
+  }
+
+  private void ResetZombieWarehouseReclamationAchievement() {
+    Zombie_GameControl;
+  }
+
   public static void SaveData() {
     for (int slot = 0; slot < NUM_SLOTS; slot++)
       Data_Manager.Instance.DATA_SAVE(slot);
@@ -60,6 +91,7 @@ class SaveUtilities {
     LevelData.Save();
     ReclaimerData.Save();
     TimeTrialData.Save();
+    GetArenaDataManager()?.SaveArenaPlayer();
   }
 
   public static void LoadData() {
@@ -70,6 +102,7 @@ class SaveUtilities {
     LevelData.Load();
     ReclaimerData.Load();
     TimeTrialData.Load();
+    GetArenaDataManager()?.LoadOrCreateArenaPlayerFile();
   }
 
   public static void DeleteSave() {

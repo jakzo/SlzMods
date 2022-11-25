@@ -3,7 +3,6 @@ using System.Linq;
 using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
-using SLZ;
 using SLZ.Rig;
 using SLZ.Props;
 using SLZ.Bonelab;

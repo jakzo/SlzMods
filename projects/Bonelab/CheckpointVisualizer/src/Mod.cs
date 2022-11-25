@@ -1,13 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using MelonLoader;
-using HarmonyLib;
 using UnityEngine;
 using SLZ.Bonelab;
 using SLZ.Marrow.Warehouse;
-using SLZ.Marrow.SceneStreaming;
 
-namespace Sst {
+namespace Sst.CheckpointVisualizer {
 public class Mod : MelonMod {
   private static Color COLOR_GREEN = new Color(0.2f, 0.8f, 0.2f, 0.25f);
   private static Color COLOR_RED = new Color(0.8f, 0.2f, 0.2f, 0.25f);
@@ -53,7 +50,7 @@ public class Mod : MelonMod {
   }
 
   private void OnLevelStart(LevelCrate level) {
-    if (level.Title == Utilities.Levels.TITLE_MONOGON_MOTORWAY) {
+    if (level.Barcode.ID == Utilities.Levels.Barcodes.MONOGON_MOTORWAY) {
       _setupAfter = Time.time + 2;
       Dbg.Log($"setup scheduled for {_setupAfter}");
     }

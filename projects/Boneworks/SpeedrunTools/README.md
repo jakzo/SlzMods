@@ -12,6 +12,7 @@
     - 100%
       - Activate with CTRL + H
       - In this mode the save state will be reset only when initially enabled
+      - Activating this will also reset all Steam achievements (so that the reclamation bin in Zombie Warehouse must be unlocked during the run)
   - Deactivate any mode with any of the activation hotkeys while in the main menu
   - Preferences like height and turn settings are maintained through save state resets and loads
   - Deactivate speedrun mode to restore your original save state

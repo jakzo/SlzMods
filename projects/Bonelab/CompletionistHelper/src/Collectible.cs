@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using MelonLoader;
-using SLZ;
-using SLZ.Data;
+using SLZ.Bonelab;
+using SLZ.Props;
+using SLZ.SaveData;
+using SLZ.Interaction;
 
-namespace Sst {
+namespace Sst.CompletionistHelper {
 class Collectible {
   public CollectibleType Type;
   public GameObject GameObject;
@@ -44,6 +46,16 @@ class CollectibleType {
       new CollectibleType("Heavy ammo", true, FindAmmo("prop_ammoBox_hvy"));
   public static CollectibleType AMMO_HEAVY_CRATE = new CollectibleType(
       "Heavy ammo crate", true, FindAmmo("dest_ammoBoxHeavy Variant"));
+  public static CollectibleType KEYCARD = new CollectibleType(
+      "Keycard", false,
+      () => _cachedKeycards.Where(
+          kc => ShouldShow(kc) &&
+                !(kc.GetComponent<InteractableHost>()?._lastHand != null)));
+  public static CollectibleType KEYCARD_READER = new CollectibleType(
+      "Keycard reader", false,
+      () => _cachedKeycardReceivers.Where(
+          kr =>
+              ShouldShow(kr) && kr._State != KeycardReciever._States.INSERTED));
 
   private static Func<IEnumerable<AmmoPickupProxy>> FindAmmo(string name) {
     var prefix = $"{name} [";
@@ -56,12 +68,14 @@ class CollectibleType {
   private static GachaCapsule[] _cachedGachaCapsules;
   private static GachaPlacer[] _cachedGachaPlacers;
   private static AmmoPickupProxy[] _cachedAmmoPickupProxys;
+  private static Keycard[] _cachedKeycards;
+  private static KeycardReciever[] _cachedKeycardReceivers;
   private static HashSet<string> _unlockedCrateBarcodes;
 
   public static CollectibleType[] ALL = {
-    GACHA_CAPSULE,     GACHA_PLACER,     GACHA_PLACER_FINISHED,
-    AMMO_LIGHT,        AMMO_LIGHT_CRATE, AMMO_MEDIUM,
-    AMMO_MEDIUM_CRATE, AMMO_HEAVY,       AMMO_HEAVY_CRATE,
+    GACHA_CAPSULE,    GACHA_PLACER, GACHA_PLACER_FINISHED, AMMO_LIGHT,
+    AMMO_LIGHT_CRATE, AMMO_MEDIUM,  AMMO_MEDIUM_CRATE,     AMMO_HEAVY,
+    AMMO_HEAVY_CRATE, KEYCARD,      KEYCARD_READER,
   };
 
   public static CollectibleType[] EnabledTypes = {};
@@ -83,6 +97,11 @@ class CollectibleType {
     () => {
       _cachedAmmoPickupProxys =
           Resources.FindObjectsOfTypeAll<AmmoPickupProxy>();
+    },
+    () => { _cachedKeycards = Resources.FindObjectsOfTypeAll<Keycard>(); },
+    () => {
+      _cachedKeycardReceivers =
+          Resources.FindObjectsOfTypeAll<KeycardReciever>();
     },
   };
 

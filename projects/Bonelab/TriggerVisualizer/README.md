@@ -4,7 +4,7 @@ Visibly shows areas which trigger something (eg. level finish) in the game.
 
 Press the `T` key on the keyboard while the game window is focussed to toggle trigger visualizations.
 
-Note that this currently doesn't show all triggers, just ones which use the `TriggerLasers` class (eg. the finish of Mine Dive won't display) and only if they use a `BoxCollider`.
+Note that this currently doesn't show all triggers, just ones which use the `TriggerLasers` class (eg. the finish of Mine Dive won't display) and only if they use a `BoxCollider` (which is most of them).
 
 # Installation
 

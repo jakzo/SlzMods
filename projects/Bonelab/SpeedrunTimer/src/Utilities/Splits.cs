@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using SLZ.Marrow.Warehouse;
 
-namespace Sst.Utilities {
+namespace Sst.SpeedrunTimer {
 public class Splits {
   public List<Split> Items = new List<Split>();
   public System.DateTime? TimeStart;

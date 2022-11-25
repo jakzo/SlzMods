@@ -1,12 +1,13 @@
 using UnityEngine;
+using TMPro;
 
-namespace Sst.Utilities {
+namespace Sst.SpeedrunTimer {
 class SplitsRenderer {
   public static void RenderLoadingWatermark(System.TimeSpan time) {
     var splitsText = new GameObject($"{BuildInfo.Name}_Watermark");
     splitsText.layer = LayerMask.NameToLayer("Background");
-    var tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
-    tmp.alignment = TMPro.TextAlignmentOptions.TopRight;
+    var tmp = splitsText.AddComponent<TextMeshPro>();
+    tmp.alignment = TextAlignmentOptions.TopRight;
     tmp.fontSize = 0.5f;
     tmp.transform.SetParent(GameObject.Find("Main Camera").transform);
     tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.8f);

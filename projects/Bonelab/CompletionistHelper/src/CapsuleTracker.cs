@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using HarmonyLib;
-using SLZ.Data;
-using SLZ.Data.SaveData;
+using SLZ.Bonelab;
+using SLZ.SaveData;
 using SLZ.Marrow.Warehouse;
 
-namespace Sst {
+namespace Sst.CompletionistHelper {
 static class CapsuleTracker {
   public static event Action<string, string> OnUnlock;
 

@@ -17,12 +17,14 @@ using System.Runtime.InteropServices;
 [assembly:AssemblyFileVersion(Sst.AppVersion.Value)]
 [assembly:NeutralResourcesLanguage("en")]
 [assembly:MelonInfo(
-    typeof(Sst.Mod), Sst.BuildInfo.NAME, Sst.AppVersion.Value,
-    Sst.Metadata.AUTHOR,
+    typeof(Sst.CompletionistHelper.Mod), Sst.BuildInfo.NAME,
+    Sst.AppVersion.Value, Sst.Metadata.AUTHOR,
     "https://bonelab.thunderstore.io/package/jakzo/CompletionistHelper/")]
 
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst {
-public static class BuildInfo { public const string NAME = "CompletionistHelper"; }
+public static class BuildInfo {
+  public const string NAME = "CompletionistHelper";
+}
 }

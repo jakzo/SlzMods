@@ -1,3 +1,7 @@
+## 1.0.0
+
+Make it work for new game patch.
+
 ## 0.1.2
 
 Fixed link to autosplitter in readme.

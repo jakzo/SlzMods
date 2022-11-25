@@ -1,8 +1,9 @@
 using MelonLoader;
 using UnityEngine;
 using System.Collections.Generic;
+using SLZ.Bonelab;
 
-namespace Sst {
+namespace Sst.TriggerVisualizer {
 public class Mod : MelonMod {
   private static Color COLOR_RED = new Color(0.8f, 0.2f, 0.2f);
 
@@ -11,10 +12,10 @@ public class Mod : MelonMod {
   public override void OnUpdate() {
     if (Input.GetKeyDown(KeyCode.T)) {
       if (GameObject.FindObjectOfType<TriggerVisualization>()) {
-        MelonLogger.Msg("Showing trigger visualizations...");
+        MelonLogger.Msg("Hiding trigger visualizations...");
         HideTriggers();
       } else {
-        MelonLogger.Msg("Hiding trigger visualizations...");
+        MelonLogger.Msg("Showing trigger visualizations...");
         ShowTriggers();
       }
     }

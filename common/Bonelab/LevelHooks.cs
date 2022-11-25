@@ -1,4 +1,5 @@
 using System;
+using MelonLoader;
 using HarmonyLib;
 using SLZ.Marrow.Warehouse;
 using SLZ.Marrow.SceneStreaming;
@@ -15,16 +16,24 @@ static class LevelHooks {
   public static event Action<LevelCrate> OnLoad;
   public static event Action<LevelCrate> OnLevelStart;
 
+  private static void SafeInvoke(string name, Action<LevelCrate> action,
+                                 LevelCrate level) {
+    try {
+      action?.Invoke(level);
+    } catch (Exception ex) {
+      MelonLogger.Error($"Failed to execute {name} event: {ex.ToString()}");
+    }
+  }
+
   [HarmonyPatch(typeof(RigManager), nameof(RigManager.Awake))]
   class RigManager_Awake_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(RigManager __instance) {
       Dbg.Log($"RigManager_Awake_Patch");
-      if (NextLevel)
-        CurrentLevel = NextLevel;
+      CurrentLevel = NextLevel ?? SceneStreamer.Session.Level ?? CurrentLevel;
       NextLevel = null;
       RigManager = __instance;
-      OnLevelStart?.Invoke(CurrentLevel);
+      SafeInvoke("OnLevelStart", OnLevelStart, CurrentLevel);
     }
   }
 
@@ -41,7 +50,7 @@ static class LevelHooks {
       CurrentLevel = null;
       NextLevel = nextLevel;
       RigManager = null;
-      OnLoad?.Invoke(NextLevel);
+      SafeInvoke("OnLoad", OnLoad, NextLevel);
     }
   }
 

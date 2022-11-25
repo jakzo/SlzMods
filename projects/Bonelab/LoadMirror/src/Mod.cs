@@ -2,10 +2,10 @@
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.XR;
-using SLZ.Data;
-using SLZ.Data.SaveData;
+using SLZ.SaveData;
+using SLZ.UI;
 
-namespace Sst {
+namespace Sst.LoadMirror {
 public class Mod : MelonMod {
   public override void OnInitializeMelon() { Dbg.Init(BuildInfo.NAME); }
 

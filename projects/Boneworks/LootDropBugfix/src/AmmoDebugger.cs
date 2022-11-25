@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using MelonLoader;
-using HarmonyLib;
 using UnityEngine;
-using StressLevelZero;
 using StressLevelZero.Props;
-using StressLevelZero.Pool;
 
 namespace Sst.LootDropBugfix {
 public static class AmmoDebugger {

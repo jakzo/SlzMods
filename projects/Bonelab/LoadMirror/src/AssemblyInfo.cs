@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly:AssemblyFileVersion(Sst.AppVersion.Value)]
 [assembly:NeutralResourcesLanguage("en")]
 [assembly:MelonInfo(
-    typeof(Sst.Mod), Sst.BuildInfo.NAME, Sst.AppVersion.Value,
+    typeof(Sst.LoadMirror.Mod), Sst.BuildInfo.NAME, Sst.AppVersion.Value,
     Sst.Metadata.AUTHOR,
     "https://bonelab.thunderstore.io/package/jakzo/LoadMirror/")]
 

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using System.Text;
 using HarmonyLib;
 using SLZ.Bonelab;
-using SLZ.Data;
+using SLZ.SaveData;
 
-namespace Sst {
+namespace Sst.CompletionistHelper {
 static class AchievementTracker {
   public static event Action<string, string> OnUnlock;
 

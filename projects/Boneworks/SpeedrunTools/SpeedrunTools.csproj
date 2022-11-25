@@ -41,6 +41,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\..\references\boneworks\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\references\boneworks\Assembly-CSharp.dll</HintPath>
     </Reference>
@@ -90,9 +93,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <!-- <PostBuildEvent>
+    <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
-    </PostBuildEvent> -->
+    </PostBuildEvent>
     <!-- <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
       "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\BONEWORKS.exe"&amp; exit 0

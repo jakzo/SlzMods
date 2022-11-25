@@ -89,16 +89,12 @@
     <Compile Include="src/**/*.cs" />
     <Compile Include="../../../common/Utilities/Metadata.cs" />
     <Compile Include="../../../common/Utilities/Dbg.cs" />
-
-    <!-- <Compile Include="snippets/**/*.cs" /> -->
+    <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
   </ItemGroup>
-  <!-- <ItemGroup>
-    <EmbeddedResource Include="resources/*" />
-  </ItemGroup> -->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <!-- <PostBuildEvent>
+    <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods"
-    </PostBuildEvent> -->
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

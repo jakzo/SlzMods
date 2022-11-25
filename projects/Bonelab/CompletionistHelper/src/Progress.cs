@@ -1,7 +1,8 @@
 using Sst.Utilities;
 using SLZ.Marrow.Warehouse;
+using SLZ.Bonelab;
 
-namespace Sst {
+namespace Sst.CompletionistHelper {
 class Progress {
   public const float MAX_PROGRESS = 0.95f;
 
@@ -13,6 +14,7 @@ class Progress {
   public float Parkour;
   public float Sandbox;
   public float TacTrial;
+  public float EasterEggs;
   public float Unlocks;
 
   public bool IsComplete { get => Total >= MAX_PROGRESS; }
@@ -60,6 +62,7 @@ class Progress {
     Parkour = _menuProgressControl.CalcParkours();
     Sandbox = _menuProgressControl.CalcSandbox();
     TacTrial = _menuProgressControl.CalcTacTrials();
+    EasterEggs = _menuProgressControl.CalcEasterEggs();
     Unlocks = _menuProgressControl.CalcUnlocks();
   }
 }

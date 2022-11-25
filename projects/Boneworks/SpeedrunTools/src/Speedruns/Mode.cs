@@ -25,10 +25,15 @@ class Mode {
   };
 
   public static readonly Mode HUNDRED_PERCENT = new Mode() {
-    name = "100% speedrun",      replayMode = Bwr.GameMode.HUNDRED_PERCENT,
-    hotkeyKey = KeyCode.H,       color = new Color(0.3f, 0.3f, 0.9f),
-    colorRgb = "4444ee",         resetSaveOnEnable = true,
-    resetSaveOnMainMenu = false, resetTimerOnMainMenu = false,
+    name = "100% speedrun",
+    replayMode = Bwr.GameMode.HUNDRED_PERCENT,
+    hotkeyKey = KeyCode.H,
+    color = new Color(0.3f, 0.3f, 0.9f),
+    colorRgb = "4444ee",
+    resetSaveOnEnable = true,
+    resetSaveOnMainMenu = false,
+    resetTimerOnMainMenu = false,
+    OnEnable = () => { Steamworks.SteamUserStats.ResetAllStats(true); },
   };
 
   public static readonly Mode BLINDFOLD = new Mode() {

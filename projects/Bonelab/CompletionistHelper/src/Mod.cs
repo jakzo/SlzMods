@@ -4,11 +4,11 @@ using System.Linq;
 using UnityEngine;
 using TMPro;
 using MelonLoader;
-using SLZ.Data;
+using SLZ.SaveData;
 using Newtonsoft.Json;
 using Sst.Common.Bonelab;
 
-namespace Sst {
+namespace Sst.CompletionistHelper {
 public class Mod : MelonMod {
   private const string HUD_TEXT_NAME = "CompletionistHud";
   private const float REFRESH_FREQUENCY = 1;
@@ -157,7 +157,8 @@ public class Mod : MelonMod {
       $"Experimental: {(_progress.Experimental * 100):N1}%",
       $"Parkour: {(_progress.Parkour * 100):N1}%",
       $"Sandbox: {(_progress.Sandbox * 100):N1}%",
-      $"TacTrial: {(_progress.TacTrial * 100):N1}%",
+      $"Tac Trial: {(_progress.TacTrial * 100):N1}%",
+      $"Easter Eggs: {(_progress.EasterEggs * 100):N1}%",
       $"Unlocks: {(_progress.Unlocks * 100):N1}%",
       $"Total: {(_progress.Total * 100):N1}% / {(Progress.MAX_PROGRESS * 100):N1}%",
       "",

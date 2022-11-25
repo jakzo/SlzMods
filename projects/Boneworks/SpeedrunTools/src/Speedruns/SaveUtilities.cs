@@ -1,6 +1,7 @@
 using MelonLoader;
 using HarmonyLib;
 using StressLevelZero.Data;
+using StressLevelZero.Arena;
 using UnityEngine;
 using System.IO;
 using System.IO.Compression;
@@ -102,10 +103,18 @@ class SaveUtilities {
     }
   }
 
+  private static void ResetArena() {
+    var arenaDataPath =
+        Application.persistentDataPath + new Arena_DataManager().arenaDataPath;
+    if (File.Exists(arenaDataPath))
+      File.Delete(arenaDataPath);
+  }
+
   public static void ResetSave() {
     MelonLogger.Msg("Resetting save");
     var oldData = Data_Manager.Instance.data_player;
     Data_Manager.Instance.DATA_DEFAULT_ALL();
+    ResetArena();
     RestorePlayerPrefs(oldData);
   }
 

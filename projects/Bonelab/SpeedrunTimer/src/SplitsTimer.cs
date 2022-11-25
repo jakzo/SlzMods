@@ -1,13 +1,11 @@
 ﻿using MelonLoader;
 using HarmonyLib;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using SLZ.Marrow.Warehouse;
 using SLZ.Bonelab;
 using Sst.Utilities;
 
-namespace Sst {
+namespace Sst.SpeedrunTimer {
 class SplitsTimer {
   private static SplitsTimer Instance;
 
@@ -104,7 +102,7 @@ class SplitsTimer {
   }
 
   public void Finish() {
-    Livesplit.SetState(false, true, Mod.Instance.CurrentLevel?.Title ?? "");
+    Livesplit.SetState(false, true, LevelHooks.CurrentLevel?.Title ?? "");
     _splits.Pause();
     MelonLogger.Msg($"Stopping timer at: {_splits.GetTime()}");
     if (_tmp != null)

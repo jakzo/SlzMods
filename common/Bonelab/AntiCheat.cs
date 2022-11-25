@@ -1,5 +1,3 @@
-using MelonLoader;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace Sst.Utilities {
@@ -18,7 +16,7 @@ class AntiCheat {
   }
 
   public static Dictionary<RunIllegitimacyReason, string>
-  ComputeRunLegitimacy() {
+  ComputeRunLegitimacy<Mod>() {
     var illegitimacyReasons = new Dictionary<RunIllegitimacyReason, string>();
 
 #if !DEBUG

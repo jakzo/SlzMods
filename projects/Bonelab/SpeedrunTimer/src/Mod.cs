@@ -36,7 +36,7 @@ public class Mod : MelonMod {
   }
 
   private bool CheckIfAllowed() {
-    var illegitimacyReasons = AntiCheat.ComputeRunLegitimacy();
+    var illegitimacyReasons = AntiCheat.ComputeRunLegitimacy<Mod>();
     if (illegitimacyReasons.Count == 0) {
       _isDisabled = false;
       return true;

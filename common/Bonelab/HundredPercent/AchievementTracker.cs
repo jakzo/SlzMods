@@ -16,13 +16,13 @@ static class AchievementTracker {
         "ACH_TUNNELTIPPER_TAC",
         "ACH_GUNRANGE",
       };
-  public static int NUM_POSSIBLE_ACHIEVEMENTS = 55;
+  public static int NumPossibleAchievements;
 
   public static event Action<string, string> OnUnlock;
 
   public static HashSet<string> Unlocked = new HashSet<string>();
   public static float Progress {
-    get => (float)(Unlocked.Count) / (float)NUM_POSSIBLE_ACHIEVEMENTS;
+    get => (float)(Unlocked.Count) / (float)NumPossibleAchievements;
   }
 
   public static Dictionary<string, string> AllAchievements =
@@ -36,7 +36,7 @@ static class AchievementTracker {
         AllAchievements.Select(entry => entry.Key).ToHashSet();
     foreach (var id in IMPOSSIBLE_ACHIEVEMENTS)
       allPossibleAchievements.Remove(id);
-    NUM_POSSIBLE_ACHIEVEMENTS = allPossibleAchievements.Count;
+    NumPossibleAchievements = allPossibleAchievements.Count;
 
     Unlocked = File.Exists(SAVE_PATH) ? File.ReadAllLines(SAVE_PATH).ToHashSet()
                                       : new HashSet<string>();

@@ -118,7 +118,7 @@ public class Mod : MelonMod {
       $"100% complete: {progress.IsComplete}",
       $"Beat game: {progress.HasBeatGame}",
       $"Has body log: {progress.HasBodyLog}",
-      $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.AllAchievements.Count}",
+      $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.NumPossibleAchievements}",
       $"Unlocks: {CapsuleTracker.Unlocked.Count} / {CapsuleTracker.NumTotalUnlocks}",
     });
   }

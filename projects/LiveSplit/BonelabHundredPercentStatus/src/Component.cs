@@ -98,7 +98,7 @@ public class Component : IComponent {
               .Concat(new[] {
                 $"Unlocks: {state.capsulesUnlocked} / {state.capsulesTotal}",
                 $"Achievements: {state.achievementsUnlocked} / {state.achievementsTotal}",
-                $"Game Progress: {(state.percentageComplete * 100f):N1}% / {(state.percentageTotal * 100f):N1}%",
+                $"Game Progress: {(state.percentageComplete * 100f):N1}%",
               }));
       invalidator.Invalidate(0, 0, width, height);
     }

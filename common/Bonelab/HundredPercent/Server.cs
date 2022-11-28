@@ -87,7 +87,7 @@ public class Server : IDisposable {
     capsulesUnlocked = CapsuleTracker.Unlocked.Count,
     capsulesTotal = CapsuleTracker.NumTotalUnlocks,
     achievementsUnlocked = AchievementTracker.Unlocked.Count,
-    achievementsTotal = AchievementTracker.AllAchievements.Count,
+    achievementsTotal = AchievementTracker.NumPossibleAchievements,
     percentageComplete = Progress.Total,
   };
 

@@ -5,7 +5,6 @@ using HarmonyLib;
 using SLZ.Marrow.Warehouse;
 using SLZ.Marrow.SceneStreaming;
 using SLZ.Rig;
-using SLZ.UI;
 
 namespace Sst.Utilities {
 static class LevelHooks {
@@ -36,15 +35,34 @@ static class LevelHooks {
 
     CurrentLevel = NextLevel ?? SceneStreamer.Session.Level ?? CurrentLevel;
     NextLevel = null;
+    Dbg.Log($"OnLevelStart {CurrentLevel?.Title}");
     SafeInvoke("OnLevelStart", OnLevelStart, CurrentLevel);
   }
 
-  [HarmonyPatch(typeof(LoadingScene), nameof(LoadingScene.Start))]
-  class LoadingScene_Start_Patch {
+  // [HarmonyPatch(typeof(LoadingScene), nameof(LoadingScene.Start))]
+  // class LoadingScene_Start_Patch {
+  //   [HarmonyPrefix()]
+  //   internal static void Prefix(LoadingScene __instance) {
+  //     Dbg.Log("LoadingScene_Start_Patch");
+  //     _loadingScene = __instance.gameObject.scene;
+  //     MelonEvents.OnUpdate.Subscribe(WaitForLoadFinished);
+  //   }
+  // }
+
+  [HarmonyPatch(typeof(BasicTrackingRig), nameof(BasicTrackingRig.Awake))]
+  class BasicTrackingRig_Awake_Patch {
     [HarmonyPrefix()]
-    internal static void Prefix(LoadingScene __instance) {
+    internal static void Prefix(BasicTrackingRig __instance) {
+      Dbg.Log("BasicTrackingRig_Awake_Patch");
       _loadingScene = __instance.gameObject.scene;
+      if (CurrentLevel)
+        PrevLevel = CurrentLevel;
+      CurrentLevel = null;
+      NextLevel = SceneStreamer.Session.Level;
+      RigManager = null;
       MelonEvents.OnUpdate.Subscribe(WaitForLoadFinished);
+      Dbg.Log($"OnLoad {NextLevel?.Title}");
+      SafeInvoke("OnLoad", OnLoad, NextLevel);
     }
   }
 
@@ -57,41 +75,42 @@ static class LevelHooks {
     }
   }
 
-  [HarmonyPatch(
-      typeof(SceneStreamer), nameof(SceneStreamer.Load),
-      new Type[] { typeof(LevelCrateReference), typeof(LevelCrateReference) })]
-  class SceneStreamer_Load_Patch {
-    [HarmonyPrefix()]
-    internal static void Prefix(LevelCrateReference level,
-                                LevelCrateReference loadLevel) {
-      var nextLevel = level.Crate;
-      Dbg.Log($"SceneStreamer_Load_Patch, next level = {nextLevel?.Title}");
-      if (CurrentLevel)
-        PrevLevel = CurrentLevel;
-      CurrentLevel = null;
-      NextLevel = nextLevel;
-      RigManager = null;
+  // [HarmonyPatch(
+  //     typeof(SceneStreamer), nameof(SceneStreamer.Load),
+  //     new Type[] { typeof(LevelCrateReference), typeof(LevelCrateReference)
+  //     })]
+  // class SceneStreamer_Load_Patch {
+  //   [HarmonyPrefix()]
+  //   internal static void Prefix(LevelCrateReference level,
+  //                               LevelCrateReference loadLevel) {
+  //     var nextLevel = level.Crate;
+  //     Dbg.Log($"SceneStreamer_Load_Patch, next level = {nextLevel?.Title}");
+  //     if (CurrentLevel)
+  //       PrevLevel = CurrentLevel;
+  //     CurrentLevel = null;
+  //     NextLevel = nextLevel;
+  //     RigManager = null;
 
-      // _loadingScene =
-      //     SceneManager.GetSceneByName(loadLevel.Crate.MainScene.Asset.name);
-      // MelonEvents.OnUpdate.Subscribe(WaitForLoadFinished);
+  //     // _loadingScene =
+  //     // SceneManager.GetSceneByName(loadLevel.Crate.MainScene.Asset.name);
+  //     // MelonEvents.OnUpdate.Subscribe(WaitForLoadFinished);
 
-      SafeInvoke("OnLoad", OnLoad, NextLevel);
-    }
-  }
+  //     SafeInvoke("OnLoad", OnLoad, NextLevel);
+  //   }
+  // }
 
-  [HarmonyPatch(typeof(SceneStreamer), nameof(SceneStreamer.Reload))]
-  class SceneStreamer_Reload_Patch {
-    [HarmonyPrefix()]
-    internal static void Prefix() {
-      Dbg.Log("SceneStreamer_Reload_Patch");
-      PrevLevel = CurrentLevel;
-      CurrentLevel = null;
-      if (CurrentLevel)
-        NextLevel = CurrentLevel;
-      RigManager = null;
-      OnLoad?.Invoke(NextLevel);
-    }
-  }
+  // [HarmonyPatch(typeof(SceneStreamer), nameof(SceneStreamer.Reload))]
+  // class SceneStreamer_Reload_Patch {
+  //   [HarmonyPrefix()]
+  //   internal static void Prefix() {
+  //     Dbg.Log("SceneStreamer_Reload_Patch");
+  //     PrevLevel = CurrentLevel;
+  //     CurrentLevel = null;
+  //     if (CurrentLevel)
+  //       NextLevel = CurrentLevel;
+  //     RigManager = null;
+  //     OnLoad?.Invoke(NextLevel);
+  //   }
+  // }
 }
 }

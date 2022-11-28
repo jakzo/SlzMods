@@ -10,8 +10,6 @@ using StressLevelZero.Pool;
 
 namespace Sst.LootDropBugfix {
 public class Mod : MelonMod {
-  private const float WAIT_AFTER_LOAD = 5f;
-
   private static bool? _nullableTrue = true;
   private static Il2CppSystem.Nullable<bool> _spawnAutoEnable =
       new Utilities.Il2CppNullable<bool>(_nullableTrue);

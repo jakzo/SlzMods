@@ -10,7 +10,7 @@ namespace Sst.Common.Ipc {
 public class Server : IDisposable {
   public event Action<NamedPipeServerStream> OnClientConnected;
   public event Action<NamedPipeServerStream> OnClientDisconnected;
-  public event Action<string> OnMessageReceived;
+  // public event Action<string> OnMessageReceived;
 
   public string Name;
 
@@ -23,7 +23,7 @@ public class Server : IDisposable {
 
   public Server(string name) {
     Name = name;
-    StartNewPipeServer();
+    StartNewPipeServerThread();
   }
 
   public void Dispose() {
@@ -44,43 +44,48 @@ public class Server : IDisposable {
     if (!stream.IsConnected)
       return;
     var bytes = Encoding.UTF8.GetBytes(message);
-    stream.WriteAsync(bytes, 0, bytes.Length);
+    stream.Write(bytes, 0, bytes.Length);
   }
 
-  private async void StartNewPipeServer() {
+  private void StartNewPipeServerThread() {
+    new System.Threading.Thread(StartNewPipeServer).Start();
+  }
+
+  private void StartNewPipeServer() {
     try {
       var stream = new NamedPipeServerStream(Name, PipeDirection.InOut,
                                              MAX_NUMBER_OF_SERVER_INSTANCES,
                                              PipeTransmissionMode.Message);
       _streams.Add(stream);
-      await WaitForConnectionAsync(stream);
+      stream.WaitForConnection();
       Dbg.Log("Client connected");
       if (_isDisposed)
         return;
-      StartNewPipeServer();
+      StartNewPipeServerThread();
       SafeInvoke(() => OnClientConnected?.Invoke(stream));
 
-      var buffer = new byte[BUFFER_SIZE];
-      StringBuilder sb = null;
-      while (true) {
-        if (sb == null)
-          sb = new StringBuilder();
-        var numBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
-        if (_isDisposed)
-          return;
-        if (numBytes <= 0) {
-          DisposeStream(stream);
-          return;
-        }
+      // TODO: The stream.Read() call blocks writes
+      // var buffer = new byte[BUFFER_SIZE];
+      // StringBuilder sb = null;
+      // while (true) {
+      //   if (sb == null)
+      //     sb = new StringBuilder();
+      //   var numBytes = stream.Read(buffer, 0, buffer.Length);
+      //   if (_isDisposed)
+      //     return;
+      //   if (numBytes <= 0) {
+      //     DisposeStream(stream);
+      //     return;
+      //   }
 
-        sb.Append(Encoding.UTF8.GetString(buffer, 0, numBytes));
+      //   sb.Append(Encoding.UTF8.GetString(buffer, 0, numBytes));
 
-        if (stream.IsMessageComplete) {
-          var message = sb.ToString().TrimEnd('\0');
-          SafeInvoke(() => OnMessageReceived?.Invoke(message));
-          sb = null;
-        }
-      }
+      //   if (stream.IsMessageComplete) {
+      //     var message = sb.ToString().TrimEnd('\0');
+      //     SafeInvoke(() => OnMessageReceived?.Invoke(message));
+      //     sb = null;
+      //   }
+      // }
     } catch (Exception ex) {
       MelonLogger.Error($"Pipe server failed: {ex.ToString()}");
     }
@@ -108,10 +113,5 @@ public class Server : IDisposable {
       MelonLogger.Error($"Failed to run event: {ex.ToString()}");
     }
   }
-
-  // WaitForConnectionAsync is not implemented in the game's build of Mono
-  // https://github.com/mono/mono/blob/main/mcs/class/referencesource/System.Core/System/IO/Pipes/Pipe.cs
-  private Task WaitForConnectionAsync(NamedPipeServerStream stream) =>
-      Task.Run(stream.WaitForConnection);
 }
 }

@@ -78,26 +78,31 @@ public class Mod : MelonMod {
     TypesPrefCategory =
         MelonPreferences.CreateCategory("TypesToShow", "Types to show");
 
-    Utilities.LevelHooks.OnLoad += level => _server.SendStateIfChanged();
+    Utilities.LevelHooks.OnLoad += level => { _server?.SendStateIfChanged(); };
     Utilities.LevelHooks.OnLevelStart += level => {
-      _server.SendStateIfChanged();
+      if (_server == null) {
+        _server = new Server(REFRESH_FREQUENCY);
+      } else {
+        _server.SendStateIfChanged();
+      }
       ShowHud();
     };
 
     CollectibleType.Initialize(TypesPrefCategory);
     AchievementTracker.Initialize();
     CapsuleTracker.Initialize();
-
-    _server = new Server(REFRESH_FREQUENCY);
   }
 
   public override void OnDeinitializeMelon() {
     CapsuleTracker.Deinitialize();
-    _server.Dispose();
+    _server?.Dispose();
+    _server = null;
   }
 
   private string GetCompletionText() {
-    var progress = _server.Progress;
+    var progress = _server?.Progress;
+    if (progress == null)
+      return null;
     return string.Join("\n", new[] {
       $"Arena: {(progress.Arena * 100):N1}%",
       $"Avatar: {(progress.Avatar * 100):N1}%",

@@ -13,16 +13,6 @@ public class Server : IDisposable {
   private float _lastUpdateTime = 0;
 
   public Server(float progressUpdateFrequency = 1f) {
-    _ipcServer = new Ipc.Server(GameState.NAMED_PIPE);
-    _ipcServer.OnClientConnected += stream => {
-      Dbg.Log("OnClientConnected");
-      var msg = BuildMessageToSend(_lastSentState ?? BuildGameState());
-      Dbg.Log($"SendState on connect: {msg}");
-      Ipc.Server.SendToStream(stream, msg);
-    };
-    _ipcServer.OnClientDisconnected +=
-        stream => { Dbg.Log("OnClientDisconnected"); };
-
     ProgressUpdateFrequency = progressUpdateFrequency;
     Progress = ProgressTracker.Calculate();
     MelonEvents.OnUpdate.Subscribe(UpdateProgressIfNecessary);
@@ -33,6 +23,16 @@ public class Server : IDisposable {
         state => state.capsulesJustUnlocked = new[] { name });
 
     Utilities.LevelHooks.OnLoad += level => UpdateProgress();
+
+    _ipcServer = new Ipc.Server(GameState.NAMED_PIPE);
+    _ipcServer.OnClientConnected += stream => {
+      Dbg.Log("OnClientConnected");
+      var msg = BuildMessageToSend(_lastSentState ?? BuildGameState());
+      Dbg.Log($"SendState on connect: {msg}");
+      Ipc.Server.SendToStream(stream, msg);
+    };
+    _ipcServer.OnClientDisconnected +=
+        stream => { Dbg.Log("OnClientDisconnected"); };
   }
 
   private void UpdateProgressIfNecessary() {

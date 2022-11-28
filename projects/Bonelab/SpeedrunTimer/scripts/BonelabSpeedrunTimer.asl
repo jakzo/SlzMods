@@ -5,7 +5,7 @@ state("BONELAB_Oculus_Windows64") {}
 startup {
   vars.Log = (Action<object>)(output => print("[BonelabSpeedrunTimer ASL] " + output));
 
-  // See projects/bonelab-timer/src/Utilities/Levels.cs for the mapping of level titles to indexes
+  // See common/Bonelab/Levels.cs for the mapping of level titles to indexes
   vars.levelIndexDescent = 1;
 
   settings.Add(

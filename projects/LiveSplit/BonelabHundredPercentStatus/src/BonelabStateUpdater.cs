@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Sst.Common.Bonelab;
+using Sst.Common.Bonelab.HundredPercent;
 using Sst.Common.LiveSplit;
 
 namespace Sst.Livesplit.BonelabHundredPercentStatus {
 class BonelabStateUpdater : IDisposable {
-  public event Action<HundredPercent.GameState> OnReceivedState;
+  public event Action<GameState> OnReceivedState;
 
-  public HundredPercent.GameState State = new HundredPercent.GameState();
+  public GameState State = new GameState();
   public List<CompletionEvent> Events = new List<CompletionEvent>();
 
   private Common.Ipc.Client _client;
 
   public BonelabStateUpdater() {
-    _client = new Common.Ipc.Client(HundredPercent.NAMED_PIPE);
+    _client = new Common.Ipc.Client(GameState.NAMED_PIPE);
     _client.OnConnected += () => Log.Info("Connected");
     _client.OnDisconnected += () => Log.Info("Disconnected");
     _client.OnMessageReceived += OnMessage;
@@ -50,9 +50,9 @@ class BonelabStateUpdater : IDisposable {
     }
   }
 
-  private HundredPercent.GameState ParseLine(string line) {
+  private GameState ParseLine(string line) {
     try {
-      return JsonConvert.DeserializeObject<HundredPercent.GameState>(line);
+      return JsonConvert.DeserializeObject<GameState>(line);
     } catch (Exception err) {
       Log.Error($"Error reading pipe message as JSON: {err.Message}");
       return null;

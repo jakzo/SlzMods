@@ -4,14 +4,12 @@ using System.Linq;
 using UnityEngine;
 using TMPro;
 using MelonLoader;
-using SLZ.SaveData;
-using Newtonsoft.Json;
-using Sst.Common.Bonelab;
+using Sst.Common.Bonelab.HundredPercent;
 
 namespace Sst.CompletionistHelper {
 public class Mod : MelonMod {
   private const string HUD_TEXT_NAME = "CompletionistHud";
-  private const float REFRESH_FREQUENCY = 1;
+  private const float REFRESH_FREQUENCY = 1f;
   private const int NUM_HUD_SLOTS = 5;
   private const int NUM_DISPLAYED_ACHIEVEMENTS = 5;
 
@@ -22,25 +20,14 @@ public class Mod : MelonMod {
   private TextMeshPro _completionTmp;
   private TextMeshPro _achievementTmp;
   private List<Collectible> _collectibles = new List<Collectible>();
-  private static Progress _progress = new Progress();
   private Action[] _refreshActions;
-  private float _refreshStart = 0;
+  private float _refreshStart = 0f;
   private int _refreshIndex = 0;
-  private Common.Ipc.Server _server;
-  private GameState _lastSentState;
+  private Server _server;
 
   public Mod() {
     _refreshActions =
-        new Action[] {
-          () => { _progress.Refresh(); },
-          // () => {
-          //   Il2CppSystem.Collections.Generic
-          //       .Dictionary<string, Il2CppSystem.Object> levelState = null;
-          //   DataManager.ActiveSave?.Progression.LevelState.TryGetValue(
-          //       Utilities.LevelHooks.CurrentLevel.name, out levelState);
-          // },
-        }
-            .Concat(CollectibleType.CacheActions)
+        CollectibleType.CacheActions
             .Concat(CollectibleType.ALL.Select<CollectibleType, Action>(
                 collectibleType => () => {
                   _collectibles = _collectibles
@@ -91,80 +78,41 @@ public class Mod : MelonMod {
     TypesPrefCategory =
         MelonPreferences.CreateCategory("TypesToShow", "Types to show");
 
-    Utilities.LevelHooks.OnLoad += level => SendState();
+    Utilities.LevelHooks.OnLoad += level => _server.SendStateIfChanged();
     Utilities.LevelHooks.OnLevelStart += level => {
-      SendState();
+      _server.SendStateIfChanged();
       ShowHud();
     };
-    AchievementTracker.OnUnlock += (id, name) => SendState(new GameState() {
-      achievementsJustUnlocked = new string[] { name },
-    });
-    CapsuleTracker.OnUnlock += (id, name) => SendState(new GameState() {
-      capsulesJustUnlocked = new string[] { name },
-    });
 
     CollectibleType.Initialize(TypesPrefCategory);
     AchievementTracker.Initialize();
     CapsuleTracker.Initialize();
 
-    _server = new Common.Ipc.Server(HundredPercent.NAMED_PIPE);
-    _server.OnClientConnected += () => Dbg.Log("OnClientConnected");
-    _server.OnClientDisconnected += () => Dbg.Log("OnClientDisconnected");
-    SendState();
+    _server = new Server(REFRESH_FREQUENCY);
   }
 
-  public override void OnDeinitializeMelon() { _server.Dispose(); }
-
-  private void SendState(GameState state = null) {
-    var sentState = state ?? new GameState();
-    _lastSentState = sentState;
-    var str = JsonConvert.SerializeObject(sentState);
-    Dbg.Log($"SendState: {str}");
-    _server.Send(str);
+  public override void OnDeinitializeMelon() {
+    CapsuleTracker.Deinitialize();
+    _server.Dispose();
   }
-
-  private bool HasStateChanged(GameState state) =>
-      _lastSentState == null || state.achievementsJustUnlocked != null
-      || state.achievementsTotal != _lastSentState.achievementsTotal
-      || state.achievementsUnlocked != _lastSentState.achievementsUnlocked
-      || state.capsulesJustUnlocked != null
-      || state.capsulesTotal != _lastSentState.capsulesTotal
-      || state.capsulesUnlocked != _lastSentState.capsulesUnlocked
-      || state.isComplete != _lastSentState.isComplete
-      || state.isLoading != _lastSentState.isLoading
-      || state.levelBarcode != _lastSentState.levelBarcode
-      || state.percentageComplete != _lastSentState.percentageComplete
-      || state.percentageTotal != _lastSentState.percentageTotal;
 
   private string GetCompletionText() {
-    var activeSave = DataManager.ActiveSave;
-    if (activeSave == null)
-      return "";
-
-    var isGameBeat = activeSave.Progression.BeatGame;
-    var hasBodyLog = activeSave.Progression.HasBodyLog;
-    var isComplete =
-        isGameBeat && hasBodyLog &&
-        CapsuleTracker.Unlocked.Count >= CapsuleTracker.NumTotalUnlocks &&
-        AchievementTracker.Unlocked.Count >=
-            AchievementTracker.AllAchievements.Count &&
-        _progress.IsComplete;
-
+    var progress = _server.Progress;
     return string.Join("\n", new[] {
-      $"Arena: {(_progress.Arena * 100):N1}%",
-      $"Avatar: {(_progress.Avatar * 100):N1}%",
-      $"Campaign: {(_progress.Campaign * 100):N1}%",
-      $"Experimental: {(_progress.Experimental * 100):N1}%",
-      $"Parkour: {(_progress.Parkour * 100):N1}%",
-      $"Sandbox: {(_progress.Sandbox * 100):N1}%",
-      $"Tac Trial: {(_progress.TacTrial * 100):N1}%",
-      $"Easter Eggs: {(_progress.EasterEggs * 100):N1}%",
-      $"Unlocks: {(_progress.Unlocks * 100):N1}%",
-      $"Total: {(_progress.Total * 100):N1}% / {(Progress.MAX_PROGRESS * 100):N1}%",
+      $"Arena: {(progress.Arena * 100):N1}%",
+      $"Avatar: {(progress.Avatar * 100):N1}%",
+      $"Campaign: {(progress.Campaign * 100):N1}%",
+      $"Experimental: {(progress.Experimental * 100):N1}%",
+      $"Parkour: {(progress.Parkour * 100):N1}%",
+      $"Sandbox: {(progress.Sandbox * 100):N1}%",
+      $"Tac Trial: {(progress.TacTrial * 100):N1}%",
+      $"Easter Eggs: {(progress.EasterEggs * 100):N1}%",
+      $"Unlocks: {(progress.Unlocks * 100):N1}%",
+      $"Total: {(progress.Total * 100):N1}%",
       "",
-      $"100% complete: {isComplete}",
-      $"Beat game: {isGameBeat}",
-      $"Has body log: {hasBodyLog}",
+      $"100% complete: {progress.IsComplete}",
+      $"Beat game: {progress.HasBeatGame}",
+      $"Has body log: {progress.HasBodyLog}",
       $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.AllAchievements.Count}",
       $"Unlocks: {CapsuleTracker.Unlocked.Count} / {CapsuleTracker.NumTotalUnlocks}",
     });
@@ -197,10 +145,6 @@ public class Mod : MelonMod {
     RollingRefresh();
     SortCollectibles();
     DisplayCollectibles();
-
-    var state = new GameState();
-    if (HasStateChanged(state))
-      SendState(state);
 
     _completionTmp.SetText(GetCompletionText());
     _achievementTmp.SetText(GetAchievementText());
@@ -301,22 +245,6 @@ public class Mod : MelonMod {
     _achievementTmp.rectTransform.sizeDelta = new Vector2(0.3f, 0.3f);
     _achievementTmp.transform.localPosition = new Vector3(-0.1f, 0, 0);
     _achievementTmp.transform.localRotation = Quaternion.identity;
-  }
-
-  class GameState : HundredPercent.GameState {
-    public GameState() {
-      isComplete = false;
-      isLoading = Utilities.LevelHooks.IsLoading;
-      levelBarcode =
-          (Utilities.LevelHooks.CurrentLevel ?? Utilities.LevelHooks.NextLevel)
-              ?.Barcode.ID;
-      capsulesUnlocked = CapsuleTracker.Unlocked.Count;
-      capsulesTotal = CapsuleTracker.NumTotalUnlocks;
-      achievementsUnlocked = AchievementTracker.Unlocked.Count;
-      achievementsTotal = AchievementTracker.AllAchievements.Count;
-      percentageComplete = _progress.Total;
-      percentageTotal = Progress.MAX_PROGRESS;
-    }
   }
 }
 }

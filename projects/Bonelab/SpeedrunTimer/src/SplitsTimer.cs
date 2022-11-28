@@ -1,6 +1,7 @@
 ﻿using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
+using TMPro;
 using SLZ.Marrow.Warehouse;
 using SLZ.Bonelab;
 using Sst.Utilities;
@@ -9,7 +10,7 @@ namespace Sst.SpeedrunTimer {
 class SplitsTimer {
   private static SplitsTimer Instance;
 
-  private TMPro.TextMeshPro _tmp;
+  private TextMeshPro _tmp;
   private Splits _splits = new Splits();
   private MelonPreferences_Entry<bool> _prefHide;
 
@@ -63,8 +64,8 @@ class SplitsTimer {
 
     if (!_prefHide.Value) {
       var splitsText = new GameObject("SpeedrunTimer_Wrist_Text");
-      _tmp = splitsText.AddComponent<TMPro.TextMeshPro>();
-      _tmp.alignment = TMPro.TextAlignmentOptions.BottomRight;
+      _tmp = splitsText.AddComponent<TextMeshPro>();
+      _tmp.alignment = TextAlignmentOptions.BottomRight;
       _tmp.fontSize = 0.5f;
       _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
       var rigManager = Bonelab.GetRigManager();

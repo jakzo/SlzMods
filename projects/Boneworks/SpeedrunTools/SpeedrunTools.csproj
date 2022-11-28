@@ -42,40 +42,40 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\..\references\boneworks\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\references\boneworks\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Il2Cppmscorlib">
-      <HintPath>..\..\..\references\boneworks\Il2Cppmscorlib.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\Il2Cppmscorlib.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>..\..\..\references\boneworks\MelonLoader.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="Harmony">
-      <HintPath>..\..\..\references\boneworks\0Harmony.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="SteamVR">
-      <HintPath>..\..\..\references\boneworks\SteamVR.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\SteamVR.dll</HintPath>
     </Reference>
     <Reference Include="UnhollowerBaseLib">
-      <HintPath>..\..\..\references\boneworks\UnhollowerBaseLib.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\UnhollowerBaseLib.dll</HintPath>
     </Reference>
     <Reference Include="UnhollowerRuntimeLib">
-      <HintPath>..\..\..\references\boneworks\UnhollowerRuntimeLib.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\UnhollowerRuntimeLib.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\..\references\boneworks\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\..\references\boneworks\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\..\references\boneworks\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\..\references\boneworks\TextMeshPro.dll</HintPath>
+      <HintPath>..\..\..\references\Boneworks\TextMeshPro.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

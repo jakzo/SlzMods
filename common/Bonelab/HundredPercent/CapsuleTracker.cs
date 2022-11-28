@@ -5,7 +5,7 @@ using SLZ.Bonelab;
 using SLZ.SaveData;
 using SLZ.Marrow.Warehouse;
 
-namespace Sst.CompletionistHelper {
+namespace Sst.Common.Bonelab.HundredPercent {
 static class CapsuleTracker {
   public static event Action<string, string> OnUnlock;
 
@@ -13,11 +13,15 @@ static class CapsuleTracker {
   public static int NumTotalUnlocks = 0;
 
   public static void Initialize() {
-    InitUnlocks();
-    Utilities.LevelHooks.OnLevelStart += level => InitUnlocks();
+    InitUnlocks(null);
+    Utilities.LevelHooks.OnLevelStart += InitUnlocks;
   }
 
-  private static void InitUnlocks() {
+  public static void Deinitialize() {
+    Utilities.LevelHooks.OnLevelStart -= InitUnlocks;
+  }
+
+  private static void InitUnlocks(LevelCrate level) {
     Unlocked = new HashSet<string>();
     var activeSave = DataManager.ActiveSave;
     if (activeSave != null) {

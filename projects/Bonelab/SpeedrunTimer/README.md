@@ -2,7 +2,7 @@ Timer for Bonelab speedruns.
 
 # Installation
 
-- Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.5 or newer is installed in Bonelab
+- Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.7 or newer is installed in Bonelab
 - Download [the mod from Thunderstore](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/) (click on "Manual Download")
 - Open the downloaded `.zip` file and extract `Mods/SpeedrunTimer.dll` into `BONELAB/Mods/SpeedrunTimer.dll` which is usually at:
   - Steam: `C:\Program Files (x86)\Steam\steamapps\common\BONELAB\BONELAB`

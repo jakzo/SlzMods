@@ -27,6 +27,10 @@ Project("{C8D343BD-EF6E-9631-972E-B4219D723E51}") = "BoneworksLootDropBugfix", "
 EndProject
 Project("{F24D5D50-5E53-31D8-AF5C-2040F7BE2926}") = "BonelabLootDropBugfix", "projects\Bonelab\LootDropBugfix\LootDropBugfix.csproj", "{792FC5C9-C984-EBB2-E2C2-86AB4D227675}"
 EndProject
+Project("{CE52B9D2-CDA0-F5D2-21FF-324F31D4CEC4}") = "BonelabProgressFix", "projects\Bonelab\ProgressFix\ProgressFix.csproj", "{1E4EBDC9-D55B-387E-121E-F1B3061EC8D9}"
+EndProject
+Project("{D5C5A03E-70BE-CDE9-67A3-99A60DEC0E98}") = "BonelabHundredPercentTimer", "projects\Bonelab\HundredPercentTimer\HundredPercentTimer.csproj", "{EE7F9656-A7F1-D319-BD1B-18DA1C57D240}"
+EndProject
 
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +38,16 @@ Global
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {EE7F9656-A7F1-D319-BD1B-18DA1C57D240}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {EE7F9656-A7F1-D319-BD1B-18DA1C57D240}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {EE7F9656-A7F1-D319-BD1B-18DA1C57D240}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {EE7F9656-A7F1-D319-BD1B-18DA1C57D240}.Release|Any CPU.Build.0 = Release|Any CPU
+
+    {1E4EBDC9-D55B-387E-121E-F1B3061EC8D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {1E4EBDC9-D55B-387E-121E-F1B3061EC8D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {1E4EBDC9-D55B-387E-121E-F1B3061EC8D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {1E4EBDC9-D55B-387E-121E-F1B3061EC8D9}.Release|Any CPU.Build.0 = Release|Any CPU
+
     {792FC5C9-C984-EBB2-E2C2-86AB4D227675}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {792FC5C9-C984-EBB2-E2C2-86AB4D227675}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {792FC5C9-C984-EBB2-E2C2-86AB4D227675}.Release|Any CPU.ActiveCfg = Release|Any CPU

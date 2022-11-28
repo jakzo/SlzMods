@@ -3,5 +3,5 @@
   "version_number": "0.0.0",
   "description": "Visibly shows level end triggers.",
   "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/TriggerVisualizer",
-  "dependencies": ["LavaGang-MelonLoader-0.5.6"]
+  "dependencies": ["LavaGang-MelonLoader-0.5.7"]
 }

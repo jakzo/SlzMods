@@ -11,7 +11,9 @@ public class Dbg {
   }
 
   public static void Log(string msg, params object[] data) {
+#if !DEBUG
     if (_prefPrintDebugLogs.Value)
+#endif
       MelonLogger.Msg($"dbg: {msg}");
   }
 }

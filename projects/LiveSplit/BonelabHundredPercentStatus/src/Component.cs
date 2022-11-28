@@ -8,7 +8,7 @@ using LiveSplit.UI.Components;
 using LiveSplit.Model;
 using Sst.Utilities;
 using Sst.Common.LiveSplit;
-using Sst.Common.Bonelab;
+using Sst.Common.Bonelab.HundredPercent;
 
 namespace Sst.Livesplit.BonelabHundredPercentStatus {
 public class Component : IComponent {
@@ -113,7 +113,7 @@ public class Component : IComponent {
     }
   }
 
-  private void UpdateTimer(HundredPercent.GameState receivedState) {
+  private void UpdateTimer(GameState receivedState) {
     var isTimerStarted = _timer.CurrentState.CurrentSplitIndex >= 0;
     _timer.CurrentState.IsGameTimePaused = receivedState.isLoading;
 

@@ -8,8 +8,8 @@ using MelonLoader;
 
 namespace Sst.Common.Ipc {
 public class Server : IDisposable {
-  public event Action OnClientConnected;
-  public event Action OnClientDisconnected;
+  public event Action<NamedPipeServerStream> OnClientConnected;
+  public event Action<NamedPipeServerStream> OnClientDisconnected;
   public event Action<string> OnMessageReceived;
 
   public string Name;
@@ -35,25 +35,30 @@ public class Server : IDisposable {
   }
 
   public void Send(string message) {
-    foreach (var stream in _streams.ToArray()) {
-      if (stream.IsConnected) {
-        var bytes = Encoding.UTF8.GetBytes(message);
-        stream.WriteAsync(bytes, 0, bytes.Length);
-      }
-    }
+    foreach (var stream in _streams.ToArray())
+      SendToStream(stream, message);
+  }
+
+  public static void SendToStream(NamedPipeServerStream stream,
+                                  string message) {
+    if (!stream.IsConnected)
+      return;
+    var bytes = Encoding.UTF8.GetBytes(message);
+    stream.WriteAsync(bytes, 0, bytes.Length);
   }
 
   private async void StartNewPipeServer() {
     try {
-      var stream = new NamedPipeServerStream(
-          Name, PipeDirection.InOut, MAX_NUMBER_OF_SERVER_INSTANCES,
-          PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+      var stream = new NamedPipeServerStream(Name, PipeDirection.InOut,
+                                             MAX_NUMBER_OF_SERVER_INSTANCES,
+                                             PipeTransmissionMode.Message);
       _streams.Add(stream);
       await WaitForConnectionAsync(stream);
+      Dbg.Log("Client connected");
       if (_isDisposed)
         return;
       StartNewPipeServer();
-      SafeInvoke(() => OnClientConnected?.Invoke());
+      SafeInvoke(() => OnClientConnected?.Invoke(stream));
 
       var buffer = new byte[BUFFER_SIZE];
       StringBuilder sb = null;
@@ -86,7 +91,7 @@ public class Server : IDisposable {
     try {
       if (stream.IsConnected) {
         stream.Disconnect();
-        SafeInvoke(() => OnClientDisconnected?.Invoke());
+        SafeInvoke(() => OnClientDisconnected?.Invoke(stream));
       }
     } catch (Exception ex) {
       MelonLogger.Error($"Failed to stop pipe server: {ex.ToString()}");
@@ -104,10 +109,9 @@ public class Server : IDisposable {
     }
   }
 
-  // This is not implemented in the game/MelonLoader's build of Mono
+  // WaitForConnectionAsync is not implemented in the game's build of Mono
   // https://github.com/mono/mono/blob/main/mcs/class/referencesource/System.Core/System/IO/Pipes/Pipe.cs
   private Task WaitForConnectionAsync(NamedPipeServerStream stream) =>
-      Task.Factory.FromAsync(stream.BeginWaitForConnection,
-                             stream.EndWaitForConnection, null);
+      Task.Run(stream.WaitForConnection);
 }
 }

@@ -104,5 +104,11 @@ public class Server : IDisposable {
       MelonLogger.Error($"Failed to run event: {ex.ToString()}");
     }
   }
+
+  // This is not implemented in the game/MelonLoader's build of Mono
+  // https://github.com/mono/mono/blob/main/mcs/class/referencesource/System.Core/System/IO/Pipes/Pipe.cs
+  private Task WaitForConnectionAsync(NamedPipeServerStream stream) =>
+      Task.Factory.FromAsync(stream.BeginWaitForConnection,
+                             stream.EndWaitForConnection, null);
 }
 }

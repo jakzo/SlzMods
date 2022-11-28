@@ -32,7 +32,7 @@ sudo apt install flatbuffers-compiler
 After making changes to `Bwr.fbs` run this to regenerate the `Bwr/*.cs` files:
 
 ```sh
-cd projects/boneworks/src/Replay && flatc --csharp Bwr.fbs
+cd projects/Boneworks/SpeedrunTools/src/Replay && flatc --csharp Bwr.fbs
 ```
 
 ## Build

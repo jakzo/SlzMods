@@ -4,12 +4,12 @@
 using System;
 using System.Threading;
 using Newtonsoft.Json;
-using Sst.Common.Bonelab;
+using Sst.Common.Bonelab.HundredPercent;
 
 try {
-  var server = new Sst.Common.Ipc.Server(HundredPercent.NAMED_PIPE);
+  var server = new Sst.Common.Ipc.Server(GameState.NAMED_PIPE);
 
-  var state = new HundredPercent.GameState() {
+  var state = new GameState() {
     isLoading = false,           levelBarcode = null,
     capsulesUnlocked = 0,        capsulesTotal = 174,
     capsulesJustUnlocked = null, achievementsUnlocked = 0,
@@ -36,13 +36,14 @@ try {
     Console.Write(".");
   };
 
-  server.OnClientConnected += () => {
+  server.OnClientConnected += stream => {
     Console.Write("\nClient connected");
     // server.Send(
     //     "{\"isComplete\":false,\"isLoading\":false,\"levelBarcode\":\"c2534c5a-de61-4df9-8f6c-416954726547\",\"capsulesUnlocked\":111,\"capsulesTotal\":174,\"capsulesJustUnlocked\":[\"Gym
     //     D6\"],\"achievementsUnlocked\":37,\"achievementsTotal\":57,\"achievementsJustUnlocked\":null,\"percentageComplete\":0.760238051,\"percentageTotal\":0.95}");
   };
-  server.OnClientDisconnected += () => Console.Write("\nClient disconnected");
+  server.OnClientDisconnected += stream =>
+      Console.Write("\nClient disconnected");
 
   while (true)
     Thread.Sleep(800);

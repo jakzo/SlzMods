@@ -8,13 +8,22 @@ using HarmonyLib;
 using SLZ.Bonelab;
 using SLZ.SaveData;
 
-namespace Sst.CompletionistHelper {
+namespace Sst.Common.Bonelab.HundredPercent {
 static class AchievementTracker {
+  public static string SAVE_PATH;
+  public static HashSet<string> IMPOSSIBLE_ACHIEVEMENTS =
+      new HashSet<string>() {
+        "ACH_TUNNELTIPPER_TAC",
+        "ACH_GUNRANGE",
+      };
+  public static int NUM_POSSIBLE_ACHIEVEMENTS = 55;
+
   public static event Action<string, string> OnUnlock;
 
-  public static string SAVE_PATH;
-
   public static HashSet<string> Unlocked = new HashSet<string>();
+  public static float Progress {
+    get => (float)(Unlocked.Count) / (float)NUM_POSSIBLE_ACHIEVEMENTS;
+  }
 
   public static Dictionary<string, string> AllAchievements =
       Utilities.Il2cpp.ToDictionary(Achievements.AchievementsDict);
@@ -22,6 +31,13 @@ static class AchievementTracker {
   public static void Initialize() {
     SAVE_PATH =
         Path.Combine(DataManager.SettingsPath, "..", "achievements.txt");
+
+    var allPossibleAchievements =
+        AllAchievements.Select(entry => entry.Key).ToHashSet();
+    foreach (var id in IMPOSSIBLE_ACHIEVEMENTS)
+      allPossibleAchievements.Remove(id);
+    NUM_POSSIBLE_ACHIEVEMENTS = allPossibleAchievements.Count;
+
     Unlocked = File.Exists(SAVE_PATH) ? File.ReadAllLines(SAVE_PATH).ToHashSet()
                                       : new HashSet<string>();
   }

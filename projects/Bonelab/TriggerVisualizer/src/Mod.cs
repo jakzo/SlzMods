@@ -7,21 +7,27 @@ namespace Sst.TriggerVisualizer {
 public class Mod : MelonMod {
   private static Color COLOR_RED = new Color(0.8f, 0.2f, 0.2f);
 
-  public override void OnInitializeMelon() { Dbg.Init(BuildInfo.NAME); }
+  private List<GameObject> _visualizations;
+
+  public override void OnInitializeMelon() {
+    Dbg.Init(BuildInfo.NAME);
+    Utilities.LevelHooks.OnLoad += level => _visualizations = null;
+  }
 
   public override void OnUpdate() {
     if (Input.GetKeyDown(KeyCode.T)) {
-      if (GameObject.FindObjectOfType<TriggerVisualization>()) {
-        MelonLogger.Msg("Hiding trigger visualizations...");
-        HideTriggers();
-      } else {
+      if (_visualizations == null) {
         MelonLogger.Msg("Showing trigger visualizations...");
         ShowTriggers();
+      } else {
+        MelonLogger.Msg("Hiding trigger visualizations...");
+        HideTriggers();
       }
     }
   }
 
   private void ShowTriggers() {
+    _visualizations = new List<GameObject>();
     foreach (var trigger in GameObject.FindObjectsOfType<TriggerLasers>()) {
       VisualizeColliders(trigger,
                          trigger.gameObject.GetComponents<BoxCollider>());
@@ -39,17 +45,15 @@ public class Mod : MelonMod {
       var visualization =
           Utilities.Collider.Visualize(trigger.gameObject, collider, COLOR_RED,
                                        Utilities.Bonelab.HighlightShader);
-      visualization.AddComponent<TriggerVisualization>();
+      _visualizations.Add(visualization);
     }
   }
 
   private void HideTriggers() {
-    foreach (var visualization in GameObject
-                 .FindObjectsOfType<TriggerVisualization>())
+    foreach (var visualization in _visualizations)
       GameObject.Destroy(visualization.gameObject);
+    _visualizations = null;
   }
-
-  class TriggerVisualization : MonoBehaviour {}
 
   // Has an error patching for some reason :'(
   // Could possibly show on chunk load instead?

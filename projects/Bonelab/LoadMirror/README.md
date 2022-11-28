@@ -2,7 +2,7 @@ Shows the headset view during loading screens instead of a still image.
 
 # Installation
 
-- Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.5 or newer is installed in Bonelab
+- Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.7 or newer is installed in Bonelab
 - Download [the mod from Thunderstore](https://bonelab.thunderstore.io/package/jakzo/LoadMirror/) (click on "Manual Download")
 - Open the downloaded `.zip` file and extract `Mods/LoadMirror.dll` into `BONELAB/Mods/LoadMirror.dll` which is usually at:
   - Steam: `C:\Program Files (x86)\Steam\steamapps\common\BONELAB\BONELAB`

@@ -4,10 +4,10 @@
 using System;
 using System.Threading;
 using Newtonsoft.Json;
-using Sst.Common.Bonelab;
+using Sst.Common.Bonelab.HundredPercent;
 
 try {
-  var client = new Sst.Common.Ipc.Client(HundredPercent.NAMED_PIPE);
+  var client = new Sst.Common.Ipc.Client(GameState.NAMED_PIPE);
 
   client.OnConnected += () => Console.WriteLine("Server connected");
   client.OnDisconnected += () => Console.WriteLine("Server disconnected");

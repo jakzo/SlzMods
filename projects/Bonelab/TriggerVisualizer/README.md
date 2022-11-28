@@ -8,7 +8,7 @@ Note that this currently doesn't show all triggers, just ones which use the `Tri
 
 # Installation
 
-- Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.5 or newer is installed in Bonelab
+- Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.7 or newer is installed in Bonelab
 - Download [the mod from Thunderstore](https://bonelab.thunderstore.io/package/jakzo/TriggerVisualizer/) (click on "Manual Download")
 - Open the downloaded `.zip` file and extract `Mods/TriggerVisualizer.dll` into `BONELAB/Mods/TriggerVisualizer.dll` which is usually at:
   - Steam: `C:\Program Files (x86)\Steam\steamapps\common\BONELAB\BONELAB`

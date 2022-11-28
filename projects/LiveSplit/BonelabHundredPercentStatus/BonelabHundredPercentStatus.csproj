@@ -61,7 +61,7 @@
     <Compile Include="src/**/*.cs" />
     <Compile Include="../../../common/Utilities/Metadata.cs" />
     <Compile Include="../../../common/Utilities/IpcClient.cs" />
-    <Compile Include="../../../common/Bonelab/HundredPercent.cs" />
+    <Compile Include="../../../common/Bonelab/HundredPercent/GameState.cs" />
     <Compile Include="../../../common/Bonelab/Levels.cs" />
     <Compile Include="../../../common/LiveSplit/Logger.cs" />
   </ItemGroup>

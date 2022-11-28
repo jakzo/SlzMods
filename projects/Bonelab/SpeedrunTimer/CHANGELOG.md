@@ -1,3 +1,7 @@
+## 1.0.1
+
+Fix time not showing in loading screens and timer starting too early before loading finishes.
+
 ## 1.0.0
 
 Make it work for new game patch.

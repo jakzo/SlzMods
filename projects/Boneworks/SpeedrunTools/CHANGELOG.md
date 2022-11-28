@@ -1,3 +1,7 @@
+## 2.3.2
+
+Fix fantasy arena state not being reset. Also reset achievements when activating 100% mode (so that reclaimation bin must be activated during the run).
+
 ## 2.3.1
 
 [LootDropBugfix](https://boneworks.thunderstore.io/package/jakzo/LootDropBugfix/) is now an allowed mod for speedruns.

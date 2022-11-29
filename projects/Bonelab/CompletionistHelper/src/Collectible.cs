@@ -37,15 +37,15 @@ class CollectibleType {
   public static CollectibleType AMMO_LIGHT =
       new CollectibleType("Light ammo", true, FindAmmo("prop_ammoBox_light"));
   public static CollectibleType AMMO_LIGHT_CRATE = new CollectibleType(
-      "Light ammo crate", true, FindAmmo("dest_ammoBoxLight Variant"));
+      "Light ammo crate", true, FindAmmoCrate("dest_ammoBoxLight Variant"));
   public static CollectibleType AMMO_MEDIUM =
       new CollectibleType("Medium ammo", true, FindAmmo("prop_ammoBox_med"));
   public static CollectibleType AMMO_MEDIUM_CRATE = new CollectibleType(
-      "Medium ammo crate", true, FindAmmo("dest_ammoBoxMedium Variant"));
+      "Medium ammo crate", true, FindAmmoCrate("dest_ammoBoxMedium Variant"));
   public static CollectibleType AMMO_HEAVY =
       new CollectibleType("Heavy ammo", true, FindAmmo("prop_ammoBox_hvy"));
   public static CollectibleType AMMO_HEAVY_CRATE = new CollectibleType(
-      "Heavy ammo crate", true, FindAmmo("dest_ammoBoxHeavy Variant"));
+      "Heavy ammo crate", true, FindAmmoCrate("dest_ammoBoxHeavy Variant"));
   public static CollectibleType KEYCARD = new CollectibleType(
       "Keycard", false,
       () => _cachedKeycards.Where(
@@ -65,9 +65,21 @@ class CollectibleType {
                       ShouldShow(obj) && obj.name.StartsWith(prefix));
   }
 
+  private static Func<IEnumerable<ObjectDestructable>>
+  FindAmmoCrate(string ammoBoxBarcode) => () =>
+      Utilities.Levels.CAMPAIGN_LEVEL_BARCODES_SET.Contains(
+          Utilities.LevelHooks.CurrentLevel.Barcode.ID)
+          ? _cachedObjectDestructables.Where(
+                obj => ShouldShow(obj) && obj.lootTable != null &&
+                       obj.lootTable.items.Any(
+                           item => item.spawnable.crateRef.Crate.Barcode.ID ==
+                                   ammoBoxBarcode))
+          : new ObjectDestructable[] {};
+
   private static GachaCapsule[] _cachedGachaCapsules;
   private static GachaPlacer[] _cachedGachaPlacers;
   private static AmmoPickupProxy[] _cachedAmmoPickupProxys;
+  private static ObjectDestructable[] _cachedObjectDestructables;
   private static Keycard[] _cachedKeycards;
   private static KeycardReciever[] _cachedKeycardReceivers;
   private static HashSet<string> _unlockedCrateBarcodes;
@@ -97,6 +109,10 @@ class CollectibleType {
     () => {
       _cachedAmmoPickupProxys =
           Resources.FindObjectsOfTypeAll<AmmoPickupProxy>();
+    },
+    () => {
+      _cachedObjectDestructables =
+          Resources.FindObjectsOfTypeAll<ObjectDestructable>();
     },
     () => { _cachedKeycards = Resources.FindObjectsOfTypeAll<Keycard>(); },
     () => {

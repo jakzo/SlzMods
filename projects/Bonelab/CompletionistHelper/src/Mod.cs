@@ -43,7 +43,9 @@ public class Mod : MelonMod {
                     if (!CollectibleType.ShouldShow(collectible.GameObject))
                       continue;
 
-                    // if (levelState != null) {
+                    // TODO: Seems like ammo might still count even if it's not
+                    // saveable? (eg. ammo boxes by the gun in Pillar Climb) if
+                    // (levelState != null) {
                     //   var saveable =
                     //       collectible.GameObject.GetComponent<SLZ.Bonelab.Saveable>();
                     //   if (saveable != null) {

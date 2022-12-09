@@ -1,3 +1,5 @@
+> **ATTENTION:** This mod is deprecated for the [LootDropBugfix mod](https://bonelab.thunderstore.io/package/jakzo/BlLootDropBugfix/) which fixes all loot dropping instead of just ammo. Download that one instead.
+
 Fixes bug where ammo sometimes doesn't spawn after breaking ammo crates.
 
 # Installation

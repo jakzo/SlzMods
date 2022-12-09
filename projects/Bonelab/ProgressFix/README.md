@@ -1,5 +1,7 @@
 Fixes the game progression percentage displayed in the main menu.
 
+Note that even if you've already finished the game you will need to complete some levels/keycards again because without this mod the game does not record them as being completed.
+
 # Installation
 
 - Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.7 or newer is installed in Bonelab

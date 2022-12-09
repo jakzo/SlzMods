@@ -419,6 +419,41 @@ var result = "";
 foreach (var crate in SLZ.Marrow.Warehouse.AssetWarehouse.Instance
              .GetCrates()) {
   if (crate.AssetType == Il2CppType.Of<UnityEngine.SceneManagement.Scene>())
-    result += crate.Title + "\n";
+    result += $"{crate.Title} ({crate.Barcode.ID})\n";
 }
 result;
+// 01 - Descent (c2534c5a-4197-4879-8cd3-4a695363656e)
+// 02 - BONELAB Hub (c2534c5a-6b79-40ec-8e98-e58c5363656e)
+// 03 - LongRun (c2534c5a-56a6-40ab-a8ce-23074c657665)
+// 04 - Mine Dive (c2534c5a-54df-470b-baaf-741f4c657665)
+// 05 - Big Anomaly (c2534c5a-7601-4443-bdfe-7f235363656e)
+// 06 - Street Puncher (SLZ.BONELAB.Content.Level.LevelStreetPunch)
+// 07 - Sprint Bridge 04 (SLZ.BONELAB.Content.Level.SprintBridge04)
+// 08 - Magma Gate (SLZ.BONELAB.Content.Level.SceneMagmaGate)
+// 09- MoonBase (SLZ.BONELAB.Content.Level.MoonBase)
+// 10 - Monogon Motorway (SLZ.BONELAB.Content.Level.LevelKartRace)
+// 11 - Pillar Climb (c2534c5a-c056-4883-ac79-e051426f6964)
+// 12 - Big Anomaly B (SLZ.BONELAB.Content.Level.LevelBigAnomalyB)
+// 13 - Ascent (c2534c5a-db71-49cf-b694-24584c657665)
+// 14 - Home (SLZ.BONELAB.Content.Level.LevelOutro)
+// 15 - Void G114 (fa534c5a868247138f50c62e424c4144.Level.VoidG114)
+// Big Bone Bowling (fa534c5a83ee4ec6bd641fec424c4142.Level.LevelKartBowling)
+// Container Yard (c2534c5a-162f-4661-a04d-975d5363656e)
+// Neon District Parkour
+// (fa534c5a83ee4ec6bd641fec424c4142.Level.SceneparkourDistrictLogic) Neon
+// District Tac Trial (c2534c5a-4f3b-480e-ad2f-69175363656e) Drop Pit
+// (c2534c5a-de61-4df9-8f6c-416954726547) Dungeon Warrior
+// (c2534c5a-5c2f-4eef-a851-66214c657665) Fantasy Arena
+// (fa534c5a868247138f50c62e424c4144.Level.LevelArenaMin) Gun Range
+// (fa534c5a83ee4ec6bd641fec424c4142.Level.LevelGunRange) Halfway Park
+// (fa534c5a83ee4ec6bd641fec424c4142.Level.LevelHalfwayPark) HoloChamber
+// (fa534c5a83ee4ec6bd641fec424c4142.Level.LevelHoloChamber) Mirror
+// (SLZ.BONELAB.Content.Level.LevelMirror) Museum Basement
+// (fa534c5a83ee4ec6bd641fec424c4142.Level.LevelMuseumBasement) Rooftops
+// (c2534c5a-c6ac-48b4-9c5f-b5cd5363656e) Tunnel Tipper
+// (c2534c5a-c180-40e0-b2b7-325c5363656e) Tuscany
+// (c2534c5a-2c4c-4b44-b076-203b5363656e) 00 - Main Menu
+// (c2534c5a-80e1-4a29-93ca-f3254d656e75) Baseline
+// (c2534c5a-61b3-4f97-9059-79155363656e) Load Default
+// (fa534c5a83ee4ec6bd641fec424c4142.Level.DefaultLoad) Load Mod
+// (SLZ.BONELAB.CORE.Level.LevelModLevelLoad)

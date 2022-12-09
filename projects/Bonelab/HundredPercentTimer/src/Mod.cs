@@ -13,12 +13,26 @@ public class Mod : MelonMod {
     AchievementTracker.Initialize();
     CapsuleTracker.Initialize();
 
-    _server = new Server();
+    Utilities.LevelHooks.OnLoad += level => ServerSendIfNecessary();
+    Utilities.LevelHooks.OnLevelStart += level => ServerSendIfNecessary();
+  }
+
+  private void ServerSendIfNecessary() {
+    if (Utilities.AntiCheat.CheckRunLegitimacy<Mod>()) {
+      if (_server == null)
+        _server = new Server();
+      else
+        _server.SendStateIfChanged();
+    } else if (_server != null) {
+      _server.Dispose();
+      _server = null;
+    }
   }
 
   public override void OnDeinitializeMelon() {
     CapsuleTracker.Deinitialize();
-    _server.Dispose();
+    _server?.Dispose();
+    _server = null;
   }
 }
 }

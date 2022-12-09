@@ -6,6 +6,8 @@ namespace Sst.Utilities {
 class AntiCheat {
   private static HashSet<string> ALLOWED_MODS = new HashSet<string>() {
     "LoadMirror",
+    "ProgressFix",
+    "LootDropBugfix",
     "MelonPreferencesManager",
   };
   private static HashSet<string> ALLOWED_PLUGINS = new HashSet<string>() {
@@ -17,6 +19,8 @@ class AntiCheat {
     DISALLOWED_PLUGINS,
   }
 
+  private static bool _hasPrintedIllegitimacyReasons = false;
+
   public static Dictionary<RunIllegitimacyReason, string>
   ComputeRunLegitimacy<Mod>() {
 #if DEBUG
@@ -24,6 +28,23 @@ class AntiCheat {
 #else
     return ComputeRunLegitimacyInternal<Mod>();
 #endif
+  }
+
+  public static bool CheckRunLegitimacy<Mod>() {
+    var illegitimacyReasons = ComputeRunLegitimacy<Mod>();
+    if (illegitimacyReasons.Count == 0) {
+      _hasPrintedIllegitimacyReasons = false;
+      return true;
+    }
+
+    if (!_hasPrintedIllegitimacyReasons) {
+      _hasPrintedIllegitimacyReasons = true;
+      var reasonMessages = string.Join(
+          "", illegitimacyReasons.Select(reason => $"\n» {reason.Value}"));
+      MelonLogger.Msg(
+          $"Cannot show timer due to run being illegitimate because:{reasonMessages}");
+    }
+    return false;
   }
 
   private static Dictionary<RunIllegitimacyReason, string>

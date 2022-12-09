@@ -97,6 +97,7 @@
     <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
     <Compile Include="../../../common/Bonelab/Levels.cs" />
     <Compile Include="../../../common/Bonelab/HundredPercent/*.cs" />
+    <Compile Include="../../../common/Bonelab/AntiCheat.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">

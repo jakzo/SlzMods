@@ -1,3 +1,6 @@
+#r "../../../../references/Bonelab/Assembly-CSharp.dll"
+#r "../bin/CompletionistHelper.dll"
+
 // Arena not completed = TunnelTipper
 // Parkour not completed = Rooftops
 // Tac trial not completed = District, ThreeGunRange
@@ -19,7 +22,6 @@
 // Stationary Turret (SLZ.BONELAB.Content.Spawnable.PropStationaryTurret)
 
 // Missing keycards
-// EricC
 // KevinC
 
 Func<float> f = () => {

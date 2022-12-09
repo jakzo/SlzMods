@@ -16,27 +16,24 @@ static class AchievementTracker {
         "ACH_TUNNELTIPPER_TAC",
         "ACH_GUNRANGE",
       };
-  public static int NumPossibleAchievements;
+  public static Dictionary<string, string> AllAchievements =
+      Utilities.Il2cpp.ToDictionary(Achievements.AchievementsDict);
+  public static Dictionary<string, string> PossibleAchievements;
 
   public static event Action<string, string> OnUnlock;
 
   public static HashSet<string> Unlocked = new HashSet<string>();
   public static float Progress {
-    get => (float)(Unlocked.Count) / (float)NumPossibleAchievements;
+    get => (float)(Unlocked.Count) / (float)PossibleAchievements.Count;
   }
-
-  public static Dictionary<string, string> AllAchievements =
-      Utilities.Il2cpp.ToDictionary(Achievements.AchievementsDict);
 
   public static void Initialize() {
     SAVE_PATH =
         Path.Combine(DataManager.SettingsPath, "..", "achievements.txt");
 
-    var allPossibleAchievements =
-        AllAchievements.Select(entry => entry.Key).ToHashSet();
+    PossibleAchievements = new Dictionary<string, string>(AllAchievements);
     foreach (var id in IMPOSSIBLE_ACHIEVEMENTS)
-      allPossibleAchievements.Remove(id);
-    NumPossibleAchievements = allPossibleAchievements.Count;
+      PossibleAchievements.Remove(id);
 
     Unlocked = File.Exists(SAVE_PATH) ? File.ReadAllLines(SAVE_PATH).ToHashSet()
                                       : new HashSet<string>();

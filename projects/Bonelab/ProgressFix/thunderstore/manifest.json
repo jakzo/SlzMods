@@ -1,6 +1,6 @@
 {
   "name": "ProgressFix",
-  "version_number": "0.0.0",
+  "version_number": "1.0.0",
   "description": "Fixes the game progression percentage displayed in the main menu.",
   "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/ProgressFix",
   "dependencies": ["LavaGang-MelonLoader-0.5.7"]

@@ -1,3 +1,7 @@
+## 1.1.1
+
+Deprecated for LootDropBugfix mod.
+
 ## 1.1.0
 
 Fix respawned ammo not being saved when collected.

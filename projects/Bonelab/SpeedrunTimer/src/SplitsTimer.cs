@@ -14,13 +14,6 @@ class SplitsTimer {
   private Splits _splits = new Splits();
   private MelonPreferences_Entry<bool> _prefHide;
 
-  // public readonly Pref<bool> PrefShowUnderWrist = new Pref<bool>() {
-  //   Id = "showUnderWrist",
-  //   Name = "Show timer under hand",
-  //   Description = "Timer is invisible unless you point your wrist upwards.",
-  //   DefaultValue = false,
-  // };
-
   public SplitsTimer() {
     Instance = this;
     Livesplit.SetState(true, false);
@@ -68,17 +61,7 @@ class SplitsTimer {
       _tmp.alignment = TextAlignmentOptions.BottomRight;
       _tmp.fontSize = 0.5f;
       _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-      var rigManager = Bonelab.GetRigManager();
-      splitsText.transform.SetParent(
-          rigManager.ControllerRig.leftController.transform);
-      // if (PrefShowUnderWrist.Read()) {
-      //   // TODO
-      //   _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
-      //   _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
-      // } else {
-      _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
-      _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
-      // }
+      Utilities.Bonelab.DockToWrist(_tmp.gameObject);
     }
 
     _splits.ResumeIfStarted();

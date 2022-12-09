@@ -19,55 +19,82 @@ class Collectible {
 class CollectibleType {
   public static CollectibleType GACHA_CAPSULE = new CollectibleType(
       "Gacha capsule", false,
-      () => _cachedGachaCapsules.Where(
-          gc => ShouldShow(gc) && !gc.used &&
-                !_unlockedCrateBarcodes.Contains(gc.selectedCrate.Barcode.ID)));
+      FindInCache(() => _cachedGachaCapsules,
+                  gc => !gc.used && !_unlockedCrateBarcodes.Contains(
+                                        gc.selectedCrate.Barcode.ID)));
   public static CollectibleType GACHA_PLACER = new CollectibleType(
       "Gacha spawn point", false,
-      () => _cachedGachaPlacers.Where(
-          gp => ShouldShow(gp) && !gp.onlyPlaceIfBeatGame &&
-                !gp.cratePlacer.placed &&
+      FindInCache(
+          () => _cachedGachaPlacers,
+          gp => !gp.onlyPlaceIfBeatGame && !gp.cratePlacer.placed &&
                 !_unlockedCrateBarcodes.Contains(gp.unlockCrate.Barcode.ID)));
   public static CollectibleType GACHA_PLACER_FINISHED = new CollectibleType(
       "Gacha spawn point (after beating game)", false,
-      () => _cachedGachaPlacers.Where(
-          gp => ShouldShow(gp) && gp.onlyPlaceIfBeatGame &&
-                !gp.cratePlacer.placed &&
+      FindInCache(
+          () => _cachedGachaPlacers,
+          gp => gp.onlyPlaceIfBeatGame && !gp.cratePlacer.placed &&
                 !_unlockedCrateBarcodes.Contains(gp.unlockCrate.Barcode.ID)));
   public static CollectibleType AMMO_LIGHT =
-      new CollectibleType("Light ammo", true, FindAmmo("prop_ammoBox_light"));
+      new CollectibleType("Light ammo", true, FindAmmo("light"));
   public static CollectibleType AMMO_LIGHT_CRATE = new CollectibleType(
-      "Light ammo crate", true, FindAmmo("dest_ammoBoxLight Variant"));
+      "Light ammo crate", true,
+      FindAmmoCrate("c1534c5a-683b-4c01-b378-6795416d6d6f"));
   public static CollectibleType AMMO_MEDIUM =
-      new CollectibleType("Medium ammo", true, FindAmmo("prop_ammoBox_med"));
+      new CollectibleType("Medium ammo", true, FindAmmo("medium"));
   public static CollectibleType AMMO_MEDIUM_CRATE = new CollectibleType(
-      "Medium ammo crate", true, FindAmmo("dest_ammoBoxMedium Variant"));
+      "Medium ammo crate", true,
+      FindAmmoCrate("c1534c5a-57d4-4468-b5f0-c795416d6d6f"));
   public static CollectibleType AMMO_HEAVY =
-      new CollectibleType("Heavy ammo", true, FindAmmo("prop_ammoBox_hvy"));
+      new CollectibleType("Heavy ammo", true, FindAmmo("heavy"));
   public static CollectibleType AMMO_HEAVY_CRATE = new CollectibleType(
-      "Heavy ammo crate", true, FindAmmo("dest_ammoBoxHeavy Variant"));
+      "Heavy ammo crate", true,
+      FindAmmoCrate("c1534c5a-97a9-43f7-be30-6095416d6d6f"));
   public static CollectibleType KEYCARD = new CollectibleType(
       "Keycard", false,
-      () => _cachedKeycards.Where(
-          kc => ShouldShow(kc) &&
-                !(kc.GetComponent<InteractableHost>()?._lastHand != null)));
+      FindInCache(
+          () => _cachedKeycards,
+          kc => !(kc.GetComponent<InteractableHost>()?._lastHand != null)));
   public static CollectibleType KEYCARD_READER = new CollectibleType(
       "Keycard reader", false,
-      () => _cachedKeycardReceivers.Where(
-          kr =>
-              ShouldShow(kr) && kr._State != KeycardReciever._States.INSERTED));
+      FindInCache(() => _cachedKeycardReceivers,
+                  kr => kr._State != KeycardReciever._States.INSERTED));
 
-  private static Func<IEnumerable<AmmoPickupProxy>> FindAmmo(string name) {
-    var prefix = $"{name} [";
-    return () => _cachedAmmoPickupProxys.Where(
-               obj => Utilities.Levels.CAMPAIGN_LEVEL_BARCODES_SET.Contains(
-                          Utilities.LevelHooks.CurrentLevel.Barcode.ID) &&
-                      ShouldShow(obj) && obj.name.StartsWith(prefix));
+  private static Func<IEnumerable<MonoBehaviour>>
+  FindAmmo(string ammoGroupKey) => FindIfInCampaignLevel(
+      () => _cachedAmmoPickupProxys,
+      obj => obj.ammoPickup.ammoGroup?.KeyName == ammoGroupKey);
+
+  private static Func<IEnumerable<MonoBehaviour>>
+  FindAmmoCrate(string ammoBoxBarcode) => FindIfInCampaignLevel(
+      () => _cachedObjectDestructables,
+      obj =>
+          obj.lootTable?.items.Any(item => item.spawnable.crateRef.Barcode.ID ==
+                                           ammoBoxBarcode) == true);
+
+  private static Func<IEnumerable<MonoBehaviour>>
+  FindIfInCampaignLevel<T>(Func<T[]> getCachedObjects,
+                           Func<T, bool> isCachedObjectCollectible)
+      where T : MonoBehaviour {
+    return () => Utilities.Levels.CAMPAIGN_LEVEL_BARCODES_SET.Contains(
+                     Utilities.LevelHooks.CurrentLevel.Barcode.ID)
+                     ? getCachedObjects().Where(
+                           obj => ShouldShow(obj) &&
+                                  isCachedObjectCollectible(obj))
+                     : new T[] {};
+  }
+
+  private static Func<IEnumerable<MonoBehaviour>>
+  FindInCache<T>(Func<T[]> getCachedObjects,
+                 Func<T, bool> isCachedObjectCollectible)
+      where T : MonoBehaviour {
+    return () => getCachedObjects().Where(
+               obj => ShouldShow(obj) && isCachedObjectCollectible(obj));
   }
 
   private static GachaCapsule[] _cachedGachaCapsules;
   private static GachaPlacer[] _cachedGachaPlacers;
   private static AmmoPickupProxy[] _cachedAmmoPickupProxys;
+  private static ObjectDestructable[] _cachedObjectDestructables;
   private static Keycard[] _cachedKeycards;
   private static KeycardReciever[] _cachedKeycardReceivers;
   private static HashSet<string> _unlockedCrateBarcodes;
@@ -97,6 +124,10 @@ class CollectibleType {
     () => {
       _cachedAmmoPickupProxys =
           Resources.FindObjectsOfTypeAll<AmmoPickupProxy>();
+    },
+    () => {
+      _cachedObjectDestructables =
+          Resources.FindObjectsOfTypeAll<ObjectDestructable>();
     },
     () => { _cachedKeycards = Resources.FindObjectsOfTypeAll<Keycard>(); },
     () => {

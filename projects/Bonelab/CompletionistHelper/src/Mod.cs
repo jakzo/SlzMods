@@ -13,8 +13,7 @@ public class Mod : MelonMod {
   private const int NUM_HUD_SLOTS = 5;
   private const int NUM_DISPLAYED_ACHIEVEMENTS = 5;
 
-  public static MelonPreferences_Category TypesPrefCategory;
-
+  private MelonPreferences_Category TypesPrefCategory;
   private (GameObject container, GameObject arrow,
            TextMeshPro text)[] _hudSlots;
   private TextMeshPro _completionTmp;
@@ -30,6 +29,9 @@ public class Mod : MelonMod {
         CollectibleType.CacheActions
             .Concat(CollectibleType.ALL.Select<CollectibleType, Action>(
                 collectibleType => () => {
+                  if (!collectibleType.Pref.Value)
+                    return;
+
                   _collectibles = _collectibles
                                       .Where(collectible => collectible.Type !=
                                                             collectibleType)
@@ -43,7 +45,9 @@ public class Mod : MelonMod {
                     if (!CollectibleType.ShouldShow(collectible.GameObject))
                       continue;
 
-                    // if (levelState != null) {
+                    // TODO: Seems like ammo might still count even if it's not
+                    // saveable? (eg. ammo boxes by the gun in Pillar Climb) if
+                    // (levelState != null) {
                     //   var saveable =
                     //       collectible.GameObject.GetComponent<SLZ.Bonelab.Saveable>();
                     //   if (saveable != null) {
@@ -66,7 +70,7 @@ public class Mod : MelonMod {
       _refreshStart = Time.time;
       _refreshIndex = 0;
     }
-    var end = Math.Min(1, (Time.time - _refreshStart) / REFRESH_FREQUENCY) *
+    var end = Math.Min(1f, (Time.time - _refreshStart) / REFRESH_FREQUENCY) *
               _refreshActions.Length;
     while (_refreshIndex < end)
       _refreshActions[_refreshIndex++]();
@@ -75,8 +79,9 @@ public class Mod : MelonMod {
   public override void OnInitializeMelon() {
     Dbg.Init(BuildInfo.NAME);
 
-    TypesPrefCategory =
-        MelonPreferences.CreateCategory("TypesToShow", "Types to show");
+    TypesPrefCategory = MelonPreferences.CreateCategory(
+        $"{BuildInfo.NAME}_TypesToShow",
+        "Types of collectibles to show locations of");
 
     Utilities.LevelHooks.OnLoad += level => { _server?.SendStateIfChanged(); };
     Utilities.LevelHooks.OnLevelStart += level => {
@@ -118,7 +123,7 @@ public class Mod : MelonMod {
       $"100% complete: {progress.IsComplete}",
       $"Beat game: {progress.HasBeatGame}",
       $"Has body log: {progress.HasBodyLog}",
-      $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.NumPossibleAchievements}",
+      $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.PossibleAchievements.Count}",
       $"Unlocks: {CapsuleTracker.Unlocked.Count} / {CapsuleTracker.NumTotalUnlocks}",
     });
   }
@@ -126,7 +131,7 @@ public class Mod : MelonMod {
   private string GetAchievementText() {
     var lockedAchievements = string.Join(
         "",
-        AchievementTracker.AllAchievements
+        AchievementTracker.PossibleAchievements
             .Where(entry => !AchievementTracker.Unlocked.Contains(entry.Key))
             .Take(NUM_DISPLAYED_ACHIEVEMENTS)
             .Reverse()

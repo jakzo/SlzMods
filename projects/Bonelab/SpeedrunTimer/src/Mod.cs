@@ -36,8 +36,8 @@ public class Mod : MelonMod {
   }
 
   private bool CheckIfAllowed() {
-    var illegitimacyReasons = AntiCheat.ComputeRunLegitimacy<Mod>();
-    if (illegitimacyReasons.Count == 0) {
+    var isLegitimate = AntiCheat.CheckRunLegitimacy<Mod>();
+    if (isLegitimate) {
       _isDisabled = false;
       return true;
     }
@@ -45,10 +45,6 @@ public class Mod : MelonMod {
     if (!_isDisabled) {
       _timer.Reset();
       _isDisabled = true;
-      var reasonMessages = string.Join(
-          "", illegitimacyReasons.Select(reason => $"\n» {reason.Value}"));
-      MelonLogger.Msg(
-          $"Cannot show timer due to run being illegitimate because:{reasonMessages}");
     }
     return false;
   }

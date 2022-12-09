@@ -1,3 +1,5 @@
+#r "../../../../references/Bonelab/Assembly-CSharp.dll"
+
 // Unlocked items
 // c1534c5a-d605-4f85-870d-f68848617463 (Hatchet): 1
 // c1534c5a-5d31-488d-b5b3-aa1c53686f76 (Shovel): 1
@@ -180,7 +182,7 @@
 // SLZ.BONELAB.Content.Spawnable.PropStationaryTurret (Stationary
 // Turret): 1
 var result = "";
-foreach (var entry in SLZ.Data.DataManager.ActiveSave.Unlocks.Unlocks)
+foreach (var entry in SLZ.SaveData.DataManager.ActiveSave.Unlocks.Unlocks)
   result += entry.Key + " (" +
             SLZ.Marrow.Warehouse.AssetWarehouse.Instance
                 .GetCrate(new SLZ.Marrow.Warehouse.Barcode(entry.Key))
@@ -299,7 +301,7 @@ result;
 // Baseline
 // Eder22
 var unlockTags =
-    SLZ.Data.DataManager.ActiveSave.Unlocks.Unlocks._entries.ToArray()
+    SLZ.SaveData.DataManager.ActiveSave.Unlocks.Unlocks._entries.ToArray()
         .SelectMany(
             entry =>
                 entry.key == null
@@ -320,7 +322,7 @@ foreach (var entry in SLZ.Marrow.Warehouse.AssetWarehouse.Instance
     continue;
   ids.Add(entry.key.ID);
 }
-foreach (var entry in SLZ.Data.DataManager.ActiveSave.Unlocks.Unlocks) {
+foreach (var entry in SLZ.SaveData.DataManager.ActiveSave.Unlocks.Unlocks) {
   ids.Remove(entry.key);
 }
 string.Join("\n",

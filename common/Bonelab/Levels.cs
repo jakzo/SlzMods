@@ -71,6 +71,11 @@ public class Levels {
     public const string ASCENT = "c2534c5a-db71-49cf-b694-24584c657665";
     public const string OUTRO = "SLZ.BONELAB.Content.Level.LevelOutro";
     public const string ROOFTOPS = "c2534c5a-c6ac-48b4-9c5f-b5cd5363656e";
+    public const string TUNNEL_TIPPER = "c2534c5a-c180-40e0-b2b7-325c5363656e";
+    public const string DISTRICT_TAC_TRIAL =
+        "c2534c5a-4f3b-480e-ad2f-69175363656e";
+    public const string DROP_PIT = "c2534c5a-de61-4df9-8f6c-416954726547";
+    public const string TUSCANY = "c2534c5a-2c4c-4b44-b076-203b5363656e";
   }
 
   public static string[] CAMPAIGN_LEVEL_BARCODES = {

@@ -15,7 +15,7 @@ public class Component : IComponent {
   public const string NAME = "Bonelab 100% Status";
 
   public float HorizontalWidth { get => 300; }
-  public float VerticalHeight { get => 300; }
+  public float VerticalHeight { get => 240; }
   public float MinimumWidth { get => HorizontalWidth; }
   public float MinimumHeight { get => VerticalHeight; }
 

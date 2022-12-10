@@ -58,8 +58,9 @@ jobs:
           PROJECT: ${{ github.event.inputs.project }}
         run: |
           set -eux
-          cd "./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}"
           DLL_NAME="${{ github.event.inputs.project }}.dll"
+          cd "./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}"
+          mkdir -p "./Components"
           cp "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
       - name: Commit version bump
         run: |

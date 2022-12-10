@@ -1,3 +1,7 @@
+#r "System.Xml"
+
+using System.Xml;
+
 string[] semverTypes = { "major", "minor", "patch" };
 
 string SemverIncrement(string version, int semverTypeIdx) {
@@ -7,6 +11,74 @@ string SemverIncrement(string version, int semverTypeIdx) {
   while (++idx < parts.Length)
     parts[idx] = "0";
   return String.Join(".", parts);
+}
+
+bool UpdateThunderstoreManifest(string projectRelativePath, string newVersion) {
+  string manifestPath = $"{projectRelativePath}/thunderstore/manifest.json";
+  if (!File.Exists(manifestPath)) {
+    Console.WriteLine($"No ThunderStore manifest found. Skipping.");
+    return false;
+  }
+
+  var manifestJson = File.ReadAllText(manifestPath);
+  const string MANIFEST_SEARCH_TERM = "\"version_number\": \"";
+  var manifestStartIdx = manifestJson.IndexOf(MANIFEST_SEARCH_TERM);
+  if (manifestStartIdx == -1)
+    throw new Exception("Manifest version not found");
+  manifestStartIdx += MANIFEST_SEARCH_TERM.Length;
+  var manifestEndIdx = manifestJson.IndexOf("\"", manifestStartIdx);
+  File.WriteAllText(manifestPath, manifestJson.Substring(0, manifestStartIdx) +
+                                      newVersion +
+                                      manifestJson.Substring(manifestEndIdx));
+  return true;
+}
+
+void UpdateChangelog(string projectRelativePath, string newVersion,
+                     string changelogDescription) {
+  string changelogPath = $"{projectRelativePath}/CHANGELOG.md";
+  if (!File.Exists(changelogPath)) {
+    Console.WriteLine($"No changelog found. Skipping.");
+    return;
+  }
+
+  var oldChangelog = File.ReadAllText(changelogPath);
+  var newChangelog =
+      $"## {newVersion}\n\n{changelogDescription}\n\n{oldChangelog}";
+  File.WriteAllText(changelogPath, newChangelog);
+
+  Console.WriteLine("CHANGELOG.md updated");
+}
+
+void UpdateLiveSplitChangelog(string projectRelativePath, string projectName,
+                              string newVersion, string changelogDescription) {
+  string changelogPath =
+      $"{projectRelativePath}/update.LiveSplit.{projectName}.xml";
+  if (!File.Exists(changelogPath)) {
+    Console.WriteLine($"No LiveSplit changelog found. Skipping.");
+    return;
+  }
+
+  var doc = new XmlDocument();
+  doc.Load(changelogPath);
+  var updatesEl = doc.SelectSingleNode("/updates");
+  var updateEl = doc.CreateElement("update");
+  updateEl.SetAttribute("version", newVersion);
+  var filesEl = doc.CreateElement("files");
+  var fileEl = doc.CreateElement("file");
+  fileEl.SetAttribute("path",
+                      Path.Join("bin", "Release", $"{projectName}.dll"));
+  fileEl.SetAttribute("status", "changed");
+  filesEl.AppendChild(fileEl);
+  updateEl.AppendChild(filesEl);
+  var changelogEl = doc.CreateElement("changelog");
+  var changeEl = doc.CreateElement("change");
+  changeEl.AppendChild(doc.CreateTextNode(changelogDescription));
+  updateEl.AppendChild(changeEl);
+  updateEl.AppendChild(changelogEl);
+  updatesEl.PrependChild(updateEl);
+  doc.Save(changelogPath);
+
+  Console.WriteLine("LiveSplit changelog updated");
 }
 
 void ReleaseProject(string gameName, string projectName, string semverTypeArg,
@@ -28,35 +100,20 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
   var oldVersion = appCode.Substring(appStartIdx, appEndIdx - appStartIdx);
   var newVersion = SemverIncrement(oldVersion, semverTypeIdx);
 
-  string manifestPath = $"{projectRelativePath}/thunderstore/manifest.json";
-  var manifestJson = File.ReadAllText(manifestPath);
-  const string MANIFEST_SEARCH_TERM = "\"version_number\": \"";
-  var manifestStartIdx = manifestJson.IndexOf(MANIFEST_SEARCH_TERM);
-  if (manifestStartIdx == -1)
-    throw new Exception("Manifest version not found");
-  manifestStartIdx += MANIFEST_SEARCH_TERM.Length;
-  var manifestEndIdx = manifestJson.IndexOf("\"", manifestStartIdx);
-
   Console.WriteLine($"Old version = {oldVersion}");
   Console.WriteLine($"Version increment type = {semverTypeArg}");
   Console.WriteLine($"New version = {newVersion}");
 
-  File.WriteAllText(manifestPath, manifestJson.Substring(0, manifestStartIdx) +
-                                      newVersion +
-                                      manifestJson.Substring(manifestEndIdx));
   File.WriteAllText(appVersionPath, appCode.Substring(0, appStartIdx) +
                                         newVersion +
                                         appCode.Substring(appEndIdx));
 
-  Console.WriteLine("AppVersion.cs and manifest.json version updated");
+  var isThunderStorePackage =
+      UpdateThunderstoreManifest(projectRelativePath, newVersion);
 
-  string changelogPath = $"{projectRelativePath}/CHANGELOG.md";
-  var oldChangelog = File.ReadAllText(changelogPath);
-  var newChangelog =
-      $"## {newVersion}\n\n{changelogDescription}\n\n{oldChangelog}";
-  File.WriteAllText(changelogPath, newChangelog);
-
-  Console.WriteLine("CHANGELOG.md updated");
+  UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
+  UpdateLiveSplitChangelog(projectRelativePath, projectName, newVersion,
+                           changelogDescription);
 
   Console.WriteLine("Setting Github action outputs");
   var escapedChangelog = changelogDescription.Replace("%", "'%25'")
@@ -65,14 +122,21 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
   var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
   File.AppendAllText(githubOutput, $"new_version={newVersion}\n");
   File.AppendAllText(githubOutput, $"changelog={escapedChangelog}\n");
+  var releaseThunderstore = isThunderStorePackage ? "true" : "false";
+  File.AppendAllText(githubOutput,
+                     $"release_thunderstore={releaseThunderstore}\n");
 }
 
 try {
-  var gameName = Args[0];
-  var projectName = Args[1];
-  var semverTypeArg = Args[2].ToLower();
-  var changelogDescription = Args[3];
-  ReleaseProject(gameName, projectName, semverTypeArg, changelogDescription);
+  // var gameName = Args[0];
+  // var projectName = Args[1];
+  // var semverTypeArg = Args[2].ToLower();
+  // var changelogDescription = Args[3];
+  // ReleaseProject(gameName, projectName, semverTypeArg, changelogDescription);
+
+  UpdateLiveSplitChangelog("projects/LiveSplit/BonelabHundredPercentStatus",
+                           "BonelabHundredPercentStatus", "0.0.1",
+                           "This is a test.");
 
   Console.WriteLine("All done!");
 } catch (Exception ex) {

@@ -44,6 +44,7 @@ jobs:
       - name: Build
         run: msbuild /property:Configuration=Release
       - name: Upload to Thunderstore
+        if: steps.bump_version.outputs.release_thunderstore == "true"
         env:
           GAME: ${{ github.event.inputs.game }}
           PROJECT: ${{ github.event.inputs.project }}

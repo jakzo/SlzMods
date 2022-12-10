@@ -49,8 +49,9 @@ void UpdateChangelog(string projectRelativePath, string newVersion,
   Console.WriteLine("CHANGELOG.md updated");
 }
 
-void UpdateLiveSplitChangelog(string projectRelativePath, string projectName,
-                              string newVersion, string changelogDescription) {
+void UpdateLiveSplitChangelogAndBuild(string projectRelativePath,
+                                      string projectName, string newVersion,
+                                      string changelogDescription) {
   string changelogPath =
       $"{projectRelativePath}/update.LiveSplit.{projectName}.xml";
   if (!File.Exists(changelogPath)) {
@@ -65,8 +66,8 @@ void UpdateLiveSplitChangelog(string projectRelativePath, string projectName,
   updateEl.SetAttribute("version", newVersion);
   var filesEl = doc.CreateElement("files");
   var fileEl = doc.CreateElement("file");
-  fileEl.SetAttribute("path",
-                      Path.Join("bin", "Release", $"{projectName}.dll"));
+  var updateDllPath = $"Components/{projectName}.dll";
+  fileEl.SetAttribute("path", updateDllPath);
   fileEl.SetAttribute("status", "changed");
   filesEl.AppendChild(fileEl);
   updateEl.AppendChild(filesEl);
@@ -79,6 +80,14 @@ void UpdateLiveSplitChangelog(string projectRelativePath, string projectName,
   doc.Save(changelogPath);
 
   Console.WriteLine("LiveSplit changelog updated");
+
+  var componentsDir = $"{projectRelativePath}/Components";
+  if (!Directory.Exists(componentsDir))
+    Directory.CreateDirectory(componentsDir);
+  File.Copy($"{projectRelativePath}/bin/Release/{projectName}.dll",
+            $"{projectRelativePath}/${updateDllPath}", true);
+
+  Console.WriteLine("LiveSplit build copied");
 }
 
 void ReleaseProject(string gameName, string projectName, string semverTypeArg,
@@ -112,8 +121,8 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
       UpdateThunderstoreManifest(projectRelativePath, newVersion);
 
   UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
-  UpdateLiveSplitChangelog(projectRelativePath, projectName, newVersion,
-                           changelogDescription);
+  UpdateLiveSplitChangelogAndBuild(projectRelativePath, projectName, newVersion,
+                                   changelogDescription);
 
   Console.WriteLine("Setting Github action outputs");
   var escapedChangelog = changelogDescription.Replace("%", "'%25'")

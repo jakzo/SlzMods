@@ -1,1 +1,9 @@
-<updates></updates>
+<updates>
+  <update version="1.0.0">
+    <files>
+      <file path="Components/BonelabHundredStatus.dll" status="changed" />
+    </files>
+    <change>Initial release.</change>
+    <changelog />
+  </update>
+</updates>

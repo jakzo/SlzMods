@@ -2,13 +2,13 @@
   "name": "@jakzo/stream-notifier",
   "version": "1.0.0",
   "description": "Sends link to unlisted YouTube stream on Discord.",
-  "main": "index.js",
+  "main": "index.ts",
   "type": "module",
-  "scripts": {
-    "start": "node index.js"
-  },
   "author": "jakzo",
   "license": "MIT",
+  "scripts": {
+    "start": "ts-node --esm --project ../../../tsconfig.json index.ts"
+  },
   "dependencies": {
     "@googleapis/youtube": "^8.0.0",
     "googleapis": "^109.0.1",

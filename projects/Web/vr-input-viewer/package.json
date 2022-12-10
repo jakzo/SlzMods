@@ -1,0 +1,20 @@
+{
+  "name": "@jakzo/vr-input-viewer",
+  "version": "0.0.1",
+  "description": "Visualization of VR controller and headset inputs.",
+  "main": "dist/index.js",
+  "type": "module",
+  "author": "jakzo",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.147.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.146.0"
+  }
+}

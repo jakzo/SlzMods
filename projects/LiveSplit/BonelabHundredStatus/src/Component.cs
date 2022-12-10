@@ -105,7 +105,7 @@ public class Component : IComponent {
   }
 
   private void UpdateEventList() {
-    var threshold = DateTime.Now - TimeSpan.FromSeconds(5);
+    var threshold = DateTime.Now - TimeSpan.FromSeconds(5f);
     while (_eventIndex < _stateUpdater.Events.Count &&
            _stateUpdater.Events[_eventIndex].time < threshold) {
       _eventIndex++;
@@ -120,7 +120,8 @@ public class Component : IComponent {
     if (receivedState.levelBarcode != null &&
         receivedState.levelBarcode != _prevLevelBarcode) {
       if (!isTimerStarted) {
-        if (receivedState.levelBarcode == Levels.Barcodes.DESCENT) {
+        if (receivedState.levelBarcode == Levels.Barcodes.DESCENT &&
+            !receivedState.isComplete) {
           _timer.InitializeGameTime();
           _timer.Start();
         }

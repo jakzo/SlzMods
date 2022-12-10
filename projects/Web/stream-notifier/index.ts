@@ -34,7 +34,7 @@ const doOauthFlow = () =>
       .createServer(async (req, res) => {
         try {
           console.log(`Received request: ${req.url}`);
-          const url = new URL(req.url, `http://${req.headers.host}`);
+          const url = new URL(req.url!, `http://${req.headers.host}`);
           const code = url.searchParams.get("code");
           if (!code) {
             res.statusCode = 404;
@@ -42,9 +42,7 @@ const doOauthFlow = () =>
             return;
           }
 
-          const { tokens } = await oauth2Client.getToken(
-            url.searchParams.get("code")
-          );
+          const { tokens } = await oauth2Client.getToken(code);
           await fs.writeFile(
             "./youtube_oauth_tokens.json",
             JSON.stringify(tokens)
@@ -85,16 +83,18 @@ const yt = youtube({
 const { data } = await yt.liveBroadcasts.list({
   part: ["snippet"],
   mine: true,
-  type: "all",
+  // type: "all",
   maxResults: 1,
-  order: "date",
+  // order: "date",
 });
 // console.log(data.items);
-if (data.items.length === 0) throw new Error("No live streams found");
-const item = data.items[0];
-if (item.snippet.actualEndTime)
+const item = data.items?.[0];
+if (!item) throw new Error("No live streams found");
+if (item.snippet?.actualEndTime)
   throw new Error("Most recent live stream has already ended");
 const broadcastUrl = `https://youtu.be/${item.id}`;
+const streamHealthUrl = `https://studio.youtube.com/videos/${item.id}/analytics`;
+console.log({ broadcastUrl, streamHealthUrl });
 
 const res = await fetch(discordWebhookUrl, {
   method: "POST",
@@ -106,9 +106,6 @@ const res = await fetch(discordWebhookUrl, {
   }),
 });
 if (!res.ok)
-  console.error(
-    "Failed to send Discord message:",
-    res.status,
-    res.statusText,
-    await res.body().catch(() => undefined)
-  );
+  console.error("Failed to send Discord message:", res.status, res.statusText);
+
+open(streamHealthUrl);

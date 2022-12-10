@@ -1,5 +1,5 @@
 #r "../../../../packages/Newtonsoft.Json.13.0.1/lib/net45/Newtonsoft.Json.dll"
-#r "../bin/Debug/BonelabHundredPercentStatus.dll"
+#r "../bin/Debug/BonelabHundredStatus.dll"
 
 using System;
 using System.Threading;

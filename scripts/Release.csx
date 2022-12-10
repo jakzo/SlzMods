@@ -128,15 +128,11 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
 }
 
 try {
-  // var gameName = Args[0];
-  // var projectName = Args[1];
-  // var semverTypeArg = Args[2].ToLower();
-  // var changelogDescription = Args[3];
-  // ReleaseProject(gameName, projectName, semverTypeArg, changelogDescription);
-
-  UpdateLiveSplitChangelog("projects/LiveSplit/BonelabHundredPercentStatus",
-                           "BonelabHundredPercentStatus", "0.0.1",
-                           "This is a test.");
+  var gameName = Args[0];
+  var projectName = Args[1];
+  var semverTypeArg = Args[2].ToLower();
+  var changelogDescription = Args[3];
+  ReleaseProject(gameName, projectName, semverTypeArg, changelogDescription);
 
   Console.WriteLine("All done!");
 } catch (Exception ex) {

@@ -10,9 +10,9 @@ using Sst.Utilities;
 using Sst.Common.LiveSplit;
 using Sst.Common.Bonelab.HundredPercent;
 
-namespace Sst.Livesplit.BonelabHundredPercentStatus {
+namespace Sst.Livesplit.BonelabHundredStatus {
 public class Component : IComponent {
-  public const string NAME = "Bonelab 100% Status";
+  public const string NAME = "Bonelab 100% Status/Autosplitter";
 
   public float HorizontalWidth { get => 300; }
   public float VerticalHeight { get => 240; }

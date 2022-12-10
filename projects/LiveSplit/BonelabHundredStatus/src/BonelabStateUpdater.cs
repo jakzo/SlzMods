@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Sst.Common.Bonelab.HundredPercent;
 using Sst.Common.LiveSplit;
 
-namespace Sst.Livesplit.BonelabHundredPercentStatus {
+namespace Sst.Livesplit.BonelabHundredStatus {
 class BonelabStateUpdater : IDisposable {
   public event Action<GameState> OnReceivedState;
 

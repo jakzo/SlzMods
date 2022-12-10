@@ -6,8 +6,8 @@
     <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BonelabHundredPercentStatus</RootNamespace>
-    <AssemblyName>BonelabHundredPercentStatus</AssemblyName>
+    <RootNamespace>BonelabHundredStatus</RootNamespace>
+    <AssemblyName>BonelabHundredStatus</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -68,7 +68,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <PostBuildEvent>
-      COPY "$(TargetPath)" "C:\Livesplit\Components\LiveSplit.BonelabHundredPercentStatus.dll"
+      COPY "$(TargetPath)" "C:\Livesplit\Components\LiveSplit.BonelabHundredStatus.dll"
       COPY "$(TargetPath)\..\..\..\..\..\..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll" "C:\Livesplit\Components\Newtonsoft.Json.dll"
     </PostBuildEvent>
   </PropertyGroup>

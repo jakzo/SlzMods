@@ -65,4 +65,6 @@ jobs:
           target_commitish: ${{ github.sha }}
           tag_name: "${{ github.event.inputs.game }}${{ github.event.inputs.project }}_v${{ steps.bump_version.outputs.new_version }}"
           body: ${{ steps.bump_version.outputs.changelog }}
-          files: ./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}/thunderstore/*.zip
+          files: |
+            ./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}/thunderstore/*.zip
+            ./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}/bin/Release/${{ github.event.inputs.project }}.dll

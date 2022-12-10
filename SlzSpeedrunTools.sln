@@ -19,7 +19,7 @@ Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabSpeedometer", "proje
 EndProject
 Project("{B16878A1-7B40-FDAE-503A-6DFEC289D113}") = "BonelabCompletionistHelper", "projects\Bonelab\CompletionistHelper\CompletionistHelper.csproj", "{56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}"
 EndProject
-Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB07}") = "BonelabHundredPercentStatus", "projects\LiveSplit\BonelabHundredPercentStatus\BonelabHundredPercentStatus.csproj", "{E782BFCA-90AA-A92F-22E9-85589F10913B}"
+Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB07}") = "BonelabHundredStatus", "projects\LiveSplit\BonelabHundredStatus\BonelabHundredStatus.csproj", "{E782BFCA-90AA-A92F-22E9-85589F10913B}"
 EndProject
 Project("{81FCC4E8-8A09-AD74-7CAB-31A3DCAD4264}") = "BonelabAmmoBugFix", "projects\Bonelab\AmmoBugFix\AmmoBugFix.csproj", "{59614574-AE6C-55D4-024A-21B97605D6F1}"
 EndProject

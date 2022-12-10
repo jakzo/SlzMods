@@ -4,7 +4,7 @@ Loop
   {
     IfWinNotExist, ahk_exe obs64.exe
     {
-      Run "C:\Program Files\obs-studio\bin\64bit\obs64.exe" "--enable-gpu" "--enable-media-stream" "--startstreaming" "--startvirtualcam", C:\Program Files\obs-studio\bin\64bit
+      Run, "C:\Program Files\obs-studio\bin\64bit\obs64.exe" "--enable-gpu" "--enable-media-stream" "--startstreaming" "--startvirtualcam", C:\Program Files\obs-studio\bin\64bit
       WinWait, No Broadcast Configured, , 10
       If ErrorLevel
       {
@@ -23,6 +23,9 @@ Loop
         {
           WinActivate, YouTube Broadcast Setup - Channel: jakzo
           Send, +{Tab}{Enter}
+          WinWaitClose, YouTube Broadcast Setup - Channel: jakzo, , 20
+          Sleep 5000
+          Run, "npm" "run" "start", %A_ScriptDir%/../stream-notifier
         }
       }
     }

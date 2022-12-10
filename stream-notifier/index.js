@@ -45,7 +45,6 @@ const doOauthFlow = () =>
           const { tokens } = await oauth2Client.getToken(
             url.searchParams.get("code")
           );
-          oauth2Client.setCredentials(tokens);
           await fs.writeFile(
             "./youtube_oauth_tokens.json",
             JSON.stringify(tokens)
@@ -81,14 +80,13 @@ oauth2Client.setCredentials(await getTokens());
 
 const yt = youtube({
   version: "v3",
-  // auth: JSON.parse(await fs.readFile("./youtube_apikey.json", "utf8")),
   auth: oauth2Client,
 });
 const { data } = await yt.liveBroadcasts.list({
   part: ["snippet"],
   mine: true,
   type: "all",
-  maxResults: 5,
+  maxResults: 1,
   order: "date",
 });
 // console.log(data.items);
@@ -96,8 +94,7 @@ if (data.items.length === 0) throw new Error("No live streams found");
 const item = data.items[0];
 if (item.snippet.actualEndTime)
   throw new Error("Most recent live stream has already ended");
-const broadcastUrl = `https://www.youtube.com/watch?v=${item.id}`;
-// open(broadcastUrl);
+const broadcastUrl = `https://youtu.be/${item.id}`;
 
 const res = await fetch(discordWebhookUrl, {
   method: "POST",
@@ -113,5 +110,5 @@ if (!res.ok)
     "Failed to send Discord message:",
     res.status,
     res.statusText,
-    await res.body()
+    await res.body().catch(() => undefined)
   );

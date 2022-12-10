@@ -49,14 +49,13 @@ void UpdateChangelog(string projectRelativePath, string newVersion,
   Console.WriteLine("CHANGELOG.md updated");
 }
 
-void UpdateLiveSplitChangelogAndBuild(string projectRelativePath,
-                                      string projectName, string newVersion,
-                                      string changelogDescription) {
+bool UpdateLiveSplitChangelog(string projectRelativePath, string projectName,
+                              string newVersion, string changelogDescription) {
   string changelogPath =
       $"{projectRelativePath}/update.LiveSplit.{projectName}.xml";
   if (!File.Exists(changelogPath)) {
     Console.WriteLine($"No LiveSplit changelog found. Skipping.");
-    return;
+    return false;
   }
 
   var doc = new XmlDocument();
@@ -80,14 +79,7 @@ void UpdateLiveSplitChangelogAndBuild(string projectRelativePath,
   doc.Save(changelogPath);
 
   Console.WriteLine("LiveSplit changelog updated");
-
-  var componentsDir = $"{projectRelativePath}/Components";
-  if (!Directory.Exists(componentsDir))
-    Directory.CreateDirectory(componentsDir);
-  File.Copy($"{projectRelativePath}/bin/Release/{projectName}.dll",
-            $"{projectRelativePath}/${updateDllPath}", true);
-
-  Console.WriteLine("LiveSplit build copied");
+  return true;
 }
 
 void ReleaseProject(string gameName, string projectName, string semverTypeArg,
@@ -121,8 +113,8 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
       UpdateThunderstoreManifest(projectRelativePath, newVersion);
 
   UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
-  UpdateLiveSplitChangelogAndBuild(projectRelativePath, projectName, newVersion,
-                                   changelogDescription);
+  var isLiveSplitComponent = UpdateLiveSplitChangelog(
+      projectRelativePath, projectName, newVersion, changelogDescription);
 
   Console.WriteLine("Setting Github action outputs");
   var escapedChangelog = changelogDescription.Replace("%", "'%25'")
@@ -134,6 +126,8 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
   var releaseThunderstore = isThunderStorePackage ? "true" : "false";
   File.AppendAllText(githubOutput,
                      $"release_thunderstore={releaseThunderstore}\n");
+  var releaseLiveSplit = isLiveSplitComponent ? "true" : "false";
+  File.AppendAllText(githubOutput, $"release_livesplit={releaseLiveSplit}\n");
 }
 
 try {

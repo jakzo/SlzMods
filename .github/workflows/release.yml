@@ -51,6 +51,16 @@ jobs:
           NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
           THUNDERSTORE_API_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
         run: csi ./scripts/UploadThunderstore.csx "$GAME" "$PROJECT" "$NEW_VERSION"
+      - name: Copy LiveSplit build for commit
+        if: steps.bump_version.outputs.release_livesplit == 'true'
+        env:
+          GAME: ${{ github.event.inputs.game }}
+          PROJECT: ${{ github.event.inputs.project }}
+        run: |
+          set -eux
+          cd "./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}"
+          DLL_NAME="${{ github.event.inputs.project }}.dll"
+          copy "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
       - name: Commit version bump
         run: |
           set -eux

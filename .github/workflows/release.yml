@@ -60,7 +60,7 @@ jobs:
           set -eux
           cd "./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}"
           DLL_NAME="${{ github.event.inputs.project }}.dll"
-          copy "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
+          cp "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
       - name: Commit version bump
         run: |
           set -eux

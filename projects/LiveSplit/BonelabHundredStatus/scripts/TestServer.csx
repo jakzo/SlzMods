@@ -10,11 +10,11 @@ try {
   var server = new Sst.Common.Ipc.Server(GameState.NAMED_PIPE);
 
   var state = new GameState() {
-    isLoading = false,           levelBarcode = null,
-    capsulesUnlocked = 0,        capsulesTotal = 174,
-    capsulesJustUnlocked = null, achievementsUnlocked = 0,
-    achievementsTotal = 55,      achievementsJustUnlocked = null,
-    percentageComplete = 0,      percentageTotal = 0.95f,
+    isLoading = false,          levelBarcode = null,
+    capsulesUnlocked = 0,       capsulesTotal = 174,
+    capsuleJustUnlocked = null, achievementsUnlocked = 0,
+    achievementsTotal = 55,     achievementJustUnlocked = null,
+    percentageComplete = 0,     percentageTotal = 0.95f,
   };
   var timer = new System.Timers.Timer();
   timer.Interval = 1200;
@@ -24,7 +24,7 @@ try {
   timer.Elapsed += (source, e) => {
     state.capsulesUnlocked++;
     state.achievementsUnlocked++;
-    state.achievementsJustUnlocked = new string[] { $"ach{i++}" };
+    state.achievementJustUnlocked = $"ach{i++}";
     state.percentageComplete += 0.001f;
     if (i == 5)
       state.levelBarcode = Sst.Utilities.Levels.Barcodes.DESCENT;
@@ -39,8 +39,8 @@ try {
   server.OnClientConnected += stream => {
     Console.Write("\nClient connected");
     // server.Send(
-    //     "{\"isComplete\":false,\"isLoading\":false,\"levelBarcode\":\"c2534c5a-de61-4df9-8f6c-416954726547\",\"capsulesUnlocked\":111,\"capsulesTotal\":174,\"capsulesJustUnlocked\":[\"Gym
-    //     D6\"],\"achievementsUnlocked\":37,\"achievementsTotal\":57,\"achievementsJustUnlocked\":null,\"percentageComplete\":0.760238051,\"percentageTotal\":0.95}");
+    //     "{\"isComplete\":false,\"isLoading\":false,\"levelBarcode\":\"c2534c5a-de61-4df9-8f6c-416954726547\",\"capsulesUnlocked\":111,\"capsulesTotal\":174,\"capsuleJustUnlocked\":\"Gym
+    //     D6\",\"achievementsUnlocked\":37,\"achievementsTotal\":57,\"achievementJustUnlocked\":null,\"percentageComplete\":0.760238051,\"percentageTotal\":0.95}");
   };
   server.OnClientDisconnected += stream =>
       Console.Write("\nClient disconnected");

@@ -17,10 +17,10 @@ public class Server : IDisposable {
     Progress = ProgressTracker.Calculate();
     MelonEvents.OnUpdate.Subscribe(UpdateProgressIfNecessary);
 
-    AchievementTracker.OnUnlock += (id, name) => SendStateAfterUpdate(
-        state => state.achievementsJustUnlocked = new[] { name });
-    CapsuleTracker.OnUnlock += (id, name) => SendStateAfterUpdate(
-        state => state.capsulesJustUnlocked = new[] { name });
+    AchievementTracker.OnUnlock += (id, name) =>
+        SendStateAfterUpdate(state => state.achievementJustUnlocked = name);
+    CapsuleTracker.OnUnlock += (id, name) =>
+        SendStateAfterUpdate(state => state.capsuleJustUnlocked = name);
 
     Utilities.LevelHooks.OnLoad += level => UpdateProgress();
 
@@ -71,15 +71,16 @@ public class Server : IDisposable {
       || state.levelBarcode != _lastSentState.levelBarcode
       || state.capsulesUnlocked != _lastSentState.capsulesUnlocked
       || state.capsulesTotal != _lastSentState.capsulesTotal
-      || state.capsulesJustUnlocked != null
+      || state.capsuleJustUnlocked != null
       || state.achievementsUnlocked != _lastSentState.achievementsUnlocked
       || state.achievementsTotal != _lastSentState.achievementsTotal
-      || state.achievementsJustUnlocked != null
+      || state.achievementJustUnlocked != null
       || state.percentageComplete != _lastSentState.percentageComplete
       || state.percentageTotal != _lastSentState.percentageTotal;
 
   public GameState BuildGameState() => new GameState() {
-    isComplete = false,
+    isComplete = Progress.IsComplete,
+    beatGame = Progress.HasBeatGame,
     isLoading = Utilities.LevelHooks.IsLoading,
     levelBarcode = (Utilities.LevelHooks.CurrentLevel ??
                     Utilities.LevelHooks.NextLevel)

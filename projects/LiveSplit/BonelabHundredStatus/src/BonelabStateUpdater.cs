@@ -30,20 +30,24 @@ class BonelabStateUpdater : IDisposable {
       if (receivedState == null)
         return;
       State = receivedState;
-      if (receivedState.capsulesJustUnlocked != null)
-        foreach (var name in receivedState.capsulesJustUnlocked)
-          Events.Add(new CompletionEvent() {
-            time = DateTime.Now,
-            type = CompletionEventType.CAPSULE,
-            name = name,
-          });
-      if (receivedState.achievementsJustUnlocked != null)
-        foreach (var name in receivedState.achievementsJustUnlocked)
-          Events.Add(new CompletionEvent() {
-            time = DateTime.Now,
-            type = CompletionEventType.ACHIEVEMENT,
-            name = name,
-          });
+      if (receivedState.capsuleJustUnlocked != null)
+        Events.Add(new CompletionEvent() {
+          time = DateTime.Now,
+          type = CompletionEventType.CAPSULE,
+          name = receivedState.capsuleJustUnlocked,
+        });
+      if (receivedState.achievementJustUnlocked != null)
+        Events.Add(new CompletionEvent() {
+          time = DateTime.Now,
+          type = CompletionEventType.ACHIEVEMENT,
+          name = receivedState.achievementJustUnlocked,
+        });
+      if (receivedState.arenaJustCompleted != null)
+        Events.Add(new CompletionEvent() {
+          time = DateTime.Now,
+          type = CompletionEventType.ARENA,
+          name = receivedState.arenaJustCompleted,
+        });
       OnReceivedState?.Invoke(receivedState);
     } catch (Exception ex) {
       Log.Error($"ONMessage error: {ex.ToString()}");
@@ -68,6 +72,7 @@ class BonelabStateUpdater : IDisposable {
   public enum CompletionEventType {
     CAPSULE,
     ACHIEVEMENT,
+    ARENA,
   }
 }
 }

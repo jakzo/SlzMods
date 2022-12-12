@@ -76,6 +76,11 @@ public class Levels {
         "c2534c5a-4f3b-480e-ad2f-69175363656e";
     public const string DROP_PIT = "c2534c5a-de61-4df9-8f6c-416954726547";
     public const string TUSCANY = "c2534c5a-2c4c-4b44-b076-203b5363656e";
+    public const string MAIN_MENU = "c2534c5a-80e1-4a29-93ca-f3254d656e75";
+    public const string VOID_G114 =
+        "fa534c5a868247138f50c62e424c4144.Level.VoidG114";
+    public const string FANTASY_ARENA =
+        "fa534c5a868247138f50c62e424c4144.Level.LevelArenaMin";
   }
 
   public static string[] CAMPAIGN_LEVEL_BARCODES = {
@@ -88,5 +93,8 @@ public class Levels {
 
   public static HashSet<string> CAMPAIGN_LEVEL_BARCODES_SET =
       CAMPAIGN_LEVEL_BARCODES.ToHashSet();
+
+  public static bool IsMenu(string barcode) => barcode == Barcodes.MAIN_MENU
+                                               || barcode == Barcodes.VOID_G114;
 }
 }

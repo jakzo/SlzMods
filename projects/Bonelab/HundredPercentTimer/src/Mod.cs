@@ -1,4 +1,8 @@
+using System;
 using MelonLoader;
+using UnityEngine;
+using SLZ.Bonelab;
+using SLZ.Marrow.Warehouse;
 using Sst.Common.Bonelab.HundredPercent;
 
 namespace Sst.HundredPercentTimer {
@@ -15,6 +19,7 @@ public class Mod : MelonMod {
 
     Utilities.LevelHooks.OnLoad += level => ServerSendIfNecessary();
     Utilities.LevelHooks.OnLevelStart += level => ServerSendIfNecessary();
+    Utilities.LevelHooks.OnLevelStart += SendStateOnArenaCompletion;
   }
 
   private void ServerSendIfNecessary() {
@@ -27,6 +32,18 @@ public class Mod : MelonMod {
       _server.Dispose();
       _server = null;
     }
+  }
+
+  private void SendStateOnArenaCompletion(LevelCrate level) {
+    if (level.Barcode.ID != Utilities.Levels.Barcodes.FANTASY_ARENA)
+      return;
+
+    var controller = GameObject.FindObjectOfType<Arena_GameController>();
+    controller.onModeWin.AddListener(new Action(() => {
+      var state = _server.BuildGameState();
+      state.arenaJustCompleted = controller.profileTitle;
+      _server.SendState(state);
+    }));
   }
 
   public override void OnDeinitializeMelon() {

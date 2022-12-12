@@ -117,8 +117,13 @@ public class Component : IComponent {
     var isTimerStarted = _timer.CurrentState.CurrentSplitIndex >= 0;
     _timer.CurrentState.IsGameTimePaused = receivedState.isLoading;
 
-    if (receivedState.levelBarcode != null &&
-        receivedState.levelBarcode != _prevLevelBarcode) {
+    var hasLevelChanged =
+        receivedState.levelBarcode != null &&
+        receivedState.levelBarcode != _prevLevelBarcode &&
+        !Levels.IsMenu(receivedState.levelBarcode) &&
+        (!receivedState.beatGame || _prevLevelBarcode != Levels.Barcodes.HUB);
+    var hasArenaChallengeCompleted = receivedState.arenaJustCompleted != null;
+    if (hasLevelChanged || hasArenaChallengeCompleted) {
       if (!isTimerStarted) {
         if (receivedState.levelBarcode == Levels.Barcodes.DESCENT &&
             !receivedState.isComplete) {

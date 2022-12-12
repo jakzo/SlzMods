@@ -20,6 +20,7 @@ export class InputViewer {
   resizeObserver: ResizeObserver;
   timePrev?: number;
   controllers: THREE.Group[];
+  headset: THREE.Object3D;
 
   isStopped = true;
 
@@ -29,18 +30,6 @@ export class InputViewer {
     this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
     this.camera.position.set(0, 1.6, 3);
     this.camera.lookAt(0, 1, 0);
-
-    const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
-    this.scene.add(ambientLight);
-
-    for (const [x, y, z] of [
-      [2, 2, 0],
-      [-2, 2, 0],
-    ]) {
-      const light = new THREE.DirectionalLight(0xffffff, 0.4);
-      light.position.set(x, y, z);
-      this.scene.add(light);
-    }
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.xr.enabled = true;
@@ -65,13 +54,13 @@ export class InputViewer {
       this.scene.add(controller);
     }
 
-    this.scene.add(createHeadset());
+    this.headset = createHeadset();
+    this.scene.add(this.headset);
 
     this.stats = opts.showStats ? Stats() : undefined;
     if (this.stats) opts.container.appendChild(this.stats.dom);
 
-    const environment = createEnvironment();
-    this.scene.add(environment);
+    this.scene.add(createEnvironment());
 
     const orbitControls = new OrbitControls(
       this.camera,
@@ -106,7 +95,7 @@ export class InputViewer {
     this.isStopped = true;
   }
 
-  private animate = (time: number): void => {
+  animate = (time: number): void => {
     this.stats?.begin();
 
     if (this.timePrev === undefined) this.timePrev = time;

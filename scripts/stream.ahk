@@ -25,7 +25,7 @@ Loop
           Send, +{Tab}{Enter}
           WinWaitClose, YouTube Broadcast Setup - Channel: jakzo, , 20
           Sleep 5000
-          Run, "npm" "run" "start", %A_ScriptDir%/../stream-notifier
+          Run, "npm" "-w" "@jakzo/stream-notifier" "run" "start", %A_ScriptDir%/..
         }
       }
     }

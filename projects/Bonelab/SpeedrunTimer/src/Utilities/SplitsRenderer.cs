@@ -29,7 +29,7 @@ class SplitsRenderer {
     // TODO
   }
 
-  public static string DurationToString(TimeSpan duration) => duration.ToString(
-      $"{(duration.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff");
+  public static string DurationToString(TimeSpan duration) =>
+      duration.ToString($"{(duration.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff");
 }
 }

@@ -194,7 +194,7 @@ class Speedrun : Feature {
                     Mode.CurrentMode),
           $"v{BuildInfo.Version}",
           duration?.ToString(
-              $"{(duration.Value.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff"),
+              $"{(duration.Value.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff"),
         }
             .Where(line => line != null)));
   }

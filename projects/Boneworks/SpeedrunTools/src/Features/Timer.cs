@@ -39,7 +39,7 @@ class Timer : Feature {
     if (!duration.HasValue)
       return;
     _tmp?.SetText(duration.Value.ToString(
-        $"{(duration.Value.Seconds >= 60 * 60 ? "h\\:m" : "")}m\\:ss\\.ff"));
+        $"{(duration.Value.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff"));
   }
 }
 }

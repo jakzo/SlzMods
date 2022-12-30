@@ -1,14 +1,18 @@
 Timer for Bonelab speedruns.
 
+This **must be the only mod installed** for it to work (to prevent cheating, accidental or otherwise). If other MelonLoader mods are installed, the timer will simply never start.
+
+The timer will appear and start when loading into Descent, pauses during loading screens and finishes when sitting in the taxi.
+
 # Installation
 
 - Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.7 or newer is installed in Bonelab
+  - To install Melon Loader for Quest follow the [instructions here](https://github.com/LemonLoader/MelonLoader/wiki/Installation)
 - Download [the mod from Thunderstore](https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/) (click on "Manual Download")
 - Open the downloaded `.zip` file and extract `Mods/SpeedrunTimer.dll` into `BONELAB/Mods/SpeedrunTimer.dll` which is usually at:
   - Steam: `C:\Program Files (x86)\Steam\steamapps\common\BONELAB\BONELAB`
   - Oculus: `C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab`
-
-This mod cannot be used on Quest yet.
+  - Quest: `/sdcard/Android/data/com.StressLevelZero.BONELAB/files`
 
 ## Livesplit Integration
 

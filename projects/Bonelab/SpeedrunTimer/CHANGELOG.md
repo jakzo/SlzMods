@@ -1,3 +1,7 @@
+## 1.0.3
+
+Added instructions for Quest.
+
 ## 1.0.2
 
 Fix to show time greater than one hour instead of resetting to zero.

@@ -1,3 +1,7 @@
+## 1.0.2
+
+Fix to show time greater than one hour instead of resetting to zero.
+
 ## 1.0.1
 
 Fix time not showing in loading screens and timer starting too early before loading finishes.

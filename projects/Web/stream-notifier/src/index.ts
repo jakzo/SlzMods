@@ -1,2 +1,2 @@
-export { notify } from "./notify";
-export type { OAuth2Config } from "./oauth2-config";
+export { notify } from "./notify.js";
+export type { OAuth2Config } from "./oauth2-config.js";

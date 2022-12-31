@@ -101,7 +101,8 @@ public class Mod : MelonMod {
     }
 
     if (obj.lootTable.items.Any(
-            item => !item.spawnable.crateRef.Crate.MainAsset.IsDone)) {
+            item =>
+                !(item.spawnable.crateRef.Crate?.MainAsset.IsDone ?? false))) {
       Dbg.Log(
           "Skipping because not all loot items loaded so we may not be able to find spawned item");
       return;

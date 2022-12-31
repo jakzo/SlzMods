@@ -1,6 +1,6 @@
 Loop
 {
-  IfWinExist, BONELAB
+  IfWinExist, ahk_exe BONELAB_Oculus_Windows64.exe
   {
     IfWinNotExist, ahk_exe obs64.exe
     {

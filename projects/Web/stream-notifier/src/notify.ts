@@ -5,7 +5,7 @@ import { youtube } from "@googleapis/youtube";
 import open from "open";
 import getPort from "get-port";
 
-import { DEFAULT_OAUTH2_CONFIG, OAuth2Config } from "./oauth2-config";
+import { DEFAULT_OAUTH2_CONFIG, OAuth2Config } from "./oauth2-config.js";
 
 export interface NotifyOpts {
   discordWebhookUrl: string;
@@ -98,7 +98,7 @@ export const notify = async (opts: NotifyOpts) => {
   if (item.snippet?.actualEndTime)
     throw new Error("Most recent live stream has already ended");
   const broadcastUrl = `https://youtu.be/${item.id}`;
-  const streamAnalyticsUrl = `https://studio.youtube.com/videos/${item.id}/analytics`;
+  const streamAnalyticsUrl = `https://studio.youtube.com/video/${item.id}/livestreaming`;
   console.log({ broadcastUrl, streamAnalyticsUrl });
 
   const res = await fetch(discordWebhookUrl, {

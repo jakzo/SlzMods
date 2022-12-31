@@ -117,24 +117,26 @@ public class Component : IComponent {
     var isTimerStarted = _timer.CurrentState.CurrentSplitIndex >= 0;
     _timer.CurrentState.IsGameTimePaused = receivedState.isLoading;
 
-    var hasLevelChanged =
-        receivedState.levelBarcode != null &&
-        receivedState.levelBarcode != _prevLevelBarcode &&
-        !Levels.IsMenu(receivedState.levelBarcode) &&
-        (!receivedState.beatGame || _prevLevelBarcode != Levels.Barcodes.HUB);
-    var hasArenaChallengeCompleted = receivedState.arenaJustCompleted != null;
-    if (hasLevelChanged || hasArenaChallengeCompleted) {
-      if (!isTimerStarted) {
-        if (receivedState.levelBarcode == Levels.Barcodes.DESCENT &&
-            !receivedState.isComplete) {
-          _timer.InitializeGameTime();
-          _timer.Start();
-        }
-      } else {
+    var hasLevelChanged = receivedState.levelBarcode != null &&
+                          receivedState.levelBarcode != _prevLevelBarcode;
+    if (isTimerStarted) {
+      var isSplittableLevelChange =
+          hasLevelChanged && !Levels.IsMenu(receivedState.levelBarcode) &&
+          (!receivedState.beatGame ||
+           receivedState.levelBarcode != Levels.Barcodes.HUB);
+      var hasArenaChallengeCompleted = receivedState.arenaJustCompleted != null;
+      if (isSplittableLevelChange || hasArenaChallengeCompleted) {
         _timer.Split();
       }
-      _prevLevelBarcode = receivedState.levelBarcode;
+    } else if (hasLevelChanged &&
+               receivedState.levelBarcode == Levels.Barcodes.DESCENT &&
+               !receivedState.isComplete) {
+      _timer.InitializeGameTime();
+      _timer.Start();
     }
+
+    if (hasLevelChanged)
+      _prevLevelBarcode = receivedState.levelBarcode;
 
     if (isTimerStarted && receivedState.isComplete)
       FinishTimer();

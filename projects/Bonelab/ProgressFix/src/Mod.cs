@@ -66,7 +66,7 @@ public class Mod : MelonMod {
       return;
     FixKevinCCardReceiver(
         Resources.FindObjectsOfTypeAll<KeycardReciever>().First(
-            kr => kr.transform.parent == null));
+            kr => kr.transform.parent?.parent == null));
   }
   private void FixKevinCCardReceiver(KeycardReciever kr) {
     var saveable = kr.gameObject.AddComponent<Saveable>();

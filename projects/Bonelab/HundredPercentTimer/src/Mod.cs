@@ -40,8 +40,19 @@ public class Mod : MelonMod {
 
     var controller = GameObject.FindObjectOfType<Arena_GameController>();
     controller.onModeWin.AddListener(new Action(() => {
+      // It's probably better to just split on every arena mode win
+      // if (!controller.assignedRoundProfile)
+      //   return;
+      // var isCompleted =
+      //     controller.assignedRoundProfile.trialProfile.completedHard ||
+      //     controller.assignedRoundProfile.name == "arena_survival_Projected"
+      //     &&
+      //         controller.currRoundIndex >= 10;
+      // if (!isCompleted)
+      //   return;
+
       var state = _server.BuildGameState();
-      state.arenaJustCompleted = controller.profileTitle;
+      state.arenaJustCompleted = controller.assignedRoundProfile.displayTitle;
       _server.SendState(state);
     }));
   }

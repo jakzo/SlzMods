@@ -41,6 +41,7 @@ completed;
 
 SLZ.Bonelab.BonelabGameControl.IsCompleted(progression, "Baseline");
 
+// Remaining unlocks
 var allUnlocks =
     SLZ.Marrow.Warehouse.AssetWarehouseExtensions
         .Filter(
@@ -67,3 +68,29 @@ string.Join("\n", progression.LevelState._entries.ToArray().SelectMany(
                           (entry.value?._entries.ToArray().Select(
                                entry2 => $"- {entry2.key}") ??
                            new string[] {}))));
+
+// Remaining keycards
+var allKeycards = new string[] {
+  "SLZ.Bonelab.card.AlexK",    "SLZ.Bonelab.card.AndrewA",
+  "SLZ.Bonelab.card.AndyT",    "SLZ.Bonelab.card.BrandonL",
+  "SLZ.Bonelab.card.CameronB", "SLZ.Bonelab.card.CamM",
+  "SLZ.Bonelab.card.ChrisS",   "SLZ.Bonelab.card.CliffL",
+  "SLZ.Bonelab.card.EricC",    "SLZ.Bonelab.card.HeldineA",
+  "SLZ.Bonelab.card.JeremyC",  "SLZ.Bonelab.card.JonathanL",
+  "SLZ.Bonelab.card.KelseyG",  "SLZ.Bonelab.card.KevinC",
+  "SLZ.Bonelab.card.KevinS",   "SLZ.Bonelab.card.KevinW",
+  "SLZ.Bonelab.card.MichaelW", "SLZ.Bonelab.card.NateE",
+  "SLZ.Bonelab.card.PaulO",    "SLZ.Bonelab.card.SpencerA",
+  "SLZ.Bonelab.card.SpencerS", "SLZ.Bonelab.card.SteveG",
+  "SLZ.Bonelab.card.StephenH",
+};
+var collectedKeycards =
+    SLZ.SaveData.DataManager.ActiveSave.Progression.LevelState._entries
+        .ToArray()
+        .Where(entry => entry.key == "SLZ.Bonelab.Keycards")
+        .First()
+        .value._entries.ToArray()
+        .Select(entry => entry.key)
+        .ToHashSet();
+string.Join("\n",
+            allKeycards.Where(keycard => !collectedKeycards.Contains(keycard)));

@@ -9,6 +9,8 @@ void CopyBuildsToBin() {
   foreach (var gameDir in Directory.EnumerateDirectories(PROJECTS_DIR)) {
     var gameName = Path.GetFileName(gameDir);
     foreach (var projectDir in Directory.EnumerateDirectories(gameDir)) {
+      if (projectDir.EndsWith("Web"))
+        continue;
       var buildFilename = $"{Path.GetFileName(projectDir)}.dll";
       var buildFile = Path.Combine(projectDir, "bin", "Debug", buildFilename);
       File.Copy(buildFile, Path.Combine(BIN_DIR, $"{gameName}{buildFilename}"));

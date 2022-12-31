@@ -28,8 +28,13 @@ export const notify = async (opts: NotifyOpts) => {
     `http://localhost:${port}`
   );
 
-  const doOauthFlow = () =>
-    new Promise((resolve, reject) => {
+  const setCredentialsFromFile = async () =>
+    oauth2Client.setCredentials(
+      JSON.parse(await fs.readFile(OAUTH2_TOKENS_FILENAME, "utf8"))
+    );
+
+  const setCredentialsFromOauthFlow = () =>
+    new Promise<void>((resolve, reject) => {
       const authorizationUrl = oauth2Client.generateAuthUrl({
         access_type: "offline",
         scope: ["https://www.googleapis.com/auth/youtube.readonly"],
@@ -56,7 +61,8 @@ export const notify = async (opts: NotifyOpts) => {
             res.end("You can now close this window");
             res.on("close", () => {
               server.close();
-              resolve(tokens);
+              oauth2Client.setCredentials(tokens);
+              resolve();
             });
           } catch (err) {
             res.statusCode = 500;
@@ -71,27 +77,35 @@ export const notify = async (opts: NotifyOpts) => {
         .listen(port);
     });
 
-  const getTokens = async () => {
+  const requestYoutube = async <T>(
+    makeRequest: () => Promise<T>
+  ): Promise<T> => {
+    if (!oauth2Client.credentials)
+      await setCredentialsFromFile().catch(setCredentialsFromOauthFlow);
     try {
-      return JSON.parse(await fs.readFile(OAUTH2_TOKENS_FILENAME, "utf8"));
-    } catch {
-      return doOauthFlow();
+      return await makeRequest();
+    } catch (err) {
+      // TODO: Also rethrow if err is not "invalid_grant" error
+      if (!err) throw err;
+      await setCredentialsFromOauthFlow();
+      return await makeRequest();
     }
   };
-
-  oauth2Client.setCredentials(await getTokens());
 
   const yt = youtube({
     version: "v3",
     auth: oauth2Client,
   });
-  const { data } = await yt.liveBroadcasts.list({
-    part: ["snippet"],
-    mine: true,
-    // type: "all",
-    maxResults: 1,
-    // order: "date",
-  });
+
+  const { data } = await requestYoutube(() =>
+    yt.liveBroadcasts.list({
+      part: ["snippet"],
+      mine: true,
+      // type: "all",
+      maxResults: 1,
+      // order: "date",
+    })
+  );
   // console.log(data.items);
   const item = data.items?.[0];
   if (!item) throw new Error("No live streams found");

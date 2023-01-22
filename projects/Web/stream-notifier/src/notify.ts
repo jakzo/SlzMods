@@ -28,10 +28,14 @@ export const notify = async (opts: NotifyOpts) => {
     `http://localhost:${port}`
   );
 
-  const setCredentialsFromFile = async () =>
+  let hasSetCredentials = false;
+
+  const setCredentialsFromFile = async () => {
     oauth2Client.setCredentials(
       JSON.parse(await fs.readFile(OAUTH2_TOKENS_FILENAME, "utf8"))
     );
+    hasSetCredentials = true;
+  };
 
   const setCredentialsFromOauthFlow = () =>
     new Promise<void>((resolve, reject) => {
@@ -58,10 +62,18 @@ export const notify = async (opts: NotifyOpts) => {
             const { tokens } = await oauth2Client.getToken(code);
             await fs.writeFile(OAUTH2_TOKENS_FILENAME, JSON.stringify(tokens));
             res.statusCode = 200;
-            res.end("You can now close this window");
+            res.end(`
+              <html>
+                <head>
+                  <script>window.close();</script>
+                </head>
+                <body>You can now close this window.</body>
+              </html>
+            `);
             res.on("close", () => {
               server.close();
               oauth2Client.setCredentials(tokens);
+              hasSetCredentials = true;
               resolve();
             });
           } catch (err) {
@@ -80,7 +92,7 @@ export const notify = async (opts: NotifyOpts) => {
   const requestYoutube = async <T>(
     makeRequest: () => Promise<T>
   ): Promise<T> => {
-    if (!oauth2Client.credentials)
+    if (!hasSetCredentials)
       await setCredentialsFromFile().catch(setCredentialsFromOauthFlow);
     try {
       return await makeRequest();

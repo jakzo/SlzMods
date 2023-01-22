@@ -42,6 +42,7 @@ completed;
 SLZ.Bonelab.BonelabGameControl.IsCompleted(progression, "Baseline");
 
 // Remaining unlocks
+var progression = SLZ.SaveData.DataManager.ActiveSave.Progression;
 var allUnlocks =
     SLZ.Marrow.Warehouse.AssetWarehouseExtensions
         .Filter(

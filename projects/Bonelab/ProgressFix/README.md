@@ -1,5 +1,7 @@
 Fixes the game progression percentage displayed in the main menu.
 
+Also fixes the total level ammo counts displayed on the game board in the Hub.
+
 Note that even if you've already finished the game you will need to complete some levels/keycards again because without this mod the game does not record them as being completed.
 
 # Installation

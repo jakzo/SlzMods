@@ -2,7 +2,7 @@ Shows game progress and achievements for Bonelab 100% speedruns in LiveSplit. Al
 
 ## Installation
 
-- Find the latest build in the "releases" section of the repository on GitHub.
+- Download [BonelabHundredStatus.dll](projects/LiveSplit/BonelabHundredStatus/Components/BonelabHundredStatus.dll) (right-click on the link -> save as...)
 - Copy `BonelabHundredStatus.dll` into `LIVESPLIT/Components/BonelabHundredStatus.dll` (the `LIVESPLIT` directory depends on where you've installed LiveSplit to)
 - Download [Newtonsoft.Json from nuget](https://www.nuget.org/packages/Newtonsoft.Json/) ("download package" link on the side)
 - Open as ZIP (eg. rename from `.nupkg` to `.zip`)

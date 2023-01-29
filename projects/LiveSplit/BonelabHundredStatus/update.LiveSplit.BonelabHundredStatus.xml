@@ -1,4 +1,11 @@
 <updates>
+  <update version="1.0.1">
+    <files>
+      <file path="Components/BonelabHundredStatus.dll" status="changed" />
+    </files>
+    <change>Split on arena challenge/trial completion.</change>
+    <changelog />
+  </update>
   <update version="1.0.0">
     <files>
       <file path="Components/BonelabHundredStatus.dll" status="changed" />

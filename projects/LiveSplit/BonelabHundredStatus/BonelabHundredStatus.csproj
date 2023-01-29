@@ -67,9 +67,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <PostBuildEvent>
+    <!-- <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Livesplit\Components\LiveSplit.BonelabHundredStatus.dll"
       COPY "$(TargetPath)\..\..\..\..\..\..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll" "C:\Livesplit\Components\Newtonsoft.Json.dll"
-    </PostBuildEvent>
+    </PostBuildEvent> -->
   </PropertyGroup>
 </Project>

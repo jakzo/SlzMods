@@ -6,6 +6,8 @@ using UnityEngine;
 using SLZ.Bonelab;
 using SLZ.Marrow.Warehouse;
 using SLZ.Interaction;
+using SLZ.UI;
+using HarmonyLib;
 
 namespace Sst.ProgressFix {
 public class Mod : MelonMod {
@@ -113,5 +115,45 @@ public class Mod : MelonMod {
     }
     MelonEvents.OnUpdate.Unsubscribe(FixUnlockCrates);
   }
+
+  // The total possible ammo counts for certain levels are wrong
+  private static Dictionary<string, int> _ammoCountsToFix =
+      new Dictionary<string, int> {
+        ["SprintBridge"] = 440,
+        ["Pillar"] = 45,
+        ["Ascent"] = 2005,
+        ["Outro"] = 710,
+      };
+  [HarmonyPatch(typeof(SceneAmmoUI), nameof(SceneAmmoUI.updateTextFields))]
+  class SceneAmmoUI_updateTextFields_Patch {
+    [HarmonyPostfix()]
+    internal static void Postfix(SceneAmmoUI __instance) {
+      for (var i = 0; i < __instance.scenesToList.Length; i++) {
+        var entry = __instance.scenesToList[i];
+        if (_ammoCountsToFix.ContainsKey(entry.levelKey)) {
+          __instance.references[i].totalPossible.SetText(
+              _ammoCountsToFix[entry.levelKey].ToString());
+        }
+      }
+    }
+  }
+
+  // TODO: It would be cleaner to update scenesToList but attempts to do
+  //       that always crash the game
+  // private void FixHubAmmoCounts(LevelCrate level) {
+  //   if (level.Barcode.ID != Utilities.Levels.Barcodes.HUB)
+  //     return;
+  //   var ammo = Resources.FindObjectsOfTypeAll<SLZ.UI.SceneAmmoUI>().First();
+  //   for (var i = 0; i < ammo.scenesToList.Length; i++) {
+  //     var entry = ammo.scenesToList[i];
+  //     if (_ammoCountsToFix.ContainsKey(entry.levelKey)) {
+  //       ammo.scenesToList[i] = new SLZ.UI.SceneAmmoUI.SceneNames {
+  //         levelKey = entry.levelKey,
+  //         prettyName = entry.prettyName,
+  //         levelTotalAmmo = _ammoCountsToFix[entry.levelKey].ToString(),
+  //       };
+  //     }
+  //   }
+  // }
 }
 }

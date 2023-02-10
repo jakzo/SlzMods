@@ -11,17 +11,21 @@ public class Gripless : Feature {
       Predicate = (cl, cr) =>
           Mod.GameState.currentSceneIdx != Utils.SCENE_MENU_IDX &&
           (Utils.GetKeyControl() && Input.GetKey(KeyCode.G) ||
-           cr.GetThumbStick()),
-      Handler =
-          () => {
-            if (IsGripDisabled) {
-              MelonLogger.Msg("Enabling grip");
-              IsGripDisabled = false;
-            } else {
-              MelonLogger.Msg("Disabling grip");
-              IsGripDisabled = true;
-            }
-          },
+#if DEBUG
+           cr.GetThumbStick()
+#else
+           false
+#endif
+               ),
+      Handler = () => {
+        if (IsGripDisabled) {
+          MelonLogger.Msg("Enabling grip");
+          IsGripDisabled = false;
+        } else {
+          MelonLogger.Msg("Disabling grip");
+          IsGripDisabled = true;
+        }
+      },
     });
   }
 

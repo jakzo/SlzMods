@@ -1,8 +1,6 @@
 Timer for Bonelab speedruns.
 
-This **must be the only mod installed** for it to work (to prevent cheating, accidental or otherwise). If other MelonLoader mods are installed, the timer will simply never start.
-
-The timer will appear and start when loading into Descent, pauses during loading screens and finishes when sitting in the taxi.
+The timer will appear and start when loading into Descent, pauses during loading screens and finishes when sitting in the taxi. Also has an option to time individual levels (see configuration section below).
 
 # Installation
 

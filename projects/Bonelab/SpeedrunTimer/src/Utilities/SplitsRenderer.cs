@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using TMPro;
+using MelonLoader;
+using System.Linq;
 
 namespace Sst.SpeedrunTimer {
 class SplitsRenderer {
@@ -21,8 +23,11 @@ class SplitsRenderer {
 #if DEBUG
     debugText = " DEBUG";
 #endif
+    var timeStr = DurationToString(time);
+    var modNames = string.Join(
+        "\n", MelonMod.RegisteredMelons.Select(mod => mod.Info.Name));
     tmp.SetText(
-        $"{BuildInfo.Name} v{AppVersion.Value}{debugText}\n{DurationToString(time)}");
+        $"{BuildInfo.Name} v{AppVersion.Value}{debugText}\n{timeStr}\n\nMods:\n{modNames}");
   }
 
   public static void RenderSplits(Splits splits) {

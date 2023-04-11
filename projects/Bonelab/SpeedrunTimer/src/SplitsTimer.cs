@@ -13,6 +13,7 @@ class SplitsTimer {
   private TextMeshPro _tmp;
   private Splits _splits = new Splits();
   private MelonPreferences_Entry<bool> _prefHide;
+  private MelonPreferences_Entry<bool> _prefIl;
 
   public SplitsTimer() {
     Instance = this;
@@ -23,6 +24,9 @@ class SplitsTimer {
     _prefHide = Mod.Instance.PrefCategory.CreateEntry<bool>(
         "hide", false, "Hide in-game timer",
         "Stops the timer from displaying on your wrist. Does not hide loading screen timer.");
+    _prefIl = Mod.Instance.PrefCategory.CreateEntry<bool>(
+        "il", false, "Time individual levels",
+        "Resets the timer at every level instead of timing whole campaign.");
   }
 
   public void Reset() {
@@ -36,13 +40,18 @@ class SplitsTimer {
 
     Livesplit.SetState(true, false, nextLevel.Title);
 
-    if (nextLevel.Title == Levels.TITLE_DESCENT) {
-      Dbg.Log("Attempting to start timer");
-      _splits.ResetAndPause(nextLevel);
-    } else if (_splits.TimeStart.HasValue) {
-      Dbg.Log("Splitting timer");
-      _splits.Pause();
-      _splits.Split(nextLevel);
+    if (_prefIl.Value) {
+      if (_splits.TimeStart.HasValue)
+        _splits.Pause();
+    } else {
+      if (nextLevel.Barcode == Levels.Barcodes.DESCENT) {
+        Dbg.Log("Attempting to start timer");
+        _splits.ResetAndPause(nextLevel);
+      } else if (_splits.TimeStart.HasValue) {
+        Dbg.Log("Splitting timer");
+        _splits.Pause();
+        _splits.Split(nextLevel);
+      }
     }
 
     var time = _splits.GetTime();
@@ -64,7 +73,16 @@ class SplitsTimer {
       Utilities.Bonelab.DockToWrist(_tmp.gameObject);
     }
 
-    _splits.ResumeIfStarted();
+    if (_prefIl.Value) {
+      _splits.Reset();
+      if (Levels.IsMenu(level.Barcode)) {
+        _splits.Reset();
+      } else {
+        _splits.ResetAndStart(level);
+      }
+    } else {
+      _splits.ResumeIfStarted();
+    }
   }
 
   public void OnUpdate() {

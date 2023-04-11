@@ -1,13 +1,11 @@
 ﻿using MelonLoader;
 using Sst.Utilities;
-using System.Linq;
 
 namespace Sst.SpeedrunTimer {
 public class Mod : MelonMod {
   public const string PREF_CATEGORY_ID = BuildInfo.Name;
 
   private static SplitsTimer _timer = new SplitsTimer();
-  private bool _isDisabled = false;
 
   public MelonPreferences_Category PrefCategory;
 
@@ -19,34 +17,11 @@ public class Mod : MelonMod {
     PrefCategory = MelonPreferences.CreateCategory(PREF_CATEGORY_ID);
     _timer.OnInitialize();
 
-    LevelHooks.OnLoad += level => {
-      if (CheckIfAllowed())
-        _timer.OnLoadingScreen(level);
-    };
+    LevelHooks.OnLoad += level => _timer.OnLoadingScreen(level);
 
-    LevelHooks.OnLevelStart += level => {
-      if (CheckIfAllowed())
-        _timer.OnLevelStart(level);
-    };
+    LevelHooks.OnLevelStart += level => _timer.OnLevelStart(level);
   }
 
-  public override void OnUpdate() {
-    if (!_isDisabled)
-      _timer.OnUpdate();
-  }
-
-  private bool CheckIfAllowed() {
-    var isLegitimate = AntiCheat.CheckRunLegitimacy<Mod>();
-    if (isLegitimate) {
-      _isDisabled = false;
-      return true;
-    }
-
-    if (!_isDisabled) {
-      _timer.Reset();
-      _isDisabled = true;
-    }
-    return false;
-  }
+  public override void OnUpdate() { _timer.OnUpdate(); }
 }
 }

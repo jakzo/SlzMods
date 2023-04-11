@@ -1,3 +1,7 @@
+## 1.1.0
+
+Added individual level mode. Also lists active mods during load screens instead of disabling the timer if any disallowed mods are active.
+
 ## 1.0.3
 
 Added instructions for Quest.

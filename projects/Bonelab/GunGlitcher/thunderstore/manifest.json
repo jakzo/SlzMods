@@ -1,0 +1,7 @@
+{
+  "name": "GunGlitcher",
+  "version_number": "0.0.0",
+  "description": "Forces the gun glitch to trigger.",
+  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/GunGlitcher",
+  "dependencies": ["LavaGang-MelonLoader-0.5.7"]
+}

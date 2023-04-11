@@ -30,6 +30,7 @@ public class Mod : MelonMod {
     new Features.Blindfold(),
     new Features.Gripless(),
     new Features.Armless(),
+    new Features.RestartLevel(),
 
     // Dev features
     new Features.Speedometer(),

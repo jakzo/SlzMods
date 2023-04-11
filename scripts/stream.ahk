@@ -1,6 +1,16 @@
 Loop
 {
+  game := ""
+  IfWinExist, ahk_exe BONEWORKS.exe
+  {
+    game := "BONEWORKS"
+  }
   IfWinExist, ahk_exe BONELAB_Oculus_Windows64.exe
+  {
+    game := "BONELAB"
+  }
+  
+  If (game != "")
   {
     IfWinNotExist, ahk_exe obs64.exe
     {
@@ -25,17 +35,17 @@ Loop
           Send, +{Tab}{Enter}
           WinWaitClose, YouTube Broadcast Setup - Channel: jakzo, , 20
           Sleep 5000
-          Run, "npm" "-w" "@jakzo/stream-notifier" "run" "start", %A_ScriptDir%/..
+          ; Run, "npm" "-w" "@jakzo/stream-notifier" "run" "start", %A_ScriptDir%/..
         }
       }
     }
 
     Loop
     {
-      If !WinExist("BONELAB")
+      If !WinExist(GAME)
       {
         start := A_TickCount
-        While !WinExist("BONELAB")
+        While !WinExist(GAME)
         {
           If A_TickCount - start >= 60000
             break

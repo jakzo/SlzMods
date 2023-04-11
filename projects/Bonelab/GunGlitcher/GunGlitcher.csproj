@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
+    Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
@@ -42,46 +43,46 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\references\bonelab\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="SLZ.Marrow">
-      <HintPath>..\..\..\references\bonelab\SLZ.Marrow.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\SLZ.Marrow.dll</HintPath>
     </Reference>
     <Reference Include="SLZ.Marrow.SDK">
-      <HintPath>..\..\..\references\bonelab\SLZ.Marrow.SDK.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\SLZ.Marrow.SDK.dll</HintPath>
     </Reference>
     <Reference Include="Il2Cppmscorlib">
-      <HintPath>..\..\..\references\bonelab\Il2Cppmscorlib.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\Il2Cppmscorlib.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>..\..\..\references\bonelab\MelonLoader.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="Harmony">
-      <HintPath>..\..\..\references\bonelab\0Harmony.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="UnhollowerBaseLib">
-      <HintPath>..\..\..\references\bonelab\UnhollowerBaseLib.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\UnhollowerBaseLib.dll</HintPath>
     </Reference>
     <Reference Include="UnhollowerRuntimeLib">
-      <HintPath>..\..\..\references\bonelab\UnhollowerRuntimeLib.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\UnhollowerRuntimeLib.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\..\references\bonelab\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Input">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="Unity.XR">
-      <HintPath>..\..\..\references\bonelab\UnityEngine.VRModule.dll</HintPath>
+      <HintPath>..\..\..\references\Bonelab\UnityEngine.VRModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

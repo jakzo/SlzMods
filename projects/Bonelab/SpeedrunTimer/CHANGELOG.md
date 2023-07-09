@@ -1,3 +1,7 @@
+## 1.1.1
+
+Fixed timer not stopping when sitting in the Taxi for latest patch.
+
 ## 1.1.0
 
 Added individual level mode. Also lists active mods during load screens instead of disabling the timer if any disallowed mods are active.

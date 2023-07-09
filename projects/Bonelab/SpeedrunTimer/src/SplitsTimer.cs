@@ -111,20 +111,12 @@ class SplitsTimer {
       _tmp.color = new Color(0.2f, 0.8f, 0.2f);
   }
 
-  [HarmonyPatch(typeof(GameControl_Outro),
-                nameof(GameControl_Outro.ReachedTaxi))]
-  class GameControl_Outro_ReachedTaxi_Patch {
+  [HarmonyPatch(typeof(TaxiController), nameof(TaxiController.Start))]
+  class TaxiController_Start_Patch {
     [HarmonyPrefix()]
-    internal static void Prefix(GameControl_Outro __instance) {
-      var taxiController =
-          __instance.TaxiSequence.GetComponentInChildren<TaxiController>();
-      if (taxiController != null) {
-        taxiController.OnPlayerSeated.AddListener(
-            new System.Action(Instance.Finish));
-      } else {
-        MelonLogger.Warning(
-            "No TaxiController found. Split timer will not stop on finish.");
-      }
+    internal static void Prefix(TaxiController __instance) {
+      Dbg.Log("TaxiController_Start_Patch");
+      __instance.OnPlayerSeated.AddListener(new System.Action(Instance.Finish));
     }
   }
 }

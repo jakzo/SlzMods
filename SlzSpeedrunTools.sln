@@ -33,6 +33,8 @@ Project("{D5C5A03E-70BE-CDE9-67A3-99A60DEC0E98}") = "BonelabHundredPercentTimer"
 EndProject
 Project("{E44C252C-BD3E-A675-1947-E81F014A28E8}") = "BonelabGunGlitcher", "projects\Bonelab\GunGlitcher\GunGlitcher.csproj", "{0B87A2C9-C1AB-96EA-3947-D1A72003A47A}"
 EndProject
+Project("{B89B2D75-808D-3383-5A2E-5C519DB49E93}") = "BonelabSpeedrunPractice", "projects\Bonelab\SpeedrunPractice\SpeedrunPractice.csproj", "{FC725E6F-5165-1F43-6707-9E297148628F}"
+EndProject
 
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,6 +42,11 @@ Global
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {FC725E6F-5165-1F43-6707-9E297148628F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {FC725E6F-5165-1F43-6707-9E297148628F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {FC725E6F-5165-1F43-6707-9E297148628F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {FC725E6F-5165-1F43-6707-9E297148628F}.Release|Any CPU.Build.0 = Release|Any CPU
+
     {0B87A2C9-C1AB-96EA-3947-D1A72003A47A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {0B87A2C9-C1AB-96EA-3947-D1A72003A47A}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {0B87A2C9-C1AB-96EA-3947-D1A72003A47A}.Release|Any CPU.ActiveCfg = Release|Any CPU

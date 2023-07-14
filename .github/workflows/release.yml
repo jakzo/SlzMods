@@ -1,21 +1,9 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      game:
-        description: Game folder name (eg. "Boneworks" or "Bonelab")
-        required: true
-      project:
-        description: Project folder name (eg. "SpeedrunTimer").
-        required: true
-      versionBumpType:
-        description: Can be MAJOR, MINOR or PATCH.
-        required: true
-        default: PATCH
-      changelogDescription:
-        description: Markdown to add to changelog.
-        required: true
+  push:
+    branches:
+      - main
 
 jobs:
   release:
@@ -33,33 +21,53 @@ jobs:
         run: sudo apt install -y mono-devel
       - name: Install dependencies
         run: nuget restore SlzSpeedrunTools.sln
+      - name: Load changeset
+        id: changeset
+        run: |
+          set -eux
+          files=$(find ./changesets -name "*.md" -not -name "README.md")
+          if [[ -z "$files" ]]; then
+            echo "::warning::No changesets found."
+            exit 0
+          fi
+          filename=$(echo "$files" | head -n1)
+          info=$(basename -- "$filename" .md)
+          IFS='_' read -ra ADDR <<< "$info"
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+
+          echo "game=${ADDR[0]}" >> "$GITHUB_OUTPUT"
+          echo "project=${ADDR[1]}" >> "$GITHUB_OUTPUT"
+          echo "version_bump_type=${ADDR[2]}" >> "$GITHUB_OUTPUT"
+          echo "changelog_description=$EOF" >> "$GITHUB_OUTPUT"
+          cat "$filename" >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
       - name: Bump version
         id: bump_version
         env:
-          GAME: ${{ github.event.inputs.game }}
-          PROJECT: ${{ github.event.inputs.project }}
-          VERSION_BUMP_TYPE: ${{ github.event.inputs.versionBumpType }}
-          CHANGELOG_DESCRIPTION: ${{ github.event.inputs.changelogDescription }}
+          GAME: ${{ steps.changeset.outputs.game }}
+          PROJECT: ${{ steps.changeset.outputs.project }}
+          VERSION_BUMP_TYPE: ${{ steps.changeset.outputs.version_bump_type }}
+          CHANGELOG_DESCRIPTION: ${{ steps.changeset.outputs.changelog_description }}
         run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
       - name: Build
         run: msbuild /property:Configuration=Release
       - name: Upload to Thunderstore
         if: steps.bump_version.outputs.release_thunderstore == 'true'
         env:
-          GAME: ${{ github.event.inputs.game }}
-          PROJECT: ${{ github.event.inputs.project }}
+          GAME: ${{ steps.changeset.outputs.game }}
+          PROJECT: ${{ steps.changeset.outputs.project }}
           NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
           THUNDERSTORE_API_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
         run: csi ./scripts/UploadThunderstore.csx "$GAME" "$PROJECT" "$NEW_VERSION"
       - name: Copy LiveSplit build for commit
         if: steps.bump_version.outputs.release_livesplit == 'true'
         env:
-          GAME: ${{ github.event.inputs.game }}
-          PROJECT: ${{ github.event.inputs.project }}
+          GAME: ${{ steps.changeset.outputs.game }}
+          PROJECT: ${{ steps.changeset.outputs.project }}
         run: |
           set -eux
-          DLL_NAME="${{ github.event.inputs.project }}.dll"
-          cd "./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}"
+          DLL_NAME="${{ steps.changeset.outputs.project }}.dll"
+          cd "./projects/${{ steps.changeset.outputs.game }}/${{ steps.changeset.outputs.project }}"
           mkdir -p "./Components"
           cp "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
       - name: Commit version bump
@@ -74,8 +82,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           target_commitish: ${{ github.sha }}
-          tag_name: "${{ github.event.inputs.game }}${{ github.event.inputs.project }}_v${{ steps.bump_version.outputs.new_version }}"
+          tag_name: "${{ steps.changeset.outputs.game }}${{ steps.changeset.outputs.project }}_v${{ steps.bump_version.outputs.new_version }}"
           body: ${{ steps.bump_version.outputs.changelog }}
           files: |
-            ./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}/thunderstore/*.zip
-            ./projects/${{ github.event.inputs.game }}/${{ github.event.inputs.project }}/bin/Release/${{ github.event.inputs.project }}.dll
+            ./projects/${{ steps.changeset.outputs.game }}/${{ steps.changeset.outputs.project }}/thunderstore/*.zip
+            ./projects/${{ steps.changeset.outputs.game }}/${{ steps.changeset.outputs.project }}/bin/Release/${{ steps.changeset.outputs.project }}.dll

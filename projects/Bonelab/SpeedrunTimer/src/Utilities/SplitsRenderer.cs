@@ -6,19 +6,22 @@ using System.Linq;
 
 namespace Sst.SpeedrunTimer {
 class SplitsRenderer {
+  private static float SPLITS_WIDTH = 0.3f;
+  private static float SPLITS_LINE_HEIGHT = 0.05f;
+  private static float SPLITS_LEFT = -0.1f;
+  private static float SPLITS_FONT_SIZE = 0.3f;
+
   public static void RenderLoadingWatermark(TimeSpan time) {
+    Dbg.Log("RenderLoadingWatermark");
     var camera = GameObject.Find("Main Camera");
     if (!camera)
       return;
-    var splitsText = new GameObject($"{BuildInfo.Name}_Watermark");
-    splitsText.layer = LayerMask.NameToLayer("Background");
-    var tmp = splitsText.AddComponent<TextMeshPro>();
-    tmp.alignment = TextAlignmentOptions.TopRight;
-    tmp.fontSize = 0.5f;
-    tmp.transform.SetParent(camera.transform);
-    tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.8f);
-    tmp.rectTransform.localPosition = new Vector3(0, 0, 1);
-    tmp.rectTransform.localRotation = Quaternion.Euler(0, 0, 0);
+    var text = CreateText(camera.transform, "Watermark");
+    text.alignment = TextAlignmentOptions.TopRight;
+    text.fontSize = 0.5f;
+    text.rectTransform.sizeDelta = new Vector2(0.8f, 0.8f);
+    text.rectTransform.localPosition = new Vector3(0f, 0f, 1f);
+    text.color = new Color(0.4f, 0.4f, 0.6f);
     var debugText = "";
 #if DEBUG
     debugText = " DEBUG";
@@ -26,15 +29,68 @@ class SplitsRenderer {
     var timeStr = DurationToString(time);
     var modNames = string.Join(
         "\n", MelonMod.RegisteredMelons.Select(mod => mod.Info.Name));
-    tmp.SetText(
+    text.SetText(
         $"{BuildInfo.Name} v{AppVersion.Value}{debugText}\n{timeStr}\n\nMods:\n{modNames}");
   }
 
   public static void RenderSplits(Splits splits) {
-    // TODO
+    var camera = GameObject.Find("Main Camera");
+    if (!camera)
+      return;
+    var container = new GameObject($"{BuildInfo.Name}_Splits");
+    container.transform.SetParent(camera.transform);
+    container.transform.localPosition = new Vector3(-0.4f, 0.25f, 1f);
+    for (var i = 0; i < splits.Items.Count; i++) {
+      var split = splits.Items[i];
+      var top = i * -SPLITS_LINE_HEIGHT;
+
+      var timeTextWidth = 0f;
+      if (split.Duration.HasValue) {
+        var timeText =
+            CreateText(container.transform, $"Splits_Time_{split.Name}");
+        var format = split.Duration.Value >= TimeSpan.FromHours(1)
+                         ? "h\\:mm\\:ss"
+                         : "m\\:ss\\.f";
+        timeText.SetText(split.Duration.Value.ToString(format));
+        timeText.alignment = TextAlignmentOptions.Right;
+        timeText.overflowMode = TextOverflowModes.Truncate;
+        timeText.rectTransform.localPosition = new Vector3(0f, 0f, 0f);
+        timeText.rectTransform.anchorMin = timeText.rectTransform.anchorMax =
+            new Vector2(0f, 0.5f);
+        timeText.rectTransform.offsetMin = new Vector2(SPLITS_LEFT, top);
+        timeText.rectTransform.offsetMax =
+            new Vector2(SPLITS_WIDTH + SPLITS_LEFT, top + SPLITS_LINE_HEIGHT);
+        timeText.fontSize = SPLITS_FONT_SIZE;
+        timeText.ForceMeshUpdate();
+        timeTextWidth = timeText.preferredWidth;
+      }
+
+      var nameText =
+          CreateText(container.transform, $"Splits_Name_{split.Name}");
+      nameText.SetText(split.Name);
+      nameText.alignment = TextAlignmentOptions.Left;
+      nameText.overflowMode = TextOverflowModes.Truncate;
+      nameText.rectTransform.localPosition = new Vector3(0f, 0f, 0f);
+      nameText.rectTransform.anchorMin = nameText.rectTransform.anchorMax =
+          new Vector2(0f, 0.5f);
+      nameText.rectTransform.offsetMin = new Vector2(SPLITS_LEFT, top);
+      nameText.rectTransform.offsetMax = new Vector2(
+          SPLITS_WIDTH + SPLITS_LEFT - timeTextWidth, top + SPLITS_LINE_HEIGHT);
+      nameText.fontSize = SPLITS_FONT_SIZE;
+    }
   }
 
   public static string DurationToString(TimeSpan duration) =>
       duration.ToString($"{(duration.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff");
+
+  private static TextMeshPro CreateText(Transform parent, string name) {
+    var go = new GameObject($"{BuildInfo.Name}_{name}");
+    go.layer = LayerMask.NameToLayer("Background");
+    var tmp = go.AddComponent<TextMeshPro>();
+    tmp.transform.SetParent(parent);
+    tmp.sortingOrder = 100;
+    tmp.color = new Color(0.5f, 0.5f, 0.5f);
+    return tmp;
+  }
 }
 }

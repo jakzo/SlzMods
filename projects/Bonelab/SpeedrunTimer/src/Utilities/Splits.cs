@@ -1,14 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
 using SLZ.Marrow.Warehouse;
 
 namespace Sst.SpeedrunTimer {
 public class Splits {
+  private static Regex _levelPrefixPattern = new Regex(@"^\s*\d+\s*-\s*");
+  private static string LevelSplitName(LevelCrate level) {
+    return _levelPrefixPattern.Replace(level.Title, "");
+  }
+
   public List<Split> Items = new List<Split>();
-  public System.DateTime? TimeStart;
-  public System.DateTime? TimeEnd;
-  public System.DateTime? TimeStartRelative;
-  public System.DateTime? TimePause;
-  public System.DateTime TimeLastSplitStartRelative = System.DateTime.Now;
+  public DateTime? TimeStart;
+  public DateTime? TimeEnd;
+  public DateTime? TimeStartRelative;
+  public DateTime? TimePause;
+  public DateTime TimeLastSplitStartRelative = DateTime.Now;
 
   public void Reset() {
     TimeStart = null;
@@ -23,42 +30,45 @@ public class Splits {
   }
 
   public void ResetAndStart(LevelCrate firstLevel) {
-    var now = System.DateTime.Now;
+    var now = DateTime.Now;
     TimeEnd = TimePause = null;
     TimeStart = TimeStartRelative = TimeLastSplitStartRelative = now;
     Items = new List<Split>() {
       new Split() {
         Level = firstLevel,
-        Name = firstLevel.name,
+        Name = LevelSplitName(firstLevel),
         TimeStart = now,
       },
     };
   }
 
-  public void Pause() { TimePause = System.DateTime.Now; }
+  public void Pause() { TimePause = DateTime.Now; }
 
   public void ResumeIfStarted() {
     if (TimePause == null)
       return;
-    var delta = System.DateTime.Now - TimePause.Value;
+    var delta = DateTime.Now - TimePause.Value;
     TimeStartRelative += delta;
     TimeLastSplitStartRelative += delta;
     TimePause = null;
   }
 
   public System.TimeSpan? GetTime() =>
-      (TimeEnd ?? TimePause ?? System.DateTime.Now) - TimeStartRelative;
+      (TimeEnd ?? TimePause ?? DateTime.Now) - TimeStartRelative;
+
+  public System.TimeSpan? GetCurrentSplitTime() =>
+      (TimeEnd ?? TimePause ?? DateTime.Now) - TimeLastSplitStartRelative;
 
   public void Split(LevelCrate nextLevel) {
     var lastItem = Items[Items.Count - 1];
-    var now = System.DateTime.Now;
+    var now = DateTime.Now;
     lastItem.TimeEnd = now;
     var splitTimeRelative = TimePause ?? now;
     lastItem.Duration = splitTimeRelative - TimeLastSplitStartRelative;
     TimeLastSplitStartRelative = splitTimeRelative;
     Items.Add(new Split() {
       Level = nextLevel,
-      Name = nextLevel.name,
+      Name = LevelSplitName(nextLevel),
       TimeStart = now,
     });
   }
@@ -67,8 +77,8 @@ public class Splits {
 public class Split {
   public LevelCrate Level;
   public string Name;
-  public System.DateTime? TimeStart;
-  public System.DateTime? TimeEnd;
+  public DateTime? TimeStart;
+  public DateTime? TimeEnd;
   public System.TimeSpan? Duration;
 }
 }

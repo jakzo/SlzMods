@@ -15,11 +15,11 @@ public class Mod : MelonMod {
   public override void OnInitializeMelon() {
     Dbg.Init(PREF_CATEGORY_ID);
     PrefCategory = MelonPreferences.CreateCategory(PREF_CATEGORY_ID);
-    _timer.OnInitialize();
+    SplitsTimer.OnInitialize();
+    SaveDeleteImprovements.OnInitialize();
 
-    LevelHooks.OnLoad += level => _timer.OnLoadingScreen(level);
-
-    LevelHooks.OnLevelStart += level => _timer.OnLevelStart(level);
+    LevelHooks.OnLoad += _timer.OnLoadingScreen;
+    LevelHooks.OnLevelStart += _timer.OnLevelStart;
   }
 
   public override void OnUpdate() { _timer.OnUpdate(); }

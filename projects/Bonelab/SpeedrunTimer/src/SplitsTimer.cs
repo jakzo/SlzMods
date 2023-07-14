@@ -11,22 +11,27 @@ class SplitsTimer {
   private static SplitsTimer Instance;
 
   private TextMeshPro _tmp;
+  private TextMeshPro _tmpIl;
   private Splits _splits = new Splits();
-  private MelonPreferences_Entry<bool> _prefHide;
-  private MelonPreferences_Entry<bool> _prefIl;
+  private static MelonPreferences_Entry<bool> _prefHide;
+  private static MelonPreferences_Entry<bool> _prefHideIl;
+  private static MelonPreferences_Entry<bool> _prefHideSplits;
 
   public SplitsTimer() {
     Instance = this;
     Livesplit.SetState(true, false);
   }
 
-  public void OnInitialize() {
+  public static void OnInitialize() {
     _prefHide = Mod.Instance.PrefCategory.CreateEntry<bool>(
         "hide", false, "Hide in-game timer",
         "Stops the timer from displaying on your wrist. Does not hide loading screen timer.");
-    _prefIl = Mod.Instance.PrefCategory.CreateEntry<bool>(
-        "il", false, "Time individual levels",
-        "Resets the timer at every level instead of timing whole campaign.");
+    _prefHideIl = Mod.Instance.PrefCategory.CreateEntry<bool>(
+        "hideIl", false, "Hide level timer",
+        "Stops the individual level timer from displaying on your wrist.");
+    _prefHideSplits = Mod.Instance.PrefCategory.CreateEntry<bool>(
+        "hideSplits", false, "Hides split display in loading screen",
+        "Stops the individual level times from displaying in the loading screen.");
   }
 
   public void Reset() {
@@ -40,24 +45,20 @@ class SplitsTimer {
 
     Livesplit.SetState(true, false, nextLevel.Title);
 
-    if (_prefIl.Value) {
-      if (_splits.TimeStart.HasValue)
-        _splits.Pause();
-    } else {
-      if (nextLevel.Barcode == Levels.Barcodes.DESCENT) {
-        Dbg.Log("Attempting to start timer");
-        _splits.ResetAndPause(nextLevel);
-      } else if (_splits.TimeStart.HasValue) {
-        Dbg.Log("Splitting timer");
-        _splits.Pause();
-        _splits.Split(nextLevel);
-      }
+    if (nextLevel.Barcode == Levels.Barcodes.DESCENT) {
+      Dbg.Log("Attempting to start timer");
+      _splits.ResetAndPause(nextLevel);
+    } else if (_splits.TimeStart.HasValue) {
+      Dbg.Log("Splitting timer");
+      _splits.Pause();
+      _splits.Split(nextLevel);
     }
 
     var time = _splits.GetTime();
     if (time.HasValue) {
       SplitsRenderer.RenderLoadingWatermark(time.Value);
-      SplitsRenderer.RenderSplits(_splits);
+      if (!_prefHideSplits.Value)
+        SplitsRenderer.RenderSplits(_splits);
     }
   }
 
@@ -70,37 +71,41 @@ class SplitsTimer {
       _tmp.alignment = TextAlignmentOptions.BottomRight;
       _tmp.fontSize = 0.5f;
       _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-      Utilities.Bonelab.DockToWrist(_tmp.gameObject);
+      Utilities.Bonelab.DockToWrist(splitsText);
+
+      if (!_prefHideIl.Value) {
+        var ilText = new GameObject("SpeedrunTimer_Wrist_IL");
+        var ilTextOffset = new GameObject("SpeedrunTimer_Wrist_IL_Offset");
+        ilTextOffset.transform.parent = ilText.transform;
+        _tmpIl = ilTextOffset.AddComponent<TextMeshPro>();
+        _tmpIl.alignment = TextAlignmentOptions.BottomRight;
+        _tmpIl.fontSize = 0.3f;
+        _tmpIl.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
+        _tmpIl.rectTransform.localPosition =
+            new Vector3(-0.005f, -0.03f, 0.005f);
+        _tmpIl.color = new Color(0.2f, 0.2f, 0.2f);
+        Utilities.Bonelab.DockToWrist(ilText);
+      }
     }
 
-    if (_prefIl.Value) {
-      _splits.Reset();
-      if (Levels.IsMenu(level.Barcode)) {
-        _splits.Reset();
-      } else {
-        _splits.ResetAndStart(level);
-      }
-    } else {
-      _splits.ResumeIfStarted();
-    }
+    _splits.ResumeIfStarted();
   }
 
   public void OnUpdate() {
-    if (_tmp == null)
-      return;
-    var time = _splits.GetTime();
-    if (time == null)
-      return;
-    // if (PrefShowUnderWrist.Read()) {
-    //   // TODO
-    //   var isHidden = false;
-    //   if (isHidden) {
-    //     _tmp.gameObject.active = false;
-    //     return;
-    //   }
-    // }
-    _tmp.gameObject.active = true;
-    _tmp.SetText(SplitsRenderer.DurationToString(time.Value));
+    if (_tmp != null) {
+      var time = _splits.GetTime();
+      if (time == null)
+        return;
+      _tmp.gameObject.active = true;
+      _tmp.SetText(SplitsRenderer.DurationToString(time.Value));
+    }
+    if (_tmpIl != null) {
+      var time = _splits.GetCurrentSplitTime();
+      if (time == null)
+        return;
+      _tmpIl.gameObject.active = true;
+      _tmpIl.SetText(SplitsRenderer.DurationToString(time.Value));
+    }
   }
 
   public void Finish() {

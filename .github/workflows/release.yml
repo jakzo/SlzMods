@@ -38,7 +38,7 @@ jobs:
           echo "game=${ADDR[0]}" >> "$GITHUB_OUTPUT"
           echo "project=${ADDR[1]}" >> "$GITHUB_OUTPUT"
           echo "version_bump_type=${ADDR[2]}" >> "$GITHUB_OUTPUT"
-          echo "changelog_description=$EOF" >> "$GITHUB_OUTPUT"
+          echo "changelog_description<<$EOF" >> "$GITHUB_OUTPUT"
           cat "$filename" >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
       - name: Bump version

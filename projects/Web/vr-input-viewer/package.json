@@ -12,7 +12,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "get-port": "^6.1.2",
     "three": "^0.147.0"
   },
   "devDependencies": {

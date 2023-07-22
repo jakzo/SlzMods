@@ -1,10 +1,18 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 export const createHeadset = () => {
-  return new THREE.Mesh(
-    new THREE.BoxGeometry(0.25, 0.2, 0.15),
-    new THREE.MeshPhongMaterial({
-      color: "#eeeeee",
-    })
+  const group = new THREE.Group();
+  const loader = new GLTFLoader();
+  loader.load(
+    "/quest2_hmd.glb",
+    (gltf) => {
+      group.add(gltf.scene);
+    },
+    undefined,
+    (err) => {
+      console.error("Failed to load HMD model:", err);
+    }
   );
+  return group;
 };

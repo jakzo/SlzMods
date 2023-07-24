@@ -41,6 +41,8 @@ jobs:
           echo "changelog_description<<$EOF" >> "$GITHUB_OUTPUT"
           cat "$filename" >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
+
+          rm "$filename"
       - name: Bump version
         id: bump_version
         env:

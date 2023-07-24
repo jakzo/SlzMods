@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEngine;
 using SLZ.Rig;
 using SLZ.Marrow.Warehouse;
 
@@ -16,8 +17,18 @@ public static class Utils {
 
   public static GameState State;
 
-  public static UnityEngine.Vector3 GetPlayerPos() {
+  public static Vector3 GetPlayerPos() {
     return State.rigManager.realHeptaRig.transform.position;
+  }
+
+  public class PlayerState {
+    public Vector3 pos;
+  }
+
+  public static PlayerState GetPlayerState() {
+    return new PlayerState() {
+      pos = Utils.GetPlayerPos(),
+    };
   }
 }
 

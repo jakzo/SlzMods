@@ -7,6 +7,9 @@ export const createHeadset = () => {
   loader.load(
     "/quest2_hmd.glb",
     (gltf) => {
+      // TODO: Bake this rotation into the model
+      gltf.scene.rotateX(Math.PI / -2);
+      gltf.scene.rotateY(Math.PI);
       group.add(gltf.scene);
     },
     undefined,

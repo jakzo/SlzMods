@@ -74,14 +74,12 @@ export class InputViewer {
   }
 
   start() {
-    this.positionViewer?.start();
-
-    this.onControllerConnected("left");
-    this.onControllerConnected("right");
-
     let inputVersion: number | undefined = undefined;
     const ws = new WebSocket(this.opts.address);
     ws.binaryType = "arraybuffer";
+    ws.addEventListener("open", () => {
+      console.log("Connected to game");
+    });
     ws.addEventListener(
       "message",
       (evt: MessageEvent<ArrayBuffer | string>) => {
@@ -90,6 +88,7 @@ export class InputViewer {
             const msg = JSON.parse(evt.data);
             if (msg.inputVersion) {
               inputVersion = msg.inputVersion;
+              console.log("Got input version:", inputVersion);
               if (inputVersion !== REQUIRED_INPUT_VERSION) {
                 console.error(
                   "Wrong input version from server:",
@@ -105,8 +104,15 @@ export class InputViewer {
 
         if (inputVersion !== REQUIRED_INPUT_VERSION) return;
         const data = new DataIterator(evt.data);
-        const type = data.readInt8();
-        if (type !== 0) return;
+        const type = data.readUint8();
+        if (type !== 1) return;
+
+        if (this.positionViewer?.isStopped) {
+          this.positionViewer.start();
+          this.onControllerConnected("left");
+          this.onControllerConnected("right");
+        }
+
         data.readFloat32(); // timestamp
         this.readHmdState(data);
         this.readControllerState(data, "left");
@@ -142,23 +148,21 @@ export class InputViewer {
   private readHmdState(data: DataIterator) {
     const { position, rotation } = this.transforms.hmd;
     position.set(data.readFloat32(), data.readFloat32(), data.readFloat32());
-    rotation.set(
-      data.readFloat32(),
-      data.readFloat32(),
-      data.readFloat32(),
-      data.readFloat32()
-    );
+    const rx = data.readFloat32();
+    const ry = data.readFloat32();
+    const rz = data.readFloat32();
+    const rw = data.readFloat32();
+    rotation.set(rx, -ry, -rz, rw);
   }
 
   private readControllerState(data: DataIterator, handedness: Handedness) {
     const { position, rotation } = this.transforms[handedness];
     position.set(data.readFloat32(), data.readFloat32(), data.readFloat32());
-    rotation.set(
-      data.readFloat32(),
-      data.readFloat32(),
-      data.readFloat32(),
-      data.readFloat32()
-    );
+    const rx = data.readFloat32();
+    const ry = data.readFloat32();
+    const rz = data.readFloat32();
+    const rw = data.readFloat32();
+    rotation.set(rx, -ry, -rz, rw);
 
     const flagIterator = iterateBits(data.readInt32());
     const isConnected = flagIterator.next().value ?? false;
@@ -173,12 +177,11 @@ export class InputViewer {
       for (const i of controller.gamepad.axes.keys()) {
         controller.gamepad.axes[i] = data.readFloat32();
       }
-      for (const button of controller.gamepad.buttons) {
+      for (const [i, button] of controller.gamepad.buttons.entries()) {
         button.pressed = flagIterator.next().value ?? false;
         button.touched = flagIterator.next().value ?? false;
-        button.value = data.readFloat32();
+        button.value = i < 2 ? data.readFloat32() : button.pressed ? 1 : 0;
       }
-      controller.gamepad.buttons[0];
     }
     controller?.gamepad;
   }

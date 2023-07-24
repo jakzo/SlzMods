@@ -24,12 +24,12 @@
   r: 10;
 }
 .controller-hud .button.a {
-  cx: 44;
-  cy: 73;
+  cx: 23;
+  cy: 82;
 }
 .controller-hud .button.b {
-  cx: 68;
-  cy: 51;
+  cx: 45;
+  cy: 66;
 }
 
 .controller-hud .thumbstick .background {
@@ -46,17 +46,16 @@
 }
 
 .controller-hud .trigger.primary {
-  translate: 60px 4px;
-  rotate: -15deg;
+  translate: 60px 10px;
+  rotate: -5deg;
 }
 
 .controller-hud .trigger.secondary {
-  translate: 68px 70px;
-  rotate: 15deg;
+  translate: 63px 56px;
 }
 
 .controller-hud .touched {
-  fill: violet;
+  fill: #edbedd;
 }
 .controller-hud .pressed {
   fill: darkmagenta;

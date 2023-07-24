@@ -30,7 +30,10 @@ export class PositionViewer {
   resizeObserver: ResizeObserver;
   controllerModelFactory: XRControllerModelFactory =
     new XRControllerModelFactory();
-  controllers: Record<"left" | "right", THREE.Group>;
+  controllers: Record<
+    "left" | "right",
+    { gripSpace: THREE.Group; container: THREE.Group }
+  >;
   headset: THREE.Object3D;
   transforms: [THREE.Object3D, Transforms[keyof Transforms]][];
 
@@ -40,8 +43,8 @@ export class PositionViewer {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    this.camera.position.set(0, 1.6, 3);
-    this.camera.lookAt(0, 1, 0);
+    this.camera.position.set(0, 1.2, -0.5);
+    this.camera.lookAt(0, 1.2, 0);
 
     // this.hudScene = new THREE.Scene();
 
@@ -77,8 +80,8 @@ export class PositionViewer {
 
     this.transforms = [
       [this.headset, opts.transforms.hmd],
-      [this.controllers.left, opts.transforms.left],
-      [this.controllers.right, opts.transforms.right],
+      [this.controllers.left.container, opts.transforms.left],
+      [this.controllers.right.container, opts.transforms.right],
     ];
 
     this.stats = opts.showStats ? Stats() : undefined;
@@ -90,24 +93,27 @@ export class PositionViewer {
       this.camera,
       this.renderer.domElement
     );
-    orbitControls.target = new THREE.Vector3(0, 1, 0);
+    orbitControls.target = new THREE.Vector3(0, 1.2, 0);
     orbitControls.update();
   }
 
   private createController() {
+    const container = new THREE.Group();
     const gripSpace = new THREE.Group();
     gripSpace.add(this.controllerModelFactory.createControllerModel(gripSpace));
-    this.scene.add(gripSpace);
-    return gripSpace;
+    container.add(gripSpace);
+    gripSpace.position.z += 0.02;
+    this.scene.add(container);
+    return { gripSpace, container };
   }
 
   onControllerConnected(xrInputSource: VirtualXRInputSource) {
-    const gripSpace = this.controllers[xrInputSource.handedness];
+    const { gripSpace } = this.controllers[xrInputSource.handedness];
     gripSpace.dispatchEvent({ type: "connected", data: xrInputSource });
   }
 
   onControllerDisconnected(handedness: Handedness) {
-    const gripSpace = this.controllers[handedness];
+    const { gripSpace } = this.controllers[handedness];
     gripSpace.dispatchEvent({ type: "disconnected" });
   }
 
@@ -127,8 +133,53 @@ export class PositionViewer {
     this.stats?.begin();
 
     for (const [obj, { position, rotation }] of this.transforms) {
-      obj.position.copy(position);
+      obj.position.x = -position.x;
+      obj.position.y = position.y;
+      obj.position.z = position.z;
+
       obj.setRotationFromQuaternion(rotation);
+      obj.rotateX(Math.PI * 0.75);
+      obj.rotateZ(Math.PI);
+
+      // obj.rotation.x = rotation.x * ((2 * Math.PI) / 360);
+      // obj.rotation.y = rotation.y * ((2 * Math.PI) / 360);
+      // obj.rotation.z = rotation.z * ((2 * Math.PI) / 360);
+      // obj.rotation.x = Math.PI / 2;
+      // obj.rotation.y = 0;
+      // obj.rotation.z = Math.PI;
+      // obj.rotateZ((-rotation.z / 360) * 2 * Math.PI);
+      // obj.rotateY((rotation.y / 360) * 2 * Math.PI);
+      // obj.rotateX((rotation.x / 360) * 2 * Math.PI);
+
+      // obj.quaternion.x = rotation.x;
+      // obj.quaternion.y = rotation.z;
+      // obj.quaternion.z = rotation.y;
+      // obj.quaternion.w = rotation.w;
+
+      // obj.quaternion.multiply(
+      //   new THREE.Quaternion().setFromAxisAngle(
+      //     new THREE.Vector3(1, 0, 0),
+      //     Math.PI / 2
+      //   )
+      // );
+      // obj.quaternion.multiply(
+      //   new THREE.Quaternion().setFromAxisAngle(
+      //     new THREE.Vector3(0, 0, 1),
+      //     Math.PI
+      //   )
+      // );
+
+      // const euler = new THREE.Euler().setFromQuaternion(obj.quaternion, "YZX");
+      // [euler.y, euler.z] = [euler.z, euler.y];
+      // obj.quaternion.setFromEuler(euler);
+
+      // obj.rotateX(Math.PI);
+
+      // obj.rotateX(Math.PI * 0.5);
+      // obj.rotateY(Math.PI * 1.0);
+      // obj.rotateZ(Math.PI * 1.0);
+      // [obj.rotation.y, obj.rotation.z] = [obj.rotation.z, obj.rotation.y];
+      obj.updateMatrix();
     }
 
     for (const hud of this.huds) hud.update();

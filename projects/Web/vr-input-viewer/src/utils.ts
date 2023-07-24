@@ -43,8 +43,8 @@ export class DataIterator {
     this.view = new DataView(data);
   }
 
-  readInt8() {
-    const value = this.view.getInt8(this.byteOffset);
+  readUint8() {
+    const value = this.view.getUint8(this.byteOffset);
     this.byteOffset += Int8Array.BYTES_PER_ELEMENT;
     return value;
   }

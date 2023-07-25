@@ -47,6 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: Release
     needs: prerelease
+    if: ${{ needs.prerelease.outputs.changesets != '[]' }}
     strategy:
       matrix:
         changeset: ${{ fromJson(needs.prerelease.outputs.changesets) }}

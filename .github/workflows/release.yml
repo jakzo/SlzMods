@@ -6,12 +6,50 @@ on:
       - main
 
 jobs:
+  prerelease:
+    name: Prerelease
+    runs-on: ubuntu-latest
+    environment: Release
+    outputs:
+      changesets: ${{ steps.changesets.outputs.result }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Load changesets
+        id: changesets
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const path = require("path");
+            const fs = require("fs");
+            return fs
+              .readdirSync("changesets")
+              .map((filename) => path.parse(filename))
+              .filter(
+                (file) =>
+                  file.ext.toLowerCase() === ".md" && file.name !== "README"
+              )
+              .map((file) => {
+                const parts = file.name.split("_");
+                return {
+                  filename: file.base,
+                  game: parts[0],
+                  project: parts[1],
+                  version_bump_type: parts[2],
+                  changelog_description: fs.readFileSync(
+                    path.join("changesets", file.base),
+                    "utf-8"
+                  ),
+                };
+              });
   release:
     name: Release
     runs-on: ubuntu-latest
     environment: Release
-    outputs:
-      release_upload_url: ${{ steps.create_release.outputs.upload_url }}
+    needs: prerelease
+    strategy:
+      matrix:
+        changeset: ${{ fromJson(needs.prerelease.outputs.changesets) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -21,60 +59,39 @@ jobs:
         run: sudo apt install -y mono-devel
       - name: Install dependencies
         run: nuget restore SlzSpeedrunTools.sln
-      - name: Load changeset
-        id: changeset
-        run: |
-          set -eux
-          files=$(find ./changesets -name "*.md" -not -name "README.md")
-          if [[ -z "$files" ]]; then
-            echo "::warning::No changesets found."
-            exit 0
-          fi
-          filename=$(echo "$files" | head -n1)
-          info=$(basename -- "$filename" .md)
-          IFS='_' read -ra ADDR <<< "$info"
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-
-          echo "game=${ADDR[0]}" >> "$GITHUB_OUTPUT"
-          echo "project=${ADDR[1]}" >> "$GITHUB_OUTPUT"
-          echo "version_bump_type=${ADDR[2]}" >> "$GITHUB_OUTPUT"
-          echo "changelog_description<<$EOF" >> "$GITHUB_OUTPUT"
-          cat "$filename" >> "$GITHUB_OUTPUT"
-          echo "$EOF" >> "$GITHUB_OUTPUT"
-
-          rm "$filename"
       - name: Bump version
         id: bump_version
         env:
-          GAME: ${{ steps.changeset.outputs.game }}
-          PROJECT: ${{ steps.changeset.outputs.project }}
-          VERSION_BUMP_TYPE: ${{ steps.changeset.outputs.version_bump_type }}
-          CHANGELOG_DESCRIPTION: ${{ steps.changeset.outputs.changelog_description }}
+          GAME: ${{ matrix.changeset.game }}
+          PROJECT: ${{ matrix.changeset.project }}
+          VERSION_BUMP_TYPE: ${{ matrix.changeset.version_bump_type }}
+          CHANGELOG_DESCRIPTION: ${{ matrix.changeset.changelog_description }}
         run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
       - name: Build
         run: msbuild /property:Configuration=Release
       - name: Upload to Thunderstore
         if: steps.bump_version.outputs.release_thunderstore == 'true'
         env:
-          GAME: ${{ steps.changeset.outputs.game }}
-          PROJECT: ${{ steps.changeset.outputs.project }}
+          GAME: ${{ matrix.changeset.game }}
+          PROJECT: ${{ matrix.changeset.project }}
           NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
           THUNDERSTORE_API_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
         run: csi ./scripts/UploadThunderstore.csx "$GAME" "$PROJECT" "$NEW_VERSION"
       - name: Copy LiveSplit build for commit
         if: steps.bump_version.outputs.release_livesplit == 'true'
         env:
-          GAME: ${{ steps.changeset.outputs.game }}
-          PROJECT: ${{ steps.changeset.outputs.project }}
+          GAME: ${{ matrix.changeset.game }}
+          PROJECT: ${{ matrix.changeset.project }}
         run: |
           set -eux
-          DLL_NAME="${{ steps.changeset.outputs.project }}.dll"
-          cd "./projects/${{ steps.changeset.outputs.game }}/${{ steps.changeset.outputs.project }}"
+          DLL_NAME="$PROJECT.dll"
+          cd "./projects/$GAME/$PROJECT"
           mkdir -p "./Components"
           cp "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
       - name: Commit version bump
         run: |
           set -eux
+          rm "./changesets/${{ matrix.changeset.filename }}"
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -84,8 +101,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           target_commitish: ${{ github.sha }}
-          tag_name: "${{ steps.changeset.outputs.game }}${{ steps.changeset.outputs.project }}_v${{ steps.bump_version.outputs.new_version }}"
+          tag_name: "${{ matrix.changeset.game }}${{ matrix.changeset.project }}_v${{ steps.bump_version.outputs.new_version }}"
           body: ${{ steps.bump_version.outputs.changelog }}
           files: |
-            ./projects/${{ steps.changeset.outputs.game }}/${{ steps.changeset.outputs.project }}/thunderstore/*.zip
-            ./projects/${{ steps.changeset.outputs.game }}/${{ steps.changeset.outputs.project }}/bin/Release/${{ steps.changeset.outputs.project }}.dll
+            ./projects/${{ matrix.changeset.game }}/${{ matrix.changeset.project }}/thunderstore/*.zip
+            ./projects/${{ matrix.changeset.game }}/${{ matrix.changeset.project }}/bin/Release/${{ matrix.changeset.project }}.dll

@@ -3,15 +3,17 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { XRControllerModelFactory } from "three/examples/jsm/webxr/XRControllerModelFactory";
 
-import { createEnvironment } from "./Environment";
-import { createHeadset } from "./Headset";
-import { ControllerHud } from "./Hud";
+import { createEnvironment } from "../Environment";
+import { createHeadset } from "../Headset";
+import { ControllerHud } from "../Hud";
 import {
   Handedness,
   Transforms,
   VirtualXRInputSource,
   throttle,
-} from "./utils";
+} from "../utils";
+import { Grid } from "./Grid";
+import { HeightTrackers } from "./HeightTrackers";
 
 export interface PositionViewerOpts {
   container: HTMLElement;
@@ -26,6 +28,8 @@ export class PositionViewer {
   // hudScene: THREE.Scene;
   // hudCamera: THREE.OrthographicCamera;
   huds: ControllerHud[] = [];
+  grid: Grid = new Grid(1.8, 0.5, 0.05);
+  heightTrackers: HeightTrackers;
   renderer: THREE.WebGLRenderer;
   resizeObserver: ResizeObserver;
   controllerModelFactory: XRControllerModelFactory =
@@ -43,8 +47,8 @@ export class PositionViewer {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    this.camera.position.set(0, 1.2, -0.5);
-    this.camera.lookAt(0, 1.2, 0);
+    this.camera.position.set(0, 1.8, -3);
+    this.camera.lookAt(0, 0.8, 0);
 
     // this.hudScene = new THREE.Scene();
 
@@ -89,11 +93,16 @@ export class PositionViewer {
 
     this.scene.add(createEnvironment());
 
+    this.scene.add(this.grid.plane);
+
+    this.heightTrackers = new HeightTrackers(opts.transforms, 20);
+    this.scene.add(this.heightTrackers.container);
+
     const orbitControls = new OrbitControls(
       this.camera,
       this.renderer.domElement
     );
-    orbitControls.target = new THREE.Vector3(0, 1.2, 0);
+    orbitControls.target = new THREE.Vector3(0, 0.8, 0);
     orbitControls.update();
   }
 
@@ -140,49 +149,12 @@ export class PositionViewer {
       obj.setRotationFromQuaternion(rotation);
       obj.rotateX(Math.PI * 0.75);
       obj.rotateZ(Math.PI);
-
-      // obj.rotation.x = rotation.x * ((2 * Math.PI) / 360);
-      // obj.rotation.y = rotation.y * ((2 * Math.PI) / 360);
-      // obj.rotation.z = rotation.z * ((2 * Math.PI) / 360);
-      // obj.rotation.x = Math.PI / 2;
-      // obj.rotation.y = 0;
-      // obj.rotation.z = Math.PI;
-      // obj.rotateZ((-rotation.z / 360) * 2 * Math.PI);
-      // obj.rotateY((rotation.y / 360) * 2 * Math.PI);
-      // obj.rotateX((rotation.x / 360) * 2 * Math.PI);
-
-      // obj.quaternion.x = rotation.x;
-      // obj.quaternion.y = rotation.z;
-      // obj.quaternion.z = rotation.y;
-      // obj.quaternion.w = rotation.w;
-
-      // obj.quaternion.multiply(
-      //   new THREE.Quaternion().setFromAxisAngle(
-      //     new THREE.Vector3(1, 0, 0),
-      //     Math.PI / 2
-      //   )
-      // );
-      // obj.quaternion.multiply(
-      //   new THREE.Quaternion().setFromAxisAngle(
-      //     new THREE.Vector3(0, 0, 1),
-      //     Math.PI
-      //   )
-      // );
-
-      // const euler = new THREE.Euler().setFromQuaternion(obj.quaternion, "YZX");
-      // [euler.y, euler.z] = [euler.z, euler.y];
-      // obj.quaternion.setFromEuler(euler);
-
-      // obj.rotateX(Math.PI);
-
-      // obj.rotateX(Math.PI * 0.5);
-      // obj.rotateY(Math.PI * 1.0);
-      // obj.rotateZ(Math.PI * 1.0);
-      // [obj.rotation.y, obj.rotation.z] = [obj.rotation.z, obj.rotation.y];
-      obj.updateMatrix();
     }
 
     for (const hud of this.huds) hud.update();
+
+    this.grid.update();
+    this.heightTrackers.update();
 
     this.renderer.render(this.scene, this.camera);
 

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { ControllerHud } from "./Hud";
-import { PositionViewer } from "./PositionViewer";
+import { PositionViewer } from "./PositionViewer/PositionViewer";
 import {
   DataIterator,
   Handedness,

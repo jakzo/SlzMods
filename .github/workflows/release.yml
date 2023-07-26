@@ -123,6 +123,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          registry-url: https://registry.npmjs.org
       - name: Install dependencies
         run: npm ci
       - name: Bump versions
@@ -140,7 +144,7 @@ jobs:
               const packageJson = JSON.parse(
                 fs.readFileSync(path.join(projectPath, "package.json"), "utf8")
               );
-              cp.spawnSync(
+              const result = cp.spawnSync(
                 "npm",
                 [
                   "-w",
@@ -151,6 +155,7 @@ jobs:
                 ],
                 { stdio: "inherit" }
               );
+              if (result.status) throw new Error("Command failed");
               const packageJson2 = JSON.parse(
                 fs.readFileSync(path.join(projectPath, "package.json"), "utf8")
               );
@@ -167,7 +172,7 @@ jobs:
         uses: actions/github-script@v6
         env:
           CHANGESETS: ${{ needs.prerelease.outputs.web_changesets }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
           script: |
             const fs = require("fs");
@@ -179,11 +184,12 @@ jobs:
                 fs.readFileSync(path.join(projectPath, "package.json"), "utf8")
               );
               if (packageJson.private) continue;
-              cp.spawnSync(
+              const result = cp.spawnSync(
                 "npm",
                 ["-w", packageJson.name, "publish"],
                 { stdio: "inherit" }
               );
+              if (result.status) throw new Error("Command failed");
             }
       - name: Commit version bumps
         run: |
@@ -198,7 +204,7 @@ jobs:
           set -eux
           mkdir ./docs/dist
           cp ./docs/index.html ./docs/dist/index.html
-          cp ./projects/Web/input-viewer/dist ./docs/dist/input-viewer
+          cp ./projects/Web/vr-input-viewer/dist ./docs/dist/input-viewer
       - name: Upload pages artifact
         uses: actions/upload-artifact@v3
         with:

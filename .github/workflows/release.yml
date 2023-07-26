@@ -115,10 +115,13 @@ jobs:
             ./projects/${{ matrix.changeset.game }}/${{ matrix.changeset.project }}/bin/Release/${{ matrix.changeset.project }}.dll
 
   release-web:
-    name: Release (web)
+    name: Release (JS)
     runs-on: ubuntu-latest
     environment: Release
     needs: prerelease
+    permissions:
+      pages: write
+      id-token: write
     if: ${{ needs.prerelease.outputs.web_changesets != '[]' }}
     steps:
       - name: Checkout repository

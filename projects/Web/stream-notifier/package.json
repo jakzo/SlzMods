@@ -1,6 +1,6 @@
 {
   "name": "@jakzo/stream-notifier",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Sends link to unlisted YouTube stream on Discord.",
   "main": "dist/index.js",
   "type": "module",

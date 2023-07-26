@@ -2,11 +2,16 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { log, withBaseUrl } from "../utils/utils";
 
+const REMOTE_URL =
+  "https://jakzo.github.io/SlzSpeedrunTools/input-viewer/quest2_hmd.glb";
+
 export const createHeadset = () => {
   const group = new THREE.Group();
   const loader = new GLTFLoader();
   loader.load(
-    withBaseUrl("./quest2_hmd.glb"),
+    window.location.protocol === "file:"
+      ? REMOTE_URL
+      : withBaseUrl("./quest2_hmd.glb"),
     (gltf) => {
       // TODO: Bake these into the model
       gltf.scene.rotateX(Math.PI * -0.3);

@@ -83,3 +83,11 @@ export const log = {
   warn: createLogFn("warn"),
   error: createLogFn("error"),
 };
+
+export const withBaseUrl = (relativeUrl: string) => {
+  const baseUrl = window.location.toString();
+  return new URL(
+    relativeUrl,
+    baseUrl + (baseUrl.endsWith("/") ? "" : "/")
+  ).toString();
+};

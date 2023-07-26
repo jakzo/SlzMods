@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net;
-using System.Net.WebSockets;
+using System.Net.Sockets;
 using System.Threading;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -19,14 +19,17 @@ public class Server {
 
   private WebsocketServer websocketServer;
 
-  public Server(int port = 6161, string ip = "127.0.0.1") {
+  public Server(int port = 6161, string ip = null) {
     websocketServer = new WebsocketServer() {
       OnConnect = client => _ =
           websocketServer.Send("{\"inputVersion\":1}", client),
       // OnMessage = (msg, client) => MelonLogger.Msg($"Websocket: {msg}"),
     };
     Task.Run(() => websocketServer.Start(port, ip));
-    MelonLogger.Msg($"Input viewer server started at: ws://{ip}:{port}");
+    var addresses = (ip != null ? new[] { ip } : GetAllNetworkAddresses())
+                        .Select(address => $"ws://{address}:{port}");
+    var addressText = string.Join("\n", addresses);
+    MelonLogger.Msg($"Input viewer server started at:\n{addressText}");
   }
 
   public void SendInputState() {
@@ -52,10 +55,13 @@ public class Server {
                              rigManager?.ControllerRig.leftController),
                             (MarrowGame.xr.RightController,
                              rigManager?.ControllerRig.rightController) }) {
-      if (rigController) {
+      if (rigController?.transform) {
         AddToData(data, rigController.transform);
-      } else {
+      } else if (controller != null) {
         AddToData(data, controller);
+      } else {
+        AddToData(data, new Vector3());
+        AddToData(data, new Quaternion());
       }
 
       var i = 0;
@@ -120,6 +126,16 @@ public class Server {
   private void AddToData(List<byte> data, Transform value) {
     AddToData(data, value.localPosition);
     AddToData(data, value.localRotation);
+  }
+
+  private string[] GetAllNetworkAddresses() {
+    return new[] { "127.0.0.1" }
+        .Concat(Dns.GetHostEntry(Dns.GetHostName())
+                    .AddressList
+                    .Where(address => address.AddressFamily ==
+                                      AddressFamily.InterNetwork)
+                    .Select(address => address.ToString()))
+        .ToArray();
   }
 }
 }

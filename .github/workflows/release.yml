@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: Release
     outputs:
-      changesets: ${{ steps.changesets.outputs.result }}
+      csharp_changesets: ${{ toJson(fromJson(steps.changesets.outputs.result).csharp) }}
+      web_changesets: ${{ toJson(fromJson(steps.changesets.outputs.result).web) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -22,7 +23,7 @@ jobs:
           script: |
             const path = require("path");
             const fs = require("fs");
-            return fs
+            const changesets = fs
               .readdirSync("changesets")
               .map((filename) => path.parse(filename))
               .filter(
@@ -42,15 +43,20 @@ jobs:
                   ),
                 };
               });
-  release:
-    name: Release
+            return {
+              web: changesets.filter(changeset => changeset.game === "Web"),
+              csharp: changesets.filter(changeset => changeset.game !== "Web"),
+            };
+
+  release-csharp:
+    name: Release (C#)
     runs-on: ubuntu-latest
     environment: Release
     needs: prerelease
-    if: ${{ needs.prerelease.outputs.changesets != '[]' }}
+    if: ${{ needs.prerelease.outputs.csharp_changesets != '[]' }}
     strategy:
       matrix:
-        changeset: ${{ fromJson(needs.prerelease.outputs.changesets) }}
+        changeset: ${{ fromJson(needs.prerelease.outputs.csharp_changesets) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -107,3 +113,95 @@ jobs:
           files: |
             ./projects/${{ matrix.changeset.game }}/${{ matrix.changeset.project }}/thunderstore/*.zip
             ./projects/${{ matrix.changeset.game }}/${{ matrix.changeset.project }}/bin/Release/${{ matrix.changeset.project }}.dll
+
+  release-web:
+    name: Release (web)
+    runs-on: ubuntu-latest
+    environment: Release
+    needs: prerelease
+    if: ${{ needs.prerelease.outputs.web_changesets != '[]' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm ci
+      - name: Bump versions
+        uses: actions/github-script@v6
+        env:
+          CHANGESETS: ${{ needs.prerelease.outputs.web_changesets }}
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+            const cp = require("child_process");
+            for (const changeset of JSON.parse(process.env.CHANGESETS)) {
+              const projectPath = path.join("projects", changeset.game, changeset.project);
+              const changelogPath = path.join(projectPath, "CHANGELOG.md");
+              const packageJson = JSON.parse(
+                fs.readFileSync(path.join(projectPath, "package.json"), "utf8")
+              );
+              cp.spawnSync(
+                "npm",
+                [
+                  "-w",
+                  packageJson.name,
+                  "version",
+                  "--no-git-tag-version",
+                  changeset.version_bump_type.toLowerCase(),
+                ],
+                { stdio: "inherit" }
+              );
+              const packageJson2 = JSON.parse(
+                fs.readFileSync(path.join(projectPath, "package.json"), "utf8")
+              );
+              const oldChangelog = fs.readFileSync(changelogPath, "utf8");
+              fs.writeFileSync(
+                changelogPath,
+                `## ${packageJson2.version}\n\n${changeset.changelog_description}\n\n${oldChangelog}`
+              );
+              fs.unlinkSync(path.join("changesets", changeset.filename));
+            }
+      - name: Build
+        run: npm -ws run build
+      - name: Publish to npm
+        uses: actions/github-script@v6
+        env:
+          CHANGESETS: ${{ needs.prerelease.outputs.web_changesets }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+            const cp = require("child_process");
+            for (const changeset of JSON.parse(process.env.CHANGESETS)) {
+              const projectPath = path.join("projects", changeset.game, changeset.project);
+              const packageJson = JSON.parse(
+                fs.readFileSync(path.join(projectPath, "package.json"), "utf8")
+              );
+              if (packageJson.private) continue;
+              cp.spawnSync(
+                "npm",
+                ["-w", packageJson.name, "publish"],
+                { stdio: "inherit" }
+              );
+            }
+      - name: Commit version bumps
+        run: |
+          set -eux
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Release" --no-verify
+          git push --no-verify
+      - name: Bundle pages
+        run: |
+          set -eux
+          mkdir ./docs/dist
+          cp ./docs/index.html ./docs/dist/index.html
+          cp ./projects/Web/input-viewer/dist ./docs/dist/input-viewer
+      - name: Upload pages artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./docs/dist
+      - name: Deploy pages
+        uses: actions/deploy-pages@v2

@@ -18,8 +18,9 @@ public class WebsocketServer {
   public Action<TcpClient> OnConnect;
   public Action<string, TcpClient> OnMessage;
 
-  public async Task Start(int port = 6161, string ip = "127.0.0.1") {
-    listener = new TcpListener(IPAddress.Parse(ip), port);
+  public async Task Start(int port = 6161, string ip = null) {
+    listener =
+        new TcpListener(ip != null ? IPAddress.Parse(ip) : IPAddress.Any, port);
 
     listener.Start();
 
@@ -59,10 +60,11 @@ public class WebsocketServer {
         }
       }
     } catch (Exception ex) {
-      MelonLogger.Error("Error with websocket: {0}", ex);
+      MelonLogger.Warning("Error with websocket: {0}", ex);
     } finally {
       client.Dispose();
       connectedClients.Remove(client);
+      MelonLogger.Msg("Websocket disconnected");
     }
   }
 
@@ -158,14 +160,11 @@ public class WebsocketServer {
   public async Task Send(byte[] data, TcpClient client) {
     var stream = client.GetStream();
     var framedData = CreateMessageFrame(data, false);
-    // Console.WriteLine("Sending message with length: {0}", framedData.Length);
     await stream.WriteAsync(framedData, 0, framedData.Length);
-    Console.Write("{0},", framedData.Length);
   }
   public async Task Send(string data, TcpClient client) {
     var stream = client.GetStream();
     var framedData = CreateMessageFrame(Encoding.UTF8.GetBytes(data), true);
-    // Console.WriteLine("Sending message with length: {0}", framedData.Length);
     await stream.WriteAsync(framedData, 0, framedData.Length);
   }
 

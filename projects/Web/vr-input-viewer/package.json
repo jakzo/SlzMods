@@ -9,7 +9,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --base /input-viewer",
+    "build": "tsc && vite build --base /SlzSpeedrunTools/input-viewer",
     "preview": "vite preview"
   },
   "dependencies": {

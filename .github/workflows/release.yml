@@ -122,6 +122,7 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      contents: write
     if: ${{ needs.prerelease.outputs.web_changesets != '[]' }}
     steps:
       - name: Checkout repository

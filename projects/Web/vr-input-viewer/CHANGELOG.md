@@ -1,3 +1,8 @@
+## 1.0.3
+
+Rename local file download.
+
+
 ## 1.0.2
 
 Bundle into single HTML file for running locally.

@@ -1,5 +1,5 @@
 import "./Hud.css";
-import { VirtualXRInputSource } from "./utils";
+import { VirtualXRInputSource } from "./utils/utils";
 
 export interface ControllerHudOpts {
   xrInputSource: VirtualXRInputSource;
@@ -83,9 +83,9 @@ export class ControllerHud {
 
     const { axes } = this.xrInputSource.gamepad;
     const isLeft = this.xrInputSource.handedness === "left";
-    this.thumbstick.style.translate = `${axes[2] * -13 * (isLeft ? -1 : 1)}px ${
-      axes[3] * -13
-    }px`;
+    this.thumbstick.style.transform = `translate(${
+      axes[2] * -13 * (isLeft ? -1 : 1)
+    }px, ${axes[3] * -13}px)`;
   };
 }
 

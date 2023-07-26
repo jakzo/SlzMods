@@ -3,7 +3,7 @@
   bottom: 0;
   height: auto;
   width: 50vw;
-  max-width: 50vh;
+  max-width: 40vh;
   max-height: 50vh;
   aspect-ratio: 1/1;
   pointer-events: none;
@@ -17,7 +17,7 @@
 }
 .controller-hud.right {
   right: 0;
-  scale: -1 1;
+  transform: scale(-1, 1);
 }
 
 .controller-hud .button {
@@ -46,12 +46,11 @@
 }
 
 .controller-hud .trigger.primary {
-  translate: 60px 10px;
-  rotate: -5deg;
+  transform: translate(60px, 10px) rotate(-5deg);
 }
 
 .controller-hud .trigger.secondary {
-  translate: 63px 56px;
+  transform: translate(63px, 56px);
 }
 
 .controller-hud .touched {

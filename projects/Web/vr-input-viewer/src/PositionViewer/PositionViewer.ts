@@ -4,14 +4,14 @@ import Stats from "three/examples/jsm/libs/stats.module";
 import { XRControllerModelFactory } from "three/examples/jsm/webxr/XRControllerModelFactory";
 
 import { createEnvironment } from "../Environment";
-import { createHeadset } from "../Headset";
+import { createHeadset } from "./Headset";
 import { ControllerHud } from "../Hud";
 import {
   Handedness,
   Transforms,
   VirtualXRInputSource,
   throttle,
-} from "../utils";
+} from "../utils/utils";
 import { Grid } from "./Grid";
 import { HeightTrackers } from "./HeightTrackers";
 
@@ -25,10 +25,11 @@ export class PositionViewer {
   stats?: Stats;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
+  orbit: OrbitControls;
   // hudScene: THREE.Scene;
   // hudCamera: THREE.OrthographicCamera;
   huds: ControllerHud[] = [];
-  grid: Grid = new Grid(1.8, 0.5, 0.05);
+  grid: Grid = new Grid(0.8, 0.25, 0.05);
   heightTrackers: HeightTrackers;
   renderer: THREE.WebGLRenderer;
   resizeObserver: ResizeObserver;
@@ -47,8 +48,7 @@ export class PositionViewer {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    this.camera.position.set(0, 1.8, -3);
-    this.camera.lookAt(0, 0.8, 0);
+    this.camera.position.set(0, 1.8, -1.4);
 
     // this.hudScene = new THREE.Scene();
 
@@ -95,35 +95,35 @@ export class PositionViewer {
 
     this.scene.add(this.grid.plane);
 
-    this.heightTrackers = new HeightTrackers(opts.transforms, 20);
+    this.heightTrackers = new HeightTrackers(opts.transforms, 60);
     this.scene.add(this.heightTrackers.container);
 
-    const orbitControls = new OrbitControls(
-      this.camera,
-      this.renderer.domElement
-    );
-    orbitControls.target = new THREE.Vector3(0, 0.8, 0);
-    orbitControls.update();
+    this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
+    this.orbit.target = new THREE.Vector3(0, 0.9, 0);
+    this.orbit.update();
   }
 
   private createController() {
     const container = new THREE.Group();
     const gripSpace = new THREE.Group();
     gripSpace.add(this.controllerModelFactory.createControllerModel(gripSpace));
-    container.add(gripSpace);
     gripSpace.position.z += 0.02;
     this.scene.add(container);
     return { gripSpace, container };
   }
 
   onControllerConnected(xrInputSource: VirtualXRInputSource) {
-    const { gripSpace } = this.controllers[xrInputSource.handedness];
+    const { gripSpace, container } = this.controllers[xrInputSource.handedness];
     gripSpace.dispatchEvent({ type: "connected", data: xrInputSource });
+    container.add(gripSpace);
+    this.heightTrackers.onControllerConnected(xrInputSource.handedness);
   }
 
   onControllerDisconnected(handedness: Handedness) {
-    const { gripSpace } = this.controllers[handedness];
+    const { gripSpace, container } = this.controllers[handedness];
     gripSpace.dispatchEvent({ type: "disconnected" });
+    container.remove(gripSpace);
+    this.heightTrackers.onControllerDisconnected(handedness);
   }
 
   start() {
@@ -153,6 +153,8 @@ export class PositionViewer {
 
     for (const hud of this.huds) hud.update();
 
+    // this.grid.radius = this.camera.position.distanceTo(this.orbit.target) - 0.9;
+    // console.log(this.grid.radius);
     this.grid.update();
     this.heightTrackers.update();
 

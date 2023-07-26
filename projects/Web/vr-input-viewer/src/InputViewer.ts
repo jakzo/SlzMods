@@ -7,7 +7,8 @@ import {
   Transforms,
   VirtualXRInputSource,
   iterateBits,
-} from "./utils";
+  log,
+} from "./utils/utils";
 
 const REQUIRED_INPUT_VERSION = 1;
 
@@ -26,8 +27,11 @@ export class InputViewer {
     right: { position: new THREE.Vector3(), rotation: new THREE.Quaternion() },
   };
   controllers: Partial<Record<Handedness, VirtualXRInputSource>> = {};
+  isStarted = false;
+  ws?: WebSocket;
   huds?: Partial<Record<Handedness, ControllerHud>>;
   positionViewer?: PositionViewer;
+  nullController = this.createController("left");
 
   constructor(public opts: InputViewerOpts) {
     if (!opts.hideHud) this.huds = {};
@@ -74,13 +78,56 @@ export class InputViewer {
   }
 
   start() {
+    if (this.isStarted) return;
+    this.isStarted = true;
+    this.connectWebsocket(true);
+  }
+
+  stop() {
+    if (!this.isStarted) return;
+    this.isStarted = false;
+    this.positionViewer?.stop();
+  }
+
+  onControllerConnected(handedness: Handedness) {
+    const xrInputSource = this.createController(handedness);
+    this.controllers[handedness] = xrInputSource;
+    if (this.huds) this.huds[handedness] = this.createHud(xrInputSource);
+    this.positionViewer?.onControllerConnected(xrInputSource);
+  }
+
+  onControllerDisconnected(handedness: Handedness) {
+    const controller = this.controllers[handedness];
+    if (controller) controller.gamepad.connected = false;
+    delete this.controllers[handedness];
+
+    if (this.huds) {
+      this.huds[handedness]?.remove();
+      delete this.huds[handedness];
+    }
+
+    this.positionViewer?.onControllerDisconnected(handedness);
+  }
+
+  private connectWebsocket(isInitialConnection = false) {
     let inputVersion: number | undefined = undefined;
-    const ws = new WebSocket(this.opts.address);
-    ws.binaryType = "arraybuffer";
-    ws.addEventListener("open", () => {
-      console.log("Connected to game");
+    let isOpen = false;
+    this.ws = new WebSocket(this.opts.address);
+    this.ws.binaryType = "arraybuffer";
+    this.ws.addEventListener("open", () => {
+      log.info("Connected to game");
+      isOpen = true;
     });
-    ws.addEventListener(
+    this.ws.addEventListener("error", () => {
+      if (isOpen) log.warn("Websocket error");
+      else if (isInitialConnection)
+        log.warn("Failed to connect to game, will retry in background...");
+    });
+    this.ws.addEventListener("close", () => {
+      if (isOpen) log.info("Websocket closed");
+      if (this.isStarted) setTimeout(() => this.connectWebsocket(), 15000);
+    });
+    this.ws.addEventListener(
       "message",
       (evt: MessageEvent<ArrayBuffer | string>) => {
         if (typeof evt.data === "string") {
@@ -90,7 +137,7 @@ export class InputViewer {
               inputVersion = msg.inputVersion;
               console.log("Got input version:", inputVersion);
               if (inputVersion !== REQUIRED_INPUT_VERSION) {
-                console.error(
+                log.error(
                   "Wrong input version from server:",
                   inputVersion,
                   "but required:",
@@ -121,30 +168,6 @@ export class InputViewer {
     );
   }
 
-  stop() {
-    this.positionViewer?.stop();
-  }
-
-  onControllerConnected(handedness: Handedness) {
-    const xrInputSource = this.createController(handedness);
-    this.controllers[handedness] = xrInputSource;
-    if (this.huds) this.huds[handedness] = this.createHud(xrInputSource);
-    this.positionViewer?.onControllerConnected(xrInputSource);
-  }
-
-  onControllerDisconnected(handedness: Handedness) {
-    const controller = this.controllers[handedness];
-    if (controller) controller.gamepad.connected = false;
-    delete this.controllers[handedness];
-
-    if (this.huds) {
-      this.huds[handedness]?.remove();
-      delete this.huds[handedness];
-    }
-
-    this.positionViewer?.onControllerDisconnected(handedness);
-  }
-
   private readHmdState(data: DataIterator) {
     const { position, rotation } = this.transforms.hmd;
     position.set(data.readFloat32(), data.readFloat32(), data.readFloat32());
@@ -169,20 +192,20 @@ export class InputViewer {
     let controller = this.controllers[handedness];
     if (!isConnected) {
       if (controller) this.onControllerDisconnected(handedness);
-    } else {
-      if (!controller) {
-        this.onControllerConnected(handedness);
-        controller = this.controllers[handedness]!;
-      }
-      for (const i of controller.gamepad.axes.keys()) {
-        controller.gamepad.axes[i] = data.readFloat32();
-      }
-      for (const [i, button] of controller.gamepad.buttons.entries()) {
-        button.pressed = flagIterator.next().value ?? false;
-        button.touched = flagIterator.next().value ?? false;
-        button.value = i < 2 ? data.readFloat32() : button.pressed ? 1 : 0;
-      }
+      controller = this.nullController;
+    } else if (!controller) {
+      this.onControllerConnected(handedness);
+      controller = this.controllers[handedness]!;
     }
-    controller?.gamepad;
+
+    controller.gamepad.connected = isConnected;
+    for (const i of controller.gamepad.axes.keys()) {
+      controller.gamepad.axes[i] = data.readFloat32();
+    }
+    for (const [i, button] of controller.gamepad.buttons.entries()) {
+      button.pressed = flagIterator.next().value ?? false;
+      button.touched = flagIterator.next().value ?? false;
+      button.value = i < 2 ? data.readFloat32() : button.pressed ? 1 : 0;
+    }
   }
 }

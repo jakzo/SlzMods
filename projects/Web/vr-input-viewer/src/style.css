@@ -67,3 +67,51 @@ button:focus-visible {
   width: 100% !important;
   height: 100% !important;
 }
+
+#notifications {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.notification {
+  background: #444;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin: 16px;
+  color: white;
+  animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+.notification.info {
+  background: #44c;
+}
+.notification.warn {
+  background: #773;
+}
+.notification.error {
+  background: #933;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease-in-out forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

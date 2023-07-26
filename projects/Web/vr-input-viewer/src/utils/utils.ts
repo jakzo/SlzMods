@@ -61,3 +61,25 @@ export class DataIterator {
     return value;
   }
 }
+
+const createLogFn =
+  (type: "info" | "warn" | "error") =>
+  (...data: unknown[]) => {
+    console[type](...data);
+    const notification = document.createElement("div");
+    notification.classList.add("notification");
+    notification.classList.add(type);
+    notification.textContent = data.map(String).join(" ");
+    document.querySelector("#notifications")?.append(notification);
+
+    setTimeout(() => {
+      notification.classList.add("fade-out");
+      setTimeout(() => notification.remove(), 500);
+    }, 10 * 1000);
+  };
+
+export const log = {
+  info: createLogFn("info"),
+  warn: createLogFn("warn"),
+  error: createLogFn("error"),
+};

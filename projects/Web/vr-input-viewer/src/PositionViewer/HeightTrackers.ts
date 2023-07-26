@@ -1,10 +1,11 @@
 import * as THREE from "three";
-import { Transforms } from "../utils";
+import { Handedness, Transforms } from "../utils/utils";
+import { RollingMedian } from "../utils/RollingMedian";
 
 export class HeightTrackers {
   container = new THREE.Object3D();
   trackers: Record<keyof Transforms, THREE.Mesh>;
-  heightLog = new LinkedList<[number, number]>();
+  heightLog = new RollingMedian<[number, number]>((a, b) => a[1] - b[1]);
   heightMarker: THREE.Mesh;
 
   constructor(
@@ -23,10 +24,11 @@ export class HeightTrackers {
       left: this.createTracker(material),
       right: this.createTracker(material),
     };
+    this.container.add(this.trackers.hmd);
 
     this.heightMarker = new THREE.Mesh(
       new THREE.SphereGeometry(0.03),
-      new THREE.MeshBasicMaterial({ color: "#ff3333" })
+      new THREE.MeshBasicMaterial({ color: "#55cccc" })
     );
     this.container.add(this.heightMarker);
   }
@@ -34,7 +36,6 @@ export class HeightTrackers {
   createTracker(material: THREE.Material): THREE.Mesh {
     const geometry = new THREE.CylinderGeometry(0.01, 0.01, 1, 32);
     const mesh = new THREE.Mesh(geometry, material);
-    this.container.add(mesh);
     return mesh;
   }
 
@@ -51,64 +52,23 @@ export class HeightTrackers {
 
     const now = Date.now();
     const windowStart = now - this.medianHeightWindow * 1000;
-    while (
-      this.heightLog.first &&
-      this.heightLog.first.value[0] < windowStart
-    ) {
+    while ((this.heightLog.first()?.[0] ?? Infinity) < windowStart) {
       this.heightLog.shift();
     }
     const hmdPos = this.transforms.hmd.position;
     this.heightLog.push([now, hmdPos.y]);
     this.heightMarker.position.set(
       -hmdPos.x,
-      this.heightLog.middle
-        ? this.heightLog.size % 2 === 1
-          ? this.heightLog.middle.value[1]
-          : (this.heightLog.middle.value[1] +
-              this.heightLog.middle.next!.value[1]) /
-            2
-        : 0,
+      this.heightLog.median()?.[1] ?? 0,
       hmdPos.z
     );
   }
-}
 
-class LinkedList<T> {
-  first?: LinkedListNode<T>;
-  last?: LinkedListNode<T>;
-  middle?: LinkedListNode<T>;
-  size = 0;
-
-  push(value: T) {
-    const prevLast = this.last;
-    this.last = new LinkedListNode(value);
-    this.size++;
-    if (prevLast) {
-      this.last.prev = prevLast;
-      prevLast.next = this.last;
-      if (this.size % 2 === 1) this.middle = this.middle!.next;
-    } else {
-      this.first = this.middle = this.last;
-    }
+  onControllerConnected(handedness: Handedness) {
+    this.container.add(this.trackers[handedness]);
   }
 
-  shift(): T | undefined {
-    if (!this.first) return undefined;
-    const value = this.first.value;
-    this.first = this.first.next;
-    this.size--;
-    if (this.first) {
-      this.first.prev = undefined;
-      if (this.size % 2 === 1) this.middle = this.middle!.next;
-    } else {
-      this.middle = this.last = undefined;
-    }
-    return value;
+  onControllerDisconnected(handedness: Handedness) {
+    this.container.remove(this.trackers[handedness]);
   }
-}
-
-class LinkedListNode<T> {
-  next?: LinkedListNode<T>;
-  prev?: LinkedListNode<T>;
-  constructor(public value: T) {}
 }

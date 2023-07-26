@@ -221,12 +221,9 @@ jobs:
           cp -r ./projects/Web/vr-input-viewer/dist ./docs/dist/input-viewer
       - name: Upload pages artifact
         if: ${{ steps.deploy_pages.outputs.result }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-pages-artifact@v2
         with:
-          name: github-pages
           path: ./docs/dist
       - name: Deploy pages
         if: ${{ steps.deploy_pages.outputs.result }}
         uses: actions/deploy-pages@v2
-        with:
-          artifact_name: github-pages

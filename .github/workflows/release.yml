@@ -186,7 +186,7 @@ jobs:
               if (packageJson.private) continue;
               const result = cp.spawnSync(
                 "npm",
-                ["-w", packageJson.name, "publish"],
+                ["-w", packageJson.name, "publish", "--access=public"],
                 { stdio: "inherit" }
               );
               if (result.status) throw new Error("Command failed");
@@ -199,15 +199,27 @@ jobs:
           git add -A
           git commit -m "Release" --no-verify
           git push --no-verify
+      - name: Check if should deploy pages
+        id: deploy_pages
+        uses: actions/github-script@v6
+        env:
+          CHANGESETS: ${{ needs.prerelease.outputs.web_changesets }}
+        with:
+          script: |
+            var projects = new Set(JSON.parse(process.env.CHANGESETS).map(changeset => changeset.project));
+            return ["vr-input-viewer"].some(name => projects.has(name));
       - name: Bundle pages
+        if: ${{ steps.deploy_pages.outputs.result }}
         run: |
           set -eux
           mkdir ./docs/dist
           cp ./docs/index.html ./docs/dist/index.html
           cp ./projects/Web/vr-input-viewer/dist ./docs/dist/input-viewer
       - name: Upload pages artifact
+        if: ${{ steps.deploy_pages.outputs.result }}
         uses: actions/upload-artifact@v3
         with:
           path: ./docs/dist
       - name: Deploy pages
+        if: ${{ steps.deploy_pages.outputs.result }}
         uses: actions/deploy-pages@v2

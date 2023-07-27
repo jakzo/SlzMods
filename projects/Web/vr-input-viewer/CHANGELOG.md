@@ -1,3 +1,8 @@
+## 1.0.6
+
+Fix 3D display.
+
+
 ## 1.0.5
 
 Fix OBS headset URL.

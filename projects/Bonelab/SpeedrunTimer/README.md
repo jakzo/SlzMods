@@ -27,6 +27,10 @@ By default the autosplitter will pause during loading screens, split every time 
 
 If you've set up the autosplitter you may not want the in-game timer anymore. You can disable it by setting the `hide` option to `true` (see instructions below).
 
+## Input Viewer
+
+This mod also supports an input viewer for showing your controller inputs and headset position to be used as an overlay for gameplay recordings. You can find instructions to install the input viewer [here](https://jakzo.github.io/SlzSpeedrunTools/).
+
 # Configuration
 
 You can change some settings by editing the file at `BONELAB/MelonLoader/MelonPreferences.cfg` or by using MelonPreferencesManager:

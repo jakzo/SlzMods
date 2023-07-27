@@ -1,3 +1,8 @@
+## 1.0.7
+
+Minor content fix.
+
+
 ## 1.0.6
 
 Fix 3D display.

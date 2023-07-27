@@ -44,7 +44,6 @@ public class WebsocketServer {
     var framedData = CreateMessageFrame(data, isString);
     foreach (var client in connectedClients.ToArray()) {
       if (client.TcpClient.Connected) {
-        MelonLogger.Msg($"a{framedData.Length}");
         client.SendQueue.Add(framedData);
       } else {
         connectedClients.Remove(client);
@@ -119,7 +118,6 @@ public class WebsocketServer {
       foreach (var data in client.SendQueue.GetConsumingEnumerable()) {
         if (!client.TcpClient.Connected)
           break;
-        MelonLogger.Msg($"s{data.Length}");
         stream.Write(data, 0, data.Length);
       }
     } catch (Exception ex) {

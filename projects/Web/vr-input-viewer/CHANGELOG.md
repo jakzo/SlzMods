@@ -1,3 +1,8 @@
+## 1.0.10
+
+Styling fix.
+
+
 ## 1.0.9
 
 Update instructions.

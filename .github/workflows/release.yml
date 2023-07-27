@@ -76,14 +76,14 @@ jobs:
         run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
       - name: Build
         run: msbuild /property:Configuration=Release
-      # - name: Upload to Thunderstore
-      #   if: steps.bump_version.outputs.release_thunderstore == 'true'
-      #   env:
-      #     GAME: ${{ matrix.changeset.game }}
-      #     PROJECT: ${{ matrix.changeset.project }}
-      #     NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
-      #     THUNDERSTORE_API_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
-      #   run: csi ./scripts/UploadThunderstore.csx "$GAME" "$PROJECT" "$NEW_VERSION"
+      - name: Upload to Thunderstore
+        if: steps.bump_version.outputs.release_thunderstore == 'true'
+        env:
+          GAME: ${{ matrix.changeset.game }}
+          PROJECT: ${{ matrix.changeset.project }}
+          NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
+          THUNDERSTORE_API_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
+        run: csi ./scripts/UploadThunderstore.csx "$GAME" "$PROJECT" "$NEW_VERSION"
       - name: Copy LiveSplit build for commit
         if: steps.bump_version.outputs.release_livesplit == 'true'
         env:

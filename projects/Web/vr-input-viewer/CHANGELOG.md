@@ -1,3 +1,8 @@
+## 1.0.5
+
+Fix OBS headset URL.
+
+
 ## 1.0.4
 
 Various fixes.

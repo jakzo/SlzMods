@@ -21,8 +21,7 @@ public class Server {
 
   public Server(int port = 6161, string ip = null) {
     websocketServer = new WebsocketServer() {
-      OnConnect = client => _ =
-          websocketServer.Send("{\"inputVersion\":1}", client),
+      OnConnect = client => client.Send("{\"inputVersion\":1}"),
       // OnMessage = (msg, client) => MelonLogger.Msg($"Websocket: {msg}"),
     };
     Task.Run(() => websocketServer.Start(port, ip));

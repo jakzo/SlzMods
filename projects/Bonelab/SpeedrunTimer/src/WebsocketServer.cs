@@ -5,42 +5,79 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using MelonLoader;
 
 namespace Sst.SpeedrunTimer {
 public class WebsocketServer {
-  public TcpListener listener;
-  private Dictionary<TcpClient, List<byte>> messageBuffers =
-      new Dictionary<TcpClient, List<byte>>();
-  private List<TcpClient> connectedClients = new List<TcpClient>();
+  public class Client {
+    public TcpClient TcpClient;
+    public List<byte> MessageBuffer = new List<byte>();
+    public BlockingCollection<byte[]> SendQueue =
+        new BlockingCollection<byte[]>();
 
-  public Action<TcpClient> OnConnect;
-  public Action<string, TcpClient> OnMessage;
-
-  public async Task Start(int port = 6161, string ip = null) {
-    listener =
-        new TcpListener(ip != null ? IPAddress.Parse(ip) : IPAddress.Any, port);
-
-    listener.Start();
-
-    while (true) {
-      var client = await listener.AcceptTcpClientAsync();
-      MelonLogger.Msg("Websocket client connected");
-      _ = HandleClient(client);
+    public void Send(string data) { Send(Encoding.UTF8.GetBytes(data), true); }
+    public void Send(byte[] data, bool isString = false) {
+      SendQueue.Add(CreateMessageFrame(data, isString));
     }
   }
 
-  private async Task HandleClient(TcpClient client) {
+  public TcpListener listener;
+  private List<Client> connectedClients = new List<Client>();
 
-    var stream = client.GetStream();
-    messageBuffers[client] = new List<byte>();
+  public Action<Client> OnConnect;
+  public Action<string, Client> OnMessage;
 
+  // Websocket is not supported in the Mono packaged with MelonLoader 5
+  // We also cannot use the async methods on Quest, hence sync + threads
+  public void Start(int port = 6161, string ip = null) {
+    listener =
+        new TcpListener(ip != null ? IPAddress.Parse(ip) : IPAddress.Any, port);
+    listener.Start();
+    Task.Run(ListenForConnections);
+  }
+
+  public void Send(string data) { Send(Encoding.UTF8.GetBytes(data), true); }
+  public void Send(byte[] data, bool isString = false) {
+    var framedData = CreateMessageFrame(data, isString);
+    foreach (var client in connectedClients.ToArray()) {
+      if (client.TcpClient.Connected) {
+        MelonLogger.Msg($"a{framedData.Length}");
+        client.SendQueue.Add(framedData);
+      } else {
+        connectedClients.Remove(client);
+      }
+    }
+  }
+
+  private void ListenForConnections() {
+    while (true) {
+      try {
+        var tcpClient = listener.AcceptTcpClient();
+        MelonLogger.Msg("Websocket client connected");
+        var client = new Client() { TcpClient = tcpClient };
+        connectedClients.Add(client);
+        Task.Run(() => HandleClient(client));
+        var sendThread = new Thread(() => ListenToSendQueue(client)) {
+          IsBackground = true,
+        };
+        sendThread.Start();
+      } catch (Exception ex) {
+        MelonLogger.Error("Error listening for Websocket connections:");
+        MelonLogger.Error(ex);
+        Thread.Sleep(5000); // avoid spam on persistent errors
+      }
+    }
+  }
+
+  private void HandleClient(Client client) {
     var buffer = new byte[1024];
-
     try {
-      while (client.Connected) {
-        var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+      var stream = client.TcpClient.GetStream();
+      while (client.TcpClient.Connected) {
+        var bytesRead = stream.Read(buffer, 0, buffer.Length);
         if (bytesRead == 0)
           break;
 
@@ -48,23 +85,48 @@ public class WebsocketServer {
         Array.Copy(buffer, bytes, bytesRead);
 
         if (IsClientHandshake(bytes)) {
-          _ = RespondToClientHandshake(bytes, client, stream);
+          RespondToClientHandshake(bytes, client);
         } else {
           var response = ReadMessage(bytes, client);
           if (response != null) {
             var text = Encoding.UTF8.GetString(response);
             if (OnMessage != null)
               OnMessage(text, client);
-            messageBuffers[client].Clear();
+            client.MessageBuffer.Clear();
           }
         }
       }
     } catch (Exception ex) {
       MelonLogger.Warning("Error with websocket: {0}", ex);
     } finally {
-      client.Dispose();
-      connectedClients.Remove(client);
+      CloseConnection(client);
+    }
+  }
+
+  private void CloseConnection(Client client) {
+    if (connectedClients.Contains(client)) {
       MelonLogger.Msg("Websocket disconnected");
+      client.SendQueue.CompleteAdding();
+      connectedClients.Remove(client);
+    } else {
+      client.TcpClient.Dispose();
+    }
+  }
+
+  private void ListenToSendQueue(Client client) {
+    try {
+      var stream = client.TcpClient.GetStream();
+      foreach (var data in client.SendQueue.GetConsumingEnumerable()) {
+        if (!client.TcpClient.Connected)
+          break;
+        MelonLogger.Msg($"s{data.Length}");
+        stream.Write(data, 0, data.Length);
+      }
+    } catch (Exception ex) {
+      MelonLogger.Warning("Websocket error:");
+      MelonLogger.Warning(ex);
+    } finally {
+      CloseConnection(client);
     }
   }
 
@@ -72,8 +134,8 @@ public class WebsocketServer {
       Regex.IsMatch(Encoding.UTF8.GetString(request, 0, 4), "^GET\\s",
                     RegexOptions.IgnoreCase);
 
-  private async Task RespondToClientHandshake(byte[] request, TcpClient client,
-                                              NetworkStream stream) {
+  private void RespondToClientHandshake(byte[] request, Client client) {
+    var stream = client.TcpClient.GetStream();
     var requestString = Encoding.UTF8.GetString(request);
     var response = Encoding.UTF8.GetBytes(string.Join("\r\n", new[] {
       "HTTP/1.1 101 Switching Protocols",
@@ -83,11 +145,7 @@ public class WebsocketServer {
       "",
       "",
     }));
-    await stream.WriteAsync(response, 0, response.Length);
-
-    if (connectedClients.Contains(client))
-      return;
-    connectedClients.Add(client);
+    stream.Write(response, 0, response.Length);
     OnConnect(client);
   }
 
@@ -102,7 +160,7 @@ public class WebsocketServer {
     return Convert.ToBase64String(swkaSha1);
   }
 
-  private byte[] ReadMessage(byte[] request, TcpClient client) {
+  private byte[] ReadMessage(byte[] request, Client client) {
     var fin = (request[0] & 0b10000000) != 0;
     var mask = (request[1] & 0b10000000) != 0;
     if (!mask)
@@ -130,45 +188,14 @@ public class WebsocketServer {
       decoded[i] = (byte)(request[offset + (int)i] ^
                           request[masksIdx + ((int)i & 0b11)]);
 
-    messageBuffers[client].AddRange(decoded);
+    client.MessageBuffer.AddRange(decoded);
 
     if (!fin)
       return null;
-    return messageBuffers[client].ToArray();
+    return client.MessageBuffer.ToArray();
   }
 
-  public void Send(byte[] data) {
-    foreach (var client in connectedClients.ToArray()) {
-      if (client.Connected) {
-        _ = Send(data, client);
-      } else {
-        connectedClients.Remove(client);
-      }
-    }
-  }
-
-  public void Send(string data) {
-    foreach (var client in connectedClients.ToArray()) {
-      if (client.Connected) {
-        _ = Send(data, client);
-      } else {
-        connectedClients.Remove(client);
-      }
-    }
-  }
-
-  public async Task Send(byte[] data, TcpClient client) {
-    var stream = client.GetStream();
-    var framedData = CreateMessageFrame(data, false);
-    await stream.WriteAsync(framedData, 0, framedData.Length);
-  }
-  public async Task Send(string data, TcpClient client) {
-    var stream = client.GetStream();
-    var framedData = CreateMessageFrame(Encoding.UTF8.GetBytes(data), true);
-    await stream.WriteAsync(framedData, 0, framedData.Length);
-  }
-
-  private byte[] CreateMessageFrame(byte[] data, bool isString) {
+  private static byte[] CreateMessageFrame(byte[] data, bool isString) {
     byte[] frame;
 
     if (data.Length < 126) {

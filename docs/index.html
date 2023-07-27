@@ -25,31 +25,33 @@
         color: #5890c7;
       }
 
-      .contents {
+      .content {
         background-color: #1e1e1e;
-        padding: 15px;
+        padding: 4px 16px;
         margin-bottom: 20px;
         border-radius: 5px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin: 20px auto;
+        max-width: 800px;
       }
 
-      .contents h2 {
+      .content h2 {
         color: #f8f8f2;
       }
 
-      .contents p {
+      .content p {
         color: #cccccc;
       }
 
-      .contents a {
+      .content a {
         color: #76a9fa;
       }
 
-      .contents a:hover {
+      .content a:hover {
         color: #5890c7;
       }
 
-      .contents code {
+      .content code {
         color: #fada5e;
         background-color: #333333;
         border: 1px solid #555555;
@@ -60,8 +62,31 @@
     </style>
   </head>
   <body>
-    <main class="contents">
+    <main class="content">
       <h2>Bonelab VR Input Viewer Instructions</h2>
+      <h4>For PC:</h4>
+      <ul>
+        <li>
+          Open the
+          <a href="https://jakzo.github.io/SlzSpeedrunTools/input-viewer"
+            >input viewer</a
+          >
+          in your browser
+          <ul>
+            <li>
+              If recording with OBS you can add it to your scene directly by
+              adding a "Browser" source and using this for the URL:
+              <code>https://jakzo.github.io/SlzSpeedrunTools/input-viewer</code>
+            </li>
+          </ul>
+        </li>
+        <li>
+          The input viewer should automatically connect to the SpeedrunTimer mod
+          running on a game on the same computer (must be SpeedrunTimer v1.4.0
+          or higher)
+        </li>
+      </ul>
+      <h4>For Quest or if viewing inputs from another PC:</h4>
       <ul>
         <li>
           Download the input viewer from
@@ -70,21 +95,60 @@
             download
             >here</a
           >
+          <ul>
+            <li>
+              Downloading the file is required due to browser security
+              restrictions
+            </li>
+          </ul>
         </li>
         <li>
-          The downloaded input viewer file can be opened in a browser or
-          directly in OBS by adding a "browser" source and selecting the file
+          The downloaded input viewer file can be opened in a browser
+          <ul>
+            <li>
+              If recording with OBS you can add it to your scene directly by
+              adding a "Browser" source, ticking "Local file" and selecting the
+              downloaded file
+            </li>
+          </ul>
         </li>
         <li>
-          The input viewer should automatically connect to the SpeedrunTimer mod
-          running on a game on the same computer (must be SpeedrunTimer v1.4.0
-          or higher)
+          Press enter to open the IP address text input
+          <ul>
+            <li>
+              If using OBS browser source, select the source then press the
+              "Interact" button first
+            </li>
+          </ul>
         </li>
         <li>
-          If you are on a different computer (or using Quest) then you can
-          connect over the network by adding <code>?host=x.x.x.x</code> to the
-          end of the browser URL where <code>x.x.x.x</code> is the IP address of
-          your Quest/machine running the game
+          Write the IP address of your Quest/machine running the game then press
+          enter again
+          <ul>
+            <li>
+              To find your IP address on Quest: go to Wifi, select your network,
+              scroll down to the advanced section and it will show your IP
+              address
+            </li>
+            <li>
+              You can record the inputs separately and combine with the Quest
+              recorded gameplay using video editing software later but may
+              prefer to record both the inputs and gameplay at the same time by
+              casting the Quest screen to the computer showing the inputs and
+              overlaying with OBS
+            </li>
+          </ul>
+        </li>
+        <li>
+          The input viewer should connect to the SpeedrunTimer mod running at
+          the entered IP address (must be SpeedrunTimer v1.4.0 or higher)
+        </li>
+      </ul>
+      <h4>OBS tips:</h4>
+      <ul>
+        <li>
+          You can use a color key filter in OBS to make the black background
+          transparent
         </li>
       </ul>
     </main>

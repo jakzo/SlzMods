@@ -88,6 +88,8 @@ export const withBaseUrl = (relativeUrl: string) => {
   const baseUrl = window.location.toString();
   return new URL(
     relativeUrl,
-    baseUrl + (baseUrl.endsWith("/") ? "" : "/")
+    baseUrl + (baseUrl.endsWith(".html") || baseUrl.endsWith("/") ? "" : "/")
   ).toString();
 };
+
+export const isLocalFile = () => window.location.protocol === "file:";

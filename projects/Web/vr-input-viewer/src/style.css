@@ -115,3 +115,23 @@ button:focus-visible {
     opacity: 0;
   }
 }
+
+form.host {
+  position: absolute;
+  top: 16px;
+  width: 300px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: 1;
+}
+form.host input {
+  font-size: 24px;
+  width: 100%;
+  border-radius: 32px;
+  padding: 8px 16px;
+  background: white;
+  color: black;
+  box-shadow: 0 0 16px gray;
+}

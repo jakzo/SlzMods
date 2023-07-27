@@ -119,12 +119,12 @@ export class InputViewer {
       isOpen = true;
     });
     this.ws.addEventListener("error", () => {
-      if (isOpen) log.warn("Websocket error");
+      if (isOpen) log.warn("Connection error");
       else if (isInitialConnection)
         log.warn("Failed to connect to game, will retry in background...");
     });
     this.ws.addEventListener("close", () => {
-      if (isOpen) log.info("Websocket closed");
+      if (isOpen) log.info("Connection closed");
       if (this.isStarted) setTimeout(() => this.connectWebsocket(), 15000);
     });
     this.ws.addEventListener(

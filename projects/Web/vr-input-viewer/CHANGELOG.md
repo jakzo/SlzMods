@@ -1,3 +1,8 @@
+## 1.0.8
+
+Added OBS tip to instructions.
+
+
 ## 1.0.7
 
 Minor content fix.

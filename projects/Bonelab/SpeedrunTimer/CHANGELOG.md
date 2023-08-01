@@ -1,3 +1,7 @@
+## 1.4.0
+
+Added input viewer.
+
 ## 1.3.0
 
 Accidental release, no changes. 😅

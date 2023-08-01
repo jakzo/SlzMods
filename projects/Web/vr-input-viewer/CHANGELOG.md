@@ -1,3 +1,28 @@
+## 1.0.11
+
+Styling fix.
+
+
+## 1.0.10
+
+Styling fix.
+
+
+## 1.0.9
+
+Update instructions.
+
+
+## 1.0.8
+
+Added OBS tip to instructions.
+
+
+## 1.0.7
+
+Minor content fix.
+
+
 ## 1.0.6
 
 Fix 3D display.

@@ -1,0 +1,7 @@
+{
+  "name": "ThirdPersonCamera",
+  "version_number": "0.0.0",
+  "description": "Makes spectator camera third-person.",
+  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/ThirdPersonCamera",
+  "dependencies": ["LavaGang-MelonLoader-0.5.7"]
+}

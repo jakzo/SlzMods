@@ -24,6 +24,8 @@ class ScriptedMovement : Feature {
 
   public ScriptedMovement() {
     Instance = this;
+    IsEnabledByDefault = false;
+
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) =>
           ActiveMovement != null && Utils.State.rigManager && cl.GetAButton(),
@@ -45,13 +47,13 @@ class ScriptedMovement : Feature {
   class OpenController_CacheInputs_Patch {
     [HarmonyPostfix()]
     internal static void Postfix(OpenController __instance) {
+      if (CurrentMovement == null || !Instance.IsEnabled)
+        return;
+
       var leftController = Utils.State.rigManager.ControllerRig.leftController;
       leftController._aButton = false;
       leftController._aButtonDown = false;
       leftController._aButtonUp = false;
-
-      if (CurrentMovement == null)
-        return;
 
       if (CurrentMovementEnumerator == null) {
         startTime = Time.time;

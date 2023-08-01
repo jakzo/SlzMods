@@ -7,6 +7,7 @@ namespace Sst.SpeedrunPractice {
 public class Mod : MelonMod {
   private static readonly Feature[] features = {
     new Features.Teleport(),
+    new Features.Checkpoint(),
     new Features.ScriptedMovement(),
   };
 

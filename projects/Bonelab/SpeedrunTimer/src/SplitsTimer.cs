@@ -1,4 +1,5 @@
-﻿using MelonLoader;
+﻿using System;
+using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
 using TMPro;
@@ -13,6 +14,7 @@ class SplitsTimer {
   private TextMeshPro _tmp;
   private TextMeshPro _tmpIl;
   private Splits _splits = new Splits();
+  private bool _isFinished = false;
   private static MelonPreferences_Entry<bool> _prefHide;
   private static MelonPreferences_Entry<bool> _prefHideIl;
   private static MelonPreferences_Entry<bool> _prefHideSplits;
@@ -35,7 +37,9 @@ class SplitsTimer {
   }
 
   public void Reset() {
+    _isFinished = false;
     _splits.Reset();
+    Mod.Instance.SplitsServer?.Reset();
     Livesplit.SetState(false, false);
   }
 
@@ -47,9 +51,16 @@ class SplitsTimer {
 
     if (nextLevel.Barcode == Levels.Barcodes.DESCENT) {
       Dbg.Log("Attempting to start timer");
+      Mod.Instance.SplitsServer?.Start();
+      Mod.Instance.SplitsServer?.PauseGameTime();
+      Mod.Instance.SplitsServer?.SetGameTime(TimeSpan.Zero);
+      Mod.Instance.SplitsServer?.SetLoadingTimes(TimeSpan.Zero);
       _splits.ResetAndPause(nextLevel);
     } else if (_splits.TimeStart.HasValue) {
       Dbg.Log("Splitting timer");
+      Mod.Instance.SplitsServer?.Split();
+      Mod.Instance.SplitsServer?.PauseGameTime();
+      Mod.Instance.SplitsServer?.SetGameTime(_splits.GetTime().Value);
       _splits.Pause();
       _splits.Split(nextLevel);
     }
@@ -65,30 +76,43 @@ class SplitsTimer {
   public void OnLevelStart(LevelCrate level) {
     Livesplit.SetState(false, false, level.Title);
 
-    if (!_prefHide.Value) {
-      var splitsText = new GameObject("SpeedrunTimer_Wrist_Text");
-      _tmp = splitsText.AddComponent<TextMeshPro>();
-      _tmp.alignment = TextAlignmentOptions.BottomRight;
-      _tmp.fontSize = 0.5f;
-      _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-      Utilities.Bonelab.DockToWrist(splitsText);
-
-      if (!_prefHideIl.Value) {
-        var ilText = new GameObject("SpeedrunTimer_Wrist_IL");
-        var ilTextOffset = new GameObject("SpeedrunTimer_Wrist_IL_Offset");
-        ilTextOffset.transform.parent = ilText.transform;
-        _tmpIl = ilTextOffset.AddComponent<TextMeshPro>();
-        _tmpIl.alignment = TextAlignmentOptions.BottomRight;
-        _tmpIl.fontSize = 0.3f;
-        _tmpIl.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-        _tmpIl.rectTransform.localPosition =
-            new Vector3(-0.005f, -0.03f, 0.005f);
-        _tmpIl.color = new Color(0.2f, 0.2f, 0.2f);
-        Utilities.Bonelab.DockToWrist(ilText);
-      }
+    if (level.Barcode.ID == Levels.Barcodes.MAIN_MENU && _isFinished) {
+      Reset();
+    } else {
+      Mod.Instance.SplitsServer?.ResumeGameTime();
+      var loadingTime = _splits.TimeStartRelative - _splits.TimeStart;
+      if (loadingTime.HasValue)
+        Mod.Instance.SplitsServer?.SetLoadingTimes(loadingTime.Value);
+      _splits.ResumeIfStarted();
     }
 
-    _splits.ResumeIfStarted();
+    AddTimerToWrist();
+  }
+
+  private void AddTimerToWrist() {
+    if (_prefHide.Value)
+      return;
+
+    var splitsText = new GameObject("SpeedrunTimer_Wrist_Text");
+    _tmp = splitsText.AddComponent<TextMeshPro>();
+    _tmp.alignment = TextAlignmentOptions.BottomRight;
+    _tmp.fontSize = 0.5f;
+    _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
+    Utilities.Bonelab.DockToWrist(splitsText);
+
+    if (_prefHideIl.Value)
+      return;
+
+    var ilText = new GameObject("SpeedrunTimer_Wrist_IL");
+    var ilTextOffset = new GameObject("SpeedrunTimer_Wrist_IL_Offset");
+    ilTextOffset.transform.parent = ilText.transform;
+    _tmpIl = ilTextOffset.AddComponent<TextMeshPro>();
+    _tmpIl.alignment = TextAlignmentOptions.BottomRight;
+    _tmpIl.fontSize = 0.3f;
+    _tmpIl.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
+    _tmpIl.rectTransform.localPosition = new Vector3(-0.005f, -0.03f, 0.005f);
+    _tmpIl.color = new Color(0.2f, 0.2f, 0.2f);
+    Utilities.Bonelab.DockToWrist(ilText);
   }
 
   public void OnUpdate() {
@@ -111,6 +135,9 @@ class SplitsTimer {
   public void Finish() {
     Livesplit.SetState(false, true, LevelHooks.CurrentLevel?.Title ?? "");
     _splits.Pause();
+    Mod.Instance.SplitsServer?.Split();
+    Mod.Instance.SplitsServer?.SetGameTime(_splits.GetTime().Value);
+    _isFinished = true;
     MelonLogger.Msg($"Stopping timer at: {_splits.GetTime()}");
     if (_tmp != null)
       _tmp.color = new Color(0.2f, 0.8f, 0.2f);

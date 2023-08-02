@@ -7,10 +7,10 @@ public class Mod : MelonMod {
   public const string PREF_CATEGORY_ID = BuildInfo.Name;
 
   private static SplitsTimer _timer = new SplitsTimer();
-  private Server _server;
+  private InputServer _inputServer;
 
   public MelonPreferences_Category PrefCategory;
-  public RigManager RigManager;
+  public SplitsServer SplitsServer;
 
   public static Mod Instance;
   public Mod() { Instance = this; }
@@ -24,16 +24,13 @@ public class Mod : MelonMod {
     LevelHooks.OnLoad += _timer.OnLoadingScreen;
     LevelHooks.OnLevelStart += _timer.OnLevelStart;
 
-    LevelHooks.OnLoad += level => RigManager = null;
-    LevelHooks.OnLevelStart += level => RigManager =
-        Utilities.Bonelab.GetRigManager();
-
-    _server = new Server();
+    SplitsServer = new SplitsServer();
+    _inputServer = new InputServer();
   }
 
   public override void OnUpdate() {
     _timer.OnUpdate();
-    _server?.SendInputState();
+    _inputServer?.SendInputState();
   }
 }
 }

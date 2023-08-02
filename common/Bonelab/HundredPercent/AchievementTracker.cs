@@ -17,7 +17,7 @@ static class AchievementTracker {
         "ACH_GUNRANGE",
       };
   public static Dictionary<string, string> AllAchievements =
-      Utilities.Il2cpp.ToDictionary(Achievements.AchievementsDict);
+      Utilities.Il2Cpp.ToDictionary(Achievements.AchievementsDict);
   public static Dictionary<string, string> PossibleAchievements;
 
   public static event Action<string, string> OnUnlock;

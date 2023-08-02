@@ -94,7 +94,7 @@
     <Compile Include="../../../common/Utilities/Metadata.cs" />
     <Compile Include="../../../common/Utilities/Dbg.cs" />
     <Compile Include="../../../common/Utilities/IpcServer.cs" />
-    <Compile Include="../../../common/Bonelab/Il2cpp.cs" />
+    <Compile Include="../../../common/Bonelab/Il2Cpp.cs" />
     <Compile Include="../../../common/Bonelab/Bonelab.cs" />
     <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
     <Compile Include="../../../common/Bonelab/Levels.cs" />

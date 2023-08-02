@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 namespace Sst.Utilities {
-public class Il2cpp {
+public class Il2Cpp {
   public static Dictionary<K, V>
   ToDictionary<K, V>(Il2CppSystem.Collections.Generic.Dictionary<K, V> from) {
     Dictionary<K, V> dict = new Dictionary<K, V>();

@@ -66,6 +66,9 @@
     <Reference Include="UnhollowerRuntimeLib">
       <HintPath>..\..\..\references\Bonelab\UnhollowerRuntimeLib.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>..\..\..\references\Bonelab\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\references\Bonelab\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
@@ -96,8 +99,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <PostBuildEvent>
-      COPY "$(TargetPath)" "C:\Program
-      Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods"
+      COPY "$(TargetPath)" "C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods"
     </PostBuildEvent>
   </PropertyGroup>
 </Project>

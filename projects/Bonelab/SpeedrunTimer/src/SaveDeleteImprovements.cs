@@ -47,10 +47,11 @@ public static class SaveDeleteImprovements {
 
   // According to dnSpy this is the only hookable method which is called after
   // the Mods folder is deleted and before the application quits
-  [HarmonyPatch(typeof(DataManager), "get_SavePath")]
+  [HarmonyPatch(typeof(DataManager), nameof(DataManager.SavePath),
+                MethodType.Getter)]
   class DataManager_SavePath_Patch {
     [HarmonyPrefix()]
-    internal static void Postfix() {
+    internal static void Prefix() {
       Dbg.Log("DataManager_SavePath_Patch");
       if (_modsBackupPath != null && Directory.Exists(_modsBackupPath) &&
           !Directory.Exists(GetModsPath())) {

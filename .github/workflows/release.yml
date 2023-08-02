@@ -259,7 +259,7 @@ jobs:
           cp -r ./projects/Web/vr-input-viewer/dist ./pages/dist/vr.jf.id.au/input-viewer
           cp ./projects/Web/vr-input-viewer/dist/index.html ./pages/dist/vr.jf.id.au/input-viewer.html
       - name: Upload vr.jf.id.au
-        uses: SamKirkland/FTP-Deploy-Action@v4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ftpupload.net
           protocol: ftps

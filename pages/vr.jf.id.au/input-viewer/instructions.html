@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../styles.css" />
+    <title>VR Input Viewer Instructions</title>
+  </head>
+  <body>
+    <main class="content">
+      <h2>VR Input Viewer Instructions</h2>
+      <ul>
+        <li>
+          Open the
+          <a href="http://vr.jf.id.au/input-viewer/">input viewer</a>
+          in your browser
+          <ul>
+            <li>
+              If recording with OBS you should instead add it to your scene
+              directly by adding a "Browser" source and using this for the URL:
+              <code>http://vr.jf.id.au/input-viewer/</code>
+            </li>
+            <li>
+              You can also instead download the input viewer by clicking
+              <a
+                href="https://jakzo.github.io/SlzSpeedrunTools/input-viewer.html"
+                download
+                >here</a
+              >
+              in case you cannot use the web version for whatever reason
+            </li>
+          </ul>
+        </li>
+        <li>
+          The input viewer should automatically connect to the
+          <a href="https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/"
+            >SpeedrunTimer mod</a
+          >
+          running on a game on the same computer (must be SpeedrunTimer v1.4.0
+          or higher)
+        </li>
+        <li>
+          <strong>If viewing inputs from another PC (or Quest):</strong>
+          <ul>
+            <li>
+              Press enter to open the IP address text input
+              <ul>
+                <li>
+                  If using OBS browser source, select the source then press the
+                  "Interact" button first
+                </li>
+              </ul>
+            </li>
+            <li>
+              Write the IP address of your machine running the game then press
+              enter again
+              <ul>
+                <li>
+                  To find your IP address on Quest: go to Wifi, select your
+                  network, scroll down to the advanced section and it will show
+                  your IP address
+                </li>
+                <li>
+                  You can record the inputs separately and combine with the
+                  Quest recorded gameplay using video editing software later but
+                  may prefer to record both the inputs and gameplay at the same
+                  time by casting the Quest screen to the computer showing the
+                  inputs and overlaying with OBS
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>OBS tips:</h4>
+      <ul>
+        <li>
+          To make the black background of the input viewer transparent in OBS:
+          select the input viewer, click the "Filters" button, add a "Luma key"
+          effect filter
+        </li>
+        <li>
+          The viewer looks best when it is square (width and height are the
+          same)
+        </li>
+        <li>
+          You can use the mouse + shift/control to move the input viewer camera
+          (but the default view should be fine for most people)
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>

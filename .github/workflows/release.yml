@@ -16,6 +16,27 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Set up toolchain
+        # flatbuffers-compiler at version 2.0.6 is only available on 22.10 but we don't need it anyway
+        # run: sudo apt install -y mono-devel flatbuffers-compiler=2.0.6
+        run: sudo apt install -y mono-devel flatbuffers-compiler
+      - name: Install dependencies
+        run: nuget restore SlzSpeedrunTools.sln
+      - name: Build
+        run: msbuild
+      - name: Prepare for nightly release
+        run: csi ./scripts/CopyBuildsToBin.csx
+      - name: Create nightly release
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          target_commitish: ${{ github.sha }}
+          tag_name: dev_${{ github.run_number }}
+          body: >
+            **DO NOT DOWNLOAD** unless either I told you to or you know what you're doing. Instead look these mods up on Thunderstore and download them from there.
+
+            These are testing builds used for development of the mods. They contain the most recent changes which are usually untested and broken. Use at your own risk.
+          files: ./bin/*.dll
       - name: Load changesets
         id: changesets
         uses: actions/github-script@v6
@@ -225,18 +246,31 @@ jobs:
             console.log(projects);
             return ["vr-input-viewer"].some(name => projects.has(name));
       - name: Bundle pages
-        if: ${{ steps.deploy_pages.outputs.result }}
+        if: ${{ steps.deploy_pages.outputs.result == 'true' }}
         run: |
           set -eux
-          mkdir ./docs/dist
-          cp ./docs/index.html ./docs/dist/index.html
-          cp -r ./projects/Web/vr-input-viewer/dist ./docs/dist/input-viewer
-          cp ./projects/Web/vr-input-viewer/dist/index.html ./docs/dist/input-viewer.html
+          mkdir ./pages/dist
+
+          cp -r ./pages/github-pages ./pages/dist/github-pages
+          cp -r ./projects/Web/vr-input-viewer/dist ./pages/dist/github-pages/input-viewer
+          cp ./projects/Web/vr-input-viewer/dist/index.html ./pages/dist/github-pages/input-viewer.html
+
+          cp -r ./pages/vr.jf.id.au ./pages/dist/vr.jf.id.au
+          cp -r ./projects/Web/vr-input-viewer/dist ./pages/dist/vr.jf.id.au/input-viewer
+          cp ./projects/Web/vr-input-viewer/dist/index.html ./pages/dist/vr.jf.id.au/input-viewer.html
+      - name: Upload vr.jf.id.au
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ftpupload.net
+          protocol: ftps
+          username: if0_34708249
+          password: ${{ secrets.IF_FTP_PASSWORD }}
+          local-dir: ./pages/dist/vr.jf.id.au/
       - name: Upload pages artifact
-        if: ${{ steps.deploy_pages.outputs.result }}
+        if: ${{ steps.deploy_pages.outputs.result == 'true' }}
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./docs/dist
+          path: ./pages/dist/github-pages
       - name: Deploy pages
-        if: ${{ steps.deploy_pages.outputs.result }}
+        if: ${{ steps.deploy_pages.outputs.result == 'true' }}
         uses: actions/deploy-pages@v2

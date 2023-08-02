@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
+    Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
@@ -42,46 +43,46 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="SLZ.Marrow">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\SLZ.Marrow.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\SLZ.Marrow.dll</HintPath>
     </Reference>
     <Reference Include="SLZ.Marrow.SDK">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\SLZ.Marrow.SDK.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\SLZ.Marrow.SDK.dll</HintPath>
     </Reference>
     <Reference Include="Il2Cppmscorlib">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\Il2Cppmscorlib.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\Il2Cppmscorlib.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\MelonLoader.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="Harmony">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\0Harmony.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="UnhollowerBaseLib">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\UnhollowerBaseLib.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\UnhollowerBaseLib.dll</HintPath>
     </Reference>
     <Reference Include="UnhollowerRuntimeLib">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\UnhollowerRuntimeLib.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\UnhollowerRuntimeLib.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Input">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="Unity.XR">
-      <HintPath>..\..\..\references\$$GAME_LOWER$$\UnityEngine.VRModule.dll</HintPath>
+      <HintPath>..\..\..\references\$$GAME$$\UnityEngine.VRModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -93,7 +94,8 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <PostBuildEvent>
-      COPY "$(TargetPath)" "C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-$$GAME_LOWER$$\Mods"
+      COPY "$(TargetPath)" "C:\Program
+      Files\Oculus\Software\Software\stress-level-zero-inc-$$GAME_LOWER$$\Mods"
     </PostBuildEvent>
   </PropertyGroup>
 </Project>

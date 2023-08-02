@@ -255,10 +255,12 @@ jobs:
           cp -r ./projects/Web/vr-input-viewer/dist ./pages/dist/github-pages/input-viewer
           cp ./projects/Web/vr-input-viewer/dist/index.html ./pages/dist/github-pages/input-viewer.html
 
-          mkdir ./pages/dist/vr.jf.id.au
-          cp -r ./pages/vr.jf.id.au ./pages/dist/vr.jf.id.au/vr.jf.id.au
-          cp -r ./projects/Web/vr-input-viewer/dist ./pages/dist/vr.jf.id.au/vr.jf.id.au/htdocs/input-viewer
-          cp ./projects/Web/vr-input-viewer/dist/index.html ./pages/dist/vr.jf.id.au/vr.jf.id.au/htdocs/input-viewer.html
+          cp -r ./pages/vr.jf.id.au ./pages/dist/vr.jf.id.au
+          cp -r ./projects/Web/vr-input-viewer/dist/. ./pages/dist/vr.jf.id.au/input-viewer/
+          cp ./projects/Web/vr-input-viewer/dist/index.html ./pages/dist/vr.jf.id.au/input-viewer.html
+          mv ./pages/dist/vr.jf.id.au ./pages/dist/temp
+          mkdir -p ./pages/dist/vr.jf.id.au/vr.jf.id.au
+          mv ./pages/dist/temp ./pages/dist/vr.jf.id.au/vr.jf.id.au/htdocs
       - name: Upload vr.jf.id.au
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:

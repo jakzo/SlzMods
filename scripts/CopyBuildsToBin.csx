@@ -8,7 +8,7 @@ void CopyBuildsToBin() {
 
   foreach (var gameDir in Directory.EnumerateDirectories(PROJECTS_DIR)) {
     var gameName = Path.GetFileName(gameDir);
-    if (new[] { "Web", "Quest" }.Contains(gameDir))
+    if (new[] { "Web", "Quest" }.Contains(gameName))
       continue;
     foreach (var projectDir in Directory.EnumerateDirectories(gameDir)) {
       var buildFilename = $"{Path.GetFileName(projectDir)}.dll";

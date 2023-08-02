@@ -1,3 +1,8 @@
+## 1.0.12
+
+Move to HTTP server.
+
+
 ## 1.0.11
 
 Styling fix.

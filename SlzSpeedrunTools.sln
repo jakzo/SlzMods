@@ -37,6 +37,8 @@ Project("{B89B2D75-808D-3383-5A2E-5C519DB49E93}") = "BonelabSpeedrunPractice", "
 EndProject
 Project("{D47BB0CA-36CA-0AA0-74ED-4117FDB1FCE4}") = "BonelabThirdPersonCamera", "projects\Bonelab\ThirdPersonCamera\ThirdPersonCamera.csproj", "{EE4562BC-A673-6C8A-9E73-57F7942FD510}"
 EndProject
+Project("{1D0D07E2-0C07-604C-1B55-2A84455C427E}") = "BonelabTasTool", "projects\Bonelab\TasTool\TasTool.csproj", "{BC8503B6-89E1-171A-9C86-3673F3F8EA13}"
+EndProject
 
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +46,11 @@ Global
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {BC8503B6-89E1-171A-9C86-3673F3F8EA13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {BC8503B6-89E1-171A-9C86-3673F3F8EA13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {BC8503B6-89E1-171A-9C86-3673F3F8EA13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {BC8503B6-89E1-171A-9C86-3673F3F8EA13}.Release|Any CPU.Build.0 = Release|Any CPU
+
     {EE4562BC-A673-6C8A-9E73-57F7942FD510}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {EE4562BC-A673-6C8A-9E73-57F7942FD510}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {EE4562BC-A673-6C8A-9E73-57F7942FD510}.Release|Any CPU.ActiveCfg = Release|Any CPU

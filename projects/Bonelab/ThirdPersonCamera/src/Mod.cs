@@ -36,10 +36,6 @@ public class Mod : MelonMod {
     Utilities.LevelHooks.OnLevelStart += level => CreateThirdPersonCamera();
     Utilities.LevelHooks.OnLoad += level => ResetState();
     _prefCameraRatio.OnEntryValueChanged.Subscribe((a, b) => SetCameraRatios());
-
-#if DEBUG // TAS
-    Screen.SetResolution(3840, 1080, FullScreenMode.Windowed);
-#endif
   }
 
   public override void OnUpdate() {

@@ -1,3 +1,8 @@
+## 1.0.16
+
+Livesplit instructions.
+
+
 ## 1.0.15
 
 Release.

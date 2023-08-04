@@ -1,1 +1,0 @@
-Livesplit instructions.

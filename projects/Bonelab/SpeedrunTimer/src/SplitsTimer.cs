@@ -52,18 +52,16 @@ class SplitsTimer {
     if (nextLevel.Barcode == Levels.Barcodes.DESCENT) {
       Dbg.Log("Attempting to start timer");
       Mod.Instance.SplitsServer?.Start();
-      Mod.Instance.SplitsServer?.PauseGameTime();
-      Mod.Instance.SplitsServer?.SetGameTime(TimeSpan.Zero);
-      Mod.Instance.SplitsServer?.SetLoadingTimes(TimeSpan.Zero);
       _splits.ResetAndPause(nextLevel);
     } else if (_splits.TimeStart.HasValue) {
       Dbg.Log("Splitting timer");
       Mod.Instance.SplitsServer?.Split();
-      Mod.Instance.SplitsServer?.PauseGameTime();
-      Mod.Instance.SplitsServer?.SetGameTime(_splits.GetTime().Value);
       _splits.Pause();
       _splits.Split(nextLevel);
     }
+
+    Mod.Instance.SplitsServer?.PauseGameTime();
+    Mod.Instance.SplitsServer?.SetGameTime(_splits.GetTime().Value);
 
     var time = _splits.GetTime();
     if (time.HasValue) {
@@ -81,8 +79,6 @@ class SplitsTimer {
     } else {
       Mod.Instance.SplitsServer?.ResumeGameTime();
       var loadingTime = _splits.TimeStartRelative - _splits.TimeStart;
-      if (loadingTime.HasValue)
-        Mod.Instance.SplitsServer?.SetLoadingTimes(loadingTime.Value);
       _splits.ResumeIfStarted();
     }
 

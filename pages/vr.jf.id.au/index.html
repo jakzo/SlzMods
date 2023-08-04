@@ -15,9 +15,92 @@
         </li>
         <li>
           <a href="livesplit/">LiveSplit</a> (Quest-compatible with
-          autosplitter, work-in-progress)
+          autosplitter)
         </li>
       </ul>
+
+      <details>
+        <summary>Instructions for speedrunning Bonelab from Quest</summary>
+
+        <h3>First time</h3>
+        <ul>
+          <li>Install OBS on a computer</li>
+          <li>
+            In OBS:
+            <ul>
+              <li>
+                Download the OBS scene from
+                <a
+                  href="https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/snippets/Obs/BonelabQuestObsScene.json"
+                  download
+                  >here</a
+                >
+              </li>
+              <li>
+                Scene Collection -> Import -> Select the downloaded
+                `BonelabQuestObsScene.json`
+              </li>
+              <li>
+                Select the `Quest Cast` source -> Click "Interact" -> Log in
+              </li>
+              <li>
+                Select the `Livesplit` source -> Click "Interact" -> Click the
+                "Select IP" button -> Enter your Quest's IP
+              </li>
+              <li>
+                To find your Quest's IP: Open the Wifi menu in your Quest ->
+                Select your network -> Scroll down to the advanced section
+              </li>
+              <li>
+                Select the `Input Viewer` source -> Click "Interact" -> Press
+                enter -> Enter your Quest's IP and press enter
+              </li>
+              <li>
+                First time you click "Start streaming" you will need to log into
+                a streaming platform
+              </li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>Every time</h3>
+        <ul>
+          <li>Open OBS</li>
+          <li>On Quest:</li>
+          <ul>
+            <li>Cast to computer</li>
+            <li>Quest footage should now appear in OBS</li>
+          </ul>
+          <li>
+            In OBS:
+            <ul>
+              <li>
+                Select the `Quest Cast` source -> Click "Interact" -> Fullscreen
+                the video and turn the sound up to full
+              </li>
+              <li>
+                If input viewer (or Livesplit) isn't working, your Quest's IP
+                address may have changed and you need to enter them again
+              </li>
+              <li>Click "Start Streaming" and follow prompts</li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>Notes</h3>
+        <ul>
+          <li>
+            Quest casts at 1024x1024 resolution, 30fps, mono audio (I think?),
+            ~1mbps bitrate (don't know exactly but it's low)
+          </li>
+          <li>Recording quality is higher than cast quality</li>
+          <li>
+            For decent quality on Youtube you should set the output resolution
+            slightly higher to 1080x1080
+          </li>
+        </ul>
+      </details>
+
       <details>
         <summary>Browser warning that this site is insecure?</summary>
         <p>

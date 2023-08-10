@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>VR Tools</title>
+  </head>
+  <body>
+    <main class="content">
+      <h2>VR Tools</h2>
+      <ul>
+        <li>
+          <a href="input-viewer/instructions.html">Input viewer</a>
+        </li>
+        <li>
+          <a href="livesplit/">LiveSplit</a> (Quest-compatible with
+          autosplitter)
+        </li>
+      </ul>
+
+      <details>
+        <summary>Instructions for speedrunning Bonelab from Quest</summary>
+
+        <h3>First time</h3>
+        <ul>
+          <li>Install OBS on a computer</li>
+          <li>
+            In OBS:
+            <ul>
+              <li>
+                Download the OBS scene from
+                <a
+                  href="https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/snippets/Obs/BonelabQuestObsScene.json"
+                  download
+                  >here</a
+                >
+              </li>
+              <li>
+                Scene Collection -> Import -> Select the downloaded
+                `BonelabQuestObsScene.json`
+              </li>
+              <li>
+                Select the `Quest Cast` source -> Click "Interact" -> Log in
+              </li>
+              <li>
+                Select the `Livesplit` source -> Click "Interact" -> Click the
+                "Select IP" button -> Enter your Quest's IP
+              </li>
+              <li>
+                To find your Quest's IP: Open the Wifi menu in your Quest ->
+                Select your network -> Scroll down to the advanced section
+              </li>
+              <li>
+                Select the `Input Viewer` source -> Click "Interact" -> Press
+                enter -> Enter your Quest's IP and press enter
+              </li>
+              <li>
+                First time you click "Start streaming" you will need to log into
+                a streaming platform
+              </li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>Every time</h3>
+        <ul>
+          <li>Open OBS</li>
+          <li>On Quest:</li>
+          <ul>
+            <li>Cast to computer</li>
+            <li>Quest footage should now appear in OBS</li>
+          </ul>
+          <li>
+            In OBS:
+            <ul>
+              <li>
+                Select the `Quest Cast` source -> Click "Interact" -> Fullscreen
+                the video and turn the sound up to full
+              </li>
+              <li>
+                If input viewer (or Livesplit) isn't working, your Quest's IP
+                address may have changed and you need to enter them again
+              </li>
+              <li>Click "Start Streaming" and follow prompts</li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>Notes</h3>
+        <ul>
+          <li>
+            Quest casts at 1024x1024 resolution, 30fps, mono audio (I think?),
+            ~1mbps bitrate (don't know exactly but it's low)
+          </li>
+          <li>Recording quality is higher than cast quality</li>
+          <li>
+            For decent quality on Youtube you should set the output resolution
+            slightly higher to 1080x1080
+          </li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Browser warning that this site is insecure?</summary>
+        <p>
+          The tools on this site require using the unencrypted HTTP protocol
+          (rather than the encrypted and secure HTTPS) due to browser security
+          mechanisms not allowing these tools to function correctly.
+          Specifically an HTTPS page cannot initiate a connection to an HTTP
+          server, which is required in the case of the input viewer or Livesplit
+          connecting to the non-HTTPS server created within the game to provide
+          the inputs/splits.
+        </p>
+        <p>
+          There should be no security risk for you, but here is what you should
+          know to make up your own mind:
+        </p>
+        <ul>
+          <li>
+            Because the connection to the site is unencrypted, any data sent
+            between your machine and the server can be viewed by a "man in the
+            middle" (your ISP, a hacker that has compromised a router, etc.)
+          </li>
+          <li>
+            You should never send sensitive information (password, credit card
+            number, etc.) to the server over an insecure connection just in case
+            someone is listening
+          </li>
+          <li>
+            There are no features on this website for sending sensitive
+            information to the server
+          </li>
+          <li>
+            Things like inputs and splits sent from your game to the page,
+            although not encrypted, go directly from the game to the page
+            running in your browser, meaning they are not sent to the server and
+            will not go through the internet (and they are not sensitive
+            information anyway)
+          </li>
+          <li>
+            If you're technically inclined you can
+            <a href="https://github.com/jakzo/SlzSpeedrunTools"
+              >view the source code on Github</a
+            >, verify that the mod you downloaded was published by the action in
+            this repo, inspect the site with dev tools, etc. for reassurance it
+            is not doing anything malicious
+          </li>
+        </ul>
+      </details>
+    </main>
+  </body>
+</html>

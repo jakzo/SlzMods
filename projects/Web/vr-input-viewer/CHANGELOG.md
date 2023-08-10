@@ -1,3 +1,23 @@
+## 1.0.16
+
+Livesplit instructions.
+
+
+## 1.0.15
+
+Release.
+
+
+## 1.0.14
+
+Fixes.
+
+
+## 1.0.13
+
+Move to HTTP server.
+
+
 ## 1.0.12
 
 Move to HTTP server.

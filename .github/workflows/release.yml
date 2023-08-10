@@ -247,18 +247,7 @@ jobs:
             return ["vr-input-viewer"].some(name => projects.has(name));
       - name: Bundle pages
         if: ${{ steps.deploy_pages.outputs.result == 'true' }}
-        run: |
-          set -eux
-          mkdir ./pages/dist
-
-          cp -r ./pages/github-pages ./pages/dist/github-pages
-          cp -r ./projects/Web/vr-input-viewer/dist ./pages/dist/github-pages/input-viewer
-          cp ./projects/Web/vr-input-viewer/dist/index.html ./pages/dist/github-pages/input-viewer.html
-
-          mkdir ./pages/dist/vr.jf.id.au
-          cp -r ./pages/vr.jf.id.au ./pages/dist/vr.jf.id.au/vr.jf.id.au
-          cp -r ./projects/Web/vr-input-viewer/dist ./pages/dist/vr.jf.id.au/vr.jf.id.au/htdocs/input-viewer
-          cp ./projects/Web/vr-input-viewer/dist/index.html ./pages/dist/vr.jf.id.au/vr.jf.id.au/htdocs/input-viewer.html
+        run: ./pages/build.sh
       - name: Upload vr.jf.id.au
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -267,6 +256,7 @@ jobs:
           username: if0_34708249
           password: ${{ secrets.IF_FTP_PASSWORD }}
           local-dir: ./pages/dist/vr.jf.id.au/
+          server-dir: ./vr.jf.id.au/htdocs/
       - name: Upload pages artifact
         if: ${{ steps.deploy_pages.outputs.result == 'true' }}
         uses: actions/upload-pages-artifact@v2

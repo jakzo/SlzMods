@@ -1,3 +1,7 @@
+## 1.5.0
+
+Added Livesplit One websocket support.
+
 ## 1.4.0
 
 Added input viewer.

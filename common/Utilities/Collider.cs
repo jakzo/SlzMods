@@ -58,6 +58,22 @@ static class Collider {
       break;
     }
 
+    case MeshCollider meshCollider: {
+      visualization = new GameObject("DebugMeshCollider");
+      var meshFilter = visualization.AddComponent<MeshFilter>();
+      meshFilter.mesh = meshCollider.sharedMesh;
+      var meshRenderer = visualization.AddComponent<MeshRenderer>();
+      SetMaterial(meshRenderer.gameObject, color, shader);
+      visualization.transform.SetParent(meshCollider.gameObject.transform);
+      visualization.transform.localPosition =
+          meshCollider.transform.localPosition;
+      visualization.transform.localRotation =
+          meshCollider.transform.localRotation;
+      visualization.transform.localScale = meshCollider.transform.localScale;
+      visualization.active = true;
+      break;
+    }
+
     default: {
       MelonLogger.Warning(
           $"Cannot render collider of unsupported type: {collider}");

@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using SLZ.SaveData;
 
 namespace Sst.TasTool {
@@ -29,10 +27,6 @@ public static class Tas {
   public static void Initialize() {
     Tas.SetResolution();
     Sst.Utilities.LevelHooks.OnLoad += level => MeasureTimescale();
-    // TODO: This works for most sounds but there are still some that are
-    // created on the fly (despawn sound) but never have their pitch set
-    Sst.Utilities.LevelHooks.OnLevelStart += level =>
-        SlowDownAudio(CheatEngineTimescale);
   }
 
   public static void SetResolution() {
@@ -76,23 +70,15 @@ public static class Tas {
     }
   }
 
-  public static void SlowDownAudio(float timescale) {
-    MelonLogger.Msg($"Slowing down audio to: {timescale.ToString("F2")}");
-    for (int i = 0; i < SceneManager.sceneCount; i++) {
-      var scene = SceneManager.GetSceneAt(i);
-      if (!scene.isLoaded)
-        continue;
-      foreach (var rootObj in scene.GetRootGameObjects()) {
-        var audioSources = new List<AudioSource>();
-        Sst.Utilities.Unity.FindDescendantComponentsOfType<AudioSource>(
-            ref audioSources, rootObj.transform);
-        foreach (var audioSource in audioSources) {
-          if (_modifiedAudioSources.TryGetValue(audioSource, out var _))
-            continue;
-          // Trigger setter patch
-          audioSource.pitch = audioSource.pitch;
-        }
-      }
+  // TODO: If the other play methods are called they will also need to patching
+  [HarmonyPatch(typeof(AudioSource), nameof(AudioSource.Play))]
+  class AudioSource_Play_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix(AudioSource __instance) {
+      if (_modifiedAudioSources.TryGetValue(__instance, out var _))
+        return;
+      // Trigger setter patch but cancel out effect of getter patch
+      __instance.pitch = __instance.pitch * CheatEngineTimescale;
     }
   }
 

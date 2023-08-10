@@ -106,5 +106,6 @@
   "clang-format.language.proto.enable": false,
   "clang-format.language.typescript.enable": false,
   "clang-format.language.objective-c.enable": false,
-  "typescript.tsdk": "node_modules\\typescript\\lib"
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "dotnet.defaultSolution": "SlzSpeedrunTools.sln"
 }

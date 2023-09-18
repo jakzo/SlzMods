@@ -11,9 +11,10 @@ startup {
   vars.Helper.LoadSceneManager = true;
 
   vars.Helper.AlertGameTime();
+  vars.nextLevelStopwatch = new Stopwatch();
 }
 
-init { current.levelHasChanged = false; }
+init { current.split = false; }
 
 update {
   vars.levelIsMenu = current.levelNumber <= 1;
@@ -21,17 +22,20 @@ update {
   vars.levelChanged = current.levelNumber != old.levelNumber;
 
   if (vars.levelChanged) {
-    current.levelHasChanged = true;
+    vars.nextLevelStopwatch.Restart();
   }
+
+  // Wait 1 second for the fade out before splitting
+  current.split = vars.nextLevelStopwatch.Elapsed >= TimeSpan.FromSeconds(1f);
 
   var isLoadingScene = vars.Helper.Scenes.Active.Name == "loadingScene" ||
                        vars.Helper.Scenes.Active.Name == null;
 
-  if (isLoadingScene) {
-    current.levelHasChanged = false;
+  if (isLoadingScene && current.split) {
+    vars.nextLevelStopwatch.Reset();
   }
 
-  vars.isLoading = current.levelHasChanged || isLoadingScene;
+  vars.isLoading = current.split || isLoadingScene;
 }
 
 isLoading { return vars.isLoading; }
@@ -40,6 +44,6 @@ reset {
   return vars.levelChanged && vars.levelIsMenu && !vars.levelWasThroneRoom;
 }
 
-split { return vars.levelChanged; }
+split { return current.split && !old.split; }
 
 start { return vars.isLoading && !vars.levelIsMenu; }

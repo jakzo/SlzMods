@@ -133,6 +133,16 @@ class DebugColliders : Feature {
           .ToArray();
   private bool IsPhysicalLayer(int layer) => PHYSICAL_LAYERS.Contains(layer);
 
+  private static void SetShader(GameObject gameObject, Shader shader = null) {
+    var meshRenderer = gameObject.GetComponent<MeshRenderer>();
+    meshRenderer.shadowCastingMode =
+        UnityEngine.Rendering.ShadowCastingMode.Off;
+    meshRenderer.receiveShadows = false;
+    var material = meshRenderer.material;
+    if (shader != null)
+      material.shader = shader;
+  }
+
   private class DebugColliderPrefabs {
     // TODO: Be consistent about whether positive Y means up or down
     public readonly GameObject BOX = Utilities.Geometry.CreatePrefabCube(

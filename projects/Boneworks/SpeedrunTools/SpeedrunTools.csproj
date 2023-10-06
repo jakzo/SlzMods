@@ -96,9 +96,9 @@
     <!-- <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
     </PostBuildEvent> -->
-    <!-- <PostBuildEvent>
+    <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
       "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\BONEWORKS.exe"&amp; exit 0
-    </PostBuildEvent> -->
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

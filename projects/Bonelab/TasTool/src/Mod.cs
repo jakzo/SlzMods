@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using System.Diagnostics;
 using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
@@ -41,7 +43,7 @@ public static class Tas {
 
   private static void MeasureTimescaleOnUpdate() {
     var elapsedUnity = Time.unscaledTimeAsDouble - _measureTimescaleStartUnity;
-    if (elapsedUnity < 1f)
+    if (elapsedUnity < 2f)
       return;
     MelonEvents.OnUpdate.Unsubscribe(MeasureTimescaleOnUpdate);
     var elapsedRealtime =
@@ -71,7 +73,7 @@ public static class Tas {
   }
 
   // TODO: If the other play methods are called they will also need to patching
-  [HarmonyPatch(typeof(AudioSource), nameof(AudioSource.Play))]
+  [HarmonyPatch(typeof(AudioSource), nameof(AudioSource.Play), new Type[] {})]
   class AudioSource_Play_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(AudioSource __instance) {

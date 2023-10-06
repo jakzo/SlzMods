@@ -42,9 +42,8 @@ public class Mod : MelonMod {
                                   IEnumerable<Collider> colliders) {
     foreach (var collider in colliders) {
       Dbg.Log($"TriggerLasers visualized: {trigger.gameObject.name}");
-      var visualization =
-          Utilities.Collider.Visualize(trigger.gameObject, collider, COLOR_RED,
-                                       Utilities.Bonelab.HighlightShader);
+      var visualization = Utilities.Collider.Visualize(
+          collider, COLOR_RED, Utilities.Bonelab.HighlightShader);
       _visualizations.Add(visualization);
     }
   }
@@ -69,7 +68,7 @@ public class Mod : MelonMod {
   //           {__instance.gameObject.name}");
   //       return;
   //     }
-  //     Utilities.Collider.Visualize(__instance.gameObject, collider,
+  //     Utilities.Collider.Visualize(collider,
   //     COLOR_RED,
   //                                  Utilities.Bonelab.HighlightShader);
   //   }

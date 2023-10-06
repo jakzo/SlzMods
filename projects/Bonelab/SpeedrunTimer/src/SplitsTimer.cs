@@ -60,11 +60,11 @@ class SplitsTimer {
       _splits.Split(nextLevel);
     }
 
-    Mod.Instance.SplitsServer?.PauseGameTime();
-    Mod.Instance.SplitsServer?.SetGameTime(_splits.GetTime().Value);
-
     var time = _splits.GetTime();
     if (time.HasValue) {
+      Mod.Instance.SplitsServer?.PauseGameTime();
+      Mod.Instance.SplitsServer?.SetGameTime(time.Value);
+
       SplitsRenderer.RenderLoadingWatermark(time.Value);
       if (!_prefHideSplits.Value)
         SplitsRenderer.RenderSplits(_splits);

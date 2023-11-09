@@ -24,10 +24,11 @@ init {
   // Will split when entering each level in this list in this order
   // If entering a level later in the list it will split until it reaches it
   vars.levelOrder = new int[] {
-    1,  // scene_mainMenu
     2,  // scene_theatrigon_movie01 -> scene_breakroom
     4,  // scene_museum
     5,  // scene_streets
+    5,  // scene_streets
+    6,  // scene_runoff
     6,  // scene_runoff
     7,  // scene_sewerStation
     8,  // scene_warehouse
@@ -38,8 +39,6 @@ init {
     14, // scene_arena
     15, // scene_throneRoom
     1,  // scene_mainMenu
-    5,  // scene_streets
-    6,  // scene_runoff
     18, // scene_redactedChamber
     19, // sandbox_handgunBox
     22, // scene_hoverJunkers
@@ -48,36 +47,32 @@ init {
     // 23, // zombie_warehouse
     // 23, // zombie_warehouse
     1, // scene_mainMenu
-    1, // scene_mainMenu
-    1, // scene_mainMenu
   };
   vars.levelOrderIdx = 0;
-  vars.targetLevelOrderIdx = 0;
 }
 
 update { vars.isLoading.Update(game); }
 
 isLoading { return vars.isLoading.Current; }
 
-start { return vars.isLoading.Current && current.levelNumber == 2; }
+start {
+  if (vars.isLoading.Current && current.levelNumber == 2) {
+    vars.levelOrderIdx = 0;
+    return true;
+  }
+  return false;
+}
 
 split {
   if (vars.isLoading.Current &&
       (!vars.isLoading.Old || current.levelNumber != old.levelNumber)) {
-    for (var i = vars.levelOrderIdx + 1;
-         i < vars.levelOrder.Length && i <= vars.levelOrderIdx + 2; i++) {
-      if (vars.levelOrder[i] == current.levelNumber) {
-        vars.targetLevelOrderIdx = i;
-        break;
-      }
-    }
-
-    if (vars.levelOrderIdx < vars.targetLevelOrderIdx) {
-      vars.levelOrderIdx++;
+    var nextLevelOrderIdx = vars.levelOrderIdx + 1;
+    if (nextLevelOrderIdx < vars.levelOrder.Length &&
+        vars.levelOrder[nextLevelOrderIdx] == current.levelNumber) {
+      vars.levelOrderIdx = nextLevelOrderIdx;
       return true;
     }
   }
-
   return false;
 }
 

@@ -1,0 +1,84 @@
+state("BONEWORKS") {
+  int levelNumber : "GameAssembly.dll", 0x01E7E4E0, 0xB8, 0x590;
+}
+
+init {
+  var module = modules.First(x => x.ModuleName == "vrclient_x64.dll");
+
+  var scanner =
+      new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
+
+  vars.loadingPointer = scanner.Scan(new SigScanTarget(
+      3,
+      "4889??????????488B??????????48FF????488B??????????488B??4889??????????488D??????????488B??????????48FF??????????????????????????????488B??????????418B") {
+    OnFound = (process, scanners, addr) =>
+        addr + 0x4 + process.ReadValue<int>(addr)
+  });
+  if (vars.loadingPointer == IntPtr.Zero) {
+    throw new Exception("Game engine not initialized - retrying");
+  }
+
+  vars.isLoading =
+      new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC54));
+
+  // Will split when entering each level in this list in this order
+  // If entering a level later in the list it will split until it reaches it
+  vars.levelOrder = new int[] {
+    1,  // scene_mainMenu
+    2,  // scene_theatrigon_movie01 -> scene_breakroom
+    4,  // scene_museum
+    5,  // scene_streets
+    6,  // scene_runoff
+    7,  // scene_sewerStation
+    8,  // scene_warehouse
+    9,  // scene_subwayStation
+    10, // scene_tower
+    11, // scene_towerBoss
+    12, // scene_theatrigon_movie02 -> scene_dungeon
+    14, // scene_arena
+    15, // scene_throneRoom
+    1,  // scene_mainMenu
+    5,  // scene_streets
+    6,  // scene_runoff
+    18, // scene_redactedChamber
+    19, // sandbox_handgunBox
+    22, // scene_hoverJunkers
+    16, // arena_fantasy
+    23, // zombie_warehouse
+    // 23, // zombie_warehouse
+    // 23, // zombie_warehouse
+    1, // scene_mainMenu
+    1, // scene_mainMenu
+    1, // scene_mainMenu
+  };
+  vars.levelOrderIdx = 0;
+  vars.targetLevelOrderIdx = 0;
+}
+
+update { vars.isLoading.Update(game); }
+
+isLoading { return vars.isLoading.Current; }
+
+start { return vars.isLoading.Current && current.levelNumber == 2; }
+
+split {
+  if (vars.isLoading.Current &&
+      (!vars.isLoading.Old || current.levelNumber != old.levelNumber)) {
+    for (var i = vars.levelOrderIdx + 1;
+         i < vars.levelOrder.Length && i <= vars.levelOrderIdx + 2; i++) {
+      if (vars.levelOrder[i] == current.levelNumber) {
+        vars.targetLevelOrderIdx = i;
+        break;
+      }
+    }
+
+    if (vars.levelOrderIdx < vars.targetLevelOrderIdx) {
+      vars.levelOrderIdx++;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+exit { timer.IsGameTimePaused = true; }

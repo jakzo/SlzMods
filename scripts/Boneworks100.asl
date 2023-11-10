@@ -21,6 +21,9 @@ init {
   vars.isLoading =
       new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC54));
 
+  // Index in levelOrder to start the run at (for practice)
+  vars.startingSplit = 0;
+
   // Will split when entering each level in this list in this order
   // If entering a level later in the list it will split until it reaches it
   vars.levelOrder = new int[] {
@@ -49,6 +52,7 @@ init {
     1, // scene_mainMenu
   };
   vars.levelOrderIdx = 0;
+  vars.targetLevelOrderIdx = vars.startingSplit;
 }
 
 update { vars.isLoading.Update(game); }
@@ -56,7 +60,8 @@ update { vars.isLoading.Update(game); }
 isLoading { return vars.isLoading.Current; }
 
 start {
-  if (vars.isLoading.Current && current.levelNumber == 2) {
+  if (vars.isLoading.Current &&
+      current.levelNumber == vars.levelOrder[vars.startingSplit]) {
     vars.levelOrderIdx = 0;
     return true;
   }
@@ -69,10 +74,15 @@ split {
     var nextLevelOrderIdx = vars.levelOrderIdx + 1;
     if (nextLevelOrderIdx < vars.levelOrder.Length &&
         vars.levelOrder[nextLevelOrderIdx] == current.levelNumber) {
-      vars.levelOrderIdx = nextLevelOrderIdx;
-      return true;
+      vars.targetLevelOrderIdx = nextLevelOrderIdx;
     }
   }
+
+  if (vars.levelOrderIdx < vars.targetLevelOrderIdx) {
+    vars.levelOrderIdx++;
+    return true;
+  }
+
   return false;
 }
 

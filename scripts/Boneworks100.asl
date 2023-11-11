@@ -21,10 +21,17 @@ init {
   vars.isLoading =
       new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC54));
 
-  var arenaTarget = new SigScanTarget(7, "D4 E2 03 34 C2 DF 63 ??");
-  var ptr = scanner.Scan(target);
+  var arenaTarget = new SigScanTarget(7, "D5 E2 03 34 C2 DF 63 ??");
+  IntPtr ptr = IntPtr.Zero;
+  foreach (var page in game.MemoryPages(true)) {
+    var pageScanner =
+        new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
+    ptr = pageScanner.Scan(arenaTarget);
+    if (ptr != IntPtr.Zero)
+      break;
+  }
   if (ptr == IntPtr.Zero) {
-    throw new Exception("Game engine not initialized - retrying");
+    throw new Exception("Arena state not found - retrying");
   }
   vars.arenaWatcher = new MemoryWatcher<byte>(ptr);
 

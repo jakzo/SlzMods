@@ -21,6 +21,13 @@ init {
   vars.isLoading =
       new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC54));
 
+  var arenaTarget = new SigScanTarget(7, "D4 E2 03 34 C2 DF 63 ??");
+  var ptr = scanner.Scan(target);
+  if (ptr == IntPtr.Zero) {
+    throw new Exception("Game engine not initialized - retrying");
+  }
+  vars.arenaWatcher = new MemoryWatcher<byte>(ptr);
+
   // Index in levelOrder to start the run at (for practice)
   vars.startingSplit = 0;
 
@@ -55,7 +62,10 @@ init {
   vars.targetLevelOrderIdx = vars.startingSplit;
 }
 
-update { vars.isLoading.Update(game); }
+update {
+  vars.isLoading.Update(game);
+  vars.arenaWatcher.Update(game);
+}
 
 isLoading { return vars.isLoading.Current; }
 
@@ -69,6 +79,10 @@ start {
 }
 
 split {
+  if (vars.arenaWatcher.Current != vars.arenaWatcher.Old) {
+    return true;
+  }
+
   if (vars.isLoading.Current &&
       (!vars.isLoading.Old || current.levelNumber != old.levelNumber)) {
     var nextLevelOrderIdx = vars.levelOrderIdx + 1;

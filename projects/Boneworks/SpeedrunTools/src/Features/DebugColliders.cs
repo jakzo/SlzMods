@@ -3,6 +3,7 @@ using System.Linq;
 using MelonLoader;
 using StressLevelZero.Props.Weapons;
 using UnityEngine;
+using Valve.VR;
 
 namespace Sst.Features {
 class DebugColliders : Feature {
@@ -11,6 +12,7 @@ class DebugColliders : Feature {
   private DebugColliderPrefabs _prefabs;
   private List<(Collider, GameObject)> _colliders =
       new List<(Collider, GameObject)>();
+  private float _physicsRate = 0f;
 
   public readonly Pref<bool> PrefHideBody = new Pref<bool>() {
     Id = "debugCollidersHideBody",
@@ -21,6 +23,63 @@ class DebugColliders : Feature {
   public DebugColliders() {
     Instance = this;
     IsDev = true;
+
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
+                              Utils.GetKeyControl() &&
+                              Input.GetKey(KeyCode.Alpha1),
+      Handler = () => ShowRigColliders(true),
+    });
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
+                              Utils.GetKeyControl() &&
+                              Input.GetKey(KeyCode.Alpha2),
+      Handler = ShowHeldMagColliders,
+    });
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
+                              Utils.GetKeyControl() &&
+                              Input.GetKey(KeyCode.Alpha3),
+      Handler = ToggleCameraLockedToKnee,
+    });
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
+                              Utils.GetKeyControl() &&
+                              Input.GetKey(KeyCode.Alpha4),
+      Handler = () => Time.timeScale = Time.timeScale == 0f ? 1f : 0f,
+    });
+    Hotkeys.Add(new Hotkey() {
+      Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
+                              Utils.GetKeyControl() &&
+                              Input.GetKey(KeyCode.Alpha5),
+      // Pimax Reality 12k QLED
+      Handler = () => SetPhysicsRate(_physicsRate == 0f ? 200f : 0f),
+    });
+  }
+
+  public void SetPhysicsRate(float rate) {
+
+    var steamSettings = Resources.Load<SteamVR_Settings>("SteamVR_Settings");
+    steamSettings.lockPhysicsUpdateRateToRenderFrequency = rate == 0f;
+    _physicsRate = rate;
+  }
+
+  public override void OnLateUpdate() {
+    if (_physicsRate != 0f)
+      Time.fixedDeltaTime = Time.timeScale / _physicsRate;
+  }
+
+  public void ToggleCameraLockedToKnee() {
+    var knee = Mod.GameState.rigManager.physicsRig.physBody.knee;
+    var cam = GameObject.Find("Camera (Freezes With Preview) [0]");
+    cam.transform.SetParent(cam.transform.parent ? null : knee.transform);
+
+    var preview = cam.transform.Find("ScaleFix").Find("Plane");
+    preview.transform.SetParent(
+        Mod.GameState.rigManager.ControllerRig.rightController.transform);
+    preview.transform.localPosition = new Vector3(0f, 0f, 0.05f);
+    preview.transform.localRotation = Quaternion.Euler(45f, 160f, 340f);
+    Component.Destroy(preview.GetComponent<Collider>());
   }
 
   // Sst.Features.DebugColliders.Instance.ShowRigColliders(true)

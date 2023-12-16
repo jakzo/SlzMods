@@ -169,6 +169,7 @@ abstract public class Feature {
   public virtual void OnSceneWasLoaded(int buildIndex, string sceneName) {}
   public virtual void OnSceneWasInitialized(int buildIndex, string sceneName) {}
   public virtual void OnUpdate() {}
+  public virtual void OnLateUpdate() {}
   public virtual void OnFixedUpdate() {}
   public virtual void OnEnabled() {}
   public virtual void OnDisabled() {}

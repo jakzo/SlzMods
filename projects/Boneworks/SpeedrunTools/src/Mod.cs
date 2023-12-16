@@ -42,6 +42,7 @@ public class Mod : MelonMod {
     new Features.Tas(),
     new Features.FixPhysicsRate(),
     new Features.DebugColliders(),
+    new Features.LootChanceViewer(),
   };
 
   private static List<Feature> enabledFeatures = new List<Feature>();
@@ -147,6 +148,10 @@ public class Mod : MelonMod {
   public override void OnUpdate() {
     s_hotkeys.OnUpdate();
     OnFeatureCallback(feature => feature.OnUpdate());
+  }
+
+  public override void OnLateUpdate() {
+    OnFeatureCallback(feature => feature.OnLateUpdate());
   }
 
   public override void OnFixedUpdate() {

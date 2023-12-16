@@ -21,6 +21,8 @@ Project("{B16878A1-7B40-FDAE-503A-6DFEC289D113}") = "BonelabCompletionistHelper"
 EndProject
 Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB07}") = "BonelabHundredStatus", "projects\LiveSplit\BonelabHundredStatus\BonelabHundredStatus.csproj", "{E782BFCA-90AA-A92F-22E9-85589F10913B}"
 EndProject
+Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB08}") = "BoneworksHundredStatus", "projects\LiveSplit\BoneworksHundredStatus\BoneworksHundredStatus.csproj", "{E782BFCA-90AA-A92F-22E9-85589F10913C}"
+EndProject
 Project("{81FCC4E8-8A09-AD74-7CAB-31A3DCAD4264}") = "BonelabAmmoBugFix", "projects\Bonelab\AmmoBugFix\AmmoBugFix.csproj", "{59614574-AE6C-55D4-024A-21B97605D6F1}"
 EndProject
 Project("{C8D343BD-EF6E-9631-972E-B4219D723E51}") = "BoneworksLootDropBugfix", "projects\Boneworks\LootDropBugfix\LootDropBugfix.csproj", "{C6766168-937D-D108-4DB1-5BCAF3D7376F}"
@@ -102,6 +104,11 @@ Global
     {E782BFCA-90AA-A92F-22E9-85589F10913B}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {E782BFCA-90AA-A92F-22E9-85589F10913B}.Release|Any CPU.ActiveCfg = Release|Any CPU
     {E782BFCA-90AA-A92F-22E9-85589F10913B}.Release|Any CPU.Build.0 = Release|Any CPU
+
+    {E782BFCA-90AA-A92F-22E9-85589F10913C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {E782BFCA-90AA-A92F-22E9-85589F10913C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {E782BFCA-90AA-A92F-22E9-85589F10913C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {E782BFCA-90AA-A92F-22E9-85589F10913C}.Release|Any CPU.Build.0 = Release|Any CPU
 
     {56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {56E3BACA-562C-81C7-9A6A-A7ACB2CA82A4}.Debug|Any CPU.Build.0 = Debug|Any CPU

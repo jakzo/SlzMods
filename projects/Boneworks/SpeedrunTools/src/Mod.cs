@@ -31,6 +31,7 @@ public class Mod : MelonMod {
     new Features.Gripless(),
     new Features.Armless(),
     new Features.RestartLevel(),
+    new Features.ArenaSplitState(),
 
     // Dev features
     new Features.Speedometer(),

@@ -30,7 +30,7 @@ public class Mod : MelonMod {
         "smooth_time", 10f,
         "Time it takes for the camera to catch up to player movements");
     _prefCameraRatio = category.CreateEntry(
-        "camera_ratio", 0.5f,
+        "camera_ratio", 1f,
         "Amount to split screen between first and third person cameras (0 = first person only, 1 = third person only)");
 
     Utilities.LevelHooks.OnLevelStart += level => CreateThirdPersonCamera();
@@ -96,8 +96,8 @@ public class Mod : MelonMod {
     thirdPersonCamera.transform.parent = spectatorCamera.transform.parent;
 
     _thirdPersonCamera = thirdPersonCamera.GetComponent<SmoothFollower>();
-    _thirdPersonCamera.TranslationSmoothTime = 10f;
-    _thirdPersonCamera.RotationalSmoothTime = 10f;
+    _thirdPersonCamera.TranslationSmoothTime = _prefSmoothTime.Value;
+    _thirdPersonCamera.RotationalSmoothTime = _prefSmoothTime.Value;
 
     var thirdPersonTarget = new GameObject("Third Person Target").transform;
     thirdPersonTarget.SetParent(_thirdPersonCamera.targetTransform.parent,
@@ -111,11 +111,12 @@ public class Mod : MelonMod {
 
     SetCameraRatios();
 
-#if DEBUG // TAS
-    var spectatorFollower = spectatorCamera.GetComponent<SmoothFollower>();
-    spectatorFollower.RotationalSmoothTime *= 4f;
-    spectatorFollower.TranslationSmoothTime *= 2f;
-#endif
+    // #if DEBUG // TAS
+    //     var spectatorFollower =
+    //     spectatorCamera.GetComponent<SmoothFollower>();
+    //     spectatorFollower.RotationalSmoothTime *= 4f;
+    //     spectatorFollower.TranslationSmoothTime *= 2f;
+    // #endif
   }
 
   private RigScreenOptions GetRigScreen() =>

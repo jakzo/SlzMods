@@ -1,5 +1,7 @@
 Makes spectator camera third-person.
 
+After installing this mod, switch to the spectator camera in the game preferences and it will show a third-person view in the game window.
+
 # Installation
 
 - Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.5.7 or newer is installed in Bonelab

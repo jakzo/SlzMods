@@ -43,6 +43,8 @@ Project("{1D0D07E2-0C07-604C-1B55-2A84455C427E}") = "BonelabTasTool", "projects\
 EndProject
 Project("{9C2FCA83-0D5B-3617-C065-E60B9F23F746}") = "BonelabHitboxes", "projects\Bonelab\Hitboxes\Hitboxes.csproj", "{D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}"
 EndProject
+Project("{DC2D8CF7-AF23-373A-3B1B-6B571C815BC7}") = "BonelabPancakeMode", "projects\Bonelab\PancakeMode\PancakeMode.csproj", "{36334481-E244-AFBB-451D-DC47A3ED475D}"
+EndProject
 
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,6 +52,11 @@ Global
     Release|Any CPU = Release|Any CPU
   EndGlobalSection
   GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    {36334481-E244-AFBB-451D-DC47A3ED475D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {36334481-E244-AFBB-451D-DC47A3ED475D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {36334481-E244-AFBB-451D-DC47A3ED475D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {36334481-E244-AFBB-451D-DC47A3ED475D}.Release|Any CPU.Build.0 = Release|Any CPU
+
     {D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -16,6 +16,7 @@ public class Mod : MelonMod {
 
   private SmoothFollower _thirdPersonCamera;
   private float _cameraRadius;
+  private Vector3 _followVec;
   private MelonPreferences_Entry<float> _prefFollowDistance;
   private MelonPreferences_Entry<float> _prefSmoothTime;
   private MelonPreferences_Entry<float> _prefCameraRatio;
@@ -36,6 +37,8 @@ public class Mod : MelonMod {
     Utilities.LevelHooks.OnLevelStart += level => CreateThirdPersonCamera();
     Utilities.LevelHooks.OnLoad += level => ResetState();
     _prefCameraRatio.OnEntryValueChanged.Subscribe((a, b) => SetCameraRatios());
+    _prefFollowDistance.OnEntryValueChanged.Subscribe((a, b) => SetFollowVec());
+    SetFollowVec();
   }
 
   public override void OnUpdate() {
@@ -45,23 +48,20 @@ public class Mod : MelonMod {
     var rigScreen =
         Utilities.LevelHooks.RigManager?.uiRig.controlPlayer.rigScreen ??
         GetRigScreen();
-    var target = rigScreen.TargetTransform;
-    if (target) {
-      _thirdPersonCamera.targetTransform.rotation = target.rotation;
-      _thirdPersonCamera.targetTransform.position =
-          target.position +
-          target.rotation * Vector3.back * _prefFollowDistance.Value;
+    if (rigScreen.TargetTransform) {
+      var tpos = rigScreen.TargetTransform.position;
+      var trot = rigScreen.TargetTransform.rotation;
+      var targetTransformPos = tpos + trot * _followVec;
 
-      if (Physics.SphereCast(
-              target.position, _cameraRadius,
-              _thirdPersonCamera.targetTransform.position - target.position,
-              out var hit,
-              Vector3.Distance(target.position,
-                               _thirdPersonCamera.targetTransform.position),
-              CAMERA_COLLISION_LAYER_MASK)) {
-        _thirdPersonCamera.targetTransform.position =
-            hit.point + hit.normal * _cameraRadius;
+      if (Physics.SphereCast(tpos, _cameraRadius, targetTransformPos - tpos,
+                             out var hit,
+                             Vector3.Distance(tpos, targetTransformPos),
+                             CAMERA_COLLISION_LAYER_MASK)) {
+        targetTransformPos = hit.point + hit.normal * _cameraRadius;
       }
+
+      _thirdPersonCamera.targetTransform.SetPositionAndRotation(
+          targetTransformPos, trot);
     }
 
     _thirdPersonCamera.MoveCameraUpdate();
@@ -70,11 +70,11 @@ public class Mod : MelonMod {
   private void SetCameraRatios() {
     var cam = GetRigScreen().cam;
     if (cam)
-      cam.rect = new Rect(0f, 0f, _prefCameraRatio.Value, 1f);
+      cam.rect = new Rect(0f, 0f, 1f - _prefCameraRatio.Value, 1f);
     if (_thirdPersonCamera) {
       var camera = _thirdPersonCamera.GetComponent<Camera>();
       camera.rect =
-          new Rect(_prefCameraRatio.Value, 0f, 1f - _prefCameraRatio.Value, 1f);
+          new Rect(1f - _prefCameraRatio.Value, 0f, _prefCameraRatio.Value, 1f);
 
       var halfHeight =
           Mathf.Tan(0.5f * camera.fieldOfView * DEG2RAD) * camera.nearClipPlane;
@@ -121,5 +121,9 @@ public class Mod : MelonMod {
 
   private RigScreenOptions GetRigScreen() =>
       Utilities.LevelHooks.RigManager.GetComponent<RigScreenOptions>();
+
+  private void SetFollowVec() {
+    _followVec = Vector3.back * _prefFollowDistance.Value;
+  }
 }
 }

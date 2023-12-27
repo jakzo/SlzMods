@@ -44,8 +44,6 @@ init {
     2,  // scene_theatrigon_movie01 -> scene_breakroom
     4,  // scene_museum
     5,  // scene_streets
-    5,  // scene_streets
-    6,  // scene_runoff
     6,  // scene_runoff
     7,  // scene_sewerStation
     8,  // scene_warehouse
@@ -61,9 +59,9 @@ init {
     22, // scene_hoverJunkers
     16, // arena_fantasy
     23, // zombie_warehouse
-    // 23, // zombie_warehouse
-    // 23, // zombie_warehouse
-    1, // scene_mainMenu
+    1,  // scene_mainMenu
+    6,  // scene_runoff
+    1,  // scene_mainMenu
   };
   vars.levelOrderIdx = 0;
   vars.targetLevelOrderIdx = vars.startingSplit;
@@ -92,7 +90,7 @@ split {
 
   if (vars.isLoading.Current &&
       (!vars.isLoading.Old || current.levelNumber != old.levelNumber)) {
-    var nextLevelOrderIdx = vars.levelOrderIdx + 1;
+    var nextLevelOrderIdx = vars.targetLevelOrderIdx + 1;
     if (nextLevelOrderIdx < vars.levelOrder.Length &&
         vars.levelOrder[nextLevelOrderIdx] == current.levelNumber) {
       vars.targetLevelOrderIdx = nextLevelOrderIdx;
@@ -101,7 +99,10 @@ split {
 
   if (vars.levelOrderIdx < vars.targetLevelOrderIdx) {
     vars.levelOrderIdx++;
-    return true;
+    // Skip splitting here because fantasy arena splits at the end
+    var isFirstZombieWarehouseSplit =
+        vars.levelOrderIdx == Array.IndexOf(vars.levelOrder, 23);
+    return !isFirstZombieWarehouseSplit;
   }
 
   return false;

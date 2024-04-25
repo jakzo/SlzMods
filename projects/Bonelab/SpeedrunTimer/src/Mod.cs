@@ -20,7 +20,6 @@ public class Mod : MelonMod {
     PrefCategory = MelonPreferences.CreateCategory(PREF_CATEGORY_ID);
     SplitsTimer.OnInitialize();
     SaveDeleteImprovements.OnInitialize();
-    TimeTrialDisplayFix.OnInitialize();
 
     LevelHooks.OnLoad += _timer.OnLoadingScreen;
     LevelHooks.OnLevelStart += _timer.OnLevelStart;

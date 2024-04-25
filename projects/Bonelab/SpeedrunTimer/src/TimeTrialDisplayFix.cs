@@ -6,71 +6,44 @@ using TMPro;
 using SLZ.Marrow.Warehouse;
 using SLZ.Bonelab;
 using Sst.Utilities;
-using System.Collections.Generic;
 
 namespace Sst.SpeedrunTimer {
-class TimeTrialDisplayFix : MonoBehaviour {
-  private static HashSet<string> TIME_TRIAL_LEVELS = new HashSet<string>() {
-    Utilities.Levels.Barcodes.STREET_PUNCHER,
-    Utilities.Levels.Barcodes.SPRINT_BRIDGE,
-  };
+class TimeTrialDisplayFix {
+  public const string LABEL_NAME = "TimeTrialDisplayFix_Label";
 
-  private static TimeTrial_GameController _controller;
-  private static BoneLeaderManager _leaderboardManager;
-  private static TextMeshPro _tmpLabel;
-
-  public static void OnInitialize() { LevelHooks.OnLevelStart += OnLevelStart; }
-
-  private static void OnLevelStart(LevelCrate level) {
-    Dbg.Log($"TimeTrialDisplayFix OnLevelStart");
-
-    if (!TIME_TRIAL_LEVELS.Contains(level.Barcode.ID))
-      return;
-
-    Dbg.Log($"TimeTrialDisplayFix TIME_TRIAL_LEVELS");
-
-    _controller = GameObject.FindObjectOfType<TimeTrial_GameController>();
-    if (_controller == null)
-      return;
-
-    _leaderboardManager = GameObject.FindObjectOfType<BoneLeaderManager>();
-    if (_leaderboardManager == null)
-      return;
-
-    Dbg.Log($"TimeTrialDisplayFix DisplayTimeOnFinish");
-
-    _controller.onSessionEnd.AddListener(new Action(OnSessionEnd));
+  [HarmonyPatch(typeof(BoneLeaderManager),
+                nameof(BoneLeaderManager.SubmitLeaderboardScore))]
+  class BoneLeaderManager_SubmitLeaderboardScore_Patch {
+    [HarmonyPostfix()]
+    internal static void Postfix(BoneLeaderManager __instance,
+                                 uint score) => DisplayTime(__instance, score);
   }
 
-  public static void OnSessionEnd() {
-    if (_controller == null || _leaderboardManager == null)
-      return;
-
-    Dbg.Log($"TimeTrialDisplayFix OnSessionEnd: {_controller.tsTimerString}");
-
-    var leaderboardTitle = _leaderboardManager.text_TitleBoard;
+  public static void DisplayTime(BoneLeaderManager leaderManager,
+                                 uint milliseconds) {
+    var leaderboardTitle = leaderManager.text_TitleBoard;
     var leaderboardCanvas = leaderboardTitle.transform.parent;
 
-    var label = new GameObject("TimeTrialDisplayFix_Label");
-    label.transform.SetParent(leaderboardCanvas, false);
-    label.transform.localPosition = new Vector3(0f, 0f, 3f);
+    var tmp = leaderboardCanvas.Find(LABEL_NAME)?.GetComponent<TextMeshPro>() ??
+              CreateTimeDisplay(leaderboardCanvas, leaderboardTitle);
 
-    _tmpLabel = label.AddComponent<TextMeshPro>();
-    _tmpLabel.alignment = TextAlignmentOptions.Center;
-    _tmpLabel.font = leaderboardTitle.font;
-    _tmpLabel.fontSize = 4f;
-    _tmpLabel.rectTransform.sizeDelta = new Vector2(10f, 1f);
+    var time = SplitsRenderer.DurationToString(
+        TimeSpan.FromMilliseconds(milliseconds));
+    tmp.SetText($"Time: {time}");
   }
 
-  [HarmonyPatch(typeof(BaseGameController),
-                nameof(BaseGameController.UpdateTimeDisplay))]
-  class BaseGameController_UpdateTimeDisplay_Patch {
-    [HarmonyPostfix()]
-    internal static void Postfix(BaseGameController __instance) {
-      if (__instance == _controller && _tmpLabel != null) {
-        _tmpLabel.SetText($"Time: {_controller.tsTimerString}");
-      }
-    }
+  private static TextMeshPro CreateTimeDisplay(Transform canvas,
+                                               TMP_Text title) {
+    var go = new GameObject(LABEL_NAME);
+    go.transform.SetParent(canvas, false);
+    go.transform.localPosition = new Vector3(0f, 1.2f, 3f);
+
+    var tmp = go.AddComponent<TextMeshPro>();
+    tmp.alignment = TextAlignmentOptions.Center;
+    tmp.font = title.font;
+    tmp.fontSize = 4f;
+    tmp.rectTransform.sizeDelta = new Vector2(10f, 1f);
+    return tmp;
   }
 }
 }

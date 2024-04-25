@@ -157,17 +157,17 @@ jobs:
         if: steps.bump_version.outputs.release_thunderstore == 'true'
         with:
           token: ${{ secrets.THUNDERSTORE_API_TOKEN }}
-          repo: ${{ steps.thunderstore_details.outputs.repo }}
-          community: ${{ steps.thunderstore_details.outputs.community }}
-          namespace: ${{ steps.thunderstore_details.outputs.namespace }}
-          name: ${{ steps.thunderstore_details.outputs.name }}
-          version: ${{ steps.thunderstore_details.outputs.version }}
-          description: ${{ steps.thunderstore_details.outputs.description }}
-          readme: ${{ steps.thunderstore_details.outputs.readme }}
-          website: ${{ steps.thunderstore_details.outputs.website }}
-          icon: ${{ steps.thunderstore_details.outputs.icon }}
-          deps: ${{ steps.thunderstore_details.outputs.deps }}
-          path: ${{ steps.thunderstore_details.outputs.path }}
+          repo: ${{ fromJson(steps.thunderstore_details.outputs.result).repo }}
+          community: ${{ fromJson(steps.thunderstore_details.outputs.result).community }}
+          namespace: ${{ fromJson(steps.thunderstore_details.outputs.result).namespace }}
+          name: ${{ fromJson(steps.thunderstore_details.outputs.result).name }}
+          version: ${{ fromJson(steps.thunderstore_details.outputs.result).version }}
+          description: ${{ fromJson(steps.thunderstore_details.outputs.result).description }}
+          readme: ${{ fromJson(steps.thunderstore_details.outputs.result).readme }}
+          website: ${{ fromJson(steps.thunderstore_details.outputs.result).website }}
+          icon: ${{ fromJson(steps.thunderstore_details.outputs.result).icon }}
+          deps: ${{ fromJson(steps.thunderstore_details.outputs.result).deps }}
+          path: ${{ fromJson(steps.thunderstore_details.outputs.result).path }}
       - name: Copy LiveSplit build for commit
         if: steps.bump_version.outputs.release_livesplit == 'true'
         env:

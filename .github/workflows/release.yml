@@ -134,10 +134,13 @@ jobs:
               path.join(projectDir, "bin", "Release", `${project}.dll`),
               path.join(modsDir, `${project}.dll`)
             );
-            const readmeBuiltPath = path.join(filesDir, "README.md");
             fs.writeFileSync(
-              readmeBuiltPath,
+              path.join(filesDir, "README.md"),
               `${readmeContents}\n# Changelog\n\n${changelogContents}`
+            );
+            fs.copyFileSync(
+              path.join(projectDir, "thunderstore", "icon.png"),
+              path.join(filesDir, "icon.png")
             );
             return {
               repo: `${gameLower}.thunderstore.io`,
@@ -146,9 +149,7 @@ jobs:
               name: project,
               version: process.env["NEW_VERSION"],
               description: readmeContents.split("\n\n", 1)[0],
-              readme: readmeBuiltPath,
               website: `https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/${game}/${project}`,
-              icon: path.join(projectDir, "thunderstore", "icon.png"),
               deps: manifest.dependencies.map((dep) => dep.replace(/-([^-]+)$/, "@$1")).join(" "),
               path: filesDir,
             };
@@ -163,9 +164,7 @@ jobs:
           name: ${{ fromJson(steps.thunderstore_details.outputs.result).name }}
           version: ${{ fromJson(steps.thunderstore_details.outputs.result).version }}
           description: ${{ fromJson(steps.thunderstore_details.outputs.result).description }}
-          readme: ${{ fromJson(steps.thunderstore_details.outputs.result).readme }}
           website: ${{ fromJson(steps.thunderstore_details.outputs.result).website }}
-          icon: ${{ fromJson(steps.thunderstore_details.outputs.result).icon }}
           deps: ${{ fromJson(steps.thunderstore_details.outputs.result).deps }}
           path: ${{ fromJson(steps.thunderstore_details.outputs.result).path }}
       - name: Copy LiveSplit build for commit

@@ -149,7 +149,7 @@ jobs:
               readme: readmeBuiltPath,
               website: `https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/${game}/${project}`,
               icon: path.join(projectDir, "thunderstore", "icon.png"),
-              deps: manifest.dependencies.map((dep) => dep.replace(/-([^-]+)$/, "@$1")),
+              deps: manifest.dependencies.map((dep) => dep.replace(/-([^-]+)$/, "@$1")).join(" "),
               path: filesDir,
             };
       - name: Release to Thunderstore

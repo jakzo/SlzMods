@@ -97,14 +97,77 @@ jobs:
         run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
       - name: Build
         run: msbuild /property:Configuration=Release
-      - name: Upload to Thunderstore
+      - name: Get Thunderstore package details
+        id: thunderstore_details
         if: steps.bump_version.outputs.release_thunderstore == 'true'
+        uses: actions/github-script@v6
         env:
           GAME: ${{ matrix.changeset.game }}
           PROJECT: ${{ matrix.changeset.project }}
           NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
-          THUNDERSTORE_API_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
-        run: csi ./scripts/UploadThunderstore.csx "$GAME" "$PROJECT" "$NEW_VERSION"
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+            const project = process.env["PROJECT"];
+            const game = process.env["GAME"];
+            const gameLower = game.toLowerCase();
+            const projectDir = path.join("projects", game, project);
+            const readmeContents = fs.readFileSync(
+              path.join(projectDir, "README.md"),
+              "utf8"
+            );
+            const changelogContents = fs.readFileSync(
+              path.join(projectDir, "CHANGELOG.md"),
+              "utf8"
+            );
+            const manifest = JSON.parse(
+              fs.readFileSync(
+                path.join(projectDir, "thunderstore", "manifest.json"),
+                "utf8"
+              )
+            );
+            const filesDir = path.join(projectDir, "thunderstore", "files");
+            const modsDir = path.join(filesDir, "Mods");
+            fs.mkdirSync(modsDir, { recursive: true });
+            fs.copyFileSync(
+              path.join(projectDir, "bin", "Release", `${project}.dll`),
+              path.join(modsDir, `${project}.dll`)
+            );
+            const readmeBuiltPath = path.join(filesDir, "README.md");
+            fs.writeFileSync(
+              readmeBuiltPath,
+              `${readmeContents}\n# Changelog\n\n${changelogContents}`
+            );
+            return {
+              repo: `${gameLower}.thunderstore.io`,
+              community: gameLower,
+              namespace: "jakzo",
+              name: project,
+              version: process.env["NEW_VERSION"],
+              description: readmeContents.split("\n\n", 1)[0],
+              readme: readmeBuiltPath,
+              website: `https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/${game}/${project}`,
+              icon: path.join(projectDir, "thunderstore", "icon.png"),
+              deps: manifest.dependencies.map((dep) => dep.replace(/-([^-]+)$/, "@$1")),
+              path: filesDir,
+            };
+      - name: Release to Thunderstore
+        uses: GreenTF/upload-thunderstore-package@v4.2
+        if: steps.bump_version.outputs.release_thunderstore == 'true'
+        with:
+          token: ${{ secrets.THUNDERSTORE_API_TOKEN }}
+          repo: ${{ steps.thunderstore_details.outputs.repo }}
+          community: ${{ steps.thunderstore_details.outputs.community }}
+          namespace: ${{ steps.thunderstore_details.outputs.namespace }}
+          name: ${{ steps.thunderstore_details.outputs.name }}
+          version: ${{ steps.thunderstore_details.outputs.version }}
+          description: ${{ steps.thunderstore_details.outputs.description }}
+          readme: ${{ steps.thunderstore_details.outputs.readme }}
+          website: ${{ steps.thunderstore_details.outputs.website }}
+          icon: ${{ steps.thunderstore_details.outputs.icon }}
+          deps: ${{ steps.thunderstore_details.outputs.deps }}
+          path: ${{ steps.thunderstore_details.outputs.path }}
       - name: Copy LiveSplit build for commit
         if: steps.bump_version.outputs.release_livesplit == 'true'
         env:

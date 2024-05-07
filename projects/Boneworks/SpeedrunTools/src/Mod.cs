@@ -44,6 +44,7 @@ public class Mod : MelonMod {
     new Features.FixPhysicsRate(),
     new Features.DebugColliders(),
     new Features.LootChanceViewer(),
+    new Features.AslHelper(),
   };
 
   private static List<Feature> enabledFeatures = new List<Feature>();

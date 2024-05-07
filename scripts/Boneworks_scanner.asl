@@ -12,6 +12,9 @@ startup {
 
   vars.Helper.AlertGameTime();
 
+  vars.LEVEL_MAIN_MENU = 1;
+  vars.LEVEL_THRONE_ROOM = 15;
+
   // === LOADING SCANNER ===
   {
     const int MEGABYTE = 1024 * 1024;
@@ -21,8 +24,8 @@ startup {
     const int LOADING_MARGIN_MS = 100;
 
     ProcessModule VrclientModule = null;
-    bool IsLoading = false;
     HashSet<IntPtr> PossibleAddresses = null;
+    bool IsLoading = false;
 
     Func<Process, string, ProcessModule> GetModule = (proc, name) => {
       foreach (ProcessModule module in proc.Modules) {
@@ -40,10 +43,8 @@ startup {
 
     Action<Process> Scan = proc => {
       var targetValue = IsLoading ? 1 : 0;
-
       print("Scan(" + targetValue + ")");
 
-      var prevCount = PossibleAddresses != null ? PossibleAddresses.Count : 0;
       var filteredAddresses = new HashSet<IntPtr>();
 
       byte[] buffer;
@@ -73,15 +74,16 @@ startup {
               " possible addresses (" + totalMb + "mb scanned)");
       } else {
         print("Filtered down to " + filteredAddresses.Count +
-              " possible addresses (was " + prevCount + ")");
+              " possible addresses (was " + PossibleAddresses.Count + ")");
       }
 
       PossibleAddresses = filteredAddresses;
-      if (filteredAddresses.Count == 1) {
-        var loadingAddress = filteredAddresses.First();
-        OnLoadingAddressFound(loadingAddress);
-      } else if (filteredAddresses.Count == 0) {
-        print("Failed to find loading address (no candidates remaining)");
+      if (PossibleAddresses.Count == 1) {
+        OnLoadingAddressFound(PossibleAddresses.First());
+      } else if (PossibleAddresses.Count == 0) {
+        MessageBox.Show("Failed to find loading address.",
+                        "LiveSplit | Autosplitter Error", MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
       }
     };
 
@@ -111,7 +113,6 @@ startup {
         }
       }
     };
-
     vars.ScannerOnUpdate = OnUpdate;
 
     Action Reset = () => {
@@ -119,7 +120,6 @@ startup {
       IsLoading = false;
       PossibleAddresses = null;
     };
-
     vars.ScannerReset = Reset;
   }
 }
@@ -140,7 +140,7 @@ update {
 isLoading { return vars.isLoading != null && vars.isLoading.Current; }
 
 start {
-  return vars.isLoading != null && current.levelNumber > 1 &&
+  return vars.isLoading != null && current.levelNumber > vars.LEVEL_MAIN_MENU &&
          vars.isLoading.Current;
 }
 
@@ -148,12 +148,12 @@ split {
   if (vars.isLoading == null)
     return false;
 
-  if (current.levelNumber == old.levelNumber + 1) {
+  if (current.levelNumber > old.levelNumber) {
     vars.isNextLevel = true;
   }
-  // Split on returning to main menu after throne room
-  if (current.levelNumber == 1 && old.levelNumber == 15 &&
-      vars.isLoading.Current) {
+
+  if (current.levelNumber == vars.LEVEL_MAIN_MENU &&
+      old.levelNumber == vars.LEVEL_THRONE_ROOM && vars.isLoading.Current) {
     return true;
   }
 
@@ -172,7 +172,8 @@ split {
 
 reset {
   // Allows restarting a level, but does not work in Throne Room
-  return current.levelNumber < old.levelNumber && old.levelNumber != 15;
+  return current.levelNumber < old.levelNumber &&
+         old.levelNumber != vars.LEVEL_THRONE_ROOM;
 }
 
 exit { vars.ScannerReset(); }

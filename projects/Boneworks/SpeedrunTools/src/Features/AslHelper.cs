@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using System.Threading;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Timers;
 using System.Linq;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using HarmonyLib;
-using Valve.VR;
-using System.Security.Policy;
 
 namespace Sst.Features {
 class AslHelper : Feature {
@@ -27,11 +21,11 @@ class AslHelper : Feature {
 
   const int PROCESS_VM_READ = 0x0010;
   const int MEGABYTE = 1024 * 1024;
-  const int BUFFER_SIZE = 1 * MEGABYTE;
   const int VALUE_SIZE = sizeof(int);
   const string VRCLIENT64_MODULE_NAME = "vrclient_x64.dll";
   const int LOADING_SCENE_INDEX = 25;
-  const float LOADING_MARGIN = 0.5f;
+  const int LOADING_MARGIN_MS = 0;
+  const int RETRY_INTERVAL_MS = 500;
 
   public static byte[] AslSigBytes = {
     // 0 = magic string start
@@ -54,32 +48,36 @@ class AslHelper : Feature {
   public static ProcessModule VrclientModule;
   public static IntPtr ProcessHandle;
   public static bool IsLoading = false;
-  public static bool IsNotLoading = false;
-  public static bool IsStopped = false;
-  public static int PrevSceneIndex = 0;
-  public static ConcurrentBag<IntPtr> PossibleAddresses = null;
-  public static System.Timers.Timer FilterPollTimer =
-      new System.Timers.Timer() {
-        Interval = 500,
-      };
+  public static HashSet<IntPtr> PossibleAddresses = null;
+  public static System.Timers.Timer ScanTimer = null;
 
   public AslHelper() {
     IsDev = true;
     IsAllowedInRuns = true;
-    FilterPollTimer.Elapsed += (source, args) => FilterScan();
   }
 
   public override void OnUpdate() {
+    if (PossibleAddresses != null && PossibleAddresses.Count <= 1)
+      return;
+
     var sceneIndex = SceneManager.GetActiveScene().buildIndex;
-    if (sceneIndex >= 0 && sceneIndex != PrevSceneIndex) {
-      PrevSceneIndex = sceneIndex;
-      if (sceneIndex == LOADING_SCENE_INDEX) {
-        SetNotLoading(false);
-        DoAfter(LOADING_MARGIN, () => SetLoading(true));
-      } else {
-        SetLoading(false);
-        DoAfter(LOADING_MARGIN, () => SetNotLoading(true));
-      }
+    var isNowLoading = sceneIndex == LOADING_SCENE_INDEX;
+    if (sceneIndex >= 0 && isNowLoading != IsLoading) {
+      IsLoading = isNowLoading;
+
+      DoAfter(LOADING_MARGIN_MS, () => {
+        if (PossibleAddresses == null) {
+          if (IsLoading) {
+            var process = Process.GetCurrentProcess();
+            ProcessHandle = OpenProcess(PROCESS_VM_READ, false, process.Id);
+            VrclientModule = GetModule(VRCLIENT64_MODULE_NAME);
+
+            InitialScan();
+          }
+        } else {
+          FilterScan();
+        }
+      });
     }
   }
 
@@ -95,63 +93,41 @@ class AslHelper : Feature {
   public static void InitialScan() {
     Dbg.Log("InitialScan()");
 
-    if (!IsLoading) {
-      throw new Exception("First scan can only be run while loading");
-    }
+    var targetValue = 1;
+    var possibleAddresses = new HashSet<IntPtr>();
 
-    var isLoading = IsLoading;
-    var targetValue = isLoading ? 1 : 0;
-    var possibleAddresses = new ConcurrentBag<IntPtr>();
-    var totalMb = VrclientModule.ModuleMemorySize / MEGABYTE;
+    var buffer = new byte[VrclientModule.ModuleMemorySize];
+    var readSucceeded =
+        ReadProcessMemory(ProcessHandle, VrclientModule.BaseAddress, buffer,
+                          buffer.Length, out var bytesRead);
 
-    var result = Parallel.For(
-        0, VrclientModule.ModuleMemorySize / BUFFER_SIZE,
-        (index, loopState) => {
-          var hasStateChanged = isLoading ? !IsLoading : !IsNotLoading;
-          if (hasStateChanged) {
-            var progressMb = index * BUFFER_SIZE / MEGABYTE;
-            MelonLogger.Warning(
-                $"ASL loading scan could not finish in time ({progressMb}mb / {totalMb}mb)");
-            loopState.Break();
-            return;
-          }
-
-          var buffer = new byte[BUFFER_SIZE];
-          var readAddress = VrclientModule.BaseAddress + index * BUFFER_SIZE;
-          var readSucceeded =
-              ReadProcessMemory(ProcessHandle, readAddress, buffer,
-                                buffer.Length, out var bytesRead);
-
-          if (!readSucceeded) {
-            MelonLogger.Error(
-                $"Read of {VRCLIENT64_MODULE_NAME} memory to find loading state address failed",
-                new Win32Exception(Marshal.GetLastWin32Error()));
-            loopState.Break();
-            return;
-          }
-
-          for (var i = 0; i < bytesRead; i += VALUE_SIZE) {
-            if (bytesRead - i >= VALUE_SIZE) {
-              var value = BitConverter.ToInt32(buffer, i);
-              if (value == targetValue) {
-                possibleAddresses.Add(readAddress + i);
-              }
-            }
-          }
-        });
-
-    if (!result.IsCompleted) {
-      StopScanning();
+    if (!readSucceeded) {
+      MelonLogger.Error(
+          $"Read of {VRCLIENT64_MODULE_NAME} memory to find loading state address failed",
+          new Win32Exception(Marshal.GetLastWin32Error()));
       return;
     }
 
+    for (var i = 0; i < bytesRead; i += VALUE_SIZE) {
+      if (bytesRead - i >= VALUE_SIZE) {
+        var value = BitConverter.ToInt32(buffer, i);
+        if (value == targetValue) {
+          possibleAddresses.Add(VrclientModule.BaseAddress + i);
+        }
+      }
+    }
+
+    var totalMb = VrclientModule.ModuleMemorySize / MEGABYTE;
     Dbg.Log(
         $"ASL: Initial scan found {possibleAddresses.Count} possible addresses ({totalMb}mb scanned)");
+
     PossibleAddresses = possibleAddresses;
   }
 
   public static void FilterScan() {
-    Dbg.Log("FilterScan()");
+    var isLoading = IsLoading;
+    var targetValue = isLoading ? 1 : 0;
+    Dbg.Log($"FilterScan({targetValue})");
 
     if (PossibleAddresses == null) {
       throw new Exception(
@@ -159,105 +135,74 @@ class AslHelper : Feature {
     }
 
     var prevCount = PossibleAddresses.Count;
-    var filteredAddresses = new ConcurrentBag<IntPtr>();
+    var filteredAddresses = new HashSet<IntPtr>();
 
-    if (!IsLoading && !IsNotLoading) {
-      throw new Exception(
-          "Cannot start ASL loading scan because state is not clear");
+    var buffer = new byte[VrclientModule.ModuleMemorySize];
+    var readSucceeded =
+        ReadProcessMemory(ProcessHandle, VrclientModule.BaseAddress, buffer,
+                          buffer.Length, out var bytesRead);
+
+    if (!readSucceeded) {
+      MelonLogger.Error(
+          $"Read of {VRCLIENT64_MODULE_NAME} memory to find loading state address failed",
+          new Win32Exception(Marshal.GetLastWin32Error()));
+      return;
     }
 
-    var isLoading = IsLoading;
-    var targetValue = isLoading ? 1 : 0;
-
-    // TODO: Batch nearby addresses into a single ReadProcessMemory call
-    var result = Parallel.ForEach(PossibleAddresses, (address, loopState) => {
-      var hasStateChanged = isLoading ? !IsLoading : !IsNotLoading;
-      if (hasStateChanged) {
-        MelonLogger.Warning("ASL loading scan could not finish in time");
-        loopState.Break();
-        return;
-      }
-
-      var buffer = new byte[VALUE_SIZE];
-      var readSucceeded = ReadProcessMemory(ProcessHandle, address, buffer,
-                                            buffer.Length, out var bytesRead);
-
-      if (!readSucceeded) {
-        MelonLogger.Error(
-            $"Read of {VRCLIENT64_MODULE_NAME} memory to find loading state address failed",
-            new Win32Exception(Marshal.GetLastWin32Error()));
-        loopState.Break();
-        return;
-      }
-
-      var value = BitConverter.ToInt32(buffer, 0);
+    foreach (var address in PossibleAddresses) {
+      var value = BitConverter.ToInt32(
+          buffer, (int)((long)address - (long)VrclientModule.BaseAddress));
       if (value == targetValue) {
         filteredAddresses.Add(address);
       }
-    });
-
-    if (!result.IsCompleted) {
-      StopScanning();
-      return;
     }
 
     Dbg.Log(
         $"ASL: Filtered down to {filteredAddresses.Count} possible addresses (was {prevCount})");
-    PossibleAddresses = filteredAddresses;
 
-    if (PossibleAddresses.Count == 1) {
-      BitConverter.GetBytes(PossibleAddresses.First().ToInt32())
-          .CopyTo(AslSigBytes, 8);
+    // Update address list after a delay in case we scanned the memory on the
+    // boundary of a load starting/ending
+    DoAfter(LOADING_MARGIN_MS,
+            () => UpdatePossibleAddresses(filteredAddresses, isLoading));
+  }
+
+  public static void UpdatePossibleAddresses(HashSet<IntPtr> addresses,
+                                             bool wasLoading) {
+    if (wasLoading != IsLoading)
+      return;
+
+    PossibleAddresses = addresses;
+    if (addresses.Count == 1) {
+      BitConverter.GetBytes(addresses.First().ToInt32()).CopyTo(AslSigBytes, 8);
       AslSigBytes[0] = 0xD5;
-      StopScanning();
       MelonLogger.Msg("Found ASL loading address");
-      Dbg.Log($"Loading address = {PossibleAddresses.First()}");
-    } else if (PossibleAddresses.Count == 0) {
-      StopScanning();
+      Dbg.Log($"Loading address = {addresses.First()}");
+    } else if (addresses.Count == 0) {
       MelonLogger.Warning(
           "Failed to find ASL loading address (no candidates remaining)");
-    } else if (PossibleAddresses.Count <= 10) {
-      FilterPollTimer.Enabled = true;
+    } else if (addresses.Count <= 10) {
+      DoAfter(RETRY_INTERVAL_MS - LOADING_MARGIN_MS, FilterScan);
     }
   }
 
-  public static void StopScanning() {
-    FilterPollTimer.Enabled = false;
-    IsStopped = true;
-    Dbg.Log("ASL scan stopped");
-  }
-
-  public static void SetLoading(bool value) {
-    IsLoading = value;
-
-    if (IsLoading && !IsStopped) {
-      if (PossibleAddresses == null) {
-        var process = Process.GetCurrentProcess();
-        ProcessHandle = OpenProcess(PROCESS_VM_READ, false, process.Id);
-        VrclientModule = GetModule(VRCLIENT64_MODULE_NAME);
-
-        InitialScan();
-      } else if (PossibleAddresses.Count > 1) {
-        FilterScan();
-      }
-    }
-  }
-
-  public static void SetNotLoading(bool value) {
-    IsNotLoading = value;
-
-    if (IsNotLoading && PossibleAddresses.Count > 1 && !IsStopped) {
-      FilterScan();
-    }
-  }
-
-  private static void DoAfter(float seconds, Action callback) {
-    var timer = new System.Timers.Timer() {
-      Interval = (int)Mathf.Max(1f, seconds * 1000f),
+  public static void DoAfter(int delayMs, Action callback) {
+    CancelTimer();
+    ScanTimer = new System.Timers.Timer() {
+      Interval = Math.Max(1, delayMs),
       AutoReset = false,
       Enabled = true,
     };
-    timer.Elapsed += (source, args) => callback();
+    ScanTimer.Elapsed += (source, args) => {
+      CancelTimer();
+      callback();
+    };
+  }
+
+  public static void CancelTimer() {
+    if (ScanTimer != null) {
+      ScanTimer.Dispose();
+      ScanTimer = null;
+    }
   }
 }
 }

@@ -56,6 +56,7 @@ class AslHelper : Feature {
   public static bool IsLoading = false;
   public static bool IsNotLoading = false;
   public static bool IsStopped = false;
+  public static int PrevSceneIndex = 0;
   public static ConcurrentBag<IntPtr> PossibleAddresses = null;
   public static System.Timers.Timer FilterPollTimer =
       new System.Timers.Timer() {
@@ -70,10 +71,14 @@ class AslHelper : Feature {
 
   public override void OnUpdate() {
     var sceneIndex = SceneManager.GetActiveScene().buildIndex;
-    if (sceneIndex >= 0) {
+    if (sceneIndex >= 0 && sceneIndex != PrevSceneIndex) {
+      PrevSceneIndex = sceneIndex;
       if (sceneIndex == LOADING_SCENE_INDEX) {
-        // TODO: Use this instead of fade to grid since ASL will use this
+        SetNotLoading(false);
+        DoAfter(LOADING_MARGIN, () => SetLoading(true));
       } else {
+        SetLoading(false);
+        DoAfter(LOADING_MARGIN, () => SetNotLoading(true));
       }
     }
   }
@@ -243,22 +248,6 @@ class AslHelper : Feature {
 
     if (IsNotLoading && PossibleAddresses.Count > 1 && !IsStopped) {
       FilterScan();
-    }
-  }
-
-  // TODO: This actually isn't what makes the loading bit in vrclient turn true
-  // TODO: Use active scene instead since that is what the ASL would be using
-  [HarmonyPatch(typeof(CVRCompositor), nameof(CVRCompositor.FadeGrid))]
-  class CVRCompositor_FadeGrid_Patch {
-    [HarmonyPrefix()]
-    internal static void Prefix(float fSeconds, bool bFadeIn) {
-      if (bFadeIn) {
-        DoAfter(fSeconds - LOADING_MARGIN, () => SetNotLoading(false));
-        DoAfter(fSeconds + LOADING_MARGIN, () => SetLoading(true));
-      } else {
-        SetLoading(false);
-        DoAfter(LOADING_MARGIN, () => SetNotLoading(true));
-      }
     }
   }
 

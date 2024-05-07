@@ -4,13 +4,15 @@ using System.Runtime.InteropServices;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Threading;
+using System.ComponentModel;
+using System.Timers;
 using System.Linq;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using HarmonyLib;
 using Valve.VR;
-using System.ComponentModel;
+using System.Security.Policy;
 
 namespace Sst.Features {
 class AslHelper : Feature {
@@ -28,6 +30,7 @@ class AslHelper : Feature {
   const int BUFFER_SIZE = 1 * MEGABYTE;
   const int VALUE_SIZE = sizeof(int);
   const string VRCLIENT64_MODULE_NAME = "vrclient_x64.dll";
+  const int LOADING_SCENE_INDEX = 25;
   const float LOADING_MARGIN = 0.5f;
 
   public static byte[] AslSigBytes = {
@@ -52,16 +55,26 @@ class AslHelper : Feature {
   public static IntPtr ProcessHandle;
   public static bool IsLoading = false;
   public static bool IsNotLoading = false;
+  public static bool IsStopped = false;
   public static ConcurrentBag<IntPtr> PossibleAddresses = null;
+  public static System.Timers.Timer FilterPollTimer =
+      new System.Timers.Timer() {
+        Interval = 500,
+      };
 
   public AslHelper() {
     IsDev = true;
     IsAllowedInRuns = true;
+    FilterPollTimer.Elapsed += (source, args) => FilterScan();
   }
 
   public override void OnUpdate() {
-    if (SceneManager.GetActiveScene().name == "loadingScene") {
-      // TODO: Use this instead of fade to grid since ASL will use this
+    var sceneIndex = SceneManager.GetActiveScene().buildIndex;
+    if (sceneIndex >= 0) {
+      if (sceneIndex == LOADING_SCENE_INDEX) {
+        // TODO: Use this instead of fade to grid since ASL will use this
+      } else {
+      }
     }
   }
 
@@ -75,6 +88,8 @@ class AslHelper : Feature {
   }
 
   public static void InitialScan() {
+    Dbg.Log("InitialScan()");
+
     if (!IsLoading) {
       throw new Exception("First scan can only be run while loading");
     }
@@ -92,7 +107,6 @@ class AslHelper : Feature {
             var progressMb = index * BUFFER_SIZE / MEGABYTE;
             MelonLogger.Warning(
                 $"ASL loading scan could not finish in time ({progressMb}mb / {totalMb}mb)");
-            // TODO: Keep track of progress and resume next time?
             loopState.Break();
             return;
           }
@@ -122,6 +136,7 @@ class AslHelper : Feature {
         });
 
     if (!result.IsCompleted) {
+      StopScanning();
       return;
     }
 
@@ -131,6 +146,8 @@ class AslHelper : Feature {
   }
 
   public static void FilterScan() {
+    Dbg.Log("FilterScan()");
+
     if (PossibleAddresses == null) {
       throw new Exception(
           "Cannot filter possible addresses unless InitialScan has been called");
@@ -152,7 +169,6 @@ class AslHelper : Feature {
       var hasStateChanged = isLoading ? !IsLoading : !IsNotLoading;
       if (hasStateChanged) {
         MelonLogger.Warning("ASL loading scan could not finish in time");
-        // TODO: Keep track of progress and resume next time?
         loopState.Break();
         return;
       }
@@ -175,13 +191,8 @@ class AslHelper : Feature {
       }
     });
 
-    // TODO: Keep track of progress and resume next time?
-    if (!result.IsCompleted && result.LowestBreakIteration.HasValue) {
-      var totalMb = VrclientModule.ModuleMemorySize / MEGABYTE;
-      var progressMb =
-          result.LowestBreakIteration.Value * BUFFER_SIZE / MEGABYTE;
-      MelonLogger.Warning(
-          $"ASL loading scan could not finish in time ({progressMb}mb / {totalMb}mb)");
+    if (!result.IsCompleted) {
+      StopScanning();
       return;
     }
 
@@ -193,20 +204,28 @@ class AslHelper : Feature {
       BitConverter.GetBytes(PossibleAddresses.First().ToInt32())
           .CopyTo(AslSigBytes, 8);
       AslSigBytes[0] = 0xD5;
+      StopScanning();
       MelonLogger.Msg("Found ASL loading address");
+      Dbg.Log($"Loading address = {PossibleAddresses.First()}");
     } else if (PossibleAddresses.Count == 0) {
+      StopScanning();
       MelonLogger.Warning(
           "Failed to find ASL loading address (no candidates remaining)");
+    } else if (PossibleAddresses.Count <= 10) {
+      FilterPollTimer.Enabled = true;
     }
+  }
 
-    // TODO: If count is less than 10, filter at a regular interval until it
-    // reaches 1
+  public static void StopScanning() {
+    FilterPollTimer.Enabled = false;
+    IsStopped = true;
+    Dbg.Log("ASL scan stopped");
   }
 
   public static void SetLoading(bool value) {
     IsLoading = value;
 
-    if (IsLoading) {
+    if (IsLoading && !IsStopped) {
       if (PossibleAddresses == null) {
         var process = Process.GetCurrentProcess();
         ProcessHandle = OpenProcess(PROCESS_VM_READ, false, process.Id);
@@ -222,7 +241,7 @@ class AslHelper : Feature {
   public static void SetNotLoading(bool value) {
     IsNotLoading = value;
 
-    if (IsNotLoading && PossibleAddresses.Count > 1) {
+    if (IsNotLoading && PossibleAddresses.Count > 1 && !IsStopped) {
       FilterScan();
     }
   }
@@ -244,15 +263,12 @@ class AslHelper : Feature {
   }
 
   private static void DoAfter(float seconds, Action callback) {
-    if (seconds <= 0) {
-      callback();
-      return;
-    }
-
-    new System.Threading.Timer(timer => {
-      ((System.Threading.Timer)timer).Dispose();
-      callback();
-    }, null, (int)(seconds * 1000f), Timeout.Infinite);
+    var timer = new System.Timers.Timer() {
+      Interval = (int)Mathf.Max(1f, seconds * 1000f),
+      AutoReset = false,
+      Enabled = true,
+    };
+    timer.Elapsed += (source, args) => callback();
   }
 }
 }

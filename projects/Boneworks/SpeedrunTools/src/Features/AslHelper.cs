@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using HarmonyLib;
 using Valve.VR;
+using System.ComponentModel;
 
 namespace Sst.Features {
 class AslHelper : Feature {
@@ -78,44 +79,49 @@ class AslHelper : Feature {
       throw new Exception("First scan can only be run while loading");
     }
 
-    var possibleAddresses = new ConcurrentBag<IntPtr>();
-
     var isLoading = IsLoading;
     var targetValue = isLoading ? 1 : 0;
+    var possibleAddresses = new ConcurrentBag<IntPtr>();
+    var totalMb = VrclientModule.ModuleMemorySize / MEGABYTE;
 
     var result = Parallel.For(
         0, VrclientModule.ModuleMemorySize / BUFFER_SIZE,
         (index, loopState) => {
           var hasStateChanged = isLoading ? !IsLoading : !IsNotLoading;
           if (hasStateChanged) {
+            var progressMb = index * BUFFER_SIZE / MEGABYTE;
+            MelonLogger.Warning(
+                $"ASL loading scan could not finish in time ({progressMb}mb / {totalMb}mb)");
+            // TODO: Keep track of progress and resume next time?
             loopState.Break();
             return;
           }
 
           var buffer = new byte[BUFFER_SIZE];
           var readAddress = VrclientModule.BaseAddress + index * BUFFER_SIZE;
+          var readSucceeded =
+              ReadProcessMemory(ProcessHandle, readAddress, buffer,
+                                buffer.Length, out var bytesRead);
 
-          if (ReadProcessMemory(ProcessHandle, readAddress, buffer,
-                                buffer.Length, out var bytesRead)) {
-            for (var i = 0; i < bytesRead; i += VALUE_SIZE) {
-              if (bytesRead - i >= VALUE_SIZE) {
-                var value = BitConverter.ToInt32(buffer, i);
-                if (value == targetValue) {
-                  possibleAddresses.Add(readAddress + i);
-                }
+          if (!readSucceeded) {
+            MelonLogger.Error(
+                $"Read of {VRCLIENT64_MODULE_NAME} memory to find loading state address failed",
+                new Win32Exception(Marshal.GetLastWin32Error()));
+            loopState.Break();
+            return;
+          }
+
+          for (var i = 0; i < bytesRead; i += VALUE_SIZE) {
+            if (bytesRead - i >= VALUE_SIZE) {
+              var value = BitConverter.ToInt32(buffer, i);
+              if (value == targetValue) {
+                possibleAddresses.Add(readAddress + i);
               }
             }
           }
         });
 
-    var totalMb = VrclientModule.ModuleMemorySize / MEGABYTE;
-
-    // TODO: Keep track of progress and resume next time?
-    if (!result.IsCompleted && result.LowestBreakIteration.HasValue) {
-      var progressMb =
-          result.LowestBreakIteration.Value * BUFFER_SIZE / MEGABYTE;
-      MelonLogger.Warning(
-          $"ASL loading scan could not finish in time ({progressMb}mb / {totalMb}mb)");
+    if (!result.IsCompleted) {
       return;
     }
 
@@ -145,17 +151,27 @@ class AslHelper : Feature {
     var result = Parallel.ForEach(PossibleAddresses, (address, loopState) => {
       var hasStateChanged = isLoading ? !IsLoading : !IsNotLoading;
       if (hasStateChanged) {
+        MelonLogger.Warning("ASL loading scan could not finish in time");
+        // TODO: Keep track of progress and resume next time?
         loopState.Break();
         return;
       }
 
       var buffer = new byte[VALUE_SIZE];
-      if (ReadProcessMemory(ProcessHandle, address, buffer, buffer.Length,
-                            out var bytesRead)) {
-        var value = BitConverter.ToInt32(buffer, 0);
-        if (value == targetValue) {
-          filteredAddresses.Add(address);
-        }
+      var readSucceeded = ReadProcessMemory(ProcessHandle, address, buffer,
+                                            buffer.Length, out var bytesRead);
+
+      if (!readSucceeded) {
+        MelonLogger.Error(
+            $"Read of {VRCLIENT64_MODULE_NAME} memory to find loading state address failed",
+            new Win32Exception(Marshal.GetLastWin32Error()));
+        loopState.Break();
+        return;
+      }
+
+      var value = BitConverter.ToInt32(buffer, 0);
+      if (value == targetValue) {
+        filteredAddresses.Add(address);
       }
     });
 

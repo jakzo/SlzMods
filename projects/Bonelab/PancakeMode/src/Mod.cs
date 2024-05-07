@@ -25,6 +25,15 @@ public class Mod : MelonMod {
   private static bool
   GetKey(KeyCode key) => Input.GetKey(key) || Input.GetKeyDown(key);
 
+  enum Handedness { LEFT, RIGHT }
+
+  private static void MoveThumbstick(Handedness handedness, Vector2 delta) {
+    var controller = handedness == Handedness.LEFT
+                         ? _rigManager.ControllerRig.leftController
+                         : _rigManager.ControllerRig.rightController;
+    controller._thumbstickAxis += delta;
+  }
+
   [HarmonyPatch(typeof(OpenController), nameof(OpenController.CacheInputs))]
   class OpenController_CacheInputs_Patch {
     [HarmonyPostfix()]
@@ -33,20 +42,16 @@ public class Mod : MelonMod {
         return;
 
       if (GetKey(KeyCode.W)) {
-        var cl = _rigManager.ControllerRig.leftController;
-        cl._thumbstickAxis += Vector2.up;
+        MoveThumbstick(Handedness.LEFT, Vector2.up);
       }
       if (GetKey(KeyCode.S)) {
-        var cl = _rigManager.ControllerRig.leftController;
-        cl._thumbstickAxis += Vector2.down;
+        MoveThumbstick(Handedness.LEFT, Vector2.down);
       }
       if (GetKey(KeyCode.A)) {
-        var cl = _rigManager.ControllerRig.leftController;
-        cl._thumbstickAxis += Vector2.left;
+        MoveThumbstick(Handedness.LEFT, Vector2.left);
       }
       if (GetKey(KeyCode.D)) {
-        var cl = _rigManager.ControllerRig.leftController;
-        cl._thumbstickAxis += Vector2.right;
+        MoveThumbstick(Handedness.LEFT, Vector2.right);
       }
 
       if (GetKey(KeyCode.Space)) {

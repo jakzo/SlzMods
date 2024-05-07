@@ -10,16 +10,6 @@ using UnityEngine.SceneManagement;
 
 namespace Sst.Features {
 class AslHelper : Feature {
-  [DllImport("kernel32.dll")]
-  static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle,
-                                   int dwProcessId);
-
-  [DllImport("kernel32.dll")]
-  static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress,
-                                       byte[] lpBuffer, int dwSize,
-                                       out int lpNumberOfBytesRead);
-
-  const int PROCESS_VM_READ = 0x0010;
   const int MEGABYTE = 1024 * 1024;
   const int VALUE_SIZE = sizeof(int);
   const string VRCLIENT64_MODULE_NAME = "vrclient_x64.dll";
@@ -49,7 +39,6 @@ class AslHelper : Feature {
   };
 
   public static ProcessModule VrclientModule;
-  public static IntPtr ProcessHandle;
   public static bool IsLoading = false;
   public static HashSet<IntPtr> PossibleAddresses = null;
 
@@ -68,8 +57,6 @@ class AslHelper : Feature {
         if (!IsLoading)
           return;
 
-        var process = Process.GetCurrentProcess();
-        ProcessHandle = OpenProcess(PROCESS_VM_READ, false, process.Id);
         VrclientModule = GetModule(VRCLIENT64_MODULE_NAME);
       }
 
@@ -103,7 +90,7 @@ class AslHelper : Feature {
     }
   }
 
-  public static void Scan() {
+  public unsafe static void Scan() {
     var isLoading = IsLoading;
     var targetValue = isLoading ? 1 : 0;
 
@@ -116,23 +103,8 @@ class AslHelper : Feature {
     var prevCount = PossibleAddresses?.Count ?? 0;
     var filteredAddresses = new HashSet<IntPtr>();
 
-    var buffer = new byte[VrclientModule.ModuleMemorySize];
-    var readSucceeded =
-        ReadProcessMemory(ProcessHandle, VrclientModule.BaseAddress, buffer,
-                          buffer.Length, out var bytesRead);
-
-    if (!readSucceeded) {
-      MelonLogger.Error(
-          $"Read of {VRCLIENT64_MODULE_NAME} memory to find loading state address failed",
-          new Win32Exception(Marshal.GetLastWin32Error()));
-      return;
-    }
-
     foreach (var address in PossibleAddresses ?? AllAddresses()) {
-      var offset = (int)((long)address - (long)VrclientModule.BaseAddress);
-      if (offset > buffer.Length)
-        break;
-      var value = BitConverter.ToInt32(buffer, offset);
+      var value = *(int *)address;
       if (value == targetValue) {
         filteredAddresses.Add(address);
       }

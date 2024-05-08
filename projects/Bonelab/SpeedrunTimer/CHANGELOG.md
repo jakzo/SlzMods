@@ -1,3 +1,7 @@
+## 1.6.0
+
+Added a display to level leaderboards to show the time you got, even if you didn't beat your best time for the level.
+
 ## 1.5.0
 
 Added Livesplit One websocket support.

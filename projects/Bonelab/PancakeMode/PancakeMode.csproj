@@ -84,6 +84,12 @@
     <Reference Include="Unity.XR">
       <HintPath>..\..\..\references\Bonelab\UnityEngine.VRModule.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.XR.Management">
+      <HintPath>..\..\..\references\Bonelab\Unity.XR.Management.dll</HintPath>
+    </Reference>
+    <Reference Include="UniTask">
+      <HintPath>..\..\..\references\Bonelab\UniTask.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppVersion.cs" />

@@ -42,6 +42,7 @@ startup {
     };
 
     Action<Process> Scan = proc => {
+      var startTime = DateTime.Now;
       var targetValue = IsLoading ? 1 : 0;
       print("Scan(" + targetValue + ")");
 
@@ -68,13 +69,16 @@ startup {
         }
       }
 
+      var duration = (DateTime.Now - startTime).ToString();
       if (PossibleAddresses == null) {
         var totalMb = VrclientModule.ModuleMemorySize / MEGABYTE;
         print("Initial scan found " + filteredAddresses.Count +
-              " possible addresses (" + totalMb + "mb scanned)");
+              " possible addresses out of " + totalMb + "mb in " + duration +
+              "s");
       } else {
         print("Filtered down to " + filteredAddresses.Count +
-              " possible addresses (was " + PossibleAddresses.Count + ")");
+              " possible addresses from " + PossibleAddresses.Count + " in " +
+              duration + "s");
       }
 
       PossibleAddresses = filteredAddresses;

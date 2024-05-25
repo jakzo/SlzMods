@@ -55,7 +55,7 @@ export class PositionViewer {
     // this.hudCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
     // this.hudCamera.lookAt(0, 1, 0);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
     const setSize = throttle(100, () => {
       const width = opts.container.clientWidth;

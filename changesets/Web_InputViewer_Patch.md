@@ -1,0 +1,1 @@
+Add transparency to background.

@@ -1,3 +1,8 @@
+## 1.0.17
+
+Add transparency to background.
+
+
 ## 1.0.16
 
 Livesplit instructions.

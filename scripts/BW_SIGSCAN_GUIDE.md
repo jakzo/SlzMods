@@ -1,0 +1,49 @@
+- Run Boneworks with current SteamVR
+- To find loading indicator address:
+  - Scan for 0 while not loading, 1 while loading
+- Right click -> Find what accesses it
+  - 3 spots come up
+    - `rdi+C65`, `rdi+C64`, etc...
+  - Open the `C65` one in disassembler
+    - `vrclient_x64.dll+1002A9 - cmp byte ptr [rdi+00000C65],00`
+    - `rdi = 7FFC39FD8C98`
+  - Set breakpoint
+  - Find where `rdi` is set
+    - `vrclient_x64.dll+FF50A - mov rdi,rcx`
+    - `rcx = 7FFC39FD8C98`
+  - Find where `rcx` is set
+    - Not in this function so step out
+    - `UnityPlayer.dll+4DBCBC - mov rcx,[rcx+00000118]`
+  - I thought I found it after stepping out but after verifying rcx was the expected value with the debugger, turns out it wasn't
+    - Had to step into the call and find when rcx is updated to the expected value
+  - Found it here and this is the flow from the fixed offset within vrclient_x64.dll to the loading indicator:
+    - `vrclient_x64.dll+A9887 - lea rcx,[vrclient_x64.dll+3CAEB8]`
+      - rcx after = 7FFC39FD8C98
+    - `vrclient_x64.dll+8E080 - mov rcx,[rcx+08]`
+      - rcx before = 7FFC39FBAEB8
+      - rcx after = 7FFC39FD8C98
+    - `vrclient_x64.dll+FF50A - mov rdi,rcx`
+      - rcx before = 7FFC39FD8C98
+      - rdi after = 7FFC39FD8C98
+    - `vrclient_x64.dll+1002A9 - cmp byte ptr [rdi+00000C65],00`
+      - rdi before = 7FFC39FD8C98
+      - cmp (final value) = 7FFC39FD98FD
+- Ghidra
+  - Import vrclient_x64.dll into a Ghidra project (auto analyse)
+  - Downgrade SteamVR and import the old version of vrclient_x64.dll into the same project
+  - For each of the versions:
+    - Find the fixed offset above in the file (`vrclient_x64.dll+3CAEB8`) by: - Noting the file offset from the Cheat Engine disassembler (`A9887`) - Adding this to the Ghidra base address (`1800A9887`) - Navigate -> Go to -> the address and you should see the same code
+    - Right click on the fixed offset (`DAT_1803caeb8`) -> find references
+    - Skim through the references of both the new and old versions until you find a spot which best matches these criteria:
+      - Exists in both new and old version
+      - Unique looking surrounding code (to make the sigscan target more unique)
+      - Surrounding code is the same in both new and old version
+      - Generates a small AOB
+      - AOB matches both new and old version
+    - We will look for this spot to sigscan and find the fixed offset
+- Find the spot from Ghidra in the Cheat Engine disassembler
+  - Right click on a line inside the disassembler -> Go to address
+  - Calculate full address by subtracting relative address of line from full address of line then adding relative address from Ghidra
+- Tools -> Generate AOB lua script
+- Paste AOB into autosplitter
+- Log found address to see if it's working

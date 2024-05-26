@@ -1,34 +1,40 @@
 ﻿using MelonLoader;
-using HarmonyLib;
 using UnityEngine;
 using UnityEngine.XR;
 using SLZ.SaveData;
-using SLZ.UI;
+using Sst.Utilities;
+using SLZ.Marrow.Warehouse;
+using System;
+using System.Linq;
 
 namespace Sst.LoadMirror {
 public class Mod : MelonMod {
-  public override void OnInitializeMelon() { Dbg.Init(BuildInfo.NAME); }
+  private GameObject _overlay;
 
-  [HarmonyPatch(typeof(LoadingScene), nameof(LoadingScene.Start))]
-  class LoadingScene_Start_Patch {
-    [HarmonyPostfix()]
-    internal static void Postfix() {
-      Dbg.Log("LoadingScene_Start_Patch");
-      var overlay = GameObject.Find("2D_Overlay");
-      if (overlay != null) {
-        overlay.active = false;
-      } else {
-        MelonLogger.Warning("2D_Overlay not found in loading screen");
-      }
+  public override void OnInitializeMelon() {
+    Dbg.Init(BuildInfo.NAME);
 
-      // Turn XR game rendering back on when loading while spectator cam is set
-      // to fisheye (automatically turns back off after loading finishes)
-      var spectatorCameraMode =
-          DataManager.Instance._settings.SpectatorSettings.SpectatorCameraMode;
-      if (spectatorCameraMode == SpectatorCameraMode.Fisheye) {
-        Dbg.Log("XRSettings.gameViewRenderMode = GameViewRenderMode.LeftEye");
-        XRSettings.gameViewRenderMode = GameViewRenderMode.LeftEye;
-      }
+    LevelHooks.OnLoad += OnLoad;
+  }
+
+  void OnLoad(LevelCrate nextLevel) {
+    var rootObjects =
+        LevelHooks.BasicTrackingRig.gameObject.scene.GetRootGameObjects();
+    _overlay = rootObjects.FirstOrDefault(go => go.name == "2D_Overlay") ??
+               rootObjects.FirstOrDefault(go => go.name == "Canvas");
+    if (_overlay != null) {
+      _overlay.SetActive(false);
+    } else {
+      MelonLogger.Warning("Overlay not found in loading screen");
+    }
+
+    // Turn XR game rendering back on when loading while spectator cam is set
+    // to fisheye (automatically turns back off after loading finishes)
+    var spectatorCameraMode =
+        DataManager.Instance._settings.SpectatorSettings.SpectatorCameraMode;
+    if (spectatorCameraMode == SpectatorCameraMode.Fisheye) {
+      Dbg.Log("XRSettings.gameViewRenderMode = GameViewRenderMode.LeftEye");
+      XRSettings.gameViewRenderMode = GameViewRenderMode.LeftEye;
     }
   }
 }

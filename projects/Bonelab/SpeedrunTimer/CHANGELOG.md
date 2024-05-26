@@ -1,3 +1,7 @@
+## 1.7.0
+
+Works with Labworks now.
+
 ## 1.6.0
 
 Added a display to level leaderboards to show the time you got, even if you didn't beat your best time for the level.

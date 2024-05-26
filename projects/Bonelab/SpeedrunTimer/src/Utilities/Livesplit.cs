@@ -29,7 +29,7 @@ class Livesplit {
     State[0] = 0xD4;
     State[8] =
         (byte)((isLoading ? 1 : 0) << 0 | (isSittingInTaxi ? 1 : 0) << 1);
-    State[9] = Sst.Utilities.Levels.GetIndex(levelTitle);
+    State[9] = Utilities.Levels.GetIndex(levelTitle);
   }
 }
 

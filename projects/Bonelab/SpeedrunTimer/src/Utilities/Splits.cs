@@ -53,10 +53,10 @@ public class Splits {
     TimePause = null;
   }
 
-  public System.TimeSpan? GetTime() =>
+  public TimeSpan? GetTime() =>
       (TimeEnd ?? TimePause ?? DateTime.Now) - TimeStartRelative;
 
-  public System.TimeSpan? GetCurrentSplitTime() =>
+  public TimeSpan? GetCurrentSplitTime() =>
       (TimeEnd ?? TimePause ?? DateTime.Now) - TimeLastSplitStartRelative;
 
   public void Split(LevelCrate nextLevel) {
@@ -66,11 +66,13 @@ public class Splits {
     var splitTimeRelative = TimePause ?? now;
     lastItem.Duration = splitTimeRelative - TimeLastSplitStartRelative;
     TimeLastSplitStartRelative = splitTimeRelative;
-    Items.Add(new Split() {
-      Level = nextLevel,
-      Name = LevelSplitName(nextLevel),
-      TimeStart = now,
-    });
+    if (nextLevel) {
+      Items.Add(new Split() {
+        Level = nextLevel,
+        Name = LevelSplitName(nextLevel),
+        TimeStart = now,
+      });
+    }
   }
 }
 
@@ -79,6 +81,6 @@ public class Split {
   public string Name;
   public DateTime? TimeStart;
   public DateTime? TimeEnd;
-  public System.TimeSpan? Duration;
+  public TimeSpan? Duration;
 }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Sst.Utilities {
 public class Levels {
@@ -42,13 +43,18 @@ public class Levels {
         ["Baseline"] = 32,
         ["Load Default"] = 33,
         ["Load Mod"] = 34,
+
+        // Labworks
+        ["Boneworks Main Menu"] = 100,
       };
 
   public static byte GetIndex(string title) {
-    byte index;
-    if (!TitleToIndex.TryGetValue(title, out index))
-      return 0;
-    return index;
+    if (TitleToIndex.TryGetValue(title, out var index))
+      return index;
+    var labworksMatch = Regex.Match(title, @"^Boneworks_(\d+) ");
+    if (labworksMatch.Success)
+      return (byte)(100 + int.Parse(labworksMatch.Groups[1].Value));
+    return 0;
   }
 
   public class Barcodes {
@@ -96,5 +102,14 @@ public class Levels {
 
   public static bool IsMenu(string barcode) => barcode == Barcodes.MAIN_MENU
                                                || barcode == Barcodes.VOID_G114;
+
+  public class LabworksBarcodes {
+    public const string BREAKROOM =
+        "volx4.LabWorksBoneworksPort.Level.Boneworks01Breakroom";
+    public const string THRONE_ROOM =
+        "volx4.LabWorksBoneworksPort.Level.Boneworks12ThroneRoom";
+    public const string MAIN_MENU =
+        "volx4.LabWorksBoneworksPort.Level.BoneworksMainMenu";
+  }
 }
 }

@@ -9,6 +9,8 @@ using Sst.Utilities;
 
 namespace Sst.SpeedrunTimer {
 class SplitsTimer {
+  private static Color FINISH_COLOR = new Color(0.2f, 0.8f, 0.2f);
+
   private static SplitsTimer Instance;
 
   private TextMeshPro _tmp;
@@ -25,13 +27,13 @@ class SplitsTimer {
   }
 
   public static void OnInitialize() {
-    _prefHide = Mod.Instance.PrefCategory.CreateEntry<bool>(
+    _prefHide = Mod.Instance.PrefCategory.CreateEntry(
         "hide", false, "Hide in-game timer",
         "Stops the timer from displaying on your wrist. Does not hide loading screen timer.");
-    _prefHideIl = Mod.Instance.PrefCategory.CreateEntry<bool>(
+    _prefHideIl = Mod.Instance.PrefCategory.CreateEntry(
         "hideIl", false, "Hide level timer",
         "Stops the individual level timer from displaying on your wrist.");
-    _prefHideSplits = Mod.Instance.PrefCategory.CreateEntry<bool>(
+    _prefHideSplits = Mod.Instance.PrefCategory.CreateEntry(
         "hideSplits", false, "Hides split display in loading screen",
         "Stops the individual level times from displaying in the loading screen.");
   }
@@ -47,17 +49,29 @@ class SplitsTimer {
     if (nextLevel == null)
       return;
 
-    Livesplit.SetState(true, false, nextLevel.Title);
+    if (_isFinished) {
+      _splits.Reset();
+      _isFinished = false;
+    }
 
-    if (nextLevel.Barcode == Levels.Barcodes.DESCENT) {
-      Dbg.Log("Attempting to start timer");
-      Mod.Instance.SplitsServer?.Start();
-      _splits.ResetAndPause(nextLevel);
-    } else if (_splits.TimeStart.HasValue) {
-      Dbg.Log("Splitting timer");
-      Mod.Instance.SplitsServer?.Split();
-      _splits.Pause();
-      _splits.Split(nextLevel);
+    if (nextLevel.Barcode == Levels.LabworksBarcodes.MAIN_MENU &&
+        LevelHooks.PrevLevel.Barcode == Levels.LabworksBarcodes.THRONE_ROOM) {
+      _splits.Split(null);
+      Finish();
+    } else {
+      Livesplit.SetState(true, false, nextLevel.Title);
+
+      if (nextLevel.Barcode == Levels.Barcodes.DESCENT ||
+          nextLevel.Barcode == Levels.LabworksBarcodes.BREAKROOM) {
+        Dbg.Log("Attempting to start timer");
+        Mod.Instance.SplitsServer?.Start();
+        _splits.ResetAndPause(nextLevel);
+      } else if (_splits.TimeStart.HasValue) {
+        Dbg.Log("Splitting timer");
+        Mod.Instance.SplitsServer?.Split();
+        _splits.Pause();
+        _splits.Split(nextLevel);
+      }
     }
 
     var time = _splits.GetTime();
@@ -74,13 +88,10 @@ class SplitsTimer {
   public void OnLevelStart(LevelCrate level) {
     Livesplit.SetState(false, false, level.Title);
 
-    if (level.Barcode.ID == Levels.Barcodes.MAIN_MENU && _isFinished) {
-      Reset();
-    } else {
-      Mod.Instance.SplitsServer?.ResumeGameTime();
-      var loadingTime = _splits.TimeStartRelative - _splits.TimeStart;
+    Mod.Instance.SplitsServer?.ResumeGameTime();
+
+    if (!_isFinished)
       _splits.ResumeIfStarted();
-    }
 
     AddTimerToWrist();
   }
@@ -94,7 +105,9 @@ class SplitsTimer {
     _tmp.alignment = TextAlignmentOptions.BottomRight;
     _tmp.fontSize = 0.5f;
     _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
-    Utilities.Bonelab.DockToWrist(splitsText);
+    if (_isFinished)
+      _tmp.color = FINISH_COLOR;
+    Bonelab.DockToWrist(splitsText);
 
     if (_prefHideIl.Value)
       return;
@@ -108,7 +121,7 @@ class SplitsTimer {
     _tmpIl.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
     _tmpIl.rectTransform.localPosition = new Vector3(-0.005f, -0.03f, 0.005f);
     _tmpIl.color = new Color(0.2f, 0.2f, 0.2f);
-    Utilities.Bonelab.DockToWrist(ilText);
+    Bonelab.DockToWrist(ilText);
   }
 
   public void OnUpdate() {
@@ -136,7 +149,7 @@ class SplitsTimer {
     _isFinished = true;
     MelonLogger.Msg($"Stopping timer at: {_splits.GetTime()}");
     if (_tmp != null)
-      _tmp.color = new Color(0.2f, 0.8f, 0.2f);
+      _tmp.color = FINISH_COLOR;
   }
 
   [HarmonyPatch(typeof(TaxiController), nameof(TaxiController.Start))]
@@ -144,7 +157,7 @@ class SplitsTimer {
     [HarmonyPrefix()]
     internal static void Prefix(TaxiController __instance) {
       Dbg.Log("TaxiController_Start_Patch");
-      __instance.OnPlayerSeated.AddListener(new System.Action(Instance.Finish));
+      __instance.OnPlayerSeated.AddListener(new Action(Instance.Finish));
     }
   }
 }

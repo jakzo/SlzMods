@@ -12,6 +12,7 @@ static class LevelHooks {
   public static LevelCrate CurrentLevel;
   public static LevelCrate NextLevel;
   public static RigManager RigManager;
+  public static BasicTrackingRig BasicTrackingRig;
   public static bool IsLoading { get => !CurrentLevel; }
 
   public static event Action<LevelCrate> OnLoad;
@@ -60,6 +61,7 @@ static class LevelHooks {
       CurrentLevel = null;
       NextLevel = SceneStreamer.Session.Level;
       RigManager = null;
+      BasicTrackingRig = __instance;
       MelonEvents.OnUpdate.Subscribe(WaitForLoadFinished);
       Dbg.Log($"OnLoad {NextLevel?.Title}");
       SafeInvoke("OnLoad", OnLoad, NextLevel);
@@ -72,6 +74,7 @@ static class LevelHooks {
     internal static void Prefix(RigManager __instance) {
       Dbg.Log("RigManager_Awake_Patch");
       RigManager = __instance;
+      BasicTrackingRig = null;
     }
   }
 

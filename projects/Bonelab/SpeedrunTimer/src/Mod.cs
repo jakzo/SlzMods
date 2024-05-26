@@ -1,6 +1,5 @@
 ﻿using MelonLoader;
 using Sst.Utilities;
-using SLZ.Rig;
 
 namespace Sst.SpeedrunTimer {
 public class Mod : MelonMod {

@@ -3,26 +3,19 @@ state("BONELAB_Steam_Windows64") {}
 state("BONELAB_Oculus_Windows64") {}
 
 startup {
-  vars.Log = (Action<object>)(output => print("[BonelabSpeedrunTimer ASL] " + output));
+  vars.Log =
+      (Action<object>)(output => print("[BonelabSpeedrunTimer ASL] " + output));
 
   // See common/Bonelab/Levels.cs for the mapping of level titles to indexes
   vars.levelIndexDescent = 1;
+  vars.levelIndexBreakroom = 101;
 
+  settings.Add("gameTimeMsg", true,
+               "Ask if game time should be used on startup");
+  settings.Add("splitAtTaxi", true, "Split when sitting in the taxi");
   settings.Add(
-    "gameTimeMsg",
-    true,
-    "Ask if game time should be used on startup"
-  );
-  settings.Add(
-    "splitAtTaxi",
-    true,
-    "Split when sitting in the taxi"
-  );
-  settings.Add(
-    "useSpeedrunTimer",
-    true,
-    "Split based on the SpeedrunTimer mod in-game (required for now)"
-  );
+      "useSpeedrunTimer", true,
+      "Split based on the SpeedrunTimer mod in-game (required for now)");
 }
 
 init {
@@ -41,7 +34,8 @@ init {
     attempts++;
     vars.Log("Searching for SpeedrunTimer mod (attempt " + attempts + ")");
     foreach (var page in game.MemoryPages(true)) {
-      var scanner = new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
+      var scanner =
+          new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
       var ptr = scanner.Scan(target);
       if (ptr != IntPtr.Zero) {
         vars.watcher = new MemoryWatcher<uint>(ptr);
@@ -54,12 +48,10 @@ init {
       if (attempts >= 2) {
         vars.Log("Could not find SpeedrunTimer mod");
         MessageBox.Show(
-          "Could not find the SpeedrunTimer mod. Please make sure the mod is active then restart LiveSplit. " +
-            "Starting LiveSplit before the game can also sometimes cause it to not be found.",
-          "LiveSplit | BonelabSpeedrunTimer Auto Splitter",
-          MessageBoxButtons.OK,
-          MessageBoxIcon.Error
-        );
+            "Could not find the SpeedrunTimer mod. Please make sure the mod is active then restart LiveSplit. " +
+                "Starting LiveSplit before the game can also sometimes cause it to not be found.",
+            "LiveSplit | BonelabSpeedrunTimer Auto Splitter",
+            MessageBoxButtons.OK, MessageBoxIcon.Error);
         return;
       }
 
@@ -68,14 +60,13 @@ init {
     }
   } while (vars.watcher == null);
 
-  if (timer.CurrentTimingMethod == TimingMethod.RealTime && settings["gameTimeMsg"]) {
+  if (timer.CurrentTimingMethod == TimingMethod.RealTime &&
+      settings["gameTimeMsg"]) {
     var response = MessageBox.Show(
-      "You are currently comparing against \"real time\" which means you will not be able to " +
-        "submit to the leaderboard.\nWould you like to switch to \"game time\"?", 
-      "LiveSplit | BonelabSpeedrunTimer Auto Splitter",
-      MessageBoxButtons.YesNo,
-      MessageBoxIcon.Question
-    );
+        "You are currently comparing against \"real time\" which means you will not be able to " +
+            "submit to the leaderboard.\nWould you like to switch to \"game time\"?",
+        "LiveSplit | BonelabSpeedrunTimer Auto Splitter",
+        MessageBoxButtons.YesNo, MessageBoxIcon.Question);
     if (response == DialogResult.Yes)
       timer.CurrentTimingMethod = TimingMethod.GameTime;
   }
@@ -92,29 +83,28 @@ update {
   vars.nextLevelIdx = (state >> 8) & 0xFF;
 }
 
-isLoading {
-  return vars.isLoading;
-}
+isLoading { return vars.isLoading; }
 
 start {
-  return vars.nextLevelIdx != vars.prevLevelIdx && vars.nextLevelIdx == vars.levelIndexDescent;
+  return vars.nextLevelIdx != vars.prevLevelIdx &&
+         (vars.nextLevelIdx == vars.levelIndexDescent ||
+          vars.nextLevelIdx == vars.levelIndexBreakroom);
 }
 
 split {
-  return vars.nextLevelIdx != vars.prevLevelIdx ||
-    settings["splitAtTaxi"] && vars.isSittingInTaxi && !vars.prevSittingInTaxi;
+  return vars.nextLevelIdx != vars.prevLevelIdx || settings["splitAtTaxi"] &&
+                                                       vars.isSittingInTaxi &&
+                                                       !vars.prevSittingInTaxi;
 }
 
 reset {
-  var gotOutOfTaxi = settings["splitAtTaxi"] && vars.prevSittingInTaxi && !vars.isSittingInTaxi;
-  var isUnknownLevel = vars.nextLevelIdx != vars.prevLevelIdx && vars.nextLevelIdx == 0;
-  return gotOutOfTaxi || isUnknownLevel;
+  var gotOutOfTaxi = settings["splitAtTaxi"] && vars.prevSittingInTaxi &&
+                     !vars.isSittingInTaxi;
+  var isUnknownLevel =
+      vars.nextLevelIdx != vars.prevLevelIdx && vars.nextLevelIdx == 0;
+  return gotOutOfTaxi || (!vars.isSittingInTaxi && isUnknownLevel);
 }
 
-onStart {
-  timer.IsGameTimePaused = true;
-}
+onStart { timer.IsGameTimePaused = true; }
 
-exit {
-  timer.IsGameTimePaused = true;
-}
+exit { timer.IsGameTimePaused = true; }

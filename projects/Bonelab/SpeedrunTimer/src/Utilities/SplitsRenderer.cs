@@ -3,6 +3,8 @@ using UnityEngine;
 using TMPro;
 using MelonLoader;
 using System.Linq;
+using Sst.Utilities;
+using System.Text.RegularExpressions;
 
 namespace Sst.SpeedrunTimer {
 class SplitsRenderer {
@@ -13,10 +15,13 @@ class SplitsRenderer {
 
   public static void RenderLoadingWatermark(TimeSpan time) {
     Dbg.Log("RenderLoadingWatermark");
-    var camera = GameObject.Find("Main Camera");
-    if (!camera)
+    var head = LevelHooks.BasicTrackingRig?.head;
+    if (!head) {
+      MelonLogger.Warning(
+          "Failed to render watermark in loading screen because could not find head position");
       return;
-    var text = CreateText(camera.transform, "Watermark");
+    }
+    var text = CreateText(head, "Watermark");
     text.alignment = TextAlignmentOptions.TopRight;
     text.fontSize = 0.5f;
     text.rectTransform.sizeDelta = new Vector2(0.8f, 0.8f);
@@ -34,11 +39,11 @@ class SplitsRenderer {
   }
 
   public static void RenderSplits(Splits splits) {
-    var camera = GameObject.Find("Main Camera");
-    if (!camera)
+    var head = LevelHooks.BasicTrackingRig?.head;
+    if (!head)
       return;
     var container = new GameObject($"{BuildInfo.Name}_Splits");
-    container.transform.SetParent(camera.transform);
+    container.transform.SetParent(head.transform);
     container.transform.localPosition = new Vector3(-0.4f, 0.25f, 1f);
     for (var i = 0; i < splits.Items.Count; i++) {
       var split = splits.Items[i];
@@ -67,7 +72,9 @@ class SplitsRenderer {
 
       var nameText =
           CreateText(container.transform, $"Splits_Name_{split.Name}");
-      nameText.SetText(split.Name);
+      var cleanedName = Regex.Replace(split.Name, @"^boneworks(?:_\d+)?\s+", "",
+                                      RegexOptions.IgnoreCase);
+      nameText.SetText(cleanedName);
       nameText.alignment = TextAlignmentOptions.Left;
       nameText.overflowMode = TextOverflowModes.Truncate;
       nameText.rectTransform.localPosition = new Vector3(0f, 0f, 0f);

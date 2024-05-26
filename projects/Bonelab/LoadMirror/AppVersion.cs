@@ -1,3 +1,3 @@
 namespace Sst {
-static class AppVersion { public const string Value = "1.0.1"; }
+static class AppVersion { public const string Value = "1.1.0"; }
 }

@@ -20,10 +20,14 @@ jobs:
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: "6.0.x"
-      - name: Install dependencies
-        run: nuget restore SlzSpeedrunTools.sln
+      - name: Set up toolchain
+        # flatbuffers-compiler at version 2.0.6 is only available on 22.10 but we don't need it anyway
+        # run: sudo apt install -y mono-devel flatbuffers-compiler=2.0.6
+        run: sudo apt install -y mono-devel flatbuffers-compiler
+      - name: Build (.NET 4)
+        run: nuget restore SlzSpeedrunToolsNet4.sln && msbuild SlzSpeedrunToolsNet4.sln
       - name: Build
-        run: ./scripts/ci-build.sh Debug
+        run: dotnet SlzSpeedrunTools.sln
       - name: Prepare for nightly release
         run: csi ./scripts/CopyBuildsToBin.csx
       - name: Create nightly release
@@ -81,8 +85,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Install dependencies
-        run: nuget restore SlzSpeedrunTools.sln
+      - name: Set up .NET 6.0 SDK
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: "6.0.x"
+      - name: Set up toolchain
+        run: sudo apt install -y mono-devel
       - name: Bump version
         id: bump_version
         env:
@@ -91,8 +99,10 @@ jobs:
           VERSION_BUMP_TYPE: ${{ matrix.changeset.version_bump_type }}
           CHANGELOG_DESCRIPTION: ${{ matrix.changeset.changelog_description }}
         run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
+      - name: Build (.NET 4)
+        run: nuget restore SlzSpeedrunToolsNet4.sln && msbuild SlzSpeedrunToolsNet4.sln /property:Configuration=Release
       - name: Build
-        run: ./scripts/ci-build.sh Release
+        run: dotnet SlzSpeedrunTools.sln --configuration Release
       - name: Get Thunderstore package details
         id: thunderstore_details
         if: steps.bump_version.outputs.release_thunderstore == 'true'

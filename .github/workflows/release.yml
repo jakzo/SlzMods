@@ -16,8 +16,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Build
+      - name: Set up .NET 6.0 SDK
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: "6.0.x"
+      - name: Install dependencies
+        run: nuget restore SlzSpeedrunTools.sln
+      - name: Build .NET 4 projects
         run: msbuild
+      - name: Build .NET 6 projects
+        run: dotnet build -c Debug
       - name: Prepare for nightly release
         run: csi ./scripts/CopyBuildsToBin.csx
       - name: Create nightly release

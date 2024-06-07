@@ -1,8 +1,5 @@
-using MelonLoader;
-using UnityEngine;
-using SLZ.Marrow.Warehouse;
+namespace Sst.Speedometer;
 
-namespace Sst.Speedometer {
 public class Mod : MelonMod {
   private const string SPEEDOMETER_TEXT_NAME = "Speedometer";
 
@@ -11,7 +8,7 @@ public class Mod : MelonMod {
   private MelonPreferences_Entry<bool> _prefRightHand;
   private MelonPreferences_Entry<Units> _prefUnits;
   private MelonPreferences_Entry<float> _prefWindowDuration;
-  private TMPro.TextMeshPro _tmp;
+  private TextMeshPro _tmp;
   private SpeedTracker _speedTracker;
 
   public override void OnInitializeMelon() {
@@ -23,8 +20,9 @@ public class Mod : MelonMod {
         "Show speed reading on right hand instead of left");
     _prefUnits =
         category.CreateEntry("units", Units.MS, "Units to measure speed in");
-    _prefWindowDuration = category.CreateEntry(
-        "window_duration", 0.1f, "Number of seconds to average the speed over");
+    _prefWindowDuration =
+        category.CreateEntry("window_duration", 0.25f,
+                             "Number of seconds to average the speed over");
 
     Utilities.LevelHooks.OnLevelStart += OnLevelStart;
   }
@@ -55,10 +53,9 @@ public class Mod : MelonMod {
     case Units.MS:
       return $"{speedMs:N2}m/s";
     case Units.KPH:
-      return $"{(speedMs * 3.6f):N1}kph";
+      return $"{speedMs * 3.6f:N1}kph";
     case Units.MPH:
-      return $"{(speedMs * 2.237f):N1}mph";
+      return $"{speedMs * 2.237f:N1}mph";
     }
   }
-}
 }

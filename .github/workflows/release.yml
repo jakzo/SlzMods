@@ -27,7 +27,7 @@ jobs:
       - name: Build (.NET 4)
         run: nuget restore SlzSpeedrunToolsNet4.sln && msbuild SlzSpeedrunToolsNet4.sln
       - name: Build
-        run: dotnet SlzSpeedrunTools.sln
+        run: dotnet build SlzSpeedrunTools.sln
       - name: Prepare for nightly release
         run: csi ./scripts/CopyBuildsToBin.csx
       - name: Create nightly release
@@ -102,7 +102,7 @@ jobs:
       - name: Build (.NET 4)
         run: nuget restore SlzSpeedrunToolsNet4.sln && msbuild SlzSpeedrunToolsNet4.sln /property:Configuration=Release
       - name: Build
-        run: dotnet SlzSpeedrunTools.sln --configuration Release
+        run: dotnet build SlzSpeedrunTools.sln --configuration Release
       - name: Get Thunderstore package details
         id: thunderstore_details
         if: steps.bump_version.outputs.release_thunderstore == 'true'

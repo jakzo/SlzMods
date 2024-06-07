@@ -26,10 +26,8 @@ jobs:
           dotnet-version: "4.7.2"
       - name: Set up toolchain
         # flatbuffers-compiler at version 2.0.6 is only available on 22.10 but we don't need it anyway
-        # run: sudo apt install -y mono-devel flatbuffers-compiler=2.0.6
-        run: sudo apt install -y mono-devel flatbuffers-compiler
-      - name: Install dependencies
-        run: nuget restore SlzSpeedrunTools.sln
+        # run: sudo apt install -y flatbuffers-compiler=2.0.6
+        run: sudo apt install -y flatbuffers-compiler
       - name: Build
         run: dotnet build
       - name: Prepare for nightly release
@@ -89,10 +87,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Set up toolchain
-        # flatbuffers-compiler at version 2.0.6 is only available on 22.10 but we don't need it anyway
-        # run: sudo apt install -y mono-devel flatbuffers-compiler=2.0.6
-        run: sudo apt install -y mono-devel
       - name: Install dependencies
         run: nuget restore SlzSpeedrunTools.sln
       - name: Bump version

@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: nuget restore SlzSpeedrunTools.sln
       - name: Build .NET 4 projects
-        run: msbuild
+        run: msbuild /p:TargetFrameworkVersion=v4.7.2
       - name: Build .NET 6 projects
         run: dotnet build -c Debug
       - name: Prepare for nightly release

@@ -19,7 +19,8 @@ jobs:
       - name: Set up .NET 4.7.2
         uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: "4.7.2"
+          dotnet-version: "4.8"
+          include-prerelease: true
       - name: Build
         run: dotnet build
       - name: Prepare for nightly release

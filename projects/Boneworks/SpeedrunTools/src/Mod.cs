@@ -45,6 +45,9 @@ public class Mod : MelonMod {
     new Features.DebugColliders(),
     new Features.LootChanceViewer(),
     new Features.AslHelper(),
+    new Features.MuseumBhopTimer(),
+    new Features.DebugStats(),
+    new Features.GripFlyFinder(),
   };
 
   private static List<Feature> enabledFeatures = new List<Feature>();

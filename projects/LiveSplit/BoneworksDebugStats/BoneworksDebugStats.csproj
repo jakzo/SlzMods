@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{E782BFCA-90AA-A92F-22E9-85589F109ABC}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BoneworksDebugStats</RootNamespace>
+    <AssemblyName>BoneworksDebugStats</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="LiveSplit.Core">
+      <HintPath>..\..\..\references\LiveSplit\LiveSplit.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="LiveSplit.AutoSplittingRuntime">
+      <HintPath>..\..\..\references\LiveSplit\LiveSplit.AutoSplittingRuntime.dll</HintPath>
+    </Reference>
+    <Reference Include="UpdateManager">
+      <HintPath>..\..\..\references\LiveSplit\UpdateManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AppVersion.cs" />
+    <Compile Include="src/**/*.cs" />
+    <Compile Include="../../../common/Utilities/Metadata.cs" />
+    <Compile Include="../../../common/Utilities/IpcClient.cs" />
+    <Compile Include="../../../common/Boneworks/DebugStats.cs" />
+    <Compile Include="../../../common/LiveSplit/Logger.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+    <!-- <PostBuildEvent>
+      COPY "$(TargetPath)" "C:\Users\jakzo\Downloads\LiveSplit_1.8.28\Components\LiveSplit.BoneworksDebugStats.dll"
+      COPY "$(TargetPath)\..\..\..\..\..\..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll" "C:\Users\jakzo\Downloads\LiveSplit_1.8.28\Components\Newtonsoft.Json.dll"
+    </PostBuildEvent> -->
+  </PropertyGroup>
+</Project>

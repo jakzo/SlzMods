@@ -24,7 +24,7 @@ public class Server : IDisposable {
 
     Utilities.LevelHooks.OnLoad += level => UpdateProgress();
 
-    _ipcServer = new Ipc.Server(GameState.NAMED_PIPE);
+    _ipcServer = new Ipc.Server(GameState.NAMED_PIPE, new Logger());
     _ipcServer.OnClientConnected += stream => {
       Dbg.Log("OnClientConnected");
       var msg = BuildMessageToSend(_lastSentState ?? BuildGameState());
@@ -103,5 +103,10 @@ public class Server : IDisposable {
   }
 
   public void Dispose() { _ipcServer.Dispose(); }
+
+  class Logger : Ipc.Logger {
+    public override void Debug(string message) => Dbg.Log(message);
+    public override void Error(string message) => MelonLogger.Error(message);
+  }
 }
 }

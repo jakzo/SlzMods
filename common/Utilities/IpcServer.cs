@@ -4,9 +4,13 @@ using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading.Tasks;
-using MelonLoader;
 
 namespace Sst.Common.Ipc {
+public abstract class Logger {
+  public abstract void Debug(string message);
+  public abstract void Error(string message);
+}
+
 public class Server : IDisposable {
   public event Action<NamedPipeServerStream> OnClientConnected;
   public event Action<NamedPipeServerStream> OnClientDisconnected;
@@ -20,9 +24,11 @@ public class Server : IDisposable {
   private HashSet<NamedPipeServerStream> _streams =
       new HashSet<NamedPipeServerStream>();
   private bool _isDisposed = false;
+  private Logger _logger;
 
-  public Server(string name) {
+  public Server(string name, Logger logger) {
     Name = name;
+    _logger = logger;
     StartNewPipeServerThread();
   }
 
@@ -58,7 +64,7 @@ public class Server : IDisposable {
                                              PipeTransmissionMode.Message);
       _streams.Add(stream);
       stream.WaitForConnection();
-      Dbg.Log("Client connected");
+      _logger.Debug("Client connected");
       if (_isDisposed)
         return;
       StartNewPipeServerThread();
@@ -87,7 +93,7 @@ public class Server : IDisposable {
       //   }
       // }
     } catch (Exception ex) {
-      MelonLogger.Error($"Pipe server failed: {ex.ToString()}");
+      _logger.Error($"Pipe server failed: {ex}");
     }
   }
 
@@ -99,7 +105,7 @@ public class Server : IDisposable {
         SafeInvoke(() => OnClientDisconnected?.Invoke(stream));
       }
     } catch (Exception ex) {
-      MelonLogger.Error($"Failed to stop pipe server: {ex.ToString()}");
+      _logger.Error($"Failed to stop pipe server: {ex}");
     } finally {
       stream.Close();
       stream.Dispose();
@@ -110,7 +116,7 @@ public class Server : IDisposable {
     try {
       action();
     } catch (Exception ex) {
-      MelonLogger.Error($"Failed to run event: {ex.ToString()}");
+      _logger.Error($"Failed to run event: {ex}");
     }
   }
 }

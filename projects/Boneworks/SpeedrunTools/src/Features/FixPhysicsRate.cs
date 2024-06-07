@@ -3,41 +3,33 @@ using UnityEngine;
 
 namespace Sst.Features {
 class FixPhysicsRate : Feature {
-  private Valve.VR.SteamVR_Settings _steamVrSettings;
-  private Data_Manager _dataManager;
-  private int _lastPhysicsRate;
+  public readonly Pref<float> PrefTargetRate = new Pref<float>() {
+    Id = "targetPhysicsRate",
+    Name = "Physics tick rate in hertz or 0 to use setting from game menu.",
+    DefaultValue = 0f,
+  };
 
   public FixPhysicsRate() { IsDev = true; }
 
-  public override void OnApplicationStart() {
-    _steamVrSettings =
-        Resources.Load<Valve.VR.SteamVR_Settings>("SteamVR_Settings");
+  public void LockPhysicsToRefreshRate(bool isLocked) {
+    Resources.Load<Valve.VR.SteamVR_Settings>("SteamVR_Settings")
+        .lockPhysicsUpdateRateToRenderFrequency = isLocked;
   }
 
-  public override void OnEnabled() {
-    if (_steamVrSettings != null)
-      _steamVrSettings.lockPhysicsUpdateRateToRenderFrequency = false;
+  public override void OnEnabled() { LockPhysicsToRefreshRate(false); }
+
+  public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
+    LockPhysicsToRefreshRate(false);
   }
 
-  public override void OnDisabled() {
-    if (_steamVrSettings != null)
-      _steamVrSettings.lockPhysicsUpdateRateToRenderFrequency = true;
-    _dataManager = null;
-  }
+  public override void OnDisabled() { LockPhysicsToRefreshRate(true); }
 
-  public override void OnSceneWasLoaded(int buildIndex, string sceneName) {
-    _dataManager = null;
-  }
-
-  public override void OnUpdate() {
-    if (_dataManager == null)
-      _dataManager = Data_Manager.Instance;
-    if (_dataManager.physicsUpdateRate != _lastPhysicsRate &&
-        Time.timeScale > 0 && _dataManager.physicsUpdateRate > 0) {
-      Time.fixedDeltaTime =
-          Time.timeScale / (float)_dataManager.physicsUpdateRate;
-      _lastPhysicsRate = _dataManager.physicsUpdateRate;
-    }
+  public override void OnLateUpdate() {
+    var targetRate = PrefTargetRate.Read();
+    if (targetRate == 0f)
+      targetRate = Data_Manager.Instance?.physicsUpdateRate ?? 0f;
+    if (targetRate > 0f)
+      Time.fixedDeltaTime = 1f / targetRate;
   }
 }
 }

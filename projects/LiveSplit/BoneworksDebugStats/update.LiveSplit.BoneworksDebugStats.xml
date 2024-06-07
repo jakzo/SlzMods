@@ -1,0 +1,9 @@
+<updates>
+  <update version="1.0.0">
+    <files>
+      <file path="Components/BoneworksDebugStats.dll" status="changed" />
+    </files>
+    <change>Initial release.</change>
+    <changelog />
+  </update>
+</updates>

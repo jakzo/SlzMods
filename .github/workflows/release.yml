@@ -22,10 +22,8 @@ jobs:
           dotnet-version: "6.0.x"
       - name: Install dependencies
         run: nuget restore SlzSpeedrunTools.sln
-      # - name: Build .NET 4 projects
-      #   run: msbuild /p:TargetFrameworkVersion=v4.7.2
-      - name: Build .NET 6 projects
-        run: dotnet build -c Debug
+      - name: Build
+        run: ./scripts/ci-build.sh Debug
       - name: Prepare for nightly release
         run: csi ./scripts/CopyBuildsToBin.csx
       - name: Create nightly release
@@ -94,7 +92,7 @@ jobs:
           CHANGELOG_DESCRIPTION: ${{ matrix.changeset.changelog_description }}
         run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
       - name: Build
-        run: dotnet build /property:Configuration=Release
+        run: ./scripts/ci-build.sh Release
       - name: Get Thunderstore package details
         id: thunderstore_details
         if: steps.bump_version.outputs.release_thunderstore == 'true'

@@ -22,7 +22,7 @@
     <TargetFramework Condition=" '$(MelonLoader)' == '6' ">net6.0</TargetFramework>
     <TargetFramework Condition=" '$(MelonLoader)' == '5' ">net472</TargetFramework>
 
-    <ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <RootNamespace>Sst.Speedometer</RootNamespace>
     <LangVersion>default</LangVersion>

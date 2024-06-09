@@ -2,10 +2,12 @@ Shows how fast you're moving.
 
 # Installation
 
-- Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) version 0.6.2 or newer is installed in Bonelab
+- Make sure [Melon Loader](https://melonwiki.xyz/#/?id=what-is-melonloader) is installed in Bonelab
   - To install Melon Loader for Quest follow the [instructions here](https://github.com/LemonLoader/MelonLoader/wiki/Installation)
 - Download [the mod from Thunderstore](https://bonelab.thunderstore.io/package/jakzo/Speedometer/) (click on "Manual Download")
-- Open the downloaded `.zip` file and extract `Mods/Speedometer.dll` into `BONELAB/Mods/Speedometer.dll` which is usually at:
+- Open the downloaded `.zip` file and find the Mod `.dll` file matching your version of the game and Melon Loader in the `Mods` folder
+  - For example, the file at `Mods/Speedometer.P3.ML5.dll` is the mod for Bonelab patch 3 using MelonLoader 0.5.x
+- Extract this file into `BONELAB/Mods/Speedometer_*.dll` which is usually at:
 
   - Steam: `C:\Program Files (x86)\Steam\steamapps\common\BONELAB\BONELAB`
   - Oculus: `C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab`

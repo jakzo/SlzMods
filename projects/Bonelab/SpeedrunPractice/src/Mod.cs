@@ -94,7 +94,7 @@ public class Mod : MelonMod {
         DisableFeature(feature);
       }
     }
-    Utils.State.rigManager = Utilities.Bonelab.GetRigManager();
+    Utils.State.rigManager = Utilities.LevelHooks.RigManager;
     s_hotkeys.Init();
     Dbg.Log("OnLevelStart");
     OnFeatureCallback(feature => feature.OnLevelStart(level));

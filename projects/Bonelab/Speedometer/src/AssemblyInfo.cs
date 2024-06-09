@@ -1,3 +1,8 @@
+using MelonLoader;
+using System.Reflection;
+using System.Resources;
+using System.Runtime.InteropServices;
+
 [assembly:AssemblyTitle(Sst.Speedometer.BuildInfo.NAME)]
 [assembly:AssemblyDescription("")]
 [assembly:AssemblyConfiguration("")]
@@ -18,8 +23,8 @@
 
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
-namespace Sst.Speedometer;
-
+namespace Sst.Speedometer {
 public static class BuildInfo {
   public const string NAME = "Speedometer";
+}
 }

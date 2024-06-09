@@ -8,20 +8,11 @@ using UnityEngine;
 using HarmonyLib;
 using SLZ.Marrow.Input;
 using SLZ.Marrow.Utilities;
+using Sst.Utilities;
 
 namespace Sst.PancakeMode {
 public class Mod : MelonMod {
-  private static RigManager _rigManager;
-
-  public override void OnInitializeMelon() {
-    Dbg.Init(BuildInfo.NAME);
-
-    Utilities.LevelHooks.OnLevelStart += OnLevelStart;
-  }
-
-  private void OnLevelStart(LevelCrate level) {
-    _rigManager = Utilities.Bonelab.GetRigManager();
-  }
+  public override void OnInitializeMelon() { Dbg.Init(BuildInfo.NAME); }
 
   public override void OnUpdate() {}
 
@@ -58,11 +49,12 @@ public class Mod : MelonMod {
         if (Input.GetKeyUp(KeyCode.Space))
           cr._aButtonUp = true;
 
-        if (_rigManager) {
-          cr._thumbstickAxis += Input.GetKey(KeyCode.LeftControl) ? Vector2.down
-                                : _rigManager.remapHeptaRig._crouchTarget < 0f
-                                    ? Vector2.up
-                                    : Vector2.zero;
+        if (LevelHooks.RigManager) {
+          cr._thumbstickAxis +=
+              Input.GetKey(KeyCode.LeftControl) ? Vector2.down
+              : LevelHooks.RigManager.remapHeptaRig._crouchTarget < 0f
+                  ? Vector2.up
+                  : Vector2.zero;
         }
       }
 

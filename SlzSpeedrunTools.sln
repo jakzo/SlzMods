@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32510.428
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabSpeedometer", "projects\Bonelab\Speedometer\Speedometer.csproj", "{F13040F5-2641-6465-6E4A-FF7C0DA26BDF}"
+Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabSpeedometer", "projects\Bonelab\Speedometer\Project.csproj", "{F13040F5-2641-6465-6E4A-FF7C0DA26BDF}"
 EndProject
 
 Global

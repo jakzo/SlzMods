@@ -1,5 +1,15 @@
-namespace Sst.Speedometer;
+using MelonLoader;
+using UnityEngine;
 
+#if ML6
+using Il2CppSLZ.Marrow.Warehouse;
+using Il2CppTMPro;
+#else
+using SLZ.Marrow.Warehouse;
+using TMPro;
+#endif
+
+namespace Sst.Speedometer {
 public class Mod : MelonMod {
   private const string SPEEDOMETER_TEXT_NAME = "Speedometer";
 
@@ -53,9 +63,10 @@ public class Mod : MelonMod {
     case Units.MS:
       return $"{speedMs:N2}m/s";
     case Units.KPH:
-      return $"{speedMs * 3.6f:N1}kph";
+      return $"{(speedMs * 3.6f):N1}kph";
     case Units.MPH:
-      return $"{speedMs * 2.237f:N1}mph";
+      return $"{(speedMs * 2.237f):N1}mph";
     }
   }
+}
 }

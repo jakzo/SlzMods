@@ -95,5 +95,17 @@
   "dotnet.defaultSolution": "SlzSpeedrunTools.sln",
   "clangFormat.assumeFilename": "Name.cs",
   "dotnet.preferCSharpExtension": true,
-  "dotnet.server.useOmnisharp": true
+  "dotnet.server.useOmnisharp": true,
+  "xml.format.preserveSpace": [
+    "xsl:text",
+    "xsl:comment",
+    "xsl:processing-instruction",
+    "literallayout",
+    "programlisting",
+    "screen",
+    "synopsis",
+    "pre",
+    "xd:pre",
+    "HintPath"
+  ]
 }

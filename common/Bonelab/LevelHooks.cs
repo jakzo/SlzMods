@@ -2,9 +2,16 @@ using System;
 using MelonLoader;
 using UnityEngine.SceneManagement;
 using HarmonyLib;
+
+#if ML6
+using Il2CppSLZ.Marrow.Warehouse;
+using Il2CppSLZ.Marrow.SceneStreaming;
+using Il2CppSLZ.Rig;
+#else
 using SLZ.Marrow.Warehouse;
 using SLZ.Marrow.SceneStreaming;
 using SLZ.Rig;
+#endif
 
 namespace Sst.Utilities {
 static class LevelHooks {

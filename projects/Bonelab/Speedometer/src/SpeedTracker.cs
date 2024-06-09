@@ -1,5 +1,6 @@
-namespace Sst.Speedometer;
+using UnityEngine;
 
+namespace Sst.Speedometer {
 class SpeedTracker {
   public int BufferSize = 1000;
   public float WindowDuration = 1;
@@ -38,4 +39,5 @@ class SpeedTracker {
     var duration = frameEnd.Item1 - frameStart.Item1;
     return Mathf.Sqrt(dx * dx + dz * dz) / duration;
   }
+}
 }

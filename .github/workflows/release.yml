@@ -22,11 +22,14 @@ jobs:
         with:
           dotnet-version: "6.0.x"
 
+      - name: Install scripting support
+        run: dotnet tool install -g dotnet-script
+
       - name: Build
         run: nuget restore && dotnet build
 
       - name: Prepare for nightly release
-        run: csi ./scripts/CopyBuildsToBin.csx
+        run: dotnet script ./scripts/CopyBuildsToBin.csx
 
       - name: Create nightly release
         uses: softprops/action-gh-release@v1
@@ -90,6 +93,9 @@ jobs:
         with:
           dotnet-version: "6.0.x"
 
+      - name: Install scripting support
+        run: dotnet tool install -g dotnet-script
+
       - name: Bump version
         id: bump_version
         env:
@@ -97,7 +103,7 @@ jobs:
           PROJECT: ${{ matrix.changeset.project }}
           VERSION_BUMP_TYPE: ${{ matrix.changeset.version_bump_type }}
           CHANGELOG_DESCRIPTION: ${{ matrix.changeset.changelog_description }}
-        run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
+        run: dotnet script ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
 
       - name: Build
         run: nuget restore && dotnet build --configuration Release

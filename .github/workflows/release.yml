@@ -23,7 +23,7 @@ jobs:
           dotnet-version: "6.0.x"
 
       - name: Build
-        run: dotnet build
+        run: nuget restore && dotnet build
 
       - name: Prepare for nightly release
         run: csi ./scripts/CopyBuildsToBin.csx
@@ -100,7 +100,7 @@ jobs:
         run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
 
       - name: Build
-        run: dotnet build SlzSpeedrunTools.sln --configuration Release
+        run: nuget restore && dotnet build --configuration Release
 
       - name: Get Thunderstore package details
         id: thunderstore_details

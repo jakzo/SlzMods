@@ -12,8 +12,21 @@ void CopyBuildsToBin() {
       continue;
     foreach (var projectDir in Directory.EnumerateDirectories(gameDir)) {
       var buildFilename = $"{Path.GetFileName(projectDir)}.dll";
-      var buildFile = Path.Combine(projectDir, "bin", "Debug", buildFilename);
-      File.Copy(buildFile, Path.Combine(BIN_DIR, $"{gameName}{buildFilename}"));
+      var debugDir = Path.Combine(projectDir, "bin", "Debug");
+      var buildFile = Path.Combine(debugDir, buildFilename);
+      if (File.Exists(buildFile)) {
+        File.Copy(buildFile,
+                  Path.Combine(BIN_DIR, $"{gameName}{buildFilename}"));
+      } else {
+        foreach (var buildDir in Directory.EnumerateDirectories(debugDir)) {
+          foreach (var file in Directory.EnumerateFiles(buildDir)) {
+            var filename = Path.GetFileName(projectDir);
+            if (filename.EndsWith(".dll")) {
+              File.Copy(file, Path.Combine(BIN_DIR, $"{gameName}{filename}"));
+            }
+          }
+        }
+      }
     }
   }
 }

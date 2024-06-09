@@ -8,7 +8,7 @@ on:
 jobs:
   prerelease:
     name: Prerelease
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     environment: Release
     outputs:
       csharp_changesets: ${{ toJson(fromJson(steps.changesets.outputs.result).csharp) }}
@@ -16,20 +16,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
       - name: Set up .NET 6.0 SDK
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: "6.0.x"
-      - name: Set up toolchain
-        # flatbuffers-compiler at version 2.0.6 is only available on 22.10 but we don't need it anyway
-        # run: sudo apt install -y mono-devel flatbuffers-compiler=2.0.6
-        run: sudo apt install -y mono-devel flatbuffers-compiler
-      - name: Build (.NET 4)
-        run: nuget restore SlzSpeedrunToolsNet4.sln && msbuild SlzSpeedrunToolsNet4.sln
+
       - name: Build
-        run: dotnet build SlzSpeedrunTools.sln
+        run: dotnet build
+
       - name: Prepare for nightly release
         run: csi ./scripts/CopyBuildsToBin.csx
+
       - name: Create nightly release
         uses: softprops/action-gh-release@v1
         with:
@@ -41,6 +39,7 @@ jobs:
 
             These are testing builds used for development of the mods. They contain the most recent changes which are usually untested and broken. Use at your own risk.
           files: ./bin/*.dll
+
       - name: Load changesets
         id: changesets
         uses: actions/github-script@v6
@@ -75,7 +74,7 @@ jobs:
 
   release-csharp:
     name: Release (C#)
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     environment: Release
     needs: prerelease
     if: ${{ needs.prerelease.outputs.csharp_changesets != '[]' }}
@@ -85,12 +84,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
       - name: Set up .NET 6.0 SDK
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: "6.0.x"
-      - name: Set up toolchain
-        run: sudo apt install -y mono-devel
+
       - name: Bump version
         id: bump_version
         env:
@@ -99,10 +98,10 @@ jobs:
           VERSION_BUMP_TYPE: ${{ matrix.changeset.version_bump_type }}
           CHANGELOG_DESCRIPTION: ${{ matrix.changeset.changelog_description }}
         run: csi ./scripts/Release.csx "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
-      - name: Build (.NET 4)
-        run: nuget restore SlzSpeedrunToolsNet4.sln && msbuild SlzSpeedrunToolsNet4.sln /property:Configuration=Release
+
       - name: Build
         run: dotnet build SlzSpeedrunTools.sln --configuration Release
+
       - name: Get Thunderstore package details
         id: thunderstore_details
         if: steps.bump_version.outputs.release_thunderstore == 'true'
@@ -136,10 +135,26 @@ jobs:
             const filesDir = path.join(projectDir, "thunderstore", "files");
             const modsDir = path.join(filesDir, "Mods");
             fs.mkdirSync(modsDir, { recursive: true });
-            fs.copyFileSync(
-              path.join(projectDir, "bin", "Release", `${project}.dll`),
-              path.join(modsDir, `${project}.dll`)
-            );
+            const releasePath = path.join(projectDir, "bin", "Release");
+            const filePath = path.join(releasePath, `${project}.dll`);
+            if (fs.existsSync(filePath)) {
+              fs.copyFileSync(
+                path.join(projectDir, "bin", "Release", `${project}.dll`),
+                path.join(modsDir, `${project}.dll`)
+              );
+            } else {
+              for (const entry of fs.readdirSync(releasePath, { withFileTypes: true })) {
+                if (!entry.isDirectory()) continue;
+                const buildDir = path.join(releasePath, entry.name);
+                for (const entry of fs.readdirSync(buildDir, { withFileTypes: true })) {
+                  if (!entry.isFile() || !entry.name.endsWith(".dll")) continue;
+                  fs.copyFileSync(
+                    path.join(buildDir, entry.name),
+                    path.join(modsDir, entry.name)
+                  );
+                }
+              }
+            }
             fs.writeFileSync(
               path.join(filesDir, "README.md"),
               `${readmeContents}\n# Changelog\n\n${changelogContents}`
@@ -156,9 +171,12 @@ jobs:
               version: process.env["NEW_VERSION"],
               description: readmeContents.split("\n\n", 1)[0],
               website: `https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/${game}/${project}`,
-              deps: manifest.dependencies.map((dep) => dep.replace(/-([^-]+)$/, "@$1")).join(" "),
+              deps: manifest.dependencies
+                .map((dep) => dep.replace(/-([^-]+)$/, "@$1"))
+                .join(" "),
               path: filesDir,
             };
+
       - name: Release to Thunderstore
         uses: GreenTF/upload-thunderstore-package@v4.2
         if: steps.bump_version.outputs.release_thunderstore == 'true'
@@ -173,6 +191,7 @@ jobs:
           website: ${{ fromJson(steps.thunderstore_details.outputs.result).website }}
           deps: ${{ fromJson(steps.thunderstore_details.outputs.result).deps }}
           path: ${{ fromJson(steps.thunderstore_details.outputs.result).path }}
+
       - name: Copy LiveSplit build for commit
         if: steps.bump_version.outputs.release_livesplit == 'true'
         env:
@@ -184,6 +203,7 @@ jobs:
           cd "./projects/$GAME/$PROJECT"
           mkdir -p "./Components"
           cp "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
+
       - name: Commit version bump
         run: |
           set -eux
@@ -204,6 +224,7 @@ jobs:
             fi
           done
           exit 1
+
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -227,12 +248,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
       - uses: actions/setup-node@v3
         with:
           node-version: 18.x
           registry-url: https://registry.npmjs.org
+
       - name: Install dependencies
         run: npm ci
+
       - name: Bump versions
         uses: actions/github-script@v6
         env:
@@ -270,8 +294,10 @@ jobs:
               );
               fs.unlinkSync(path.join("changesets", changeset.filename));
             }
+
       - name: Build
         run: npm -ws run build
+
       - name: Publish to npm
         uses: actions/github-script@v6
         env:
@@ -295,6 +321,7 @@ jobs:
               );
               if (result.status) throw new Error("Command failed");
             }
+
       - name: Commit version bumps
         run: |
           set -eux
@@ -303,6 +330,7 @@ jobs:
           git add -A
           git commit -m "Release" --no-verify
           git push --no-verify
+
       - name: Check if should deploy pages
         id: deploy_pages
         uses: actions/github-script@v6
@@ -313,9 +341,11 @@ jobs:
             var projects = new Set(JSON.parse(process.env.CHANGESETS).map(changeset => changeset.project));
             console.log(projects);
             return ["vr-input-viewer"].some(name => projects.has(name));
+
       - name: Bundle pages
         if: ${{ steps.deploy_pages.outputs.result == 'true' }}
         run: ./pages/build.sh
+
       - name: Upload vr.jf.id.au
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -325,11 +355,13 @@ jobs:
           password: ${{ secrets.IF_FTP_PASSWORD }}
           local-dir: ./pages/dist/vr.jf.id.au/
           server-dir: ./vr.jf.id.au/htdocs/
+
       - name: Upload pages artifact
         if: ${{ steps.deploy_pages.outputs.result == 'true' }}
         uses: actions/upload-pages-artifact@v2
         with:
           path: ./pages/dist/github-pages
+
       - name: Deploy pages
         if: ${{ steps.deploy_pages.outputs.result == 'true' }}
         uses: actions/deploy-pages@v2

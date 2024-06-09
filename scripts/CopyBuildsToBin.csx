@@ -11,17 +11,22 @@ void CopyBuildsToBin() {
     if (new[] { "Web", "Quest" }.Contains(gameName))
       continue;
     foreach (var projectDir in Directory.EnumerateDirectories(gameDir)) {
+      Console.WriteLine($"projectDir = {projectDir}");
       var buildFilename = $"{Path.GetFileName(projectDir)}.dll";
       var debugDir = Path.Combine(projectDir, "bin", "Debug");
       var buildFile = Path.Combine(debugDir, buildFilename);
       if (File.Exists(buildFile)) {
+        Console.WriteLine($"Copying {buildFile}");
         File.Copy(buildFile,
                   Path.Combine(BIN_DIR, $"{gameName}{buildFilename}"));
       } else {
         foreach (var buildDir in Directory.EnumerateDirectories(debugDir)) {
+          Console.WriteLine($"buildDir = {buildDir}");
           foreach (var file in Directory.EnumerateFiles(buildDir)) {
-            var filename = Path.GetFileName(projectDir);
+            Console.WriteLine($"file = {file}");
+            var filename = Path.GetFileName(file);
             if (filename.EndsWith(".dll")) {
+              Console.WriteLine($"Copying {file}");
               File.Copy(file, Path.Combine(BIN_DIR, $"{gameName}{filename}"));
             }
           }

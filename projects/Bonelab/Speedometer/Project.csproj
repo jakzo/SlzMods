@@ -1,4 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
+  <!-- All game/Melon Loader version combinations to build -->
+  <!-- You can append `;CopyIntoGameAfterBuild=true` to one of the `Properties` here -->
   <Target Name="BuildAll">
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5" />
@@ -9,12 +11,16 @@
   </Target>
 
   <PropertyGroup>
+    <!-- Defaults (used by IDE autocomplete/syntax highlighting) -->
+    <TargetFrameworks Condition=" '$(MelonLoader)' == '' ">net6.0;net472</TargetFrameworks>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Patch Condition=" '$(Patch)' == '' ">4</Patch>
+    <MelonLoader Condition=" '$(MelonLoader)' == '' ">6</MelonLoader>
+
     <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
 
     <TargetFramework Condition=" '$(MelonLoader)' == '6' ">net6.0</TargetFramework>
     <TargetFramework Condition=" '$(MelonLoader)' == '5' ">net472</TargetFramework>
-    <TargetFrameworks Condition=" '$(MelonLoader)' == '' ">net6.0;net472</TargetFrameworks>
 
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
@@ -107,15 +113,6 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(MelonLoader)' == '5' ">
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-
     <Reference Include="MelonLoader">
       <HintPath>..\..\..\references\ML$(MelonLoader)\MelonLoader.dll</HintPath>
       <Private>false</Private>
@@ -179,7 +176,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent"
-    Condition=" '$(OS)' == 'Windows_NT' and false ">
+    Condition=" '$(OS)' == 'Windows_NT' and '$(CopyIntoGameAfterBuild)' == 'true' ">
     <Exec
       Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods&quot;" />
   </Target>

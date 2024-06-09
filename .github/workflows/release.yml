@@ -103,7 +103,7 @@ jobs:
           PROJECT: ${{ matrix.changeset.project }}
           VERSION_BUMP_TYPE: ${{ matrix.changeset.version_bump_type }}
           CHANGELOG_DESCRIPTION: ${{ matrix.changeset.changelog_description }}
-        run: dotnet script ./scripts/Release.csx -- "$GAME" "$PROJECT" "$VERSION_BUMP_TYPE" "$CHANGELOG_DESCRIPTION"
+        run: dotnet script ./scripts/Release.csx -- "$env:GAME" "$env:PROJECT" "$env:VERSION_BUMP_TYPE" "$env:CHANGELOG_DESCRIPTION"
 
       - name: Build
         run: nuget restore && dotnet build --configuration Release

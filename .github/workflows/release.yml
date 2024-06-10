@@ -94,7 +94,9 @@ jobs:
           dotnet-version: "6.0.x"
 
       - name: Install dotnet tools
-        run: dotnet tool install -g dotnet-script tcli
+        run: |
+          dotnet tool install -g dotnet-script
+          dotnet tool install -g tcli
 
       - name: Bump version
         id: bump_version
@@ -123,31 +125,32 @@ jobs:
           GAME: ${{ matrix.changeset.game }}
           PROJECT: ${{ matrix.changeset.project }}
         run: |
-          set -eux
-          DLL_NAME="$PROJECT.dll"
-          cd "./projects/$GAME/$PROJECT"
-          mkdir -p "./Components"
-          cp "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
+          $DLL_NAME = "$env:PROJECT.dll"
+          cd "./projects/$env:GAME/$env:PROJECT"
+          mkdir -Force "./Components"
+          Copy-Item "./bin/Release/$DLL_NAME" "./Components/$DLL_NAME"
 
       - name: Commit version bump
         run: |
-          set -eux
-          rm "./changesets/${{ matrix.changeset.filename }}"
+          Remove-Item "./changesets/${{ matrix.changeset.filename }}"
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "Release" --no-verify
-          for i in {1..3}; do
+          for ($i = 0; $i -lt 3; $i++) {
             git fetch
-            if ! git rebase --autostash --no-verify; then
+            try {
+              git rebase --autostash --no-verify
+            } catch {
               git rebase --abort
-              echo "Failed to rebase with main, probably due to git conflict. Manual fix required..."
+              Write-Output "Failed to rebase with main, probably due to git conflict. Manual fix required..."
               exit 1
-            fi
-            if git push --no-verify; then
+            }
+            if (git push --no-verify) {
               exit 0
-            fi
-          done
+            }
+          }
+          Write-Output "Failed to push version bump after 3 retries. Manual fix required..."
           exit 1
 
       - name: Create release
@@ -249,12 +252,26 @@ jobs:
 
       - name: Commit version bumps
         run: |
-          set -eux
+          Remove-Item "./changesets/${{ matrix.changeset.filename }}"
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "Release" --no-verify
-          git push --no-verify
+          for ($i = 0; $i -lt 3; $i++) {
+            git fetch
+            try {
+              git rebase --autostash --no-verify
+            } catch {
+              git rebase --abort
+              Write-Output "Failed to rebase with main, probably due to git conflict. Manual fix required..."
+              exit 1
+            }
+            if (git push --no-verify) {
+              exit 0
+            }
+          }
+          Write-Output "Failed to push version bump after 3 retries. Manual fix required..."
+          exit 1
 
       - name: Check if should deploy pages
         id: deploy_pages

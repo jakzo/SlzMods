@@ -5,8 +5,6 @@
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5" />
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
-      Properties="Configuration=$(Configuration);Patch=4;MelonLoader=5" />
-    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=4;MelonLoader=6" />
   </Target>
 
@@ -101,6 +99,10 @@
       <HintPath>..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\Unity.TextMeshPro.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.VRModule">
+      <HintPath>..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\UnityEngine.VRModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
@@ -161,7 +163,7 @@
       <HintPath>..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="Unity.XR">
+    <Reference Include="UnityEngine.VRModule">
       <HintPath>..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\UnityEngine.VRModule.dll</HintPath>
       <Private>false</Private>
     </Reference>

@@ -1,11 +1,17 @@
-﻿using MelonLoader;
+﻿using System;
+using System.Linq;
+using MelonLoader;
 using UnityEngine;
 using UnityEngine.XR;
-using SLZ.SaveData;
 using Sst.Utilities;
+
+#if ML6
+using Il2CppSLZ.SaveData;
+using Il2CppSLZ.Marrow.Warehouse;
+#else
+using SLZ.SaveData;
 using SLZ.Marrow.Warehouse;
-using System;
-using System.Linq;
+#endif
 
 namespace Sst.LoadMirror {
 public class Mod : MelonMod {

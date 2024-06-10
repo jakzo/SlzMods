@@ -1,0 +1,28 @@
+[config]
+schemaVersion = "0.0.1"
+
+
+[package]
+namespace = "jakzo"
+name = "LoadMirror"
+versionNumber = "1.1.0"
+description = "Shows the headset view during loading screens instead of a still image."
+websiteUrl = "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/LoadMirror"
+containsNsfwContent = false
+
+[package.dependencies]
+
+
+[build]
+icon = "./icon.png"
+readme = "./generated-README.md"
+outdir = "./build"
+
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "bonelab" ]
+
+[publish.categories]
+bonelab = [ "code-mods" ]
+

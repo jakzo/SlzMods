@@ -1,0 +1,28 @@
+[config]
+schemaVersion = "0.0.1"
+
+
+[package]
+namespace = "jakzo"
+name = "Speedometer"
+versionNumber = "1.1.0"
+description = "Shows how fast you're moving."
+websiteUrl = "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/Speedometer"
+containsNsfwContent = false
+
+[package.dependencies]
+
+
+[build]
+icon = "./icon.png"
+readme = "./generated-README.md"
+outdir = "./build"
+
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "bonelab" ]
+
+[publish.categories]
+bonelab = [ "code-mods" ]
+

@@ -1,4 +1,5 @@
-/projects/*/*/thunderstore/files/
+/projects/*/*/thunderstore/build/
+/projects/*/*/thunderstore/generated-README.md
 
 
 ## Ignore Visual Studio temporary files, build results, and

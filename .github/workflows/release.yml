@@ -114,6 +114,7 @@ jobs:
           GAME: ${{ matrix.changeset.game }}
           PROJECT: ${{ matrix.changeset.project }}
           NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
+          TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
         run: node ./scripts/release-to-thunderstore.mjs "$env:GAME" "$env:PROJECT" "$env:NEW_VERSION"
 
       - name: Copy LiveSplit build for commit

@@ -1,3 +1,8 @@
+## 1.8.0
+
+Update for patch 4.
+
+
 ## 1.7.0
 
 Works with Labworks now.

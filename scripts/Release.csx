@@ -13,23 +13,12 @@ string SemverIncrement(string version, int semverTypeIdx) {
   return String.Join(".", parts);
 }
 
-bool UpdateThunderstoreManifest(string projectRelativePath, string newVersion) {
-  string manifestPath = $"{projectRelativePath}/thunderstore/manifest.json";
-  if (!File.Exists(manifestPath)) {
+bool ShouldReleaseToThunderstore(string projectRelativePath,
+                                 string newVersion) {
+  if (!File.Exists($"{projectRelativePath}/thunderstore/thunderstore.toml")) {
     Console.WriteLine($"No ThunderStore manifest found. Skipping.");
     return false;
   }
-
-  var manifestJson = File.ReadAllText(manifestPath);
-  const string MANIFEST_SEARCH_TERM = "\"version_number\": \"";
-  var manifestStartIdx = manifestJson.IndexOf(MANIFEST_SEARCH_TERM);
-  if (manifestStartIdx == -1)
-    throw new Exception("Manifest version not found");
-  manifestStartIdx += MANIFEST_SEARCH_TERM.Length;
-  var manifestEndIdx = manifestJson.IndexOf("\"", manifestStartIdx);
-  File.WriteAllText(manifestPath, manifestJson.Substring(0, manifestStartIdx) +
-                                      newVersion +
-                                      manifestJson.Substring(manifestEndIdx));
   return true;
 }
 
@@ -109,9 +98,6 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
                                         newVersion +
                                         appCode.Substring(appEndIdx));
 
-  var isThunderStorePackage =
-      UpdateThunderstoreManifest(projectRelativePath, newVersion);
-
   UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
   var isLiveSplitComponent = UpdateLiveSplitChangelog(
       projectRelativePath, projectName, newVersion, changelogDescription);
@@ -123,7 +109,9 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
   var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
   File.AppendAllText(githubOutput, $"new_version={newVersion}\n");
   File.AppendAllText(githubOutput, $"changelog={escapedChangelog}\n");
-  var releaseThunderstore = isThunderStorePackage ? "true" : "false";
+  var releaseThunderstore =
+      ShouldReleaseToThunderstore(projectRelativePath, newVersion) ? "true"
+                                                                   : "false";
   File.AppendAllText(githubOutput,
                      $"release_thunderstore={releaseThunderstore}\n");
   var releaseLiveSplit = isLiveSplitComponent ? "true" : "false";

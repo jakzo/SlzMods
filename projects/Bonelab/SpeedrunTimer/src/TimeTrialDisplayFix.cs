@@ -1,11 +1,14 @@
 using System;
-using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
-using TMPro;
-using SLZ.Marrow.Warehouse;
+
+#if ML6
+using Il2CppSLZ.Bonelab;
+using Il2CppTMPro;
+#else
 using SLZ.Bonelab;
-using Sst.Utilities;
+using TMPro;
+#endif
 
 namespace Sst.SpeedrunTimer {
 class TimeTrialDisplayFix {

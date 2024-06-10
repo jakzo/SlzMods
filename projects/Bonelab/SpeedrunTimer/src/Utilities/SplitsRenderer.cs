@@ -1,10 +1,15 @@
 using System;
 using UnityEngine;
-using TMPro;
 using MelonLoader;
 using System.Linq;
 using Sst.Utilities;
 using System.Text.RegularExpressions;
+
+#if ML6
+using Il2CppTMPro;
+#else
+using TMPro;
+#endif
 
 namespace Sst.SpeedrunTimer {
 class SplitsRenderer {

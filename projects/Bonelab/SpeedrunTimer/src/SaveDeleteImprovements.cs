@@ -3,7 +3,16 @@ using System.IO;
 using UnityEngine;
 using MelonLoader;
 using HarmonyLib;
+
+#if ML6
+using Il2CppSLZ.Bonelab.SaveData;
+using Il2CppSLZ.Marrow.SaveData;
+#elif PATCH4
+using SLZ.Bonelab.SaveData;
+using SLZ.Marrow.SaveData;
+#else
 using SLZ.SaveData;
+#endif
 
 namespace Sst.SpeedrunTimer {
 public static class SaveDeleteImprovements {
@@ -45,20 +54,55 @@ public static class SaveDeleteImprovements {
     }
   }
 
-  // According to dnSpy this is the only hookable method which is called after
-  // the Mods folder is deleted and before the application quits
+#if PATCH4 && ML5
+// Melon Loader 0.5 messes up the order of the generics in MarrowDataManager
+// so it cannot be patched unfortunately meaning no stopping Mods from being
+// deleted on Quest patch 4 :'(
+// [HarmonyPatch(typeof(MarrowDataManager<DataManager, Save, Settings,
+//                                        PlayerProgression, PlayerUnlocks>),
+//               "get_SavePath")]
+// class MarrowDataManager_SavePath_Patch {
+//   [HarmonyPrefix()]
+//   internal static void Prefix() {
+//     Dbg.Log("MarrowDataManager_SavePath_Patch");
+//     RestoreModsBackup();
+//   }
+// }
+#else
+
+// According to Ghidra this is the only hookable method which is called after
+// the Mods folder is deleted and before the application quits
+#if ML6
+  [HarmonyPatch(typeof(MarrowDataManager<DataManager, Save, Settings,
+                                         PlayerProgression, PlayerUnlocks>),
+                "get_SavePath")]
+  class MarrowDataManager_SavePath_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix() {
+      Dbg.Log("MarrowDataManager_SavePath_Patch");
+      RestoreModsBackup();
+    }
+  }
+#else
   [HarmonyPatch(typeof(DataManager), nameof(DataManager.SavePath),
                 MethodType.Getter)]
   class DataManager_SavePath_Patch {
     [HarmonyPrefix()]
     internal static void Prefix() {
       Dbg.Log("DataManager_SavePath_Patch");
-      if (_modsBackupPath != null && Directory.Exists(_modsBackupPath) &&
-          !Directory.Exists(GetModsPath())) {
-        Directory.Move(_modsBackupPath, GetModsPath());
-        _modsBackupPath = null;
-      }
+      RestoreModsBackup();
     }
   }
+#endif
+
+  private static void RestoreModsBackup() {
+    if (_modsBackupPath != null && Directory.Exists(_modsBackupPath) &&
+        !Directory.Exists(GetModsPath())) {
+      Directory.Move(_modsBackupPath, GetModsPath());
+      _modsBackupPath = null;
+    }
+  }
+
+#endif
 }
 }

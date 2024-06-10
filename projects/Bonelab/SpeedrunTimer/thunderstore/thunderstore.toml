@@ -1,0 +1,28 @@
+[config]
+schemaVersion = "0.0.1"
+
+
+[package]
+namespace = "jakzo"
+name = "SpeedrunTimer"
+versionNumber = "1.7.0"
+description = "Timer for Bonelab speedruns."
+websiteUrl = "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/SpeedrunTimer"
+containsNsfwContent = false
+
+[package.dependencies]
+
+
+[build]
+icon = "./icon.png"
+readme = "./generated-README.md"
+outdir = "./build"
+
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "bonelab" ]
+
+[publish.categories]
+bonelab = [ "code-mods" ]
+

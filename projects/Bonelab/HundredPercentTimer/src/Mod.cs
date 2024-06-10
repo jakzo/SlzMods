@@ -23,15 +23,10 @@ public class Mod : MelonMod {
   }
 
   private void ServerSendIfNecessary() {
-    if (Utilities.AntiCheat.CheckRunLegitimacy<Mod>()) {
-      if (_server == null)
-        _server = new Server();
-      else
-        _server.SendStateIfChanged();
-    } else if (_server != null) {
-      _server.Dispose();
-      _server = null;
-    }
+    if (_server == null)
+      _server = new Server();
+    else
+      _server.SendStateIfChanged();
   }
 
   private void SendStateOnArenaCompletion(LevelCrate level) {

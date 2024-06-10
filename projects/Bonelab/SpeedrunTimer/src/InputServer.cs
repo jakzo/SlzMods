@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using MelonLoader;
 using UnityEngine;
+
+#if ML6
+using Il2CppSLZ.Marrow.Input;
+using Il2CppSLZ.Marrow.Utilities;
+#else
 using SLZ.Marrow.Input;
 using SLZ.Marrow.Utilities;
+#endif
 
 namespace Sst.SpeedrunTimer {
 public class InputServer {

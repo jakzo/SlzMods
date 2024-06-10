@@ -2,10 +2,17 @@
 using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
-using TMPro;
-using SLZ.Marrow.Warehouse;
-using SLZ.Bonelab;
 using Sst.Utilities;
+
+#if ML6
+using Il2CppSLZ.Bonelab;
+using Il2CppSLZ.Marrow.Warehouse;
+using Il2CppTMPro;
+#else
+using SLZ.Bonelab;
+using SLZ.Marrow.Warehouse;
+using TMPro;
+#endif
 
 namespace Sst.SpeedrunTimer {
 class SplitsTimer {

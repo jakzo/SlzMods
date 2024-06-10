@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+
+#if ML6
+using Il2CppSLZ.Marrow.Warehouse;
+#else
 using SLZ.Marrow.Warehouse;
+#endif
 
 namespace Sst.SpeedrunTimer {
 public class Splits {

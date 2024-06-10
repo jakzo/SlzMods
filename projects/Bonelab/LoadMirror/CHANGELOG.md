@@ -1,3 +1,8 @@
+## 1.1.1
+
+Added builds for different versions of the game.
+
+
 ## 1.1.0
 
 Works with Labworks now.

@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "jakzo"
 name = "Speedometer"
-versionNumber = "1.1.1"
+versionNumber = "1.1.2"
 description = "Shows how fast you're moving."
 websiteUrl = "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/Speedometer"
 containsNsfwContent = false

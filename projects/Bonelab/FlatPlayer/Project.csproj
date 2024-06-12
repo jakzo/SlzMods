@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
+  <!-- All game/Melon Loader version combinations to build -->
+  <!-- You can append `;CopyIntoGameAfterBuild=true` to one of the `Properties` here -->
+  <Target Name="BuildAll">
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+      Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5;CopyIntoGameAfterBuild=true" />
+    <!-- <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+      Properties="Configuration=$(Configuration);Patch=4;MelonLoader=5" />
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+      Properties="Configuration=$(Configuration);Patch=4;MelonLoader=6" /> -->
+  </Target>
+
+  <PropertyGroup>
+    <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
+    <RootNamespace>Sst.FlatPlayer</RootNamespace>
+    <OutputPath>bin\$(Configuration)\Patch$(Patch)_MelonLoader0.$(MelonLoader)\</OutputPath>
+    <AssemblyName>FlatPlayer.P$(Patch).ML$(MelonLoader)</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="AppVersion.cs" />
+    <Compile Include="src/**/*.cs" />
+    <Compile Include="../../../common/Utilities/Metadata.cs" />
+    <Compile Include="../../../common/Utilities/Dbg.cs" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,86 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Defaults (used by IDE autocomplete/syntax highlighting) -->
+    <TargetFrameworks Condition=" '$(MelonLoader)' == '' ">net6.0;net472</TargetFrameworks>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Patch Condition=" '$(Patch)' == '' ">3</Patch>
+    <MelonLoader Condition=" '$(MelonLoader)' == '' ">5</MelonLoader>
+
+    <TargetFramework Condition=" '$(MelonLoader)' == '6' ">net6.0</TargetFramework>
+    <TargetFramework Condition=" '$(MelonLoader)' == '5' ">net472</TargetFramework>
+
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>default</LangVersion>
+    <IsPackable>false</IsPackable>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+    <DefineConstants>TRACE;PATCH$(Patch);MELONLOADER;ML$(MelonLoader)</DefineConstants>
+
+    <OutputPath>bin\$(Configuration)\Patch$(Patch)_MelonLoader0.$(MelonLoader)\</OutputPath>
+
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+
+    <GameRefsPath>..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)</GameRefsPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent"
+    Condition=" '$(OS)' == 'Windows_NT' and '$(CopyIntoGameAfterBuild)' == 'true' ">
+    <Exec
+      Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods&quot;" />
+  </Target>
+
+  <ItemGroup>
+    <Reference
+      Include="..\..\..\references\ML$(MelonLoader)\*.dll;$(GameRefsPath)\Assembly-CSharp.dll;$(GameRefsPath)\Unity*.dll;$(GameRefsPath)\SLZ*.dll;$(GameRefsPath)\Il2Cpp*.dll;$(GameRefsPath)\Newtonsoft*.dll;$(GameRefsPath)\Unhollower*.dll">
+      <HintPath>$(FullPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- <ItemGroup>
+    <Reference
+  Include="..\..\..\references\ML$(MelonLoader)\*.dll;..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\*.dll">
+      <HintPath>$(FullPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup> -->
+
+  <Target Name="AliasConflictingReferences"
+    BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <ItemGroup>
+      <ReferencePath
+        Condition=" '%(FileName)' == 'System.Net.Http.Formatting' ">
+        <Aliases>SystemNetHttpFormatting</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -1,7 +1,8 @@
 ﻿using MelonLoader;
 using Sst.Utilities;
 
-namespace Sst.SpeedrunTimer {
+namespace Sst.SpeedrunTimer;
+
 public class Mod : MelonMod {
   public const string PREF_CATEGORY_ID = BuildInfo.Name;
 
@@ -31,5 +32,4 @@ public class Mod : MelonMod {
     _timer.OnUpdate();
     _inputServer?.SendInputState();
   }
-}
 }

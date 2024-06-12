@@ -41,11 +41,13 @@ Project("{D47BB0CA-36CA-0AA0-74ED-4117FDB1FCE4}") = "BonelabThirdPersonCamera", 
 EndProject
 Project("{1D0D07E2-0C07-604C-1B55-2A84455C427E}") = "BonelabTasTool", "projects\Bonelab\TasTool\TasTool.csproj", "{BC8503B6-89E1-171A-9C86-3673F3F8EA13}"
 EndProject
-Project("{9C2FCA83-0D5B-3617-C065-E60B9F23F746}") = "BonelabHitboxes", "projects\Bonelab\Hitboxes\Hitboxes.csproj", "{D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}"
+Project("{9C2FCA83-0D5B-3617-C065-E60B9F23F746}") = "BonelabColliders", "projects\Bonelab\Colliders\Project.csproj", "{D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}"
 EndProject
 Project("{DC2D8CF7-AF23-373A-3B1B-6B571C815BC7}") = "BonelabPancakeMode", "projects\Bonelab\PancakeMode\PancakeMode.csproj", "{36334481-E244-AFBB-451D-DC47A3ED475D}"
 EndProject
 Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabSpeedometer", "projects\Bonelab\Speedometer\Project.csproj", "{F13040F5-2641-6465-6E4A-FF7C0DA26BDF}"
+EndProject
+Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabFlatPlayer", "projects\Bonelab\FlatPlayer\Project.csproj", "{A479E098-5DBD-4032-B1F6-5886C0AD2B98}"
 EndProject
 
 Global
@@ -158,11 +160,16 @@ Global
     {EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
     {EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}.Release|Any CPU.Build.0 = Release|Any CPU
-    
+
     {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
     {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
     {F13040F5-2641-6465-6E4A-FF7C0DA26BDF}.Release|Any CPU.Build.0 = Release|Any CPU
+    
+    {A479E098-5DBD-4032-B1F6-5886C0AD2B98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {A479E098-5DBD-4032-B1F6-5886C0AD2B98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {A479E098-5DBD-4032-B1F6-5886C0AD2B98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {A479E098-5DBD-4032-B1F6-5886C0AD2B98}.Release|Any CPU.Build.0 = Release|Any CPU
   EndGlobalSection
   GlobalSection(SolutionProperties) = preSolution
     HideSolutionNode = FALSE

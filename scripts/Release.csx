@@ -103,10 +103,10 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
       projectRelativePath, projectName, newVersion, changelogDescription);
 
   Console.WriteLine("Setting Github action outputs");
-  var escapedChangelog = changelogDescription.Replace("%", "'%25'")
-                             .Replace("\n", "'%0A'")
-                             .Replace("\r", "'%0D'");
-  var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
+  var escapedChangelog = changelogDescription.Replace("%", "%25")
+                             .Replace("\n", "%0A")
+                             .Replace("\r", "");
+  var githubOutput = Environment.GetEnvironmentVariable("GITHUB_ENV");
   File.AppendAllText(githubOutput, $"new_version={newVersion}\n");
   File.AppendAllText(githubOutput, $"changelog={escapedChangelog}\n");
   var releaseThunderstore =

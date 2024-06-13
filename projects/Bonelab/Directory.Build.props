@@ -30,8 +30,6 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-
-    <GameRefsPath>..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)</GameRefsPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -57,21 +55,14 @@
       Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods&quot;" />
   </Target>
 
+  <!-- TODO: How can I exclude netstandard.dll? I just deleted it for now -->
   <ItemGroup>
     <Reference
-      Include="..\..\..\references\ML$(MelonLoader)\*.dll;$(GameRefsPath)\Assembly-CSharp.dll;$(GameRefsPath)\Unity*.dll;$(GameRefsPath)\SLZ*.dll;$(GameRefsPath)\Il2Cpp*.dll;$(GameRefsPath)\Newtonsoft*.dll;$(GameRefsPath)\Unhollower*.dll">
+      Include="..\..\..\references\ML$(MelonLoader)\*.dll;..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\*.dll">
       <HintPath>$(FullPath)</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
-
-  <!-- <ItemGroup>
-    <Reference
-  Include="..\..\..\references\ML$(MelonLoader)\*.dll;..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\*.dll">
-      <HintPath>$(FullPath)</HintPath>
-      <Private>false</Private>
-    </Reference>
-  </ItemGroup> -->
 
   <Target Name="AliasConflictingReferences"
     BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">

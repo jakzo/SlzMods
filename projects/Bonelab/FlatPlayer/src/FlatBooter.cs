@@ -52,11 +52,15 @@ public class FlatBooter : MelonMod {
     get => aimMode ? rightHandAimRot : rightHandDefaultRot;
   }
 
+  bool IsTriggerPressed() =>
+      Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl);
+
+  // TODO: Reset rotation on load
   public override void OnInitializeMelon() {
     instance = this;
 
     saveFile = MelonPreferences.CreateCategory("FlatPlayer");
-    cameraSpeed = saveFile.CreateEntry<float>("CameraSensitivity", 0.2f);
+    cameraSpeed = saveFile.CreateEntry("CameraSensitivity", 0.2f);
 
     var harmony = new HarmonyLib.Harmony("FlatPlayer");
     harmony.PatchAll();
@@ -64,8 +68,6 @@ public class FlatBooter : MelonMod {
     var loaders = XRGeneralSettings.Instance.Manager.loaders;
     loaders.Clear();
     loaders.Add(ScriptableObject.CreateInstance<MockHMDLoader>());
-
-    LoggerInstance.Msg("MockHMD");
   }
 
   [HarmonyPatch(typeof(HmdActionMap), nameof(HmdActionMap.Refresh))]
@@ -120,50 +122,27 @@ public class FlatBooter : MelonMod {
       LeftController.BButtonUp = true;
     }
 
-    if (Input.GetKey(KeyCode.RightShift) || Input.GetKey(KeyCode.LeftShift))
+    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
       LeftController.JoystickButtonDown = true;
 
     if (leftHandLocked)
       leftHandGrip = Input.GetMouseButton(0);
 
-    LeftController.Grip = leftHandGrip ? 1f : 0f;
-    LeftController.GripButton = leftHandGrip;
-
-    var isTriggerPressed =
-        Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl);
-    LeftController.TriggerButtonDown = leftHandLocked && isTriggerPressed;
-    LeftController.Trigger = leftHandLocked && isTriggerPressed ? 1f : 0f;
-
-    if (leftHandLocked) {
-      if (rotateMode) {
-        var playerRotation =
-            Quaternion.AngleAxis(handsLastRotation.x, Vector3.up) *
-            Quaternion.AngleAxis(handsLastRotation.y, Vector3.left) *
-            Quaternion.AngleAxis(handsLastRotation.z, Vector3.forward);
-        LeftController.Rotation = playerRotation * leftHandRot;
-      } else {
-        var leftPos = leftHandDefaultPos;
-        if (Input.GetKey(KeyCode.F)) {
-          leftPos.z = 1f;
-        }
-        var playerRotation =
-            Quaternion.AngleAxis(cameraLastRotation.x, Vector3.up) *
-            Quaternion.AngleAxis(cameraLastRotation.y, Vector3.left);
-        LeftController.Rotation = playerRotation * leftHandRot;
-        LeftController.Position = playerRotation * leftPos;
-      }
-    }
-
-    LeftController._lastPosition = LeftController.Position;
-    LeftController._lastRotation = LeftController.Rotation;
+    HandleControllerInput(LeftController, leftHandGrip, leftHandLocked,
+                          leftHandDefaultPos, leftHandRot);
   }
 
   public void UpdateRightController() {
-    RightController.Joystick2DAxis =
-        new Vector2((Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) -
-                        (Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f),
-                    (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) -
-                        (Input.GetKey(KeyCode.DownArrow) ? 1f : 0f));
+    var stickAxis = Vector2.zero;
+    if (Input.GetKey(KeyCode.UpArrow))
+      stickAxis += Vector2.up;
+    if (Input.GetKey(KeyCode.LeftArrow))
+      stickAxis += Vector2.left;
+    if (Input.GetKey(KeyCode.DownArrow))
+      stickAxis += Vector2.down;
+    if (Input.GetKey(KeyCode.RightArrow))
+      stickAxis += Vector2.right;
+    RightController.Joystick2DAxis = stickAxis;
 
     if (Input.GetKey(KeyCode.Space)) {
       RightController.AButton = true;
@@ -177,36 +156,41 @@ public class FlatBooter : MelonMod {
     if (rightHandLocked)
       rightHandGrip = Input.GetMouseButton(1);
 
-    RightController.Grip = rightHandGrip ? 1f : 0f;
-    RightController.GripButton = rightHandGrip;
+    HandleControllerInput(RightController, rightHandGrip, rightHandLocked,
+                          rightHandDefaultPos, rightHandRot);
+  }
 
-    var isTriggerPressed =
-        Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl);
-    RightController.TriggerButtonDown = rightHandLocked && isTriggerPressed;
-    RightController.Trigger = rightHandLocked && isTriggerPressed ? 1f : 0f;
+  void HandleControllerInput(ControllerActionMap controller, bool isGripping,
+                             bool isLocked, Vector3 defaultPos,
+                             Quaternion rot) {
+    controller.Grip = isGripping ? 1f : 0f;
+    controller.GripButton = isGripping;
 
-    if (rightHandLocked) {
+    controller.TriggerButtonDown = isLocked && IsTriggerPressed();
+    controller.Trigger = isLocked && IsTriggerPressed() ? 1f : 0f;
+
+    if (isLocked) {
       if (rotateMode) {
         var playerRotation =
             Quaternion.AngleAxis(handsLastRotation.x, Vector3.up) *
             Quaternion.AngleAxis(handsLastRotation.y, Vector3.left) *
             Quaternion.AngleAxis(handsLastRotation.z, Vector3.forward);
-        RightController.Rotation = playerRotation * rightHandRot;
+        controller.Rotation = playerRotation * rot;
       } else {
-        var rightPos = rightHandDefaultPos;
+        var newPos = defaultPos;
         if (Input.GetKey(KeyCode.F)) {
-          rightPos.z = 1f;
+          newPos.z = 1f;
         }
         var playerRotation =
             Quaternion.AngleAxis(cameraLastRotation.x, Vector3.up) *
             Quaternion.AngleAxis(cameraLastRotation.y, Vector3.left);
-        RightController.Rotation = playerRotation * rightHandRot;
-        RightController.Position = playerRotation * rightPos;
+        controller.Rotation = playerRotation * rot;
+        controller.Position = playerRotation * newPos;
       }
     }
 
-    RightController._lastPosition = RightController.Position;
-    RightController._lastRotation = RightController.Rotation;
+    controller._lastPosition = controller.Position;
+    controller._lastRotation = controller.Rotation;
   }
 
   public override void OnUpdate() {
@@ -356,7 +340,6 @@ public class FlatBooter : MelonMod {
   internal static class XRDevice_IsPresent {
     [HarmonyPrefix]
     private static bool Prefix(InputFeatureUsage<bool> usage, out bool value) {
-      MelonLogger.Msg("Requesting Boolean Feature: " + usage.name);
       value = usage.name == "UserPresence";
       return false;
     }

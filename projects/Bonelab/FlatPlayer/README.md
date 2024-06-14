@@ -1,1 +1,1 @@
-Port of [FlatPlayer](https://thunderstore.io/c/bonelab/p/LlamasHere/FlatPlayer/) by LlamasHere.
+Oculus port of [FlatPlayer](https://thunderstore.io/c/bonelab/p/LlamasHere/FlatPlayer/) by LlamasHere.

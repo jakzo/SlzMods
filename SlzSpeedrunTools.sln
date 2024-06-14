@@ -37,7 +37,7 @@ Project("{E44C252C-BD3E-A675-1947-E81F014A28E8}") = "BonelabGunGlitcher", "proje
 EndProject
 Project("{B89B2D75-808D-3383-5A2E-5C519DB49E93}") = "BonelabSpeedrunPractice", "projects\Bonelab\SpeedrunPractice\SpeedrunPractice.csproj", "{FC725E6F-5165-1F43-6707-9E297148628F}"
 EndProject
-Project("{D47BB0CA-36CA-0AA0-74ED-4117FDB1FCE4}") = "BonelabThirdPersonCamera", "projects\Bonelab\ThirdPersonCamera\ThirdPersonCamera.csproj", "{EE4562BC-A673-6C8A-9E73-57F7942FD510}"
+Project("{D47BB0CA-36CA-0AA0-74ED-4117FDB1FCE4}") = "BonelabThirdPersonCamera", "projects\Bonelab\ThirdPersonCamera\Project.csproj", "{EE4562BC-A673-6C8A-9E73-57F7942FD510}"
 EndProject
 Project("{1D0D07E2-0C07-604C-1B55-2A84455C427E}") = "BonelabTasTool", "projects\Bonelab\TasTool\TasTool.csproj", "{BC8503B6-89E1-171A-9C86-3673F3F8EA13}"
 EndProject

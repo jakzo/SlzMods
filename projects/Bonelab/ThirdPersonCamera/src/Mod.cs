@@ -1,10 +1,13 @@
 using MelonLoader;
-using HarmonyLib;
 using UnityEngine;
+using UnityEngine.Rendering;
 using SLZ.Bonelab;
-using SLZ.SaveData;
+using Sst.Utilities;
+using HarmonyLib;
+using SLZ.VRMK;
 
-namespace Sst.ThirdPersonCamera {
+namespace Sst.ThirdPersonCamera;
+
 public class Mod : MelonMod {
   private const float DEG2RAD = 0.017453292519943295f;
 
@@ -13,6 +16,8 @@ public class Mod : MelonMod {
         "Default", "Static",
         "NoSelfCollide", // has things like doors but also some npc body parts
       });
+
+  public static Mod Instance;
 
   private SmoothFollower _thirdPersonCamera;
   private float _cameraRadius;
@@ -23,6 +28,7 @@ public class Mod : MelonMod {
 
   public override void OnInitializeMelon() {
     Dbg.Init(BuildInfo.NAME);
+    Instance = this;
 
     var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
     _prefFollowDistance = category.CreateEntry(
@@ -34,8 +40,8 @@ public class Mod : MelonMod {
         "camera_ratio", 1f,
         "Amount to split screen between first and third person cameras (0 = first person only, 1 = third person only)");
 
-    Utilities.LevelHooks.OnLevelStart += level => CreateThirdPersonCamera();
-    Utilities.LevelHooks.OnLoad += level => ResetState();
+    LevelHooks.OnLevelStart += level => CreateThirdPersonCamera();
+    LevelHooks.OnLoad += level => ResetState();
     _prefCameraRatio.OnEntryValueChanged.Subscribe((a, b) => SetCameraRatios());
     _prefFollowDistance.OnEntryValueChanged.Subscribe((a, b) => SetFollowVec());
     SetFollowVec();
@@ -46,8 +52,7 @@ public class Mod : MelonMod {
       return;
 
     var rigScreen =
-        Utilities.LevelHooks.RigManager?.uiRig.controlPlayer.rigScreen ??
-        GetRigScreen();
+        LevelHooks.RigManager?.uiRig.controlPlayer.rigScreen ?? GetRigScreen();
     if (rigScreen.TargetTransform) {
       var tpos = rigScreen.TargetTransform.position;
       var trot = rigScreen.TargetTransform.rotation;
@@ -86,7 +91,7 @@ public class Mod : MelonMod {
   private void ResetState() { _thirdPersonCamera = null; }
 
   private void CreateThirdPersonCamera() {
-    if (Utilities.LevelHooks.IsLoading || _thirdPersonCamera)
+    if (LevelHooks.IsLoading || _thirdPersonCamera)
       return;
 
     Dbg.Log("CreateThirdPersonCamera");
@@ -111,6 +116,8 @@ public class Mod : MelonMod {
 
     SetCameraRatios();
 
+    LevelHooks.RigManager.GetComponent<PlayerAvatarArt>()?.EnableHair();
+
     // #if DEBUG // TAS
     //     var spectatorFollower =
     //     spectatorCamera.GetComponent<SmoothFollower>();
@@ -119,11 +126,19 @@ public class Mod : MelonMod {
     // #endif
   }
 
-  private RigScreenOptions GetRigScreen() =>
-      Utilities.LevelHooks.RigManager.GetComponent<RigScreenOptions>();
+  private RigScreenOptions
+  GetRigScreen() => LevelHooks.RigManager.GetComponent<RigScreenOptions>();
 
   private void SetFollowVec() {
     _followVec = Vector3.back * _prefFollowDistance.Value;
   }
-}
+
+  [HarmonyPatch(typeof(PlayerAvatarArt), nameof(PlayerAvatarArt.DisableHair))]
+  class PlayerAvatarArt_DisableHair_Patch {
+    [HarmonyPrefix()]
+    internal static bool Prefix() {
+      Dbg.Log("PlayerAvatarArt_DisableHair_Patch");
+      return !Instance._thirdPersonCamera;
+    }
+  }
 }

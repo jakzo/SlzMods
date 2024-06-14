@@ -22,9 +22,9 @@ using System.Runtime.InteropServices;
     "https://bonelab.thunderstore.io/package/jakzo/ThirdPersonCamera/")]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
-namespace Sst.ThirdPersonCamera {
+namespace Sst.ThirdPersonCamera;
+
 public static class BuildInfo {
   public const string NAME = "ThirdPersonCamera";
   public const string DESCRIPTION = "Makes spectator camera third-person.";
-}
 }

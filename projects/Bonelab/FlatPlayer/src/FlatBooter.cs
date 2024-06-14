@@ -9,6 +9,9 @@ using SLZ.Marrow.Input;
 using SLZ.Marrow.Utilities;
 using SLZ.Rig;
 using System.Reflection;
+using SLZ.Marrow.Warehouse;
+using Sst.Utilities;
+using SLZ.SaveData;
 
 namespace Sst.FlatPlayer;
 
@@ -68,6 +71,12 @@ public class FlatBooter : MelonMod {
     var loaders = XRGeneralSettings.Instance.Manager.loaders;
     loaders.Clear();
     loaders.Add(ScriptableObject.CreateInstance<MockHMDLoader>());
+
+    LevelHooks.OnLoad += OnLoad;
+  }
+
+  void OnLoad(LevelCrate nextLevel) {
+    cameraLastRotation = handsLastRotation = Vector3.zero;
   }
 
   [HarmonyPatch(typeof(HmdActionMap), nameof(HmdActionMap.Refresh))]
@@ -294,9 +303,12 @@ public class FlatBooter : MelonMod {
       LeftHand.Refresh();
       RightHand.Refresh();
 
-      mainCamera = Camera.main;
-      mainCamera.cameraType = CameraType.SceneView;
-      mainCamera.fieldOfView = 90f;
+      if (DataManager.Instance._settings.SpectatorSettings
+              .SpectatorCameraMode == SpectatorCameraMode.Passthrough) {
+        mainCamera = Camera.main;
+        mainCamera.cameraType = CameraType.SceneView;
+        mainCamera.fieldOfView = 90f;
+      }
 
       isReady = true;
     }

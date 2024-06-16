@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
 
+#if ML6
+using Il2CppInterop.Runtime;
+#else
+using UnhollowerRuntimeLib;
+#endif
+
 namespace Sst.Utilities {
-static class Collider {
+static class Colliders {
   public static LayerMask DEFAULT_LAYER_MASK =
       new LayerMask() { value = 0x7fffffff };
 
@@ -38,21 +44,7 @@ static class Collider {
     DebugColliderPrefabs.CYLINDER = Geometry.CreatePrefabUnclosedCylinder(
         "DebugCylinderCollider", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
 
-    VisualizeAllIn<BoxCollider>(ancestor, color, layerMask, shader,
-                                visualizeTriggers);
-    VisualizeAllIn<SphereCollider>(ancestor, color, layerMask, shader,
-                                   visualizeTriggers);
-    VisualizeAllIn<CapsuleCollider>(ancestor, color, layerMask, shader,
-                                    visualizeTriggers);
-    VisualizeAllIn<MeshCollider>(ancestor, color, layerMask, shader,
-                                 visualizeTriggers);
-  }
-  public static void VisualizeAllIn<T>(GameObject ancestor, Color color,
-                                       LayerMask layerMask,
-                                       Shader shader = null,
-                                       bool visualizeTriggers = false)
-      where T : UnityEngine.Collider {
-    var colliders = new List<T>();
+    var colliders = new List<Collider>();
     Unity.FindDescendantComponentsOfType(ref colliders, ancestor.transform);
     foreach (var collider in colliders) {
       if ((layerMask.value & collider.gameObject.layer) == 0 ||
@@ -63,15 +55,17 @@ static class Collider {
     }
   }
 
-  public static GameObject Visualize(UnityEngine.Collider collider, Color color,
+  public static GameObject Visualize(Collider collider, Color color,
                                      Shader shader = null,
                                      Transform parent = null) {
+    var castedCollider = Il2Cpp.CastToUnderlyingType(collider);
+    Dbg.Log($"Collider type is {castedCollider}");
     GameObject visualization;
 
     if (parent == null)
       parent = collider.transform;
 
-    switch (collider) {
+    switch (castedCollider) {
     case BoxCollider boxCollider: {
       visualization = GameObject.Instantiate(DebugColliderPrefabs.BOX, parent);
       SetMaterial(visualization, color, shader);
@@ -131,8 +125,18 @@ static class Collider {
     return visualization;
   }
 
+  [RegisterTypeInIl2Cpp]
   public class ColliderVisualization : MonoBehaviour {
     public UnityEngine.Collider Collider;
+
+    public ColliderVisualization(IntPtr ptr) : base(ptr) {}
+
+    // Optional, only used in case you want to instantiate this class in the
+    // mono-side Don't use this on MonoBehaviours / Components!
+    public ColliderVisualization()
+        : base(ClassInjector
+                   .DerivedConstructorPointer<ColliderVisualization>()) =>
+              ClassInjector.DerivedConstructorBody(this);
 
     public void Update() {
       gameObject.active = Collider.gameObject.active && Collider.enabled;

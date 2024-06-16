@@ -108,8 +108,8 @@ public class Mod : MelonMod {
   }
 
   private GameObject RenderTrigger(Collider collider, bool isTriggered) =>
-      Utilities.Collider.Visualize(collider,
-                                   isTriggered? COLOR_GREEN: COLOR_RED,
-                                   _shader);
+      Utilities.Colliders.Visualize(collider,
+                                    isTriggered ? COLOR_GREEN : COLOR_RED,
+                                    _shader);
 }
 }

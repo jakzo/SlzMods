@@ -84,6 +84,9 @@
     <Reference Include="Unity.XR">
       <HintPath>..\..\..\references\Bonelab_P3_ML5\UnityEngine.VRModule.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\references\Bonelab_P3_ML5\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppVersion.cs" />

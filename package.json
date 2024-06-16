@@ -19,7 +19,8 @@
   ],
   "scripts": {
     "test": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "quest:logs": "adb logcat -v time MelonLoader:D CRASH:D Mono:W mono:D mono-rt:D Zygote:D A64_HOOK:V DEBUG:D Binder:D AndroidRuntime:D *:S"
+    "quest:logs": "adb logcat -v time MelonLoader:D CRASH:D Mono:W mono:D mono-rt:D Zygote:D A64_HOOK:V DEBUG:D Binder:D AndroidRuntime:D *:S",
+    "build:bonelab:start": "node ./scripts/build-non-windows.mjs start"
   },
   "devDependencies": {
     "@tsconfig/node18-strictest-esm": "^1.0.1",

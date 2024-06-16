@@ -347,8 +347,8 @@ public class FlatBooter : MelonMod {
   }
 
   [HarmonyPatch(typeof(InputDevice), nameof(InputDevice.TryGetFeatureValue),
-                [typeof(InputFeatureUsage<bool>), typeof(bool)],
-                [ArgumentType.Normal, ArgumentType.Out])]
+                new Type[] { typeof(InputFeatureUsage<bool>), typeof(bool) },
+                new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out })]
   internal static class XRDevice_IsPresent {
     [HarmonyPrefix]
     private static bool Prefix(InputFeatureUsage<bool> usage, out bool value) {

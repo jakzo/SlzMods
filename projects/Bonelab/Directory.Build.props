@@ -1,6 +1,14 @@
 <Project>
 
   <PropertyGroup>
+    <IsNewProject Condition=" '$(MSBuildProjectName)' == 'Project' ">true</IsNewProject>
+
+    <BonelabPath>C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab</BonelabPath>
+    <BonelabPath Condition=" !Exists('$(BonelabPath)') ">$(HOME)/Downloads/Bonelab_P3_ML5</BonelabPath>
+    <BonelabPath Condition=" !Exists('$(BonelabPath)') "></BonelabPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IsNewProject)' == 'true' ">
     <!-- Defaults (used by IDE autocomplete/syntax highlighting) -->
     <TargetFrameworks Condition=" '$(MelonLoader)' == '' ">net6.0;net472</TargetFrameworks>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -32,7 +40,7 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+  <PropertyGroup Condition=" '$(IsNewProject)' == 'true' and '$(Configuration)' == 'Debug' ">
     <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -41,7 +49,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(IsNewProject)' == 'true' and '$(Configuration)' == 'Release' ">
     <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
@@ -50,13 +58,16 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent"
-    Condition=" '$(OS)' == 'Windows_NT' and '$(CopyIntoGameAfterBuild)' == 'true' and '$(GITHUB_ACTIONS)' != 'true' ">
-    <Exec
-      Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files\Oculus\Software\Software\stress-level-zero-inc-bonelab\Mods&quot;" />
+    Condition=" '$(IsNewProject)' == 'true' and '$(CopyIntoGameAfterBuild)' == 'true' and '$(GITHUB_ACTIONS)' != 'true' and '$(BonelabPath)' != '' ">
+    <Exec Condition=" '$(OS)' == 'Windows_NT' "
+      Command="COPY &quot;$(TargetPath)&quot; &quot;$(BonelabPath)/Mods&quot;" />
+
+    <Exec Condition=" '$(OS)' != 'Windows_NT' "
+      Command="cp &quot;$(TargetPath)&quot; &quot;$(BonelabPath)/Mods&quot;" />
   </Target>
 
   <!-- TODO: How can I exclude netstandard.dll? I just deleted it for now -->
-  <ItemGroup>
+  <ItemGroup Condition=" '$(IsNewProject)' == 'true' ">
     <Reference
       Include="..\..\..\references\ML$(MelonLoader)\*.dll;..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\*.dll">
       <HintPath>$(FullPath)</HintPath>

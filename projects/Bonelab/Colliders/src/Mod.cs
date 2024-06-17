@@ -7,9 +7,6 @@ using Sst.Utilities;
 namespace Sst.Colliders;
 
 public class Mod : MelonMod {
-  private static Color _colorHighlighter = new Color(1f, 0f, 0f, 1f);
-  private static Color _colorDefault = new Color(1f, 0.25f, 0.25f, 0.05f);
-
   private enum Mode { NONE, RIG, PHYSICAL, TRIGGER }
 
   private MelonPreferences_Entry<Mode> _prefMode;
@@ -47,6 +44,7 @@ public class Mod : MelonMod {
   }
 
   public void ClearVisualizations() {
+    // TODO: Go through slowly to avoid GC crash
     foreach (var visualization in _visualizations) {
       if (visualization)
         GameObject.Destroy(visualization.gameObject);
@@ -66,7 +64,6 @@ public class Mod : MelonMod {
 
   public void VisualizePhysical() {
     if (_prefHideVisuals.Value) {
-      // TODO: Go through slowly to avoid GC crash
       foreach (var rootObject in Utilities.Unity.RootObjects()) {
         foreach (var renderer in Utilities.Unity
                      .AllDescendantComponents<MeshRenderer>(
@@ -95,16 +92,6 @@ public class Mod : MelonMod {
       } else {
         Utilities.Colliders.Visualize(collider, color, Shaders.DefaultShader);
       }
-    }
-  }
-
-  public void VisualizeTriggers() {
-    foreach (var collider in Utilities.Colliders.AllColliders()) {
-      if (!collider.isTrigger)
-        continue;
-
-      Utilities.Colliders.Visualize(collider, _colorHighlighter,
-                                    Shaders.HighlightShader);
     }
   }
 }

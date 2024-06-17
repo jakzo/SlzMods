@@ -106,6 +106,7 @@
     "synopsis",
     "pre",
     "xd:pre",
-    "HintPath"
+    "HintPath",
+    "BonelabPath"
   ]
 }

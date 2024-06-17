@@ -43,7 +43,7 @@ public class Mod : MelonMod {
     foreach (var collider in colliders) {
       Dbg.Log($"TriggerLasers visualized: {trigger.gameObject.name}");
       var visualization = Utilities.Colliders.Visualize(
-          collider, COLOR_RED, Utilities.Bonelab.HighlightShader);
+          collider, COLOR_RED, Utilities.Shaders.HighlightShader);
       _visualizations.Add(visualization);
     }
   }

@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 namespace Sst.Utilities {
 public static class Unity {
@@ -20,10 +21,41 @@ public static class Unity {
   }
 
   public static void FindDescendantComponentsOfType<T>(ref List<T> output,
-                                                       Transform parent) {
+                                                       Transform parent,
+                                                       bool includeInactive) {
+    if (!includeInactive && !parent.gameObject.active)
+      return;
     output.AddRange(parent.GetComponents<T>());
     for (var i = 0; i < parent.childCount; i++)
-      FindDescendantComponentsOfType(ref output, parent.GetChild(i));
+      FindDescendantComponentsOfType(ref output, parent.GetChild(i),
+                                     includeInactive);
+  }
+
+  public static IEnumerable<Transform>
+  AllDescendantTransforms(Transform parent, bool includeInactive) {
+    var stack = new Stack<(Transform, int)>();
+    stack.Push((parent, 0));
+    while (stack.Count > 0) {
+      var (t, i) = stack.Pop();
+      if (i < t.childCount) {
+        var child = t.GetChild(i);
+        if (includeInactive || child.gameObject.active)
+          yield return child;
+        stack.Push((t, i + 1));
+        stack.Push((child, 0));
+      }
+    }
+  }
+
+  public static IEnumerable<T> AllDescendantComponents<T>(Transform parent,
+                                                          bool includeInactive)
+      where T : Component {
+    foreach (var transform in AllDescendantTransforms(parent,
+                                                      includeInactive)) {
+      foreach (var component in transform.GetComponents<T>()) {
+        yield return component;
+      }
+    }
   }
 
   public static GameObject[] FindAllInDescendants(GameObject root,
@@ -45,6 +77,17 @@ public static class Unity {
     for (var i = 0; i < parent.transform.childCount; i++)
       children.Add(parent.transform.GetChild(i).gameObject);
     return children.ToArray();
+  }
+
+  public static IEnumerable<GameObject> RootObjects() {
+    for (var i = 0; i < SceneManager.sceneCount; i++) {
+      var scene = SceneManager.GetSceneAt(i);
+      if (!scene.isLoaded)
+        continue;
+      foreach (var rootObject in scene.GetRootGameObjects()) {
+        yield return rootObject;
+      }
+    }
   }
 
   public static Color GenerateColor(int i) =>

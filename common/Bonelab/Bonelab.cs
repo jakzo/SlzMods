@@ -9,13 +9,6 @@ using TMPro;
 
 namespace Sst.Utilities {
 public class Bonelab {
-  private static Shader _highlightShader;
-  public static Shader HighlightShader {
-    get => _highlightShader ??
-           (_highlightShader = Resources.FindObjectsOfTypeAll<Shader>().First(
-                shader => shader.name == "SLZ/Highlighter"));
-  }
-
   public static void DockToWrist(GameObject gameObject,
                                  bool rightHand = false) {
     var physicsRig = LevelHooks.RigManager.physicsRig;

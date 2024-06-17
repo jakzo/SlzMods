@@ -74,14 +74,14 @@ class DebugStats : Feature {
       return false;
     var magazines = new List<Magazine>();
     Utilities.Unity.FindDescendantComponentsOfType<Magazine>(
-        ref magazines, magSocket.transform);
+        ref magazines, magSocket.transform, true);
     var magazine = magazines.FirstOrDefault(
         mag => mag != magSocket._magazinePlug?.magazine);
     if (!magazine)
       return false;
     var colliders = new List<Collider>();
     Utilities.Unity.FindDescendantComponentsOfType<Collider>(
-        ref colliders, magazine.transform);
+        ref colliders, magazine.transform, true);
     var playerColliders = physicsRig.m_chest.GetComponents<Collider>();
     return !playerColliders.Any(
         playerCol => colliders.Any(magCol => Physics.ComputePenetration(

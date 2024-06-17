@@ -2,19 +2,60 @@ using System;
 using System.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
+using System.Reflection;
+using System.Linq;
 
 #if ML6
 using Il2CppInterop.Runtime;
 #else
 using UnhollowerRuntimeLib;
+using UnhollowerBaseLib;
 #endif
 
 namespace Sst.Utilities {
-static class Colliders {
+public static class Colliders {
+  private static Color _colorHighlighter = new Color(1f, 0f, 0f, 1f);
+  private static Color _colorDefault = new Color(1f, 0.25f, 0.25f, 0.05f);
+
+  private static Assembly _unityAssembly;
+  public static Assembly UnityAssembly {
+    get => _unityAssembly ??
+           (_unityAssembly = AppDomain.CurrentDomain.GetAssemblies().First(
+                asm => asm.GetName().Name == "UnityEngine"));
+  }
+
+  public static int NonPhysicalLayerMask = LayerMask.GetMask(new[] {
+    "UI",
+    "Trigger",
+  });
+
+  public static UnityEngine.Collider
+  ToUnderlyingType(UnityEngine.Collider collider) {
+    var classPtr = IL2CPP.il2cpp_object_get_class(collider.Pointer);
+    Il2CppSystem.Type il2cppType = Il2CppType.TypeFromPointer(classPtr);
+    var type = UnityAssembly.GetType(il2cppType.FullName);
+    var castMethod = typeof(UnhollowerBaseLib.Il2CppObjectBase)
+                         .GetMethod("TryCast")
+                         .MakeGenericMethod(type);
+    return castMethod.Invoke(collider, null) as UnityEngine.Collider;
+  }
+
+  public static bool IsColliderPhysical(UnityEngine.Collider collider) {
+    if (!collider.enabled || collider.isTrigger)
+      return false;
+    if ((collider.gameObject.layer & NonPhysicalLayerMask) != 0)
+      return false;
+    if (collider.attachedRigidbody) {
+      return !collider.attachedRigidbody.isKinematic &&
+             collider.attachedRigidbody.detectCollisions;
+    }
+    return true;
+  }
+
   public static LayerMask DEFAULT_LAYER_MASK =
       new LayerMask() { value = 0x7fffffff };
 
-  private static class DebugColliderPrefabs {
+  public static class DebugColliderPrefabs {
     public static GameObject BOX =
         Geometry.CreatePrefabCube("DebugBoxCollider", Color.magenta, -0.5f,
                                   0.5f, -0.5f, 0.5f, -0.5f, 0.5f);
@@ -24,17 +65,21 @@ static class Colliders {
         "DebugCylinderCollider", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
   }
 
-  public static void VisualizeAllIn(GameObject ancestor, Shader shader = null,
+  public static IEnumerable<Collider> AllColliders() {
+    foreach (var rootObject in Utilities.Unity.RootObjects()) {
+      var colliders = new List<Collider>();
+      Utilities.Unity.FindDescendantComponentsOfType(
+          ref colliders, rootObject.transform, true);
+      foreach (var unknownCollider in colliders) {
+        yield return Utilities.Colliders.ToUnderlyingType(unknownCollider);
+      }
+    }
+  }
+
+  public static void VisualizeAllIn(GameObject ancestor,
                                     bool visualizeTriggers = false) =>
-      VisualizeAllIn(ancestor, Color.red, DEFAULT_LAYER_MASK, shader,
-                     visualizeTriggers);
-  public static void VisualizeAllIn(GameObject ancestor, Color color,
-                                    Shader shader = null,
-                                    bool visualizeTriggers = false) =>
-      VisualizeAllIn(ancestor, color, DEFAULT_LAYER_MASK, shader,
-                     visualizeTriggers);
-  public static void VisualizeAllIn(GameObject ancestor, Color color,
-                                    LayerMask layerMask, Shader shader = null,
+      VisualizeAllIn(ancestor, DEFAULT_LAYER_MASK, visualizeTriggers);
+  public static void VisualizeAllIn(GameObject ancestor, LayerMask layerMask,
                                     bool visualizeTriggers = false) {
     DebugColliderPrefabs.BOX =
         Geometry.CreatePrefabCube("DebugBoxCollider", Color.magenta, -0.5f,
@@ -45,27 +90,37 @@ static class Colliders {
         "DebugCylinderCollider", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
 
     var colliders = new List<Collider>();
-    Unity.FindDescendantComponentsOfType(ref colliders, ancestor.transform);
-    foreach (var collider in colliders) {
-      if ((layerMask.value & collider.gameObject.layer) == 0 ||
-          !visualizeTriggers &&
-              (collider.isTrigger || !collider.attachedRigidbody))
+    Unity.FindDescendantComponentsOfType(ref colliders, ancestor.transform,
+                                         true);
+    foreach (var unknownCollider in colliders) {
+      var collider = ToUnderlyingType(unknownCollider);
+      var isMatchingLayer = (layerMask.value & collider.gameObject.layer) != 0;
+      if (!isMatchingLayer)
         continue;
-      Visualize(collider, color, shader);
+      if (collider.isTrigger ? !visualizeTriggers
+                             : !IsColliderPhysical(collider))
+        continue;
+
+      // Shader default renders double sided but highlighter does not.
+      // Mesh colliders only have collision in the direction of their faces
+      // but convex mesh colliders are solid.
+      if (collider is MeshCollider && !((MeshCollider)collider).convex) {
+        Visualize(collider, _colorHighlighter,
+                  Utilities.Shaders.HighlightShader);
+      } else {
+        Visualize(collider, _colorDefault, Utilities.Shaders.DefaultShader);
+      }
     }
   }
 
   public static GameObject Visualize(Collider collider, Color color,
-                                     Shader shader = null,
-                                     Transform parent = null) {
-    var castedCollider = Il2Cpp.CastToUnderlyingType(collider);
-    Dbg.Log($"Collider type is {castedCollider}");
+                                     Shader shader, Transform parent = null) {
     GameObject visualization;
 
     if (parent == null)
       parent = collider.transform;
 
-    switch (castedCollider) {
+    switch (collider) {
     case BoxCollider boxCollider: {
       visualization = GameObject.Instantiate(DebugColliderPrefabs.BOX, parent);
       SetMaterial(visualization, color, shader);
@@ -130,13 +185,6 @@ static class Colliders {
     public UnityEngine.Collider Collider;
 
     public ColliderVisualization(IntPtr ptr) : base(ptr) {}
-
-    // Optional, only used in case you want to instantiate this class in the
-    // mono-side Don't use this on MonoBehaviours / Components!
-    public ColliderVisualization()
-        : base(ClassInjector
-                   .DerivedConstructorPointer<ColliderVisualization>()) =>
-              ClassInjector.DerivedConstructorBody(this);
 
     public void Update() {
       gameObject.active = Collider.gameObject.active && Collider.enabled;

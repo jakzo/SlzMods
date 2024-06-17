@@ -187,7 +187,7 @@ class DebugColliders : Feature {
                                      Transform parent)
       where T : Collider {
     var colliders = new List<T>();
-    Utilities.Unity.FindDescendantComponentsOfType(ref colliders, parent);
+    Utilities.Unity.FindDescendantComponentsOfType(ref colliders, parent, true);
     var activeColliders = colliders.Where(
         collider => collider.enabled && collider.attachedRigidbody != null &&
                     !collider.isTrigger &&
@@ -247,14 +247,15 @@ class DebugColliders : Feature {
     // DisableRenderersInternal<SkinnedMeshRenderer>(parent);
 
     var renderers = new List<Renderer>();
-    Utilities.Unity.FindDescendantComponentsOfType(ref renderers, parent);
+    Utilities.Unity.FindDescendantComponentsOfType(ref renderers, parent, true);
     foreach (var renderer in renderers)
       renderer.enabled = false;
   }
   private void DisableRenderersInternal<T>(Transform parent)
       where T : Renderer {
     var meshRenderers = new List<T>();
-    Utilities.Unity.FindDescendantComponentsOfType(ref meshRenderers, parent);
+    Utilities.Unity.FindDescendantComponentsOfType(ref meshRenderers, parent,
+                                                   true);
     foreach (var renderer in meshRenderers)
       renderer.enabled = false;
   }

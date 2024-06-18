@@ -16,6 +16,8 @@ using SLZ.SaveData;
 namespace Sst.FlatPlayer;
 
 public class FlatBooter : MelonMod {
+  private static Vector3 ORIGIN = new Vector3(0f, 1.76f, 0f);
+
   public static FlatBooter instance;
 
   public static HmdActionMap Hmd;
@@ -92,8 +94,8 @@ public class FlatBooter : MelonMod {
     var playerRotation =
         Quaternion.AngleAxis(cameraLastRotation.x, Vector3.up) *
         Quaternion.AngleAxis(cameraLastRotation.y, Vector3.left);
-    Hmd.Rotation = playerRotation;
-    Hmd._lastRotation = playerRotation;
+    Hmd.Rotation = Hmd._lastRotation = playerRotation;
+    Hmd.Position = Hmd._lastPosition = ORIGIN;
   }
 
   [HarmonyPatch(typeof(ControllerActionMap),
@@ -194,7 +196,7 @@ public class FlatBooter : MelonMod {
             Quaternion.AngleAxis(cameraLastRotation.x, Vector3.up) *
             Quaternion.AngleAxis(cameraLastRotation.y, Vector3.left);
         controller.Rotation = playerRotation * rot;
-        controller.Position = playerRotation * newPos;
+        controller.Position = ORIGIN + playerRotation * newPos;
       }
     }
 
@@ -294,7 +296,7 @@ public class FlatBooter : MelonMod {
       LeftController.Type = RightController.Type = XRControllerType.OculusTouch;
       LeftController._IsConnected_k__BackingField =
           RightController._IsConnected_k__BackingField = true;
-      LeftController.Position = RightController.Position = Vector3.zero;
+      LeftController.Position = RightController.Position = ORIGIN;
       LeftController.Rotation = RightController.Rotation = Quaternion.identity;
 
       Hmd.Refresh();

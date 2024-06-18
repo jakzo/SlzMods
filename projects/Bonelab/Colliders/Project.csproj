@@ -27,6 +27,7 @@
     <Compile Include="../../../common/Utilities/Geometry.cs" />
     <Compile Include="../../../common/Utilities/Unity.cs" />
     <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
+    <Compile Include="../../../common/Bonelab/Levels.cs" />
   </ItemGroup>
 
 </Project>

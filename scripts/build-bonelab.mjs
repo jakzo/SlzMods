@@ -132,7 +132,7 @@ switch (process.platform) {
 
   case "linux":
   case "darwin": {
-    buildUnix();
+    await buildUnix();
 
     if (startAfterBuild) {
       console.log("Starting Bonelab...");

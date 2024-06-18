@@ -57,12 +57,12 @@ public static class Colliders {
 
   public static class DebugColliderPrefabs {
     public static GameObject BOX =
-        Geometry.CreatePrefabCube("DebugBoxCollider", Color.magenta, -0.5f,
+        Geometry.CreatePrefabCube("DebugCollider_Box", Color.magenta, -0.5f,
                                   0.5f, -0.5f, 0.5f, -0.5f, 0.5f);
     public static GameObject SPHERE = Geometry.CreatePrefabSphere(
-        "DebugSphereCollider", Color.magenta, 0.5f, 2);
+        "DebugCollider_Sphere", Color.magenta, 0.5f, 2);
     public static GameObject CYLINDER = Geometry.CreatePrefabUnclosedCylinder(
-        "DebugCylinderCollider", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
+        "DebugCollider_Cylinder", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
   }
 
   public static IEnumerable<Collider> AllColliders() {
@@ -82,12 +82,12 @@ public static class Colliders {
   public static void VisualizeAllIn(GameObject ancestor, LayerMask layerMask,
                                     bool visualizeTriggers = false) {
     DebugColliderPrefabs.BOX =
-        Geometry.CreatePrefabCube("DebugBoxCollider", Color.magenta, -0.5f,
+        Geometry.CreatePrefabCube("DebugCollider_Box", Color.magenta, -0.5f,
                                   0.5f, -0.5f, 0.5f, -0.5f, 0.5f);
     DebugColliderPrefabs.SPHERE = Geometry.CreatePrefabSphere(
-        "DebugSphereCollider", Color.magenta, 0.5f, 2);
+        "DebugCollider_Sphere", Color.magenta, 0.5f, 2);
     DebugColliderPrefabs.CYLINDER = Geometry.CreatePrefabUnclosedCylinder(
-        "DebugCylinderCollider", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
+        "DebugCollider_Cylinder", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
 
     var colliders = new List<Collider>();
     Unity.FindDescendantComponentsOfType(ref colliders, ancestor.transform,
@@ -113,8 +113,9 @@ public static class Colliders {
     }
   }
 
-  public static GameObject Visualize(Collider collider, Color color,
-                                     Shader shader, Transform parent = null) {
+  public static ColliderVisualization Visualize(Collider collider, Color color,
+                                                Shader shader,
+                                                Transform parent = null) {
     GameObject visualization;
 
     if (parent == null)
@@ -137,7 +138,7 @@ public static class Colliders {
     }
 
     case CapsuleCollider capsuleCollider: {
-      visualization = new GameObject("DebugCapsuleCollider");
+      visualization = new GameObject("SpeedrunTools_DebugCollider_Capsule");
       var cylinder = GameObject.Instantiate(DebugColliderPrefabs.CYLINDER,
                                             visualization.transform);
       SetMaterial(cylinder, color, shader);
@@ -157,7 +158,7 @@ public static class Colliders {
     }
 
     case MeshCollider meshCollider: {
-      visualization = new GameObject("DebugMeshCollider");
+      visualization = new GameObject("SpeedrunTools_DebugCollider_Mesh");
       var meshFilter = visualization.AddComponent<MeshFilter>();
       meshFilter.mesh = meshCollider.sharedMesh;
       var meshRenderer = visualization.AddComponent<MeshRenderer>();
@@ -177,7 +178,7 @@ public static class Colliders {
     var cv = visualization.AddComponent<ColliderVisualization>();
     cv.Collider = collider;
     cv.Update();
-    return visualization;
+    return cv;
   }
 
   [RegisterTypeInIl2Cpp]

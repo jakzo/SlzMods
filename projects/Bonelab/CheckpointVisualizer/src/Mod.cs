@@ -15,7 +15,7 @@ public class Mod : MelonMod {
   private GameControl_KartRace _gameControl;
   private TriggerLasers[] _checkpointTriggers;
   private UnityEngine.Collider[] _checkpointColliders;
-  private GameObject[] _renderedColliders;
+  private Utilities.Colliders.ColliderVisualization[] _renderedColliders;
   private Shader _shader;
   private float _setupAfter = 0;
 
@@ -26,7 +26,7 @@ public class Mod : MelonMod {
     Utilities.LevelHooks.OnLevelStart += OnLevelStart;
   }
 
-  // ---
+#if DEBUG
   public override void OnSceneWasInitialized(int buildindex, string sceneName) {
     if (!sceneName.ToUpper().Contains("BOOTSTRAP"))
       return;
@@ -40,7 +40,7 @@ public class Mod : MelonMod {
       bootstrapper.MenuHollowCrateRef = crateRef;
     }));
   }
-  // ---
+#endif
 
   public override void OnUpdate() {
     if (_setupAfter != 0 && _setupAfter < Time.time) {
@@ -102,12 +102,13 @@ public class Mod : MelonMod {
   private void RerenderTrigger(int i) {
     Dbg.Log($"RerenderTrigger: {i}");
     if (_renderedColliders[i] != null)
-      GameObject.Destroy(_renderedColliders[i]);
+      GameObject.Destroy(_renderedColliders[i].gameObject);
     _renderedColliders[i] =
         RenderTrigger(_checkpointColliders[i], _gameControl.trackCheckPoint[i]);
   }
 
-  private GameObject RenderTrigger(Collider collider, bool isTriggered) =>
+  private Utilities.Colliders.ColliderVisualization
+  RenderTrigger(Collider collider, bool isTriggered) =>
       Utilities.Colliders.Visualize(collider,
                                     isTriggered ? COLOR_GREEN : COLOR_RED,
                                     Utilities.Shaders.HighlightShader);

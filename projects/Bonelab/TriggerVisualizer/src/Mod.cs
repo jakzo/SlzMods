@@ -7,7 +7,7 @@ namespace Sst.TriggerVisualizer {
 public class Mod : MelonMod {
   private static Color COLOR_RED = new Color(0.8f, 0.2f, 0.2f);
 
-  private List<GameObject> _visualizations;
+  private List<Utilities.Colliders.ColliderVisualization> _visualizations;
 
   public override void OnInitializeMelon() {
     Dbg.Init(BuildInfo.NAME);
@@ -27,7 +27,7 @@ public class Mod : MelonMod {
   }
 
   private void ShowTriggers() {
-    _visualizations = new List<GameObject>();
+    _visualizations = new List<Utilities.Colliders.ColliderVisualization>();
     foreach (var trigger in GameObject.FindObjectsOfType<TriggerLasers>()) {
       VisualizeColliders(trigger,
                          trigger.gameObject.GetComponents<BoxCollider>());

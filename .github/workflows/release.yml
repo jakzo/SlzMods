@@ -31,7 +31,8 @@ jobs:
         with:
           prerelease: true
           target_commitish: ${{ github.sha }}
-          tag_name: dev_${{ github.run_number }}
+          name: "dev ${{ github.run_number }}"
+          tag_name: "dev_${{ github.run_number }}"
           body: >
             **DO NOT DOWNLOAD** unless either I told you to or you know what you're doing. Instead look these mods up on Thunderstore and download them from there.
 
@@ -149,6 +150,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           target_commitish: ${{ github.sha }}
+          name: "${{ matrix.changeset.game }}${{ matrix.changeset.project }} v${{ steps.bump_version.outputs.new_version }}"
           tag_name: "${{ matrix.changeset.game }}${{ matrix.changeset.project }}_v${{ steps.bump_version.outputs.new_version }}"
           body: ${{ steps.bump_version.outputs.changelog }}
           files: |

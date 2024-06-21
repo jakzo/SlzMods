@@ -29,19 +29,26 @@ public static class Colliders {
     "Trigger",
   });
 
+  // TODO: I think ML6 has a built-in for this
   public static UnityEngine.Collider
   ToUnderlyingType(UnityEngine.Collider collider) {
     var classPtr = IL2CPP.il2cpp_object_get_class(collider.Pointer);
     Il2CppSystem.Type il2cppType = Il2CppType.TypeFromPointer(classPtr);
     var type = UnityAssembly.GetType(il2cppType.FullName);
-    var castMethod = typeof(UnhollowerBaseLib.Il2CppObjectBase)
+    var castMethod = typeof(
+#if ML6
+                         Il2CppInterop.Runtime.InteropTypes.Il2CppObjectBase
+#else
+                         UnhollowerBaseLib.Il2CppObjectBase
+#endif
+                         )
                          .GetMethod("TryCast")
                          .MakeGenericMethod(type);
     return castMethod.Invoke(collider, null) as UnityEngine.Collider;
   }
 
   public static bool IsColliderPhysical(UnityEngine.Collider collider) {
-    if (!collider.enabled || collider.isTrigger)
+    if (collider.isTrigger)
       return false;
     if ((collider.gameObject.layer & NonPhysicalLayerMask) != 0)
       return false;
@@ -185,19 +192,37 @@ public static class Colliders {
   public class ColliderVisualization : MonoBehaviour {
     public UnityEngine.Collider Collider;
 
+    private Vector3 _cachedCenter;
+    private Vector3 _cachedOther;
+
     public ColliderVisualization(IntPtr ptr) : base(ptr) {}
 
+    private bool NeedsUpdate(Vector3 center, Vector3 other) {
+      if (center == _cachedCenter && other == _cachedOther)
+        return false;
+
+      _cachedCenter = center;
+      _cachedOther = other;
+      return true;
+    }
+
+    // TODO: Don't call for static objects (at least every update)
     public void Update() {
-      gameObject.active = Collider.gameObject.active && Collider.enabled;
+      gameObject.active = Collider.enabled;
 
       switch (Collider) {
       case BoxCollider boxCollider: {
+        if (!NeedsUpdate(boxCollider.center, boxCollider.size))
+          break;
         transform.localPosition = boxCollider.center;
         transform.localScale = boxCollider.size;
         break;
       }
 
       case SphereCollider sphereCollider: {
+        if (!NeedsUpdate(sphereCollider.center,
+                         new Vector3(sphereCollider.radius, 0f, 0f)))
+          break;
         transform.localPosition = sphereCollider.center;
         var diameter = sphereCollider.radius * 2;
         transform.localScale = new Vector3(diameter, diameter, diameter);
@@ -205,18 +230,24 @@ public static class Colliders {
       }
 
       case CapsuleCollider capsuleCollider: {
+        if (!NeedsUpdate(capsuleCollider.center,
+                         new Vector3(capsuleCollider.direction,
+                                     capsuleCollider.radius,
+                                     capsuleCollider.height)))
+          break;
         transform.localPosition = capsuleCollider.center;
         transform.localRotation =
             capsuleCollider.direction == 0   ? Quaternion.Euler(0, 0, 90)
             : capsuleCollider.direction == 2 ? Quaternion.Euler(90, 0, 0)
                                              : Quaternion.identity;
         var diameter = capsuleCollider.radius * 2;
+        var cylinderHeight = Mathf.Max(0f, capsuleCollider.height - diameter);
         transform.GetChild(0).localScale =
-            new Vector3(diameter, capsuleCollider.height, diameter);
+            new Vector3(diameter, cylinderHeight, diameter);
         foreach (var i in new[] { 1, 2 }) {
           var sphere = transform.GetChild(i);
           sphere.localPosition =
-              new Vector3(0, capsuleCollider.height / (i == 1 ? -2 : 2), 0);
+              new Vector3(0, cylinderHeight / (i == 1 ? -2 : 2), 0);
           sphere.localScale = new Vector3(diameter, diameter, diameter);
         }
         break;

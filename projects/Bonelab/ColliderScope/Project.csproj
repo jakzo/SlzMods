@@ -4,17 +4,17 @@
   <Target Name="BuildAll">
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5;CopyIntoGameAfterBuild=true" />
-    <!-- <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=4;MelonLoader=5" />
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
-      Properties="Configuration=$(Configuration);Patch=4;MelonLoader=6" /> -->
+      Properties="Configuration=$(Configuration);Patch=4;MelonLoader=6" />
   </Target>
 
   <PropertyGroup>
     <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
-    <RootNamespace>Sst.Colliders</RootNamespace>
+    <RootNamespace>Sst.ColliderScope</RootNamespace>
     <OutputPath>bin\$(Configuration)\Patch$(Patch)_MelonLoader0.$(MelonLoader)\</OutputPath>
-    <AssemblyName>Colliders.P$(Patch).ML$(MelonLoader)</AssemblyName>
+    <AssemblyName>ColliderScope.P$(Patch).ML$(MelonLoader)</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

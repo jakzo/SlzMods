@@ -91,7 +91,7 @@ public static class Unity {
   }
 
   public static Color GenerateColor(int i) =>
-      Color.HSVToRGB(i * 0.064f, 0.9f - i / 16 * 0.3f % 0.8f, 0.9f);
+      Color.HSVToRGB(i * 0.064f % 1f, 0.9f - i / 16 * 0.3f % 0.8f, 0.9f);
 
   public static Shader FindShader(string name) =>
       Resources.FindObjectsOfTypeAll<Shader>().First(shader => shader.name ==

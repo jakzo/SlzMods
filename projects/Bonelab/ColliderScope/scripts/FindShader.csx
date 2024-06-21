@@ -1,4 +1,4 @@
-#r "../bin/Debug/Patch3_MelonLoader0.5/Colliders.P3.ML5.dll"
+#r "../bin/Debug/Patch3_MelonLoader0.5/ColliderScope.P3.ML5.dll"
 #r "../../../../references/Other/UnityExplorer.dll"
 
 using UnityEngine;

@@ -41,7 +41,7 @@ Project("{D47BB0CA-36CA-0AA0-74ED-4117FDB1FCE4}") = "BonelabThirdPersonCamera", 
 EndProject
 Project("{1D0D07E2-0C07-604C-1B55-2A84455C427E}") = "BonelabTasTool", "projects\Bonelab\TasTool\TasTool.csproj", "{BC8503B6-89E1-171A-9C86-3673F3F8EA13}"
 EndProject
-Project("{9C2FCA83-0D5B-3617-C065-E60B9F23F746}") = "BonelabColliders", "projects\Bonelab\Colliders\Project.csproj", "{D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}"
+Project("{9C2FCA83-0D5B-3617-C065-E60B9F23F746}") = "BonelabColliderScope", "projects\Bonelab\ColliderScope\Project.csproj", "{D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}"
 EndProject
 Project("{DC2D8CF7-AF23-373A-3B1B-6B571C815BC7}") = "BonelabPancakeMode", "projects\Bonelab\PancakeMode\PancakeMode.csproj", "{36334481-E244-AFBB-451D-DC47A3ED475D}"
 EndProject

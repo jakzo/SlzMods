@@ -2,26 +2,28 @@
 import fs from "fs/promises";
 import path from "path";
 
-// Find these by:
-// - Opening the DLL in Ghidra
-// - Searching for "MarrowGame: Entitlement Failed"
-// - Going to the place the string is used
-// - Copying the bytes of the CALL instruction right before the TEST AL, AL and
-//   `Debug.Log("MarrowGame: Entitlement Failed"); Application.Quit();`
-const ENTITLEMENT_CHECK_CALL_BYTES = {
-  patch3: "e8 9e f7 37 fe",
-  patch4: "e8 01 9e e3 fd",
+// To find these:
+// - In Player.log there should be a line like "MarrowGame: Entitlement Failed"
+// - Open the DLL in Ghidra
+// - Search for the log line
+// - Go to the place the string is used
+// - Open the function which is called right before the TEST AL, AL and
+//   `Debug.Log(logLine); Application.Quit();`
+// - Copy the starting bytes of this function (enough that it is unique)
+const ENTITLEMENT_CHECK_FUNC_BYTES = {
+  patch3:
+    "40 53 48 83 ec 20 48 8b 19 48 85 db 0f 84 b3 00 00 00 48 89 7c 24 30 48 8b 42 20 0f b7 79 0a",
 };
 
-const MOV_AL_1 = "b0 01 90 90 90";
+const MOV_AL_1_RET = "b0 01 c3";
 
 const hexStrToBytes = (/** @type string */ str) =>
-  Buffer.from(str.split(" ").map((b) => parseInt(b, 16)));
+  Buffer.from(str.split(/\s+/).map((b) => parseInt(b, 16)));
 
 const gameAssemblyPath = process.argv[2] || "GameAssembly.dll";
 
 const gameAssembly = await fs.readFile(gameAssemblyPath);
-for (const [patch, hexStr] of Object.entries(ENTITLEMENT_CHECK_CALL_BYTES)) {
+for (const [patch, hexStr] of Object.entries(ENTITLEMENT_CHECK_FUNC_BYTES)) {
   const bytes = hexStrToBytes(hexStr);
   const matchIndex = gameAssembly.indexOf(bytes);
   if (matchIndex === -1) continue;
@@ -32,13 +34,13 @@ for (const [patch, hexStr] of Object.entries(ENTITLEMENT_CHECK_CALL_BYTES)) {
     gameAssemblyPath,
     path.join(pathParts.dir, pathParts.name + ".original" + pathParts.ext)
   );
-  hexStrToBytes(MOV_AL_1).copy(gameAssembly, matchIndex);
+  hexStrToBytes(MOV_AL_1_RET).copy(gameAssembly, matchIndex);
   await fs.writeFile(gameAssemblyPath, gameAssembly);
   console.log("Success 😈");
   process.exit(0);
 }
 
 console.error(
-  "Could not find entitlement check. Is it an Oculus version, patch 3/4 and not already patched?"
+  "Could not find entitlement check. Is it a supported Oculus version and not already patched?"
 );
 process.exit(1);

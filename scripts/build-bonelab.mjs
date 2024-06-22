@@ -111,8 +111,27 @@ EndGlobal
 
 const startAfterBuild = !!process.argv[2];
 
+const directoryBuildContents = await fs.readFile(
+  path.join(rootDir, "projects", "Bonelab", "Directory.Build.props"),
+  "utf-8"
+);
+const versions = {
+  patch: directoryBuildContents.match(/<DefaultPatch>([^<]+)</)?.[1] ?? "3",
+  melonLoader:
+    directoryBuildContents.match(/<DefaultMelonLoader>([^<]+)</)?.[1] ?? "5",
+};
+
+const bonelabDir = `Bonelab_P${versions.patch}_ML${versions.melonLoader}`;
+const bonelabExe = "BONELAB_Oculus_Windows64.exe";
+
 switch (process.platform) {
   case "win32": {
+    if (startAfterBuild) {
+      spawnSync("taskkill", ["/IM", bonelabExe, "/F"], {
+        stdio: "inherit",
+      });
+    }
+
     const result = spawnSync("dotnet", ["build"], {
       stdio: "inherit",
       cwd: rootDir,
@@ -121,10 +140,14 @@ switch (process.platform) {
 
     if (startAfterBuild) {
       console.log("Starting Bonelab...");
-      // TODO: Have the build output the game path
-      const bonelabPath =
-        "C:\\Program Files\\Oculus\\Software\\Software\\Bonelab_P3_ML5\\BONELAB_Oculus_Windows64.exe";
-      spawn(bonelabPath, { stdio: "inherit", detached: true }).unref();
+      const gamePath = `C:\\Program Files\\Oculus\\Software\\Software\\${bonelabDir}`;
+      if (gamePath) {
+        spawn(path.join(gamePath, bonelabExe), {
+          stdio: "inherit",
+          detached: true,
+          cwd: gamePath,
+        }).unref();
+      }
     }
 
     break;
@@ -137,11 +160,12 @@ switch (process.platform) {
     if (startAfterBuild) {
       console.log("Starting Bonelab...");
       const vmName = "Windows 11";
-      const bonelabPath = `${process.env.HOME}/Downloads/Bonelab_P3_ML5/BONELAB_Oculus_Windows64.exe`;
+      // TODO: Get from build output
+      const bonelabPath = `${process.env.HOME}/Downloads/${bonelabDir}/${bonelabExe}`;
       spawnSync("prlctl", ["resume", vmName], { stdio: "inherit" });
       spawnSync(
         "prlctl",
-        ["exec", vmName, "taskkill", "/IM", path.basename(bonelabPath), "/F"],
+        ["exec", vmName, "taskkill", "/IM", bonelabExe, "/F"],
         { stdio: "inherit" }
       );
       spawnSync("open", [bonelabPath], { stdio: "inherit" });

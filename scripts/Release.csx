@@ -80,23 +80,24 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
 
   var projectRelativePath = Path.Combine("projects", gameName, projectName);
   var appVersionPath = Path.Combine(projectRelativePath, "AppVersion.cs");
-  var appCode = File.ReadAllText(appVersionPath);
+  var appVersionCode = File.ReadAllText(appVersionPath);
   const string APP_VERSION_SEARCH_TERM = "Value = \"";
-  var appStartIdx = appCode.IndexOf(APP_VERSION_SEARCH_TERM);
+  var appStartIdx = appVersionCode.IndexOf(APP_VERSION_SEARCH_TERM);
   if (appStartIdx == -1)
     throw new Exception("App version not found");
   appStartIdx += APP_VERSION_SEARCH_TERM.Length;
-  var appEndIdx = appCode.IndexOf("\"", appStartIdx);
-  var oldVersion = appCode.Substring(appStartIdx, appEndIdx - appStartIdx);
+  var appEndIdx = appVersionCode.IndexOf("\"", appStartIdx);
+  var oldVersion =
+      appVersionCode.Substring(appStartIdx, appEndIdx - appStartIdx);
   var newVersion = SemverIncrement(oldVersion, semverTypeIdx);
 
   Console.WriteLine($"Old version = {oldVersion}");
   Console.WriteLine($"Version increment type = {semverTypeArg}");
   Console.WriteLine($"New version = {newVersion}");
 
-  File.WriteAllText(appVersionPath, appCode.Substring(0, appStartIdx) +
+  File.WriteAllText(appVersionPath, appVersionCode.Substring(0, appStartIdx) +
                                         newVersion +
-                                        appCode.Substring(appEndIdx));
+                                        appVersionCode.Substring(appEndIdx));
 
   UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
   var isLiveSplitComponent = UpdateLiveSplitChangelog(

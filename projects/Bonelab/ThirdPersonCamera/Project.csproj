@@ -1,19 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
-  <!-- All game/Melon Loader version combinations to build -->
-  <!-- You can append `;CopyIntoGameAfterBuild=true` to one of the `Properties` here -->
   <Target Name="BuildAll">
+    <!-- All game/Melon Loader version combinations to build -->
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
-      Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5;CopyIntoGameAfterBuild=true" />
-    <!-- <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
-      Properties="Configuration=$(Configuration);Patch=4;MelonLoader=6" /> -->
+      Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5" />
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+      Properties="Configuration=$(Configuration);Patch=4;MelonLoader=6" />
   </Target>
 
   <PropertyGroup>
-    <ModName>ThirdPersonCamera</ModName>
-    <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
+    <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild>
 
-    <RootNamespace>Sst.$(ModName)</RootNamespace>
-    <AssemblyName>$(ModName).P$(Patch).ML$(MelonLoader)</AssemblyName>
+    <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
   </PropertyGroup>
 
   <ItemGroup>

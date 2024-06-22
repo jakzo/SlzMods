@@ -110,6 +110,17 @@ jobs:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
         run: node ./scripts/release-to-thunderstore.mjs "$env:GAME" "$env:PROJECT" "$env:NEW_VERSION"
 
+      - name: Release to Github
+        if: steps.bump_version.outputs.release_thunderstore != 'true' && steps.bump_version.outputs.release_livesplit != 'true'
+        shell: pwsh
+        env:
+          GAME: ${{ matrix.changeset.game }}
+          PROJECT: ${{ matrix.changeset.project }}
+          NEW_VERSION: ${{ steps.bump_version.outputs.new_version }}
+        run: |
+          node ./scripts/release-to-github.mjs "$env:GAME" "$env:PROJECT"
+          Compress-Archive -Path "./projects/$env:GAME/$env:PROJECT/dist/build/*" -DestinationPath "./projects/$env:GAME/$env:PROJECT/dist/$env:GAME-$env:PROJECT-$env:NEW_VERSION.zip" -Verbose
+
       - name: Copy LiveSplit build for commit
         if: steps.bump_version.outputs.release_livesplit == 'true'
         env:
@@ -154,6 +165,7 @@ jobs:
           tag_name: "${{ matrix.changeset.game }}${{ matrix.changeset.project }}_v${{ steps.bump_version.outputs.new_version }}"
           body: ${{ steps.bump_version.outputs.changelog }}
           files: |
+            ./projects/${{ matrix.changeset.game }}/${{ matrix.changeset.project }}/dist/*.zip
             ./projects/${{ matrix.changeset.game }}/${{ matrix.changeset.project }}/thunderstore/build/*.zip
             ./projects/${{ matrix.changeset.game }}/${{ matrix.changeset.project }}/bin/Release/${{ matrix.changeset.project }}.dll
 

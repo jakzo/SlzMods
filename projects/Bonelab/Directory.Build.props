@@ -6,10 +6,13 @@
 
   <PropertyGroup Condition=" '$(IsNewProject)' == 'true' ">
     <!-- Defaults (used by IDE autocomplete/syntax highlighting) -->
-    <TargetFrameworks Condition=" '$(MelonLoader)' == '' ">net6.0;net472</TargetFrameworks>
+    <DefaultPatch>3</DefaultPatch>
+    <DefaultMelonLoader>5</DefaultMelonLoader>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Patch Condition=" '$(Patch)' == '' ">3</Patch>
-    <MelonLoader Condition=" '$(MelonLoader)' == '' ">5</MelonLoader>
+    <TargetFrameworks Condition=" '$(MelonLoader)' == '' ">net6.0;net472</TargetFrameworks>
+
+    <Patch Condition=" '$(Patch)' == '' ">$(DefaultPatch)</Patch>
+    <MelonLoader Condition=" '$(MelonLoader)' == '' ">$(DefaultMelonLoader)</MelonLoader>
 
     <TargetFramework Condition=" '$(MelonLoader)' == '6' ">net6.0</TargetFramework>
     <TargetFramework Condition=" '$(MelonLoader)' == '5' ">net472</TargetFramework>
@@ -30,6 +33,9 @@
 
     <DefineConstants>TRACE;PATCH$(Patch);MELONLOADER;ML$(MelonLoader)</DefineConstants>
 
+    <ModName>$([System.IO.Path]::GetFileName($(MSBuildProjectDirectory)))</ModName>
+    <RootNamespace>Sst.$(ModName)</RootNamespace>
+    <AssemblyName>$(ModName).P$(Patch).ML$(MelonLoader)</AssemblyName>
     <OutputPath>bin\$(Configuration)\Patch$(Patch)_MelonLoader0.$(MelonLoader)\</OutputPath>
 
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -59,14 +65,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent"
-    Condition=" '$(IsNewProject)' == 'true' and '$(CopyIntoGameAfterBuild)' == 'true' and '$(GITHUB_ACTIONS)' != 'true' and '$(BonelabPath)' != '' ">
+  <Target Name="CopyToGame" AfterTargets="PostBuildEvent"
+    Condition=" '$(IsNewProject)' == 'true' and '$(CopyIntoGameAfterBuild)' == 'true' and '$(GITHUB_ACTIONS)' != 'true' and '$(BonelabPath)' != '' and '$(Patch)' == '$(DefaultPatch)' and '$(MelonLoader)' == '$(DefaultMelonLoader)' ">
     <Exec Condition=" '$(OS)' == 'Windows_NT' "
       Command="COPY &quot;$(TargetPath)&quot; &quot;$(BonelabPath)/Mods&quot;" />
 
     <Exec Condition=" '$(OS)' != 'Windows_NT' "
       Command="cp &quot;$(TargetPath)&quot; &quot;$(BonelabPath)/Mods&quot;" />
-
   </Target>
 
   <!-- TODO: How can I exclude netstandard.dll? I just deleted it for now -->

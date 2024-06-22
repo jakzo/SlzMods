@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
-  <!-- All game/Melon Loader version combinations to build -->
-  <!-- You can append `;CopyIntoGameAfterBuild=true` to one of the `Properties` here -->
   <Target Name="BuildAll">
+    <!-- All game/Melon Loader version combinations to build -->
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5" />
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
@@ -11,10 +10,9 @@
   </Target>
 
   <PropertyGroup>
+    <!-- <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild> -->
+
     <ProjectGuid>{B08C3577-91FF-4261-AA3A-743E011DB435}</ProjectGuid>
-    <RootNamespace>Sst.SpeedrunTimer</RootNamespace>
-    <OutputPath>bin\$(Configuration)\Patch$(Patch)_MelonLoader0.$(MelonLoader)\</OutputPath>
-    <AssemblyName>SpeedrunTimer.P$(Patch).ML$(MelonLoader)</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

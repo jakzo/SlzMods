@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
-  <!-- All game/Melon Loader version combinations to build -->
-  <!-- You can append `;CopyIntoGameAfterBuild=true` to one of the `Properties` here -->
   <Target Name="BuildAll">
+    <!-- All game/Melon Loader version combinations to build -->
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
-      Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5;CopyIntoGameAfterBuild=true" />
+      Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5" />
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=4;MelonLoader=5" />
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
@@ -11,10 +10,9 @@
   </Target>
 
   <PropertyGroup>
+    <!-- <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild> -->
+
     <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
-    <RootNamespace>Sst.ColliderScope</RootNamespace>
-    <OutputPath>bin\$(Configuration)\Patch$(Patch)_MelonLoader0.$(MelonLoader)\</OutputPath>
-    <AssemblyName>ColliderScope.P$(Patch).ML$(MelonLoader)</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

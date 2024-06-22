@@ -11,7 +11,7 @@ import path from "path";
 //   `Debug.Log(logLine); Application.Quit();`
 // - Copy the starting bytes of this function (enough that it is unique)
 const ENTITLEMENT_CHECK_FUNC_BYTES = {
-  patch3:
+  patch_3_or_4:
     "40 53 48 83 ec 20 48 8b 19 48 85 db 0f 84 b3 00 00 00 48 89 7c 24 30 48 8b 42 20 0f b7 79 0a",
 };
 

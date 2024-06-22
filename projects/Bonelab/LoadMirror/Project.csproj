@@ -1,19 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
-  <!-- All game/Melon Loader version combinations to build -->
-  <!-- You can append `;CopyIntoGameAfterBuild=true` to one of the `Properties` here -->
   <Target Name="BuildAll">
+    <!-- All game/Melon Loader version combinations to build -->
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
-      Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5;CopyIntoGameAfterBuild=true" />
+      Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5" />
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=4;MelonLoader=6" />
   </Target>
 
   <PropertyGroup>
-    <ModName>LoadMirror</ModName>
-    <ProjectGuid>{B08C3577-91FF-4261-AA3A-743E011DB435}</ProjectGuid>
+    <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild>
 
-    <RootNamespace>Sst.$(ModName)</RootNamespace>
-    <AssemblyName>$(ModName).P$(Patch).ML$(MelonLoader)</AssemblyName>
+    <ProjectGuid>{B08C3577-91FF-4261-AA3A-743E011DB435}</ProjectGuid>
   </PropertyGroup>
 
   <ItemGroup>

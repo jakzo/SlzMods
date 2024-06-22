@@ -15,7 +15,6 @@ if (!game || !project || !newVersion) {
   );
   process.exit(1);
 }
-const gameLower = game.toLowerCase();
 
 const projectDir = path.join("projects", game, project);
 const readmeContents = await fs.readFile(

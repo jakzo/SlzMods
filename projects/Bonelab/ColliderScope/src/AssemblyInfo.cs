@@ -26,6 +26,6 @@ namespace Sst.ColliderScope {
 public static class BuildInfo {
   public const string NAME = "ColliderScope";
   public const string DESCRIPTION =
-      "Shows the shape of physical colliders and hitboxes.";
+      "Shows the shape of physical colliders and hitboxes. Kinda like X-ray vision.";
 }
 }

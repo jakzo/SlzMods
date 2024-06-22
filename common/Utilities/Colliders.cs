@@ -7,6 +7,7 @@ using System.Linq;
 
 #if ML6
 using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes;
 #else
 using UnhollowerRuntimeLib;
 using UnhollowerBaseLib;
@@ -21,40 +22,74 @@ public static class Colliders {
   public static Assembly UnityAssembly {
     get => _unityAssembly ??
            (_unityAssembly = AppDomain.CurrentDomain.GetAssemblies().First(
-                asm => asm.GetName().Name == "UnityEngine"));
+                asm => asm.GetType("UnityEngine.Collider") != null));
   }
 
-  public static int NonPhysicalLayerMask = LayerMask.GetMask(new[] {
-    "UI",
-    "Trigger",
-  });
+  public static int NonPhysicalLayerMask = LayerMask.GetMask(
+#if PATCH4
+      new[] {
+        // "Default",
+        // "TransparentFX",
+        "Ignore Raycast", "ObserverTrigger", "Water", "UI",
+            // "Fixture",
+            // "Player",
+            "NoCollide",
+            // "Dynamic",
+            // "EnemyColliders",
+            // "Interactable",
+            "Decaverse", "Deciverse", "Socket", "Plug",
+            // "PlayerAndNpc",
+            // "FeetOnly",
+            // "NoFootball",
+            "EntityTracker", "BeingTracker", "ObserverTracker", "EntityTrigger",
+            "BeingTrigger", "Background",
+      }
+#else
+      // Patch 3
+      new[] {
+        // "Default",
+        // "TransparentFX",
+        "Ignore Raycast",
+        // "Water",
+        "UI",
+        // "Player",
+        "NoCollide",
+        // "Dynamic",
+        // "SterioRender_Ignore",
+        // "EnemyColliders",
+        // "Static",
+        // "SpawnGunUI",
+        // "Interactable",
+        // "Hand",
+        // "HandOnly",
+        "Socket", "Plug", "InteractableOnly",
+        // "PlayerAndNpc",
+        // "NoSelfCollide",
+        // "FeetOnly",
+        // "NoFootball",
+        "Tracker", "Trigger",
+        // "Background",
+      }
+#endif
+  );
 
   // TODO: I think ML6 has a built-in for this
-  public static UnityEngine.Collider
-  ToUnderlyingType(UnityEngine.Collider collider) {
+  public static Collider ToUnderlyingType(Collider collider) {
     var classPtr = IL2CPP.il2cpp_object_get_class(collider.Pointer);
     Il2CppSystem.Type il2cppType = Il2CppType.TypeFromPointer(classPtr);
     var type = UnityAssembly.GetType(il2cppType.FullName);
-    var castMethod = typeof(
-#if ML6
-                         Il2CppInterop.Runtime.InteropTypes.Il2CppObjectBase
-#else
-                         UnhollowerBaseLib.Il2CppObjectBase
-#endif
-                         )
-                         .GetMethod("TryCast")
-                         .MakeGenericMethod(type);
-    return castMethod.Invoke(collider, null) as UnityEngine.Collider;
+    var castMethod =
+        typeof(Il2CppObjectBase).GetMethod("TryCast").MakeGenericMethod(type);
+    return castMethod.Invoke(collider, null) as Collider;
   }
 
-  public static bool IsColliderPhysical(UnityEngine.Collider collider) {
+  public static bool IsColliderPhysical(Collider collider) {
     if (collider.isTrigger)
       return false;
-    if ((collider.gameObject.layer & NonPhysicalLayerMask) != 0)
+    if (((1 << collider.gameObject.layer) & NonPhysicalLayerMask) != 0)
       return false;
     if (collider.attachedRigidbody) {
-      return !collider.attachedRigidbody.isKinematic &&
-             collider.attachedRigidbody.detectCollisions;
+      return collider.attachedRigidbody.detectCollisions;
     }
     return true;
   }
@@ -78,7 +113,7 @@ public static class Colliders {
       Utilities.Unity.FindDescendantComponentsOfType(
           ref colliders, rootObject.transform, true);
       foreach (var unknownCollider in colliders) {
-        yield return Utilities.Colliders.ToUnderlyingType(unknownCollider);
+        yield return ToUnderlyingType(unknownCollider);
       }
     }
   }
@@ -120,15 +155,18 @@ public static class Colliders {
     }
   }
 
-  public static ColliderVisualization Visualize(Collider collider, Color color,
-                                                Shader shader,
-                                                Transform parent = null) {
-    GameObject visualization;
+  public static ColliderVisualization
+  Visualize(Collider collider, Color color, Shader shader,
+            bool watchForChanges = true,
+            Func<ColliderVisualization, bool> onUpdate = null,
+            Transform parent = null) {
+    var castedCollider = ToUnderlyingType(collider);
 
     if (parent == null)
-      parent = collider.transform;
+      parent = castedCollider.transform;
 
-    switch (collider) {
+    GameObject visualization;
+    switch (castedCollider) {
     case BoxCollider boxCollider: {
       visualization = GameObject.Instantiate(DebugColliderPrefabs.BOX, parent);
       SetMaterial(visualization, color, shader);
@@ -177,38 +215,45 @@ public static class Colliders {
 
     default: {
       MelonLogger.Warning(
-          $"Cannot render collider of unsupported type: {collider}");
+          $"Cannot render collider of unsupported type: {castedCollider}");
       return null;
     }
     }
 
     var cv = visualization.AddComponent<ColliderVisualization>();
-    cv.Collider = collider;
-    cv.Update();
+    cv.Collider = castedCollider;
+    cv.Renderers =
+        visualization.GetComponents<Renderer>()
+            .Concat(visualization.GetComponentsInChildren<Renderer>())
+            .ToArray();
+    cv.WatchForChanges = watchForChanges;
+    cv.OnUpdate = onUpdate;
+    cv.UpdateVisualization();
     return cv;
   }
 
   [RegisterTypeInIl2Cpp]
   public class ColliderVisualization : MonoBehaviour {
-    public UnityEngine.Collider Collider;
+    public Collider Collider;
+    public Renderer[] Renderers;
+    public bool WatchForChanges = false;
+    /// Called at UpdateVisualization start and cancels update if returns false
+    public Func<ColliderVisualization, bool> OnUpdate;
 
     private Vector3 _cachedCenter;
     private Vector3 _cachedOther;
+    private MeshFilter _meshFilter;
 
     public ColliderVisualization(IntPtr ptr) : base(ptr) {}
 
-    private bool NeedsUpdate(Vector3 center, Vector3 other) {
-      if (center == _cachedCenter && other == _cachedOther)
-        return false;
-
-      _cachedCenter = center;
-      _cachedOther = other;
-      return true;
+    public void LateUpdate() {
+      if (WatchForChanges)
+        UpdateVisualization();
     }
 
-    // TODO: Don't call for static objects (at least every update)
-    public void Update() {
-      gameObject.active = Collider.enabled;
+    public void UpdateVisualization() {
+      if (!(OnUpdate?.Invoke(this) ?? true))
+        return;
 
       switch (Collider) {
       case BoxCollider boxCollider: {
@@ -252,7 +297,27 @@ public static class Colliders {
         }
         break;
       }
+
+      case MeshCollider meshCollider: {
+        if (_meshFilter == null) {
+          _meshFilter = GetComponent<MeshFilter>();
+          if (_meshFilter == null)
+            break;
+        }
+        if (meshCollider.sharedMesh != _meshFilter.mesh)
+          _meshFilter.mesh = meshCollider.sharedMesh;
+        break;
       }
+      }
+    }
+
+    private bool NeedsUpdate(Vector3 center, Vector3 other) {
+      if (center == _cachedCenter && other == _cachedOther)
+        return false;
+
+      _cachedCenter = center;
+      _cachedOther = other;
+      return true;
     }
   }
 

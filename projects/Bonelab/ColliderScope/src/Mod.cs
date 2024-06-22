@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
@@ -6,38 +7,36 @@ using Sst.Utilities;
 using HarmonyLib;
 using UnityEngine.SceneManagement;
 
-#if ML6
-using Il2CppSLZ.Marrow.SceneStreaming;
+#if PATCH4 && ML6
+using Il2CppSLZ.Marrow.Zones;
+#elif PATCH4 && ML5
+using SLZ.Marrow.Zones;
 #else
 using SLZ.Marrow.SceneStreaming;
 #endif
 
-#if DEBUG
-
-#if ML6
+#if DEBUG && ML6
 using Il2CppSLZ.Marrow.Warehouse;
 using Il2CppSLZ.Bonelab;
-#else
+#elif DEBUG && ML5
 using SLZ.Marrow.Warehouse;
 using SLZ.Bonelab;
-#endif
-
-using System.Linq;
 #endif
 
 namespace Sst.ColliderScope;
 
 public class Mod : MelonMod {
-  private enum Mode { NONE, RIG, PHYSICAL, TRIGGER }
+  public enum Mode { NONE, RIG, PHYSICAL, TRIGGER }
 
   public static Mod Instance;
 
   private MelonPreferences_Entry<Mode> _prefMode;
   private MelonPreferences_Entry<bool> _prefHideVisuals;
+  private MelonPreferences_Entry<bool> _prefHideHeadColliders;
+  private MelonPreferences_Entry<bool> _prefOnlyResizeRigColliders;
   private MelonPreferences_Entry<float> _prefIterationsPerFrame;
   private MelonPreferences_Entry<float> _prefBackgroundIterationsPerFrame;
-  private HashSet<Utilities.Colliders.ColliderVisualization> _visualizations =
-      new();
+  private HashSet<Colliders.ColliderVisualization> _visualizations = new();
   private HashSet<int> _collidersBeingVisualized = new();
   private HashSet<Renderer> _disabledRenderers = new();
   private HashSet<string> _processedScenes = new();
@@ -53,25 +52,46 @@ public class Mod : MelonMod {
     _prefMode = category.CreateEntry("mode", Mode.PHYSICAL, "Mode",
                                      "Which things to show colliders of");
     _prefHideVisuals = category.CreateEntry(
-        "hideVisuals", false, "Hide visuals",
+        "hideVisuals", true, "Hide visuals",
         "Hides visuals so that only collider visualizations can be seen");
+    _prefHideHeadColliders = category.CreateEntry(
+        "hideHeadColliders", true, "Hide head colliders",
+        "Hides head colliders so that they do not obscure your vision");
+    _prefOnlyResizeRigColliders = category.CreateEntry(
+        "onlyResizeRigColliders", true, "Only resize rig colliders",
+        "Improves performance by watching for changes to collider size on only the rig");
     // TODO: Change to frame time allocated for colliders
     _prefIterationsPerFrame = category.CreateEntry(
-        "iterationsPerFrame", 4f, "Iterations per frame",
+        "iterationsPerFrame", 8f, "Iterations per frame",
         "Number of game objects to show colliders of per frame on load (higher loads faster but too high lags and crashes the game)");
     _prefBackgroundIterationsPerFrame = category.CreateEntry(
-        "backgroundIterationsPerFrame", 1f, "Background iterations per frame",
+        "backgroundIterationsPerFrame", 2f, "Background iterations per frame",
         "Number of game objects to show colliders of per frame in the background (runs continuously to catch any objects added during play)");
 
     LevelHooks.OnLoad += nextLevel => ResetState();
     LevelHooks.OnLevelStart += level => Visualize(false);
     _prefMode.OnEntryValueChanged.Subscribe((a, b) => Visualize(true));
     _prefHideVisuals.OnEntryValueChanged.Subscribe((a, b) => Visualize(true));
+    _prefHideHeadColliders.OnEntryValueChanged.Subscribe((a, b) =>
+                                                             Visualize(true));
   }
 
   public override void OnUpdate() {
     if (LevelHooks.IsLoading)
       return;
+
+#if DEBUG
+    if (LevelHooks.RigManager?.ControllerRig.rightController
+            .GetThumbStickDown() ??
+        false) {
+      foreach (var transform in Utilities.Unity.AllDescendantTransforms(
+                   LevelHooks.RigManager.physicsRig.m_head, true)) {
+        if (transform.name.StartsWith("SpeedrunTools_")) {
+          transform.gameObject.SetActive(!transform.gameObject.active);
+        }
+      }
+    }
+#endif
 
     if (_visualizerEnumerator == null) {
       // Objects can be added to the scene after we've processed everything,
@@ -107,7 +127,7 @@ public class Mod : MelonMod {
     _isInitializing = false;
   }
 
-  private void Visualize(bool clear, bool allAtOnce = false) {
+  public void Visualize(bool clear, bool allAtOnce = false) {
     _isInitializing = true;
     if (allAtOnce) {
       Dbg.Log("Visualizing all at once...");
@@ -131,9 +151,7 @@ public class Mod : MelonMod {
     var transformsToVisualize = _prefMode.Value == Mode.RIG
                                     ? RigTransforms()
                                     : AllTransforms(onlyUnprocessedScenes);
-    var showPhysicalColliders = _prefMode.Value != Mode.TRIGGER;
-    foreach (var value in VisualizeTransforms(transformsToVisualize,
-                                              showPhysicalColliders)) {
+    foreach (var value in VisualizeTransforms(transformsToVisualize)) {
       yield return value;
     }
   }
@@ -193,26 +211,6 @@ public class Mod : MelonMod {
 
     _processedScenes.Clear();
 
-    foreach (var visualization in IterateAndRemove(_visualizations)) {
-      if (visualization) {
-        _collidersBeingVisualized.Remove(
-            visualization.Collider.GetInstanceID());
-
-        GameObject.Destroy(visualization.gameObject);
-
-        foreach (var renderer in visualization.transform.parent
-                     .GetComponents<Renderer>()) {
-          if (_disabledRenderers.Contains(renderer)) {
-            renderer.enabled = true;
-            _disabledRenderers.Remove(renderer);
-          }
-        }
-        yield return true;
-      }
-    }
-    _visualizations.Clear();
-    _collidersBeingVisualized.Clear();
-
     foreach (var renderer in IterateAndRemove(_disabledRenderers)) {
       if (renderer) {
         renderer.enabled = true;
@@ -220,6 +218,17 @@ public class Mod : MelonMod {
       }
     }
     _disabledRenderers.Clear();
+
+    foreach (var visualization in IterateAndRemove(_visualizations)) {
+      if (visualization) {
+        _collidersBeingVisualized.Remove(
+            visualization.Collider.GetInstanceID());
+        GameObject.Destroy(visualization.gameObject);
+        yield return true;
+      }
+    }
+    _visualizations.Clear();
+    _collidersBeingVisualized.Clear();
   }
 
   private IEnumerable<T> IterateAndRemove<T>(HashSet<T> set) {
@@ -232,12 +241,21 @@ public class Mod : MelonMod {
   }
 
   public IEnumerable<bool>
-  VisualizeTransforms(IEnumerable<Transform> transforms, bool onlyPhysical) {
+  VisualizeTransforms(IEnumerable<Transform> transforms) {
+    var head = LevelHooks.RigManager.physicsRig.m_head;
+
     foreach (var transform in transforms) {
-      if (transform.name.StartsWith("SpeedrunTools_"))
+      if (_prefHideHeadColliders.Value && transform == head)
         continue;
 
-      if (onlyPhysical && _prefHideVisuals.Value) {
+      if (transform.name.StartsWith("SpeedrunTools_")) {
+        transform.GetComponent<Colliders.ColliderVisualization>()
+            ?.UpdateVisualization();
+        yield return true;
+        continue;
+      }
+
+      if (OnlyShowPhysicalColliders() && _prefHideVisuals.Value) {
         foreach (var renderer in transform.GetComponents<Renderer>()) {
           if (renderer) {
             if (!renderer.enabled)
@@ -248,32 +266,71 @@ public class Mod : MelonMod {
         }
       }
 
-      foreach (var uncastedCollider in transform
-                   .GetComponents<UnityEngine.Collider>()) {
-        var collider = Utilities.Colliders.ToUnderlyingType(uncastedCollider);
-        if (_collidersBeingVisualized.Contains(collider.GetInstanceID()) ||
-            Utilities.Colliders.IsColliderPhysical(collider) != onlyPhysical)
+      foreach (var collider in transform.GetComponents<Collider>()) {
+        if (_collidersBeingVisualized.Contains(collider.GetInstanceID()))
           continue;
 
-        var color = Utilities.Unity.GenerateColor(
-            collider.attachedRigidbody ? collider.gameObject.layer + 2 : 1);
-
-        // Shader default renders double sided but highlighter does not.
-        // Mesh colliders only have collision in the direction of their faces
-        // but convex mesh colliders are solid.
-        if (collider is MeshCollider && !((MeshCollider)collider).convex) {
-          _visualizations.Add(Utilities.Colliders.Visualize(
-              collider, color, Shaders.HighlightShader));
-        } else {
-          color.a = 0.05f;
-          _visualizations.Add(Utilities.Colliders.Visualize(
-              collider, color, Shaders.DefaultShader));
-        }
+        var watchForChanges =
+            !_prefOnlyResizeRigColliders.Value || IsInRig(transform);
+        var visualization =
+            Colliders.Visualize(collider, Color.black, Shaders.DefaultShader,
+                                watchForChanges, OnVisualizationUpdate);
+        _visualizations.Add(visualization);
         _collidersBeingVisualized.Add(collider.GetInstanceID());
       }
 
       yield return true;
     }
+  }
+
+  private bool
+  OnVisualizationUpdate(Colliders.ColliderVisualization visualization) {
+    var shouldBeVisible =
+        visualization.Collider.enabled &&
+        Colliders.IsColliderPhysical(visualization.Collider) ==
+            OnlyShowPhysicalColliders();
+
+    foreach (var renderer in visualization.Renderers) {
+      if (renderer.enabled != shouldBeVisible)
+        renderer.enabled = shouldBeVisible;
+    }
+
+    if (!shouldBeVisible)
+      return false;
+
+    var color = Utilities.Unity.GenerateColor(
+        // TODO: Change
+        visualization.Collider.attachedRigidbody
+            ? visualization.Collider.gameObject.layer + 2
+            : 1);
+    color.a = 0.05f;
+
+    // Mesh colliders only have collision in the direction of their faces
+    // but convex mesh colliders are solid
+    var isOneSided = visualization.Collider is MeshCollider &&
+                     !((MeshCollider)visualization.Collider).convex;
+    // Shader default renders double sided but highlighter does not
+    var shader = isOneSided ? Shaders.HighlightShader : Shaders.DefaultShader;
+
+    foreach (var renderer in visualization.Renderers) {
+      if (renderer.material.color != color)
+        renderer.material.color = color;
+      if (renderer.material.shader != shader)
+        renderer.material.shader = shader;
+    }
+
+    return true;
+  }
+
+  private bool OnlyShowPhysicalColliders() => _prefMode.Value != Mode.TRIGGER;
+
+  private bool IsInRig(Transform transform) {
+    while (transform) {
+      if (transform == LevelHooks.RigManager.transform)
+        return true;
+      transform = transform.parent;
+    }
+    return false;
   }
 
   private void OnChunkLoaded() {
@@ -285,6 +342,15 @@ public class Mod : MelonMod {
     }
   }
 
+#if PATCH4
+  [HarmonyPatch(typeof(SceneChunk), nameof(SceneChunk.Awake))]
+  internal static class SceneChunk_Awake_Patch {
+    [HarmonyPostfix]
+    private static void Postfix(SceneChunk __instance) {
+      __instance.onChunkLoad += new Action(Instance.OnChunkLoaded);
+    }
+  }
+#else
   [HarmonyPatch(typeof(ChunkTrigger), nameof(ChunkTrigger.Awake))]
   internal static class ChunkTrigger_Awake_Patch {
     [HarmonyPostfix]
@@ -292,6 +358,7 @@ public class Mod : MelonMod {
       __instance.OnChunkLoaded.AddListener(new Action(Instance.OnChunkLoaded));
     }
   }
+#endif
 
 #if DEBUG
   public override void OnSceneWasInitialized(int buildindex, string sceneName) {

@@ -99,17 +99,19 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
                                         newVersion +
                                         appVersionCode.Substring(appEndIdx));
 
-  UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
-  var isLiveSplitComponent = UpdateLiveSplitChangelog(
-      projectRelativePath, projectName, newVersion, changelogDescription);
-
   Console.WriteLine("Setting Github action outputs");
   var escapedChangelog = changelogDescription.Replace("%", "%25")
                              .Replace("\n", "%0A")
                              .Replace("\r", "");
-  var githubOutput = Environment.GetEnvironmentVariable("GITHUB_ENV");
+  var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
   File.AppendAllText(githubOutput, $"new_version={newVersion}\n");
   File.AppendAllText(githubOutput, $"changelog={escapedChangelog}\n");
+
+  UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
+
+  var isLiveSplitComponent = UpdateLiveSplitChangelog(
+      projectRelativePath, projectName, newVersion, changelogDescription);
+
   var releaseThunderstore =
       ShouldReleaseToThunderstore(projectRelativePath, newVersion) ? "true"
                                                                    : "false";

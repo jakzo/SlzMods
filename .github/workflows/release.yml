@@ -161,7 +161,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           target_commitish: ${{ github.sha }}
-          name: "${{ matrix.changeset.game }}${{ matrix.changeset.project }} v${{ steps.bump_version.outputs.new_version }}"
+          name: "${{ matrix.changeset.game }} ${{ matrix.changeset.project }} v${{ steps.bump_version.outputs.new_version }}"
           tag_name: "${{ matrix.changeset.game }}${{ matrix.changeset.project }}_v${{ steps.bump_version.outputs.new_version }}"
           body: ${{ steps.bump_version.outputs.changelog }}
           files: |

@@ -100,12 +100,10 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
                                         appVersionCode.Substring(appEndIdx));
 
   Console.WriteLine("Setting Github action outputs");
-  var escapedChangelog = changelogDescription.Replace("%", "%25")
-                             .Replace("\n", "%0A")
-                             .Replace("\r", "");
   var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
   File.AppendAllText(githubOutput, $"new_version={newVersion}\n");
-  File.AppendAllText(githubOutput, $"changelog={escapedChangelog}\n");
+  File.AppendAllText(githubOutput,
+                     $"changelog<<EOF\n{changelogDescription}\nEOF\n");
 
   UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
 

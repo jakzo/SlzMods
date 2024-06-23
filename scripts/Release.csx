@@ -102,8 +102,11 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
   Console.WriteLine("Setting Github action outputs");
   var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
   File.AppendAllText(githubOutput, $"new_version={newVersion}\n");
-  File.AppendAllText(githubOutput,
-                     $"changelog<<EOF\n{changelogDescription}\nEOF\n");
+  var readmeUrl =
+      $"https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/{gameName}/{projectName}#readme";
+  File.AppendAllText(
+      githubOutput,
+      $"changelog<<EOF\n{changelogDescription}\n\n[{projectName} README]({readmeUrl})\nEOF\n");
 
   UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
 

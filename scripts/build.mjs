@@ -109,7 +109,8 @@ EndGlobal
   console.log("Build succeeded");
 };
 
-const startAfterBuild = !!process.argv[2];
+const game = process.argv[2]?.toLowerCase();
+const startAfterBuild = !!process.argv[3];
 
 const directoryBuildContents = await fs.readFile(
   path.join(rootDir, "projects", "Bonelab", "Directory.Build.props"),
@@ -123,6 +124,8 @@ const versions = {
 
 const bonelabDir = `Bonelab_P${versions.patch}_ML${versions.melonLoader}`;
 const bonelabExe = "BONELAB_Oculus_Windows64.exe";
+
+const boneworksExe = "BONEWORKS.exe";
 
 switch (process.platform) {
   case "win32": {
@@ -139,8 +142,11 @@ switch (process.platform) {
     if (result.error || result.status !== 0) process.exit(result.status || 1);
 
     if (startAfterBuild) {
-      console.log("Starting Bonelab...");
-      const gamePath = `C:\\Program Files\\Oculus\\Software\\Software\\${bonelabDir}`;
+      console.log(`Starting ${game}...`);
+      const gamePath =
+        game === "bonelab"
+          ? `C:\\Program Files\\Oculus\\Software\\Software\\${bonelabDir}`
+          : "TODO";
       if (gamePath) {
         spawn(path.join(gamePath, bonelabExe), {
           stdio: "inherit",
@@ -155,20 +161,25 @@ switch (process.platform) {
 
   case "linux":
   case "darwin": {
+    const vmName = "Windows 11";
+    if (startAfterBuild) {
+      const gameExe = game === "bonelab" ? bonelabExe : boneworksExe;
+      spawnSync("prlctl", ["resume", vmName], { stdio: "inherit" });
+      spawnSync("prlctl", ["exec", vmName, "taskkill", "/IM", gameExe, "/F"], {
+        stdio: "inherit",
+      });
+    }
+
     await buildUnix();
 
     if (startAfterBuild) {
-      console.log("Starting Bonelab...");
-      const vmName = "Windows 11";
+      console.log(`Starting ${game}...`);
       // TODO: Get from build output
-      const bonelabPath = `${process.env.HOME}/Downloads/${bonelabDir}/${bonelabExe}`;
-      spawnSync("prlctl", ["resume", vmName], { stdio: "inherit" });
-      spawnSync(
-        "prlctl",
-        ["exec", vmName, "taskkill", "/IM", bonelabExe, "/F"],
-        { stdio: "inherit" }
-      );
-      spawnSync("open", [bonelabPath], { stdio: "inherit" });
+      const gamePath =
+        game === "bonelab"
+          ? `${process.env.HOME}/Downloads/${bonelabDir}/${bonelabExe}`
+          : `/Volumes/[C] ${vmName}.hidden/Program Files (x86)/Steam/steamapps/common/BONEWORKS/BONEWORKS/${boneworksExe}`;
+      spawnSync("open", [gamePath], { stdio: "inherit" });
     }
 
     break;

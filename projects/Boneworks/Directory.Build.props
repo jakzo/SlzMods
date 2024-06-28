@@ -5,25 +5,15 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsNewProject)' == 'true' ">
-    <!-- Defaults (used by IDE autocomplete/syntax highlighting) -->
-    <DefaultPatch>4</DefaultPatch>
     <DefaultMelonLoader>5</DefaultMelonLoader>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <TargetFrameworks Condition=" '$(MelonLoader)' == '' ">net6.0;net472</TargetFrameworks>
-
-    <Patch Condition=" '$(Patch)' == '' ">$(DefaultPatch)</Patch>
+    <TargetFramework>net472</TargetFramework>
     <MelonLoader Condition=" '$(MelonLoader)' == '' ">$(DefaultMelonLoader)</MelonLoader>
 
-    <TargetFramework Condition=" '$(MelonLoader)' == '6' ">net6.0</TargetFramework>
-    <TargetFramework Condition=" '$(MelonLoader)' == '5' ">net472</TargetFramework>
-
-    <IsStandalone Condition=" '$(DefaultPatch)' == '4' and '$(DefaultMelonLoader)' == '5' ">true</IsStandalone>
-
-    <OculusPath>C:\Program Files\Oculus\Software\Software</OculusPath>
-    <BonelabPath Condition=" !Exists('$(BonelabPath)') ">$(OculusPath)\Bonelab_P$(Patch)_ML$(MelonLoader)</BonelabPath>
-    <BonelabPath Condition=" !Exists('$(BonelabPath)') ">$(OculusPath)\stress-level-zero-inc-bonelab</BonelabPath>
-    <BonelabPath Condition=" !Exists('$(BonelabPath)') ">$(HOME)/Downloads/Bonelab_P$(Patch)_ML$(MelonLoader)</BonelabPath>
-    <BonelabPath Condition=" !Exists('$(BonelabPath)') or '$(IsStandalone)' == 'true' "></BonelabPath>
+    <SteamPath>C:\Program Files\Oculus\Software\Software</SteamPath>
+    <BoneworksPath Condition=" !Exists('$(BoneworksPath)') ">$(SteamPath)\BONEWORKS</BoneworksPath>
+    <BoneworksPath Condition=" !Exists('$(BoneworksPath)') ">/Volumes/[C] Windows 11.hidden/Program Files (x86)/Steam/steamapps/common/BONEWORKS/BONEWORKS</BoneworksPath>
+    <BoneworksPath Condition=" !Exists('$(BoneworksPath)') "></BoneworksPath>
 
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
@@ -33,12 +23,12 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 
-    <DefineConstants>TRACE;BONELAB;PATCH$(Patch);MELONLOADER;ML$(MelonLoader)</DefineConstants>
+    <DefineConstants>TRACE;BONEWORKS;MELONLOADER;ML$(MelonLoader)</DefineConstants>
 
     <ModName>$([System.IO.Path]::GetFileName($(MSBuildProjectDirectory)))</ModName>
     <RootNamespace>Sst.$(ModName)</RootNamespace>
-    <AssemblyName>$(ModName).P$(Patch).ML$(MelonLoader)</AssemblyName>
-    <OutputPath>bin\$(Configuration)\Patch$(Patch)_MelonLoader0.$(MelonLoader)\</OutputPath>
+    <AssemblyName>$(ModName)</AssemblyName>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
 
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -68,28 +58,18 @@
   </PropertyGroup>
 
   <Target Name="CopyToGame" AfterTargets="PostBuildEvent"
-    Condition=" '$(IsNewProject)' == 'true' and '$(CopyIntoGameAfterBuild)' == 'true' and '$(GITHUB_ACTIONS)' != 'true' and '$(Patch)' == '$(DefaultPatch)' and '$(MelonLoader)' == '$(DefaultMelonLoader)' ">
-    <Exec Condition=" '$(OS)' == 'Windows_NT' and '$(BonelabPath)' != '' "
-      Command="COPY &quot;$(TargetPath)&quot; &quot;$(BonelabPath)/Mods&quot;" />
+    Condition=" '$(IsNewProject)' == 'true' and '$(CopyIntoGameAfterBuild)' == 'true' and '$(GITHUB_ACTIONS)' != 'true' and '$(BoneworksPath)' != '' and '$(MelonLoader)' == '$(DefaultMelonLoader)' ">
+    <Exec Condition=" '$(OS)' == 'Windows_NT' "
+      Command="COPY &quot;$(TargetPath)&quot; &quot;$(BoneworksPath)/Mods&quot;" />
 
-    <Exec Condition=" '$(OS)' != 'Windows_NT' and '$(BonelabPath)' != '' "
-      Command="cp &quot;$(TargetPath)&quot; &quot;$(BonelabPath)/Mods&quot;" />
-
-    <!-- adb push ./HandTracking.P4.ML5.dll /sdcard/Download -->
-    <!-- adb shell "mv /sdcard/Download/HandTracking.P4.ML5.dll
-    /storage/self/primary/Android/data/com.StressLevelZero.BONELAB/files/mods" -->
-    <!-- <Exec Condition=" '$(IsStandalone)' == 'true' "
-      Command="adb push &quot;$(TargetPath)&quot;
-    /sdcard/Android/data/com.StressLevelZero.BONELAB/files/mods" /> -->
-
-    <!-- adb logcat -v time MelonLoader:D CRASH:D Mono:W mono:D mono-rt:D Zygote:D A64_HOOK:V
-    DEBUG:D Binder:D AndroidRuntime:D "*:S" -->
+    <Exec Condition=" '$(OS)' != 'Windows_NT' "
+      Command="cp &quot;$(TargetPath)&quot; &quot;$(BoneworksPath)/Mods&quot;" />
   </Target>
 
   <!-- TODO: How can I exclude netstandard.dll? I just deleted it for now -->
   <ItemGroup Condition=" '$(IsNewProject)' == 'true' ">
     <Reference
-      Include="..\..\..\references\ML$(MelonLoader)\*.dll;..\..\..\references\Bonelab_P$(Patch)_ML$(MelonLoader)\*.dll">
+      Include="..\..\..\references\ML$(MelonLoader)_BW\*.dll;..\..\..\references\Boneworks\*.dll">
       <HintPath>$(FullPath)</HintPath>
       <Private>false</Private>
     </Reference>

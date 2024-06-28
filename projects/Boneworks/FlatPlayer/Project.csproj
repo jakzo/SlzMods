@@ -3,14 +3,12 @@
     <!-- All game/Melon Loader version combinations to build -->
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5" />
-    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
-      Properties="Configuration=$(Configuration);Patch=4;MelonLoader=6" />
   </Target>
 
   <PropertyGroup>
-    <!-- <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild> -->
+    <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild>
 
-    <ProjectGuid>{EAE1410F-B5CF-47D6-8764-2FCAEE822C9D}</ProjectGuid>
+    <ProjectGuid>{9E5F8F7D-BE79-4A67-91B4-C7A5B9D8E32E}</ProjectGuid>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,8 +16,6 @@
     <Compile Include="src/**/*.cs" />
     <Compile Include="../../../common/Utilities/Metadata.cs" />
     <Compile Include="../../../common/Utilities/Dbg.cs" />
-    <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
-    <Compile Include="../../../common/Bonelab/Bonelab.cs" />
   </ItemGroup>
 
 </Project>

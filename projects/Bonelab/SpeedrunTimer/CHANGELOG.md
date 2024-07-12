@@ -1,3 +1,8 @@
+## 1.8.1
+
+Added builds for patches 1, 2 and launch version of the game.
+
+
 ## 1.8.0
 
 Update for patch 4.

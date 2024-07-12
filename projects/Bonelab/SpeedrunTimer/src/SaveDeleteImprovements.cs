@@ -12,7 +12,7 @@ using SLZ.Bonelab.SaveData;
 using SLZ.Marrow.SaveData;
 #elif PATCH2 || PATCH3
 using SLZ.SaveData;
-#elif PATCH1
+#elif PATCH0 || PATCH1
 using SLZ.Data;
 #endif
 

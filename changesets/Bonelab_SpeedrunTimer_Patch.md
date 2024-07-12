@@ -1,1 +1,1 @@
-Added builds for patches 1 and 2 of the game.
+Added builds for patches 1, 2 and launch version of the game.

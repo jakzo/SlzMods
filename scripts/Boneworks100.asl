@@ -8,32 +8,31 @@ init {
   var scanner =
       new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
 
-  vars.loadingPointer = scanner.Scan(new SigScanTarget(
-      3,
-      "4889??????????488B??????????48FF????488B??????????488B??4889??????????488D??????????488B??????????48FF??????????????????????????????488B??????????418B") {
-    OnFound = (process, scanners, addr) =>
-        addr + 0x4 + process.ReadValue<int>(addr)
-  });
+  vars.loadingPointer = scanner.Scan(
+      new SigScanTarget(3, "488B??????????FF????440F????4885??74??8B") {
+        OnFound = (process, scanners, addr) =>
+            addr + 0xC + process.ReadValue<int>(addr)
+      });
   if (vars.loadingPointer == IntPtr.Zero) {
     throw new Exception("Game engine not initialized - retrying");
   }
 
   vars.isLoading =
-      new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC54));
+      new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC64));
 
-  var arenaTarget = new SigScanTarget(7, "D5 E2 03 34 C2 DF 63 ??");
-  IntPtr ptr = IntPtr.Zero;
-  foreach (var page in game.MemoryPages(true)) {
-    var pageScanner =
-        new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
-    ptr = pageScanner.Scan(arenaTarget);
-    if (ptr != IntPtr.Zero)
-      break;
-  }
-  if (ptr == IntPtr.Zero) {
-    throw new Exception("Arena state not found - retrying");
-  }
-  vars.arenaWatcher = new MemoryWatcher<byte>(ptr);
+  // var arenaTarget = new SigScanTarget(7, "D5 E2 03 34 C2 DF 63 ??");
+  // IntPtr ptr = IntPtr.Zero;
+  // foreach (var page in game.MemoryPages(true)) {
+  //   var pageScanner =
+  //       new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
+  //   ptr = pageScanner.Scan(arenaTarget);
+  //   if (ptr != IntPtr.Zero)
+  //     break;
+  // }
+  // if (ptr == IntPtr.Zero) {
+  //   throw new Exception("Arena state not found - retrying");
+  // }
+  // vars.arenaWatcher = new MemoryWatcher<byte>(ptr);
 
   // Index in levelOrder to start the run at (for practice)
   vars.startingSplit = 0;
@@ -69,7 +68,7 @@ init {
 
 update {
   vars.isLoading.Update(game);
-  vars.arenaWatcher.Update(game);
+  // vars.arenaWatcher.Update(game);
 }
 
 isLoading { return vars.isLoading.Current; }
@@ -84,9 +83,9 @@ start {
 }
 
 split {
-  if (vars.arenaWatcher.Current != vars.arenaWatcher.Old) {
-    return true;
-  }
+  // if (vars.arenaWatcher.Current != vars.arenaWatcher.Old) {
+  //   return true;
+  // }
 
   if (vars.isLoading.Current &&
       (!vars.isLoading.Old || current.levelNumber != old.levelNumber)) {

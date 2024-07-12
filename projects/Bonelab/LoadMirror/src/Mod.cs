@@ -5,10 +5,10 @@ using UnityEngine;
 using UnityEngine.XR;
 using Sst.Utilities;
 
-#if ML6
+#if PATCH4 && ML6
 using Il2CppSLZ.Bonelab.SaveData;
 using Il2CppSLZ.Marrow.Warehouse;
-#else
+#elif PATCH3
 using SLZ.SaveData;
 using SLZ.Marrow.Warehouse;
 #endif

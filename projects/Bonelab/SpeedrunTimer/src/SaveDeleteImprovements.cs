@@ -4,14 +4,16 @@ using UnityEngine;
 using MelonLoader;
 using HarmonyLib;
 
-#if ML6
+#if PATCH4 && ML6
 using Il2CppSLZ.Bonelab.SaveData;
 using Il2CppSLZ.Marrow.SaveData;
-#elif PATCH4
+#elif PATCH4 && ML5
 using SLZ.Bonelab.SaveData;
 using SLZ.Marrow.SaveData;
-#else
+#elif PATCH2 || PATCH3
 using SLZ.SaveData;
+#elif PATCH1
+using SLZ.Data;
 #endif
 
 namespace Sst.SpeedrunTimer {

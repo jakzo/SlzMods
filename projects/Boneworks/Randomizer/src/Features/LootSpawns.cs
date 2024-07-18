@@ -6,11 +6,12 @@ using System.Collections.Generic;
 using StressLevelZero.Data;
 using System.Reflection;
 using UnityEngine;
+using StressLevelZero.Props;
 
 namespace Sst.Randomizer.Features;
 
-public class ItemSpawns : Feature {
-  public static ItemSpawns Instance;
+public class LootSpawns : Feature {
+  public static LootSpawns Instance;
 
   private Dictionary<CategoryFilters, List<SpawnableObject>>
       _spawnablesByCategory;
@@ -19,22 +20,8 @@ public class ItemSpawns : Feature {
   public override void Initialize() {
     Instance = this;
 
-    _prefMode = Mod.PrefCategory.CreateEntry(
-        "itemSpawnMode", Mode.SAME_CATEGORY, "Item spawn mode");
-
-    // PatchAllOverloads(
-    //     typeof(PoolManager), nameof(PoolManager.Spawn),
-    //     typeof(ItemSpawns)
-    //         .GetMethod(nameof(PoolManagerSpawnPrefix), AccessTools.all));
-  }
-
-  private void PatchAllOverloads(Type type, string methodName,
-                                 MethodInfo prefix) {
-    foreach (var method in type.GetMethods(AccessTools.all)) {
-      if (method.Name == methodName) {
-        Mod.HarmonyInstance.Patch(method, prefix: new HarmonyMethod(prefix));
-      }
-    }
+    _prefMode = Mod.PrefCategory.CreateEntry("lootSpawnMode", Mode.PURE_RANDOM,
+                                             "Loot spawn mode");
   }
 
   private void UpdateSpawnablesListIfNecessary() {
@@ -63,17 +50,11 @@ public class ItemSpawns : Feature {
     }
   }
 
-  private string GetRandomizedSpawnName(string name) {
+  private SpawnableObject GetRandomizedLoot(SpawnableObject spawnable) {
     if (_prefMode.Value == Mode.NONE)
       return null;
 
     UpdateSpawnablesListIfNecessary();
-
-    var spawnable = PoolManager.GetRegisteredSpawnable(name);
-    if (spawnable == null) {
-      MelonLogger.Warning("Spawnable not in pool: " + name);
-      return null;
-    }
 
     var category = _prefMode.Value == Mode.SAME_CATEGORY ? spawnable.category
                    : _prefMode.Value == Mode.PURE_RANDOM ? CategoryFilters.All
@@ -85,43 +66,22 @@ public class ItemSpawns : Feature {
       return null;
     }
 
-    var choice =
-        spawnableChoices[new System.Random().Next(spawnableChoices.Count)];
-    return choice.title;
+    return spawnableChoices[new System.Random().Next(spawnableChoices.Count)];
   }
 
-  private static bool PoolManagerSpawnPrefix(ref string name) {
-    var randomName = name;
-    // var randomName = Instance.GetRandomizedSpawnName(name);
-    if (randomName != null) {
-      Dbg.Log("Randomizing PoolManager.Spawn from", name, "to", randomName);
-      // name = randomName;
+  [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
+  class LootTableData_GetLootItem_Patch {
+    [HarmonyPostfix()]
+    internal static void Postfix(LootTableData __instance,
+                                 ref SpawnableObject __result) {
+      var randomLoot = Instance.GetRandomizedLoot(__result);
+      if (randomLoot != null) {
+        Dbg.Log("Randomizing LootTableData.GetLootItem from", __result.title,
+                "to", randomLoot.title);
+        __result = randomLoot;
+      }
     }
-    return false;
   }
-
-  // [HarmonyPatch(typeof(Pool), nameof(Pool.Spawn))]
-  // class Pool_Spawn_Patch {
-  //   private static bool _isDisabled = false;
-
-  //   [HarmonyPrefix()]
-  //   internal static bool Prefix(Pool __instance, ref GameObject __result) {
-  //     if (_isDisabled)
-  //       return true;
-  //     _isDisabled = true;
-  //     Dbg.Log("Pool.Spawn", __instance.name);
-  //     try {
-  //       foreach (var item in PoolManager.DynamicPools) {
-  //         __result = item.value.Spawn();
-  //         break;
-  //       }
-  //     } catch (Exception ex) {
-  //       MelonLogger.Error("Pool.Spawn failed", ex);
-  //     }
-  //     _isDisabled = false;
-  //     return false;
-  //   }
-  // }
 
   public enum Mode {
     PURE_RANDOM,

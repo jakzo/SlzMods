@@ -10,8 +10,7 @@
     <TargetFramework>net472</TargetFramework>
     <MelonLoader Condition=" '$(MelonLoader)' == '' ">$(DefaultMelonLoader)</MelonLoader>
 
-    <SteamPath>C:\Program Files\Oculus\Software\Software</SteamPath>
-    <BoneworksPath Condition=" !Exists('$(BoneworksPath)') ">$(SteamPath)\BONEWORKS</BoneworksPath>
+    <BoneworksPath Condition=" !Exists('$(BoneworksPath)') ">C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS</BoneworksPath>
     <BoneworksPath Condition=" !Exists('$(BoneworksPath)') ">/Volumes/[C] Windows 11.hidden/Program Files (x86)/Steam/steamapps/common/BONEWORKS/BONEWORKS</BoneworksPath>
     <BoneworksPath Condition=" !Exists('$(BoneworksPath)') "></BoneworksPath>
 

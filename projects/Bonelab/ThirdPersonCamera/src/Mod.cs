@@ -46,7 +46,8 @@ public class Mod : MelonMod {
         "Time it takes for the camera to catch up to player movements");
     _prefCameraRatio = category.CreateEntry(
         "camera_ratio", 1f,
-        "Amount to split screen between first and third person cameras (0 = first person only, 1 = third person only)");
+        "Amount to split screen between first and third person cameras (0 = " +
+        "first person only, 1 = third person only)");
 
     LevelHooks.OnLevelStart += level => Create();
     LevelHooks.OnLoad += level => ResetState();
@@ -187,6 +188,15 @@ public class Mod : MelonMod {
     [HarmonyPrefix()]
     internal static bool Prefix() {
       Dbg.Log("PlayerAvatarArt_DisableHair_Patch");
+      return !Instance._thirdPersonCamera;
+    }
+  }
+
+  [HarmonyPatch(typeof(PlayerAvatarArt), nameof(PlayerAvatarArt.DisableHead))]
+  class PlayerAvatarArt_DisableHead_Patch {
+    [HarmonyPrefix()]
+    internal static bool Prefix() {
+      Dbg.Log("PlayerAvatarArt_DisableHead_Patch");
       return !Instance._thirdPersonCamera;
     }
   }

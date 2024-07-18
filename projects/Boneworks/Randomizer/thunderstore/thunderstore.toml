@@ -1,0 +1,28 @@
+[config]
+schemaVersion = "0.0.1"
+
+
+[package]
+namespace = "jakzo"
+name = "Randomizer"
+versionNumber = "0.0.0"
+description = "Random item spawns, enemies, level transitions and more."
+websiteUrl = "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Boneworks/Randomizer"
+containsNsfwContent = false
+
+[package.dependencies]
+
+
+[build]
+icon = "./icon.png"
+readme = "./generated-README.md"
+outdir = "./build"
+
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "boneworks" ]
+
+[publish.categories]
+boneworks = [ "code-mods" ]
+

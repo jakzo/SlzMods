@@ -10,5 +10,5 @@ Allows playing the game with keyboard, mouse and monitor instead of VR.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/PancakeMode
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/PancakeMode
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/PancakeMode/

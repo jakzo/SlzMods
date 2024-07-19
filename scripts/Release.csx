@@ -103,7 +103,7 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
   var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
   File.AppendAllText(githubOutput, $"new_version={newVersion}\n");
   var readmeUrl =
-      $"https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/{gameName}/{projectName}#readme";
+      $"https://github.com/jakzo/SlzMods/tree/main/projects/{gameName}/{projectName}#readme";
   File.AppendAllText(
       githubOutput,
       $"changelog<<EOF\n{changelogDescription}\n\n[{projectName} README]({readmeUrl})\nEOF\n");

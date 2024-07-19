@@ -37,5 +37,5 @@ The way the speedometer works is it measures the distance between your current a
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/Speedometer
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/Speedometer
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/Speedometer/

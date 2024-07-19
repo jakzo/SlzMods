@@ -2,6 +2,6 @@
   "name": "HundredPercentTimer",
   "version_number": "1.1.0",
   "description": "LiveSplit integration for timing 100% speedruns.",
-  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/HundredPercentTimer",
+  "website_url": "https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/HundredPercentTimer",
   "dependencies": ["LavaGang-MelonLoader-0.5.7"]
 }

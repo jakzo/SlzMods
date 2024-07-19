@@ -12,5 +12,5 @@ Shows where remaining collectables are located.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/CompletionistHelper
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/CompletionistHelper
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/CompletionistHelper/

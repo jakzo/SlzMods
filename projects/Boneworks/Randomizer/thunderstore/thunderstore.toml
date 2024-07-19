@@ -7,7 +7,7 @@ namespace = "jakzo"
 name = "Randomizer"
 versionNumber = "0.0.0"
 description = "Random item spawns, enemies, level transitions and more."
-websiteUrl = "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Boneworks/Randomizer"
+websiteUrl = "https://github.com/jakzo/SlzMods/tree/main/projects/Boneworks/Randomizer"
 containsNsfwContent = false
 
 [package.dependencies]

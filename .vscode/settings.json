@@ -92,7 +92,7 @@
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "typescript.tsdk": "node_modules\\typescript\\lib",
-  "dotnet.defaultSolution": "SlzSpeedrunTools.sln",
+  "dotnet.defaultSolution": "SlzMods.sln",
   "clangFormat.assumeFilename": "Name.cs",
   "dotnet.preferCSharpExtension": true,
   "dotnet.server.useOmnisharp": true,

@@ -20,5 +20,5 @@ Each of the features can be enabled or disabled via preferences.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Boneworks/Randomizer
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Boneworks/Randomizer
 - Thunderstore: https://boneworks.thunderstore.io/package/jakzo/Randomizer/

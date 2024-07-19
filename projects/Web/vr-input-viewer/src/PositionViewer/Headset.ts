@@ -3,7 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { log, withBaseUrl } from "../utils/utils";
 
 const REMOTE_URL =
-  "https://jakzo.github.io/SlzSpeedrunTools/input-viewer/quest2_hmd.glb";
+  "https://jakzo.github.io/SlzMods/input-viewer/quest2_hmd.glb";
 
 export const createHeadset = () => {
   const group = new THREE.Group();

@@ -2,6 +2,6 @@
   "name": "PancakeMode",
   "version_number": "0.0.0",
   "description": "Allows playing the game with keyboard, mouse and monitor instead of VR.",
-  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/PancakeMode",
+  "website_url": "https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/PancakeMode",
   "dependencies": ["LavaGang-MelonLoader-0.5.7"]
 }

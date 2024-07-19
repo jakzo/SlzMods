@@ -24,5 +24,5 @@ SLZ finally fixed the loot drop bug in patch 4 of Bonelab but they did this by c
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Boneworks/LootDropBugfix
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Boneworks/LootDropBugfix
 - Thunderstore: https://boneworks.thunderstore.io/package/jakzo/LootDropBugfix/

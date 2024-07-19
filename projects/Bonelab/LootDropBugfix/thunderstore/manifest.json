@@ -2,6 +2,6 @@
   "name": "BlLootDropBugfix",
   "version_number": "1.0.0",
   "description": "Fixes bug where dropped loot sometimes does not spawn.",
-  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/LootDropBugfix",
+  "website_url": "https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/LootDropBugfix",
   "dependencies": ["LavaGang-MelonLoader-0.5.7"]
 }

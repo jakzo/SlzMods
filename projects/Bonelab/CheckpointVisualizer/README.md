@@ -14,5 +14,5 @@ Also loads the game straight into Monogon Motorway for convenience.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/CheckpointVisualizer
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/CheckpointVisualizer
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/CheckpointVisualizer/

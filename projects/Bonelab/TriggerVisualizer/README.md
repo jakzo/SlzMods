@@ -18,5 +18,5 @@ Note that this currently doesn't show all triggers, just ones which use the `Tri
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/TriggerVisualizer
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/TriggerVisualizer
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/TriggerVisualizer/

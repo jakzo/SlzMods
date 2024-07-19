@@ -10,5 +10,5 @@ Utilities for building tool assisted speedruns.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/TasTool
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/TasTool
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/TasTool/

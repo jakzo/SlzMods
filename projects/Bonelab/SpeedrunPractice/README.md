@@ -10,5 +10,5 @@ Tools for practicing speedruns.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/SpeedrunPractice
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/SpeedrunPractice
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/SpeedrunPractice/

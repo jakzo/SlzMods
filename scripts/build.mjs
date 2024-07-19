@@ -46,7 +46,7 @@ const buildUnix = async () => {
   }
 
   // No dependencies in mods
-  // const result = spawnSync("nuget", ["restore", "SlzSpeedrunTools.sln"], {
+  // const result = spawnSync("nuget", ["restore", "SlzMods.sln"], {
   //   stdio: "inherit",
   //   cwd: rootDir,
   // });

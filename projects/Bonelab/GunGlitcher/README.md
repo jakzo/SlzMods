@@ -12,5 +12,5 @@ Press CTRL+G while holding a gun with a mag in it and it will glitch the mag. Th
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/GunGlitcher
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/GunGlitcher
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/GunGlitcher/

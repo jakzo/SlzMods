@@ -16,5 +16,5 @@ Note that even if you've already finished the game you will need to complete som
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/ProgressFix
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/ProgressFix
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/ProgressFix/

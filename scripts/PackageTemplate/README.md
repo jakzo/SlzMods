@@ -10,5 +10,5 @@ $$DESCRIPTION$$
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/$$GAME_CAPITALIZED$$/$$NAME$$
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/$$GAME_CAPITALIZED$$/$$NAME$$
 - Thunderstore: https://$$GAME_LOWER$$.thunderstore.io/package/jakzo/$$NAME$$/

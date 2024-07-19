@@ -21,7 +21,7 @@ void CreateNewProject() {
                                templateVars.Name));
 
   var projectUuid = GenerateUuid();
-  var solutionContents = File.ReadAllText("SlzSpeedrunTools.sln");
+  var solutionContents = File.ReadAllText("SlzMods.sln");
   var lastProjectIdx =
       solutionContents.LastIndexOf("EndProject") + "EndProject".Length;
   var projectConfigIdx = solutionContents.LastIndexOf(PROJECT_CONFIG_SECTION) +
@@ -38,7 +38,7 @@ void CreateNewProject() {
                   config =>
                       $"\n    {{{projectUuid}}}.{type}|Any CPU.{config} = {type}|Any CPU"))) +
       "\n" + solutionContents.Substring(projectConfigIdx);
-  File.WriteAllText("SlzSpeedrunTools.sln", newSolutionContents);
+  File.WriteAllText("SlzMods.sln", newSolutionContents);
 }
 
 void CopyTemplateDir(TemplateVars templateVars, string from, string to) {

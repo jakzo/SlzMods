@@ -66,5 +66,5 @@ Most settings require restarting the level to take effect.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Boneworks/SpeedrunTools
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Boneworks/SpeedrunTools
 - Thunderstore: https://boneworks.thunderstore.io/package/jakzo/SpeedrunTools/

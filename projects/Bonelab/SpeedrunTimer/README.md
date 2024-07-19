@@ -21,7 +21,7 @@ As a convenience it also stops your mods from being deleted when you delete your
 
 Because no Livesplit autosplitter exists for the game yet and it's hard to create one, there is an autosplitter which is controlled by this mod. For the autosplitter to work, this mod must be installed and running. To set up the autosplitter:
 
-- Download the [BonelabSpeedrunTimer.asl](https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/projects/Bonelab/SpeedrunTimer/scripts/BonelabSpeedrunTimer.asl) autosplitter (right click on [this link](https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/projects/Bonelab/SpeedrunTimer/scripts/BonelabSpeedrunTimer.asl) -> save link)
+- Download the [BonelabSpeedrunTimer.asl](https://raw.githubusercontent.com/jakzo/SlzMods/main/projects/Bonelab/SpeedrunTimer/scripts/BonelabSpeedrunTimer.asl) autosplitter (right click on [this link](https://raw.githubusercontent.com/jakzo/SlzMods/main/projects/Bonelab/SpeedrunTimer/scripts/BonelabSpeedrunTimer.asl) -> save link)
 - Start Livesplit and edit layout settings (right click -> edit layout)
 - Click the `+` icon and select "control" -> "scriptable auto splitter"
 - Click the "layout settings" button then select the "scriptable auto splitter" tab
@@ -51,5 +51,5 @@ Most settings require restarting the level to take effect.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/SpeedrunTimer
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/SpeedrunTimer
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/

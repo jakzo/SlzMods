@@ -16,7 +16,7 @@ public class Factory : IComponentFactory {
   public string UpdateName => ComponentName;
 
   public string UpdateURL =>
-      "https://raw.githubusercontent.com/jakzo/SlzSpeedrunTools/main/projects/LiveSplit/BoneworksDebugStats";
+      "https://raw.githubusercontent.com/jakzo/SlzMods/main/projects/LiveSplit/BoneworksDebugStats";
 
   public string XMLURL =>
       $"{UpdateURL}/update.LiveSplit.BoneworksDebugStats.xml";

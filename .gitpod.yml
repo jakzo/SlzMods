@@ -1,7 +1,7 @@
 image: gitpod/workspace-dotnet
 tasks:
   - name: Dependencies
-    init: nuget restore SlzSpeedrunTools.sln
+    init: nuget restore SlzMods.sln
     openMode: split-right
 vscode:
   extensions:

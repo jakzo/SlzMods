@@ -2,6 +2,6 @@
   "name": "TasTool",
   "version_number": "0.0.0",
   "description": "Utilities for building tool assisted speedruns.",
-  "website_url": "https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/TasTool",
+  "website_url": "https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/TasTool",
   "dependencies": ["LavaGang-MelonLoader-0.5.7"]
 }

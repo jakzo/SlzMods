@@ -12,5 +12,5 @@ Fixes bug where dropped loot sometimes does not spawn.
 
 # Links
 
-- Source code: https://github.com/jakzo/SlzSpeedrunTools/tree/main/projects/Bonelab/LootDropBugfix
+- Source code: https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/LootDropBugfix
 - Thunderstore: https://bonelab.thunderstore.io/package/jakzo/LootDropBugfix/

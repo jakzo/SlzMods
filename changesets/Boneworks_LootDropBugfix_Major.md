@@ -1,0 +1,1 @@
+Found the actual source of the bug and rewrote the mod to patch the broken method. Experimentally verified by breaking 8k+ ammo boxes with a script (included in this mod under the `test` configuration option).

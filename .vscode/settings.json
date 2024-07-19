@@ -108,6 +108,7 @@
     "xd:pre",
     "HintPath",
     "BonelabPath",
-    "BoneworksPath"
+    "BoneworksPath",
+    "PostBuildEvent"
   ]
 }

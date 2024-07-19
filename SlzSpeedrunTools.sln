@@ -25,7 +25,7 @@ Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB08}") = "BoneworksHundredStatus", "p
 EndProject
 Project("{81FCC4E8-8A09-AD74-7CAB-31A3DCAD4264}") = "BonelabAmmoBugFix", "projects\Bonelab\AmmoBugFix\AmmoBugFix.csproj", "{59614574-AE6C-55D4-024A-21B97605D6F1}"
 EndProject
-Project("{C8D343BD-EF6E-9631-972E-B4219D723E51}") = "BoneworksLootDropBugfix", "projects\Boneworks\LootDropBugfix\LootDropBugfix.csproj", "{C6766168-937D-D108-4DB1-5BCAF3D7376F}"
+Project("{C8D343BD-EF6E-9631-972E-B4219D723E51}") = "BoneworksLootDropBugfix", "projects\Boneworks\LootDropBugfix\Project.csproj", "{C6766168-937D-D108-4DB1-5BCAF3D7376F}"
 EndProject
 Project("{F24D5D50-5E53-31D8-AF5C-2040F7BE2926}") = "BonelabLootDropBugfix", "projects\Bonelab\LootDropBugfix\LootDropBugfix.csproj", "{792FC5C9-C984-EBB2-E2C2-86AB4D227675}"
 EndProject

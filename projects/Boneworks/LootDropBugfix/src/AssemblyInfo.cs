@@ -22,10 +22,10 @@ using System.Runtime.InteropServices;
     "https://boneworks.thunderstore.io/package/jakzo/LootDropBugfix/")]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME_BONEWORKS)]
 
-namespace Sst.LootDropBugfix {
+namespace Sst.LootDropBugfix;
+
 public static class BuildInfo {
   public const string NAME = "LootDropBugfix";
   public const string DESCRIPTION =
       "Fixes bug where dropped loot sometimes does not spawn.";
-}
 }

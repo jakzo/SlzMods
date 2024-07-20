@@ -2,6 +2,7 @@ using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
 using StressLevelZero.Data;
+using System.Linq;
 
 namespace Sst.LootDropBugfix;
 
@@ -33,6 +34,7 @@ public class Mod : MelonMod {
       if (lower <= n && n < upper) { // changed, used to be lower exclusive
         return item.spawnable;
       }
+      lower = upper;
     }
     return null;
   }

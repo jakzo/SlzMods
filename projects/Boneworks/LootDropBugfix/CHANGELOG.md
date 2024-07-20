@@ -1,3 +1,8 @@
+## 2.0.1
+
+Fixed a silly mistake I made in the algorithm which I didn't detect because I was testing on ammo boxes. 🤦
+
+
 ## 2.0.0
 
 Found the actual source of the bug and rewrote the mod to patch the broken method. Experimentally verified by breaking 8k+ ammo boxes with a script (included in this mod under the `test` configuration option).

@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "jakzo"
 name = "LootDropBugfix"
-versionNumber = "2.0.0"
+versionNumber = "2.0.1"
 description = "Fixes bug where dropped loot sometimes does not spawn."
 websiteUrl = "https://github.com/jakzo/SlzMods/tree/main/projects/Boneworks/LootDropBugfix"
 containsNsfwContent = false

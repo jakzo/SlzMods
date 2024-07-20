@@ -1,71 +1,243 @@
 using System;
 using System.Linq;
-using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using SLZ.Marrow.Utilities;
 using Sst.Utilities;
+using SLZ.Bonelab;
+using SLZ.Marrow.Warehouse;
+using HarmonyLib;
+using SLZ.Marrow.Input;
+using SLZ.Interaction;
+using SLZ.Rig;
+using System.Collections.Generic;
+using SLZ.Marrow.Interaction;
 
 namespace Sst.HandTracking;
 
 public class Mod : MelonMod {
-  public static (OVRInput.Controller, Color)[] HANDS = {
-    (OVRInput.Controller.LHand, Color.red),
-    (OVRInput.Controller.RHand, Color.blue),
-  };
-
   public static Mod Instance;
 
-  public (OVRInput.Controller, GameObject)[] Visualizations = null;
+  private HandTracker[] _trackers = { null, null };
+  private LocoState _locoState = new LocoState();
+  private FpsCounter _fpsRefresh = new(TimeSpan.FromSeconds(1f));
+  private FpsCounter _fpsUpdate = new(TimeSpan.FromSeconds(1f));
+  private FpsCounter _fpsFixed = new(TimeSpan.FromSeconds(1f));
+  private HashSet<LaserCursor> _visibleLaserCursors = new();
+
+  private HandTracker _trackerLeft {
+    get => _trackers[0];
+    set => _trackers[0] = value;
+  }
+  private HandTracker _trackerRight {
+    get => _trackers[1];
+    set => _trackers[1] = value;
+  }
 
   public override void OnInitializeMelon() {
     Dbg.Init(BuildInfo.NAME);
     Instance = this;
 
-    // UnityEngine.XR.Hand.Hand_TryGetFingerBonesAsList(
-    //     1, UnityEngine.XR.HandFinger.Index, out var rootBone);
+    LevelHooks.OnLoad += nextLevel => _visibleLaserCursors.Clear();
   }
 
   public override void OnUpdate() {
-    var parent = LevelHooks.RigManager?.ControllerRig.transform ??
-                 LevelHooks.BasicTrackingRig?.transform;
-    if (!parent)
+    _fpsUpdate.OnFrame();
+    // Dbg.Log(
+    //     $"fixed={_fpsFixed.Read().ToString("N1")},
+    //     update={_fpsUpdate.Read().ToString("N1")},
+    //     refresh={_fpsRefresh.Read().ToString("N1")}");
+
+    if (!MarrowGame.IsInitialized || MarrowGame.xr == null)
       return;
 
-    if (!OVRInput.IsControllerConnected(OVRInput.Controller.Hands)) {
-      if (Visualizations != null) {
-        foreach (var (hand, obj) in Visualizations) {
-          if (obj)
-            GameObject.Destroy(obj);
-        }
-        Visualizations = null;
-        MelonLogger.Msg("Hand tracking is now inactive");
-      }
-      return;
+    if (_trackerLeft == null && MarrowGame.xr.LeftController != null) {
+      _trackerLeft = new(new() {
+        isLeft = true,
+        marrowController = MarrowGame.xr.LeftController,
+        setMarrowController = c => MarrowGame.xr.LeftController = c,
+        ovrController = OVRInput.Controller.LTouch,
+        ovrHand = OVRInput.Controller.LHand,
+        handRotationOffset = Quaternion.Euler(0f, 90f, 0f) *
+                             Quaternion.Euler(0f, 0f, 95f) *
+                             Quaternion.Euler(345f, 0f, 0f),
+        handPositionOffset = new Vector3(0.04f, 0.02f, 0.1f),
+      });
+      _locoState.Init(_trackerLeft);
     }
 
-    if (Visualizations == null) {
-      Visualizations = CreateVisualizations(parent);
-      MelonLogger.Msg("Hand tracking is now active");
+    if (_trackerRight == null && MarrowGame.xr.RightController != null) {
+      _trackerRight = new(new() {
+        isLeft = false,
+        marrowController = MarrowGame.xr.RightController,
+        setMarrowController = c => MarrowGame.xr.RightController = c,
+        ovrController = OVRInput.Controller.RTouch,
+        ovrHand = OVRInput.Controller.RHand,
+        handRotationOffset = Quaternion.Euler(275f, 0f, 0f) *
+                             Quaternion.Euler(0f, 270f, 0f) *
+                             Quaternion.Euler(345f, 0f, 0f),
+        handPositionOffset = new Vector3(-0.04f, 0.02f, 0.1f),
+      });
+      _locoState.Init(_trackerRight);
     }
 
-    UpdateHandPositions();
+    // TODO: Can we do the updates right before the inputs are used?
+    _trackerLeft.OnUpdate();
+    _trackerRight.OnUpdate();
+
+    // TODO: Do this on fixed update or somewhere frame rate independent
+    _locoState.Update();
   }
 
-  private (OVRInput.Controller,
-           GameObject)[] CreateVisualizations(Transform parent) =>
-      HANDS
-          .Select(hand => {
-            var obj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            obj.transform.SetParent(parent);
-            obj.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-            obj.GetComponent<Renderer>().material.color = hand.Item2;
-            return (hand.Item1, obj);
-          })
-          .ToArray();
+  public override void OnFixedUpdate() { _fpsFixed.OnFrame(); }
 
-  private void UpdateHandPositions() {
-    foreach (var (hand, obj) in Visualizations) {
-      obj.transform.position = OVRInput.GetLocalControllerPosition(hand);
+#if DEBUG
+  public override void OnSceneWasInitialized(int buildindex, string sceneName) {
+    if (!sceneName.ToUpper().Contains("BOOTSTRAP"))
+      return;
+    AssetWarehouse.OnReady(new Action(() => {
+      var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
+          c => c.Barcode.ID == Levels.Barcodes.HUB);
+      var bootstrapper =
+          GameObject.FindObjectOfType<SceneBootstrapper_Bonelab>();
+      var crateRef = new LevelCrateReference(crate.Barcode.ID);
+      bootstrapper.VoidG114CrateRef = crateRef;
+      bootstrapper.MenuHollowCrateRef = crateRef;
+    }));
+  }
+#endif
+
+  internal HandTracker GetTrackerFromProxyController(XRController controller) {
+    if (_trackerLeft.ProxyController.Equals(controller))
+      return _trackerLeft;
+    if (_trackerRight.ProxyController.Equals(controller))
+      return _trackerRight;
+    return null;
+  }
+
+  // TODO: Is there no way to make a ProxyController class with its own
+  // Refresh?
+  [HarmonyPatch(typeof(ControllerActionMap),
+                nameof(ControllerActionMap.Refresh))]
+  internal static class ControllerActionMap_Refresh {
+    [HarmonyPrefix]
+    private static bool Prefix(ControllerActionMap __instance) {
+      var tracker = Mod.Instance.GetTrackerFromProxyController(__instance);
+      if (tracker == null || !tracker.IsTracking)
+        return true;
+
+      if (tracker.Opts.isLeft)
+        Instance._fpsRefresh.OnFrame();
+
+      tracker.UpdateProxyController();
+      return false;
+    }
+  }
+
+  [HarmonyPatch(typeof(OpenController), nameof(OpenController.ProcessFingers))]
+  internal static class OpenController_ProcessFingers {
+    [HarmonyPrefix]
+    private static bool Prefix(OpenController __instance) {
+      var tracker = Mod.Instance.GetTrackerFromProxyController(
+          Utils.XrControllerOf(__instance));
+      if (tracker == null || !tracker.IsTracking)
+        return true;
+
+      tracker.OnOpenControllerProcessFingers(__instance);
+      return false;
+    }
+  }
+
+  [HarmonyPatch(typeof(LaserCursor), nameof(LaserCursor.ShowCursor))]
+  internal static class LaserCursor_ShowCursor {
+    [HarmonyPostfix]
+    private static void Postfix(LaserCursor __instance) {
+      // TODO: Point laser pointer in direction of hand
+      if (!__instance.cursorHidden)
+        Mod.Instance._visibleLaserCursors.Add(__instance);
+    }
+  }
+
+  [HarmonyPatch(typeof(LaserCursor), nameof(LaserCursor.HideCursor))]
+  internal static class LaserCursor_HideCursor {
+    [HarmonyPostfix]
+    private static void Postfix(LaserCursor __instance) {
+      if (__instance.cursorHidden)
+        Mod.Instance._visibleLaserCursors.Remove(__instance);
+    }
+  }
+
+  [HarmonyPatch(typeof(LaserCursor), nameof(LaserCursor.Update))]
+  internal static class LaserCursor_Update {
+    [HarmonyPrefix]
+    private static void Prefix(LaserCursor __instance, ref bool __state) {
+      var pinchedTracker =
+          Mod.Instance._trackers.FirstOrDefault(t => t?.PinchUp ?? false);
+      if (pinchedTracker == null)
+        return;
+
+      // Show laser pointer from the hand which is pinching
+      var controller = Utils.RigControllerOf(pinchedTracker);
+      Control_UI_InGameData.SetActiveController(controller);
+      // __instance.activeController = controller;
+      __instance.controllerFocused = true;
+      __state = true;
+    }
+
+    [HarmonyPostfix]
+    private static void Postfix(LaserCursor __instance, ref bool __state) {
+      if (__state)
+        __instance.Trigger();
+    }
+  }
+}
+
+public static class Utils {
+  public static bool IsLocoControllerLeft() =>
+      UIRig.Instance?.controlPlayer?.body_vitals?.isRightHanded ?? true;
+
+  public static Vector3 FromFlippedXVector3f(OVRPlugin.Vector3f vector) =>
+      new Vector3(-vector.x, vector.y, vector.z);
+
+  public static Vector3 FromFlippedZVector3f(OVRPlugin.Vector3f vector) =>
+      new Vector3(vector.x, vector.y, -vector.z);
+
+  public static Quaternion FromFlippedXQuatf(OVRPlugin.Quatf quat) =>
+      new Quaternion(quat.x, -quat.y, -quat.z, quat.w);
+
+  public static XRController XrControllerOf(BaseController controller) =>
+      controller.handedness == Handedness.LEFT ? MarrowGame.xr.LeftController
+      : controller.handedness == Handedness.RIGHT
+          ? MarrowGame.xr.RightController
+          : null;
+
+  public static BaseController RigControllerOf(HandTracker tracker) {
+    var controllerRig = LevelHooks.RigManager?.ControllerRig;
+    if (controllerRig == null)
+      return null;
+    return tracker.Opts.isLeft ? controllerRig.leftController
+                               : controllerRig.rightController;
+  }
+
+  [HarmonyPatch(typeof(ForcePullGrip), nameof(ForcePullGrip.Pull))]
+  internal static class ForcePullGrip_Pull {
+    private static bool _enableForcePull = false;
+
+    public static void Call(ForcePullGrip grip, Hand hand) {
+      _enableForcePull = true;
+      grip.Pull(hand);
+      _enableForcePull = false;
+    }
+
+    [HarmonyPrefix]
+    private static bool Prefix(ForcePullGrip __instance, Hand hand) {
+      if (_enableForcePull || Mod.Instance.GetTrackerFromProxyController(
+                                  XrControllerOf(hand.Controller)) == null)
+        return true;
+
+      Dbg.Log("ForcePullGrip.Pull was called but is disabled");
+      __instance._pullToHand = null;
+      return _enableForcePull;
     }
   }
 }

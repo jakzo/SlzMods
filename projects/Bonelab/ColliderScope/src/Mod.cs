@@ -59,14 +59,18 @@ public class Mod : MelonMod {
         "Hides head colliders so that they do not obscure your vision");
     _prefOnlyResizeRigColliders = category.CreateEntry(
         "onlyResizeRigColliders", true, "Only resize rig colliders",
-        "Improves performance by watching for changes to collider size on only the rig");
+        "Improves performance by watching for changes to collider size on " +
+            "only the rig");
     // TODO: Change to frame time allocated for colliders
     _prefIterationsPerFrame = category.CreateEntry(
         "iterationsPerFrame", 8f, "Iterations per frame",
-        "Number of game objects to show colliders of per frame on load (higher loads faster but too high lags and crashes the game)");
+        "Number of game objects to show colliders of per frame on load " +
+            "(higher loads faster but too high lags and crashes the game)");
     _prefBackgroundIterationsPerFrame = category.CreateEntry(
         "backgroundIterationsPerFrame", 2f, "Background iterations per frame",
-        "Number of game objects to show colliders of per frame in the background (runs continuously to catch any objects added during play)");
+        "Number of game objects to show colliders of per frame in the " +
+            "background (runs continuously to catch any objects added during " +
+            "play)");
 
     LevelHooks.OnLoad += nextLevel => ResetState();
     LevelHooks.OnLevelStart += level => Visualize(false);
@@ -80,6 +84,7 @@ public class Mod : MelonMod {
     if (LevelHooks.IsLoading)
       return;
 
+// TODO: Replace with a check for third person camera
 #if DEBUG
     if (LevelHooks.RigManager?.ControllerRig.rightController
             .GetThumbStickDown() ??

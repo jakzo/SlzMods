@@ -16,7 +16,15 @@
     <Compile Include="src/**/*.cs" />
     <Compile Include="../../../common/Utilities/Metadata.cs" />
     <Compile Include="../../../common/Utilities/Dbg.cs" />
+    <Compile Include="../../../common/Utilities/Geometry.cs" />
+    <Compile Include="../../../common/Utilities/FpsCounter.cs" />
     <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
+
+    <Compile Include="../../../common/Bonelab/Levels.cs" />
+    <Compile Include="../../../common/Utilities/Colliders.cs" />
+    <Compile Include="../../../common/Utilities/Shaders.cs" />
+    <Compile Include="../../../common/Utilities/Geometry.cs" />
+    <Compile Include="../../../common/Utilities/Unity.cs" />
   </ItemGroup>
 
 </Project>

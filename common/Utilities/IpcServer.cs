@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sst.Common.Ipc {
 public abstract class Logger {
@@ -61,9 +62,7 @@ public class Server : IDisposable {
     stream.Write(bytes, 0, bytes.Length);
   }
 
-  private void StartNewPipeServerThread() {
-    new Thread(StartNewPipeServer).Start();
-  }
+  private void StartNewPipeServerThread() { Task.Run(StartNewPipeServer); }
 
   private void StartNewPipeServer() {
     try {

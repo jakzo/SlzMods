@@ -96,6 +96,7 @@ public class Mod : MelonMod {
   }
 
   public override void OnApplicationStart() {
+    Dbg.Init(Utils.PREF_CATEGORY);
     Directory.CreateDirectory(Utils.DIR);
 
     Utils.s_prefCategory = MelonPreferences.CreateCategory(Utils.PREF_CATEGORY);

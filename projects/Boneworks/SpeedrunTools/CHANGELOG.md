@@ -1,3 +1,8 @@
+## 2.4.0
+
+Added support for sending data to the Boneworks 100% run status LiveSplit component.
+
+
 ## 2.3.3
 
 Removed unintended hotkey of right thumbstick disabling gripping.

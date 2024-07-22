@@ -164,7 +164,7 @@ class Recorder {
     QueueWrite(System.BitConverter.GetBytes((ushort)frame.Length));
     QueueWrite(frame);
     _lastFrameTime = Time.time;
-    // Utils.LogDebug($"Recorded frame: {currentSceneIdx}
+    // Dbg.Log($"Recorded frame: {currentSceneIdx}
     // {cam.position.ToString()}");
   }
 

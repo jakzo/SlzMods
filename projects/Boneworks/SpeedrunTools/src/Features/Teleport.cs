@@ -57,7 +57,7 @@ class Teleport : Feature {
     // Init reset
     s_gameControl = Object.FindObjectOfType<GameControl>();
     if (s_resetPos.HasValue) {
-      Utils.LogDebug($"Teleporting on reset to: {s_resetPos.Value.ToString()}");
+      Dbg.Log($"Teleporting on reset to: {s_resetPos.Value.ToString()}");
       Mod.GameState.rigManager.Teleport(s_resetPos.Value);
       s_resetPos = null;
     }

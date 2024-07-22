@@ -14,7 +14,7 @@ class RemoveBossClawRng : Feature {
     if (sceneName != "scene_streets")
       return;
 
-    Utils.LogDebug("Init boss claw RNG");
+    Dbg.Log("Init boss claw RNG");
     var bca = Object.FindObjectOfType<BossClawAi>();
     if (bca == null) {
       MelonLogger.Warning("No boss claw in current scene");
@@ -22,12 +22,12 @@ class RemoveBossClawRng : Feature {
     }
 
     // Set home position X to near the level exit instead of the middle
-    Utils.LogDebug("Setting BossClawAi._homePosition");
+    Dbg.Log("Setting BossClawAi._homePosition");
     var homePosition = bca._homePosition;
     bca._homePosition =
         new Vector3(PrefX.Read(), homePosition.y, homePosition.z);
     // Reduce patrol area to a point at the home position
-    Utils.LogDebug("Setting BossClawAi.patrolXz");
+    Dbg.Log("Setting BossClawAi.patrolXz");
     bca.patrolXz = new Vector2(0.0f, 0.0f);
 
     // Color the boss claw so it's obvious that it's been modded
@@ -36,14 +36,14 @@ class RemoveBossClawRng : Feature {
       MelonLogger.Warning("No boss claw cabin to color in current scene");
       return;
     }
-    Utils.LogDebug("Coloring boss claw");
+    Dbg.Log("Coloring boss claw");
     var newMaterial = new Material(Shader.Find(
         "Valve/vr_standard")) { color = new Color(0.8f, 0.8f, 0.2f) };
     for (int i = 0; i < cabin.transform.childCount; i++) {
       var child = cabin.transform.GetChild(i).gameObject;
       if (!child.name.StartsWith("kitbash_plate_heavy_4m4m"))
         continue;
-      Utils.LogDebug($"Coloring object: {child.name}");
+      Dbg.Log($"Coloring object: {child.name}");
       child.GetComponent<MeshRenderer>().SetMaterial(newMaterial);
     }
 

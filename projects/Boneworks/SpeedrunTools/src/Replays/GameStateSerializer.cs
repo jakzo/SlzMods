@@ -148,7 +148,7 @@ class GameStateSerializer {
     _buttonsPressedLeft = _buttonsPressedRight = 0;
     _skippedFrames = -1;
 
-    // Utils.LogDebug($"Recorded frame: {currentSceneIdx}
+    // Dbg.Log($"Recorded frame: {currentSceneIdx}
     // {cam.position.ToString()}");
     return builder.SizedByteArray();
   }

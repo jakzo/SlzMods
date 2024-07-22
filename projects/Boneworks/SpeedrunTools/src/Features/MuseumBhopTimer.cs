@@ -16,7 +16,7 @@ class MuseumBhopTimer : Feature {
       return;
 
     MuseumStartTime = DateTime.Now;
-    Utils.LogDebug("Museum B-hop timer started");
+    Dbg.Log("Museum B-hop timer started");
 
     RigManager = Utilities.Boneworks.GetRigManager();
     Trigger =

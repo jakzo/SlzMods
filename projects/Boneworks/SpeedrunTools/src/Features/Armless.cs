@@ -78,7 +78,7 @@ public class Armless : Feature {
   public static void SetArmEnabled(bool leftArm, bool isEnabled) {
     if (Mod.GameState.rigManager == null) {
       if (!isEnabled)
-        Utils.LogDebug("Rig manager not found. Not disabling arm.");
+        Dbg.Log("Rig manager not found. Not disabling arm.");
       return;
     }
 
@@ -96,7 +96,7 @@ public class Armless : Feature {
         Mod.GameState.rigManager.gameWorldSkeletonRig.gameObject.transform,
         leftArm ? "l_AC_AuxSHJnt" : "r_AC_AuxSHJnt");
     if (armTransform == null)
-      Utils.LogDebug("Arm bone not found");
+      Dbg.Log("Arm bone not found");
     else
       armTransform.localScale = isEnabled ? Vector3.one : Vector3.zero;
     var dummyPalm = GameObject.Find(DUMMY_PALM_NAME);

@@ -193,7 +193,7 @@ class Ghost {
     if (!_frameNext.HasValue) {
       Pause();
       IsFinishedPlaying = true;
-      Utils.LogDebug("Finished playing");
+      Dbg.Log("Finished playing");
       return;
     }
 

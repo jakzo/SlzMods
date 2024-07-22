@@ -100,7 +100,6 @@ public class Mod : MelonMod {
     Directory.CreateDirectory(Utils.DIR);
 
     Utils.s_prefCategory = MelonPreferences.CreateCategory(Utils.PREF_CATEGORY);
-    Utils.PrefDebug.Create();
     foreach (var feature in features) {
       var name = feature.GetType().Name;
       var devName = feature.IsDev ? "Dev" : "";
@@ -127,12 +126,12 @@ public class Mod : MelonMod {
         EnableFeature(feature);
     }
 
-    Utils.LogDebug("OnApplicationStart");
+    Dbg.Log("OnApplicationStart");
     OnFeatureCallback(feature => feature.OnApplicationStart());
   }
 
   public override void OnSceneWasLoaded(int buildIndex, string sceneName) {
-    Utils.LogDebug("OnSceneWasLoaded");
+    Dbg.Log("OnSceneWasLoaded");
     foreach (var feature in features) {
       if (featureEnabledPrefs[feature].Read()) {
         EnableFeature(feature);
@@ -145,7 +144,7 @@ public class Mod : MelonMod {
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
-    Utils.LogDebug("OnSceneWasInitialized");
+    Dbg.Log("OnSceneWasInitialized");
     GameState.rigManager = Utilities.Boneworks.GetRigManager();
     s_hotkeys.Init();
     OnFeatureCallback(feature =>
@@ -178,7 +177,7 @@ public class Mod : MelonMod {
   class BoneworksSceneManager_LoadScene_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(string sceneName) {
-      Utils.LogDebug($"LoadScene: {sceneName}");
+      Dbg.Log($"LoadScene: {sceneName}");
       GameState.nextSceneIdx = Utils.SCENE_INDEXES_BY_NAME[sceneName];
     }
   }

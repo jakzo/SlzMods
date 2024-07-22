@@ -71,18 +71,8 @@ class Utils {
 
   public static MelonPreferences_Category s_prefCategory;
 
-  public static readonly Pref<bool> PrefDebug =
-      new Pref<bool>() { Id = "printDebugLogs",
-                         Name = "Print debug logs to console",
-                         DefaultValue = false };
-
   public static UnityEngine.Vector3 GetPlayerPos() {
     return Mod.GameState.rigManager.gameWorldSkeletonRig.transform.position;
-  }
-
-  public static void LogDebug(string msg, params object[] data) {
-    if (PrefDebug.Read())
-      MelonLogger.Msg($"dbg: {msg}", data);
   }
 
   public static bool GetKeyControl() =>

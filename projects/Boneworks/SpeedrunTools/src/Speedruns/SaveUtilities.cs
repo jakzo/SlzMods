@@ -34,7 +34,7 @@ class SaveUtilities {
   }
 
   public static void RestoreSaveFileResource(string saveResourceName) {
-    Utils.LogDebug($"Loading save: {saveResourceName}");
+    Dbg.Log($"Loading save: {saveResourceName}");
     DeleteSave();
     Utilities.Resources.ExtractResource(saveResourceName,
                                         Application.persistentDataPath);
@@ -60,7 +60,7 @@ class SaveUtilities {
   }
 
   public static void DeleteSave() {
-    Utils.LogDebug("Deleting save");
+    Dbg.Log("Deleting save");
     foreach (var filePath in Directory.EnumerateFiles(
                  Application.persistentDataPath)) {
       if (filePath.EndsWith("output_log.txt"))

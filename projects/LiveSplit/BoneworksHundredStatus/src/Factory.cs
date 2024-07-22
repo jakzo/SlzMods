@@ -19,7 +19,7 @@ public class Factory : IComponentFactory {
       "https://raw.githubusercontent.com/jakzo/SlzMods/main/projects/LiveSplit/BoneworksHundredStatus/";
 
   public string XMLURL =>
-      $"{UpdateURL}update.LiveSplit.BoneworksHundredStatus.xml";
+      UpdateURL + "update.LiveSplit.BoneworksHundredStatus.xml";
 
   public Version Version =>
       Version.Parse(Sst.Livesplit.BoneworksHundredStatus.AppVersion.Value);

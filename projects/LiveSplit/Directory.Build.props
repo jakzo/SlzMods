@@ -1,0 +1,89 @@
+<Project>
+
+  <PropertyGroup>
+    <IsNewProject Condition=" '$(MSBuildProjectName)' == 'Project' ">true</IsNewProject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IsNewProject)' == 'true' ">
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <TargetFramework>net472</TargetFramework>
+
+    <LiveSplitPath Condition=" !Exists('$(LiveSplitPath)') ">C:\Users\jakzo\Downloads\LiveSplit_1.8.28</LiveSplitPath>
+    <LiveSplitPath Condition=" !Exists('$(LiveSplitPath)') "></LiveSplitPath>
+
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>default</LangVersion>
+    <IsPackable>false</IsPackable>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+    <DefineConstants>TRACE</DefineConstants>
+
+    <ComponentName>$([System.IO.Path]::GetFileName($(MSBuildProjectDirectory)))</ComponentName>
+    <RootNamespace>Sst.$(ComponentName)</RootNamespace>
+    <AssemblyName>$(ComponentName)</AssemblyName>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <OutputType>Library</OutputType>
+
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(IsNewProject)' == 'true' and '$(Configuration)' == 'Debug' ">
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IsNewProject)' == 'true' and '$(Configuration)' == 'Release' ">
+    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <Target Name="CopyToGame" AfterTargets="PostBuildEvent"
+    Condition=" '$(IsNewProject)' == 'true' and '$(CopyIntoGameAfterBuild)' == 'true' and '$(GITHUB_ACTIONS)' != 'true' and '$(LiveSplitPath)' != '' ">
+    <Exec Condition=" '$(OS)' == 'Windows_NT' "
+      Command="COPY &quot;$(TargetPath)&quot; &quot;$(LiveSplitPath)\Components&quot;" />
+
+    <Exec Condition=" '$(OS)' != 'Windows_NT' "
+      Command="cp &quot;$(TargetPath)&quot; &quot;$(LiveSplitPath)/Components&quot;" />
+  </Target>
+
+  <ItemGroup Condition=" '$(IsNewProject)' == 'true' ">
+    <Reference
+      Include="..\..\..\references\LiveSplit\*.dll">
+      <HintPath>$(FullPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

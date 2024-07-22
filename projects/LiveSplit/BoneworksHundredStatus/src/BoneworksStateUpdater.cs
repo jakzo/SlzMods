@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Web.Script.Serialization;
 using Sst.Common.Boneworks;
 using Sst.Common.LiveSplit;
 
@@ -13,8 +13,10 @@ class BoneworksStateUpdater : IDisposable {
   public Dictionary<string, int> LevelCollectableIndexes;
 
   private readonly Common.Ipc.Client _client;
+  private readonly JavaScriptSerializer _serializer;
 
   public BoneworksStateUpdater() {
+    _serializer = new JavaScriptSerializer();
     _client = new Common.Ipc.Client(HundredPercentState.NAMED_PIPE);
     _client.OnConnected += () => {
       Log.Info("Connected");
@@ -57,7 +59,7 @@ class BoneworksStateUpdater : IDisposable {
 
   private HundredPercentState ParseLine(string line) {
     try {
-      return JsonConvert.DeserializeObject<HundredPercentState>(line);
+      return _serializer.Deserialize<HundredPercentState>(line);
     } catch (Exception err) {
       Log.Error($"Error reading pipe message as JSON: {err.Message}");
       return null;

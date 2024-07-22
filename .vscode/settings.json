@@ -109,6 +109,7 @@
     "HintPath",
     "BonelabPath",
     "BoneworksPath",
+    "LiveSplitPath",
     "PostBuildEvent"
   ]
 }

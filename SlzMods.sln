@@ -21,7 +21,7 @@ Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB07}") = "BonelabHundredStatus", "pro
 EndProject
 Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDABC}") = "BoneworksDebugStats", "projects\LiveSplit\BoneworksDebugStats\BoneworksDebugStats.csproj", "{E782BFCA-90AA-A92F-22E9-85589F109ABC}"
 EndProject
-Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB08}") = "BoneworksHundredStatus", "projects\LiveSplit\BoneworksHundredStatus\BoneworksHundredStatus.csproj", "{E782BFCA-90AA-A92F-22E9-85589F10913C}"
+Project("{D4EFCE32-FB9C-666F-CB8A-DA081F9BDB08}") = "BoneworksHundredStatus", "projects\LiveSplit\BoneworksHundredStatus\Project.csproj", "{E782BFCA-90AA-A92F-22E9-85589F10913C}"
 EndProject
 Project("{81FCC4E8-8A09-AD74-7CAB-31A3DCAD4264}") = "BonelabAmmoBugFix", "projects\Bonelab\AmmoBugFix\AmmoBugFix.csproj", "{59614574-AE6C-55D4-024A-21B97605D6F1}"
 EndProject

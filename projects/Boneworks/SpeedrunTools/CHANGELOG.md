@@ -1,3 +1,8 @@
+## 2.4.1
+
+Fixes logger error on startup.
+
+
 ## 2.4.0
 
 Added support for sending data to the Boneworks 100% run status LiveSplit component.

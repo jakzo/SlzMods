@@ -85,7 +85,7 @@ class Overlay {
   private Texture TextToTexture(string text) {
     TMPro.TextMeshPro tmp;
     if (s_loadingText == null) {
-      s_loadingText = new GameObject("SpeedrunTools_LoadingText");
+      s_loadingText = new GameObject(LOADING_TEXT_NAME);
       // TODO: Is there a way to have this render correctly while not making it
       // appear in the scene?
       s_loadingText.transform.position = new Vector3(100000, 100000, 100000);

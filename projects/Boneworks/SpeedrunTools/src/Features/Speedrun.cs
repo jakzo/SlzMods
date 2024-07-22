@@ -184,6 +184,12 @@ class Speedrun : Feature {
     else if (nextSceneIdx != Utils.SCENE_MENU_IDX)
       RunTimer.Reset(true);
 
+#if DEBUG
+    var debugStr = " DEBUG";
+#else
+    var debugStr = "";
+#endif
+
     var duration = RunTimer.CalculateDuration();
     _overlay.Show(string.Join(
         "\n",
@@ -192,7 +198,7 @@ class Speedrun : Feature {
                         ? "Speedrun mode disabled"
                         : $"{Mode.CurrentMode.name} mode enabled",
                     Mode.CurrentMode),
-          $"v{BuildInfo.Version}",
+          $"v{BuildInfo.Version}{debugStr}",
           duration?.ToString(
               $"{(duration.Value.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff"),
         }

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
+  <Target Name="BuildAll">
+    <!-- All game/Melon Loader version combinations to build -->
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+      Properties="Configuration=$(Configuration);Patch=3;MelonLoader=5" />
+  </Target>
+
+  <PropertyGroup>
+    <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild>
+
+    <ProjectGuid>{C33921DC-5778-4EEC-A2D0-E0AE522CC701}</ProjectGuid>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="AppVersion.cs" />
+    <Compile Include="src/**/*.cs" />
+    <Compile Include="../../../common/FlatBuffers/**/*.cs" />
+    <Compile Include="../../../common/Boneworks/DebugStats.cs" />
+    <Compile Include="../../../common/Boneworks/HundredPercentState.cs" />
+    <Compile Include="../../../common/Utilities/IpcServer.cs" />
+    <Compile Include="../../../common/Utilities/Dbg.cs" />
+    <Compile Include="../../../common/Utilities/Geometry.cs" />
+    <Compile Include="../../../common/Utilities/Metadata.cs" />
+    <Compile Include="../../../common/Utilities/Unity.cs" />
+    <Compile Include="../../../common/Utilities/Resources.cs" />
+
+    <EmbeddedResource Include="resources/*" />
+  </ItemGroup>
+
+</Project>

@@ -1,4 +1,12 @@
 <updates>
+  <update version="1.0.1">
+    <files>
+      <file path="Components/BoneworksHundredStatus.dll" status="changed" />
+    </files>
+    <change>Added settings.
+</change>
+    <changelog />
+  </update>
   <update version="1.0.0">
     <files>
       <file path="Components/BoneworksHundredStatus.dll" status="changed" />

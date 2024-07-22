@@ -56,6 +56,18 @@ class Utils {
         ["empty_scene"] = 24,
         ["loadingScene"] = 25,
       };
+  public static readonly Dictionary<int, string> SCENE_NAME_BY_INDEX =
+      GetSceneNamesByIndex();
+
+  private static Dictionary<int, string> GetSceneNamesByIndex() {
+    var dict = new Dictionary<int, string>();
+    foreach (var pair in SCENE_INDEXES_BY_NAME) {
+      if (!dict.ContainsKey(pair.Value)) {
+        dict.Add(pair.Value, pair.Key);
+      }
+    }
+    return dict;
+  }
 
   public static MelonPreferences_Category s_prefCategory;
 

@@ -6,7 +6,7 @@
   </Target>
 
   <PropertyGroup>
-    <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild>
+    <!-- <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild> -->
 
     <ProjectGuid>{9746DCEC-6A9C-4E84-98E2-B141A702FDD9}</ProjectGuid>
   </PropertyGroup>

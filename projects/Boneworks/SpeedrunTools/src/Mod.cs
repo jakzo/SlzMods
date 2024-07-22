@@ -32,6 +32,8 @@ public class Mod : MelonMod {
     new Features.Armless(),
     new Features.RestartLevel(),
     new Features.ArenaSplitState(),
+    new Features.CollectibleRecorder(),
+    new Features.HundredPercentServer(),
 
     // Dev features
     new Features.Speedometer(),
@@ -44,7 +46,6 @@ public class Mod : MelonMod {
     new Features.FixPhysicsRate(),
     new Features.DebugColliders(),
     new Features.LootChanceViewer(),
-    new Features.AslHelper(),
     new Features.MuseumBhopTimer(),
     new Features.DebugStats(),
     new Features.GripFlyFinder(),

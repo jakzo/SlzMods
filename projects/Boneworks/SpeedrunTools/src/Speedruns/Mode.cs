@@ -33,7 +33,11 @@ class Mode {
     resetSaveOnEnable = true,
     resetSaveOnMainMenu = false,
     resetTimerOnMainMenu = false,
-    OnEnable = () => { Steamworks.SteamUserStats.ResetAllStats(true); },
+    OnEnable =
+        () => {
+          Steamworks.SteamUserStats.ResetAllStats(true);
+          HundredPercentServer.Instance.Reset();
+        },
   };
 
   public static readonly Mode BLINDFOLD = new Mode() {

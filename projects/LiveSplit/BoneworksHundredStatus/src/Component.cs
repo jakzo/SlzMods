@@ -7,6 +7,7 @@ using LiveSplit.UI;
 using LiveSplit.UI.Components;
 using LiveSplit.Model;
 using Sst.Common.LiveSplit;
+using Sst.Common.Boneworks;
 
 namespace Sst.Livesplit.BoneworksHundredStatus {
 public class Component : IComponent {
@@ -26,15 +27,53 @@ public class Component : IComponent {
 
   private SimpleLabel _progressLabel = new SimpleLabel();
   private BoneworksStateUpdater _stateUpdater = new BoneworksStateUpdater();
-  private int _eventIndex = 0;
+  private int _collectiblePos = 0;
+  private HashSet<HundredPercentState.Collectible> _missingCollectibles =
+      new HashSet<HundredPercentState.Collectible>();
   private bool _isDirty = true;
-  private TimerModel _timer;
-  private string _prevLevelBarcode;
 
   public Component(LiveSplitState state) {
     Log.Initialize();
-    _timer = new TimerModel() { CurrentState = state };
-    _stateUpdater.OnReceivedState += receivedState => _isDirty = true;
+    _stateUpdater.OnReceivedState += OnReceivedState;
+  }
+
+  private void OnReceivedState(HundredPercentState receivedState) {
+    _isDirty = true;
+    if (receivedState == null)
+      return;
+
+    if (receivedState.levelCollectibles != null) {
+      _collectiblePos = 0;
+      _missingCollectibles = new HashSet<HundredPercentState.Collectible>();
+    }
+    if (receivedState.justCollected != null) {
+      foreach (var collectible in receivedState.justCollected) {
+        if (!_stateUpdater.LevelCollectableIndexes.TryGetValue(collectible.Uuid,
+                                                               out var index))
+          continue;
+
+        if (index >= _collectiblePos) {
+          for (var i = _collectiblePos; i < index; i++) {
+            _missingCollectibles.Add(_stateUpdater.LevelCollectibles[i]);
+          }
+          _collectiblePos = index + 1;
+
+          // Right before we get the last collectible, mark it as missing so
+          // that we notice it before we reach the finish in case we forgot
+          // about it
+          var lastCollectibleIndex = _stateUpdater.LevelCollectibles.Length - 1;
+          if (index == lastCollectibleIndex - 1) {
+            _missingCollectibles.Add(
+                _stateUpdater.LevelCollectibles[lastCollectibleIndex]);
+          }
+        }
+
+        if (_missingCollectibles.Contains(
+                _stateUpdater.LevelCollectibles[index])) {
+          _missingCollectibles.Remove(_stateUpdater.LevelCollectibles[index]);
+        }
+      }
+    }
   }
 
   public void DrawHorizontal(Graphics g, LiveSplitState state, float height,
@@ -70,20 +109,58 @@ public class Component : IComponent {
       document.CreateElement("Settings");
   public void SetSettings(System.Xml.XmlNode settings) {}
 
+  // TODO: Settings page
+  // public Control GetSettingsControl(LayoutMode mode) {
+  //   Settings.Mode = mode;
+  //   return Settings;
+  // }
+
+  // public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document) {
+  //   return Settings.GetSettings(document);
+  // }
+
+  // public void SetSettings(System.Xml.XmlNode settings) {
+  //   Settings.SetSettings(settings);
+  // }
+
   public void Dispose() { _stateUpdater.Dispose(); }
 
   public void Update(IInvalidator invalidator, LiveSplitState livesplitState,
                      float width, float height, LayoutMode mode) {
-    if (_isDirty) {
-      _isDirty = false;
-      var state = _stateUpdater.State;
-      _progressLabel.Text = string.Join("\n", new[] {
-        $"RNG Unlocks: {state.unlockRngCount} / {state.unlockRngMax}",
-        $"Other Unlocks: {state.unlockNormalCount} / {state.unlockNormalMax} (level = ~{state.unlockNormalLevel})",
-        $"Level Ammo: {state.levelAmmoCount} / {state.levelAmmoMax}",
-      });
-      invalidator.Invalidate(0, 0, width, height);
+    if (!_isDirty)
+      return;
+
+    _isDirty = false;
+    var state = _stateUpdater.State;
+    if (state == null) {
+      _progressLabel.Text = "";
+    } else {
+      var overallChance = state.rngUnlocks.Aggregate(
+          1f, (chance, pair) =>
+                  chance * (1f - pair.Value.probabilityNotDroppedYet));
+      var overallChanceStr = (overallChance * 100f).ToString("N0");
+      _progressLabel.Text = string.Join(
+          "\n",
+          _missingCollectibles.Select(c => $"Missed: {c.DisplayName}")
+              .Concat(state.rngUnlocks.All(pair => pair.Value.hasDropped)
+                          ? new[] { $"Overall RNG chance: {overallChanceStr}%" }
+                          : new string[] {})
+              .Concat(new[] {
+                $"Level unlocks: {state.unlockLevelCount} / {state.unlockLevelMax}",
+                $"Level Ammo: {state.ammoLevelCount} / {state.ammoLevelMax}",
+              })
+              .Concat(state.rngUnlocks.Select(pair => {
+                var u = pair.Value;
+                var status = u.hasDropped ? "✅" : "❌";
+                var triesStr = u.attempts == 1 ? "try" : "tries";
+                var attemptChanceStr =
+                    (u.prevAttemptChance * 100f).ToString("N0");
+                var total = 1f - u.probabilityNotDroppedYet;
+                var totalStr = (total * 100f).ToString("N0");
+                return $"{status} {u.name}: {u.attempts} {triesStr} @ {attemptChanceStr}% per try = {totalStr}% total";
+              })));
     }
+    invalidator?.Invalidate(0, 0, width, height);
   }
 }
 }

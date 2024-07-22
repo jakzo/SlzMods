@@ -8,14 +8,24 @@ namespace Sst.Livesplit.BoneworksHundredStatus {
 class BoneworksStateUpdater : IDisposable {
   public event Action<HundredPercentState> OnReceivedState;
 
-  public HundredPercentState State = new HundredPercentState();
+  public HundredPercentState State;
+  public HundredPercentState.Collectible[] LevelCollectibles;
+  public Dictionary<string, int> LevelCollectableIndexes;
 
   private readonly Common.Ipc.Client _client;
 
   public BoneworksStateUpdater() {
     _client = new Common.Ipc.Client(HundredPercentState.NAMED_PIPE);
-    _client.OnConnected += () => Log.Info("Connected");
-    _client.OnDisconnected += () => Log.Info("Disconnected");
+    _client.OnConnected += () => {
+      Log.Info("Connected");
+      State = new HundredPercentState();
+      OnReceivedState?.Invoke(State);
+    };
+    _client.OnDisconnected += () => {
+      Log.Info("Disconnected");
+      State = null;
+      OnReceivedState?.Invoke(State);
+    };
     _client.OnMessageReceived += OnMessage;
     Log.Info("Listening for Boneworks state change");
   }
@@ -29,7 +39,17 @@ class BoneworksStateUpdater : IDisposable {
       if (receivedState == null)
         return;
       State = receivedState;
-      OnReceivedState?.Invoke(receivedState);
+      if (State.levelCollectibles != null) {
+        LevelCollectibles = State.levelCollectibles;
+        LevelCollectableIndexes = new Dictionary<string, int>();
+        for (var i = 0; i < LevelCollectibles.Length; i++) {
+          var collectible = LevelCollectibles[i];
+          if (!LevelCollectableIndexes.ContainsKey(collectible.Uuid)) {
+            LevelCollectableIndexes.Add(collectible.Uuid, i);
+          }
+        }
+      }
+      OnReceivedState?.Invoke(State);
     } catch (Exception ex) {
       Log.Error($"OnMessage error: {ex}");
     }

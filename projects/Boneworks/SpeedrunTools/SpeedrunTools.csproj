@@ -58,6 +58,9 @@
     <Reference Include="Il2Cppmscorlib">
       <HintPath>..\..\..\references\Boneworks\Il2Cppmscorlib.dll</HintPath>
     </Reference>
+    <Reference Include="Il2CppSystem.Core">
+      <HintPath>..\..\..\references\Boneworks\Il2CppSystem.Core.dll</HintPath>
+    </Reference>
     <Reference Include="SteamVR">
       <HintPath>..\..\..\references\Boneworks\SteamVR.dll</HintPath>
     </Reference>
@@ -79,6 +82,9 @@
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\..\..\references\Boneworks\TextMeshPro-1.0.55.2017.2.0b12.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\references\Boneworks\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppVersion.cs" />
@@ -86,20 +92,22 @@
     <Compile Include="Properties/*.cs" />
     <Compile Include="../../../common/FlatBuffers/**/*.cs" />
     <Compile Include="../../../common/Boneworks/DebugStats.cs" />
+    <Compile Include="../../../common/Boneworks/HundredPercentState.cs" />
     <Compile Include="../../../common/Utilities/IpcServer.cs" />
     <Compile Include="../../../common/Utilities/Dbg.cs" />
     <Compile Include="../../../common/Utilities/Geometry.cs" />
     <Compile Include="../../../common/Utilities/Metadata.cs" />
     <Compile Include="../../../common/Utilities/Unity.cs" />
+    <Compile Include="../../../common/Utilities/Resources.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="resources/*" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <!-- <PostBuildEvent>
+    <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
-    </PostBuildEvent> -->
+    </PostBuildEvent>
     <!-- <PostBuildEvent>
       COPY "$(TargetPath)" "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\Mods"
       "C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS\BONEWORKS.exe"&amp; exit 0

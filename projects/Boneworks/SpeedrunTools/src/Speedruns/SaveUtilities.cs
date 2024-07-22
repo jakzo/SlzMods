@@ -1,11 +1,9 @@
+using System.IO;
 using MelonLoader;
 using HarmonyLib;
 using StressLevelZero.Data;
 using StressLevelZero.Arena;
 using UnityEngine;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
 
 namespace Sst.Speedruns {
 class SaveUtilities {
@@ -38,20 +36,8 @@ class SaveUtilities {
   public static void RestoreSaveFileResource(string saveResourceName) {
     Utils.LogDebug($"Loading save: {saveResourceName}");
     DeleteSave();
-    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-    string resourcePath = assembly.GetManifestResourceNames().Single(
-        str => str.EndsWith(saveResourceName));
-    using (var stream = assembly.GetManifestResourceStream(resourcePath)) {
-      using (var archive = new ZipArchive(stream, ZipArchiveMode.Read)) {
-        foreach (var entry in archive.Entries) {
-          var entryStream = entry.Open();
-          using (var fileStream = File.Create(Path.Combine(
-                     Application.persistentDataPath, entry.FullName))) {
-            entryStream.CopyTo(fileStream);
-          }
-        }
-      }
-    }
+    Utilities.Resources.ExtractResource(saveResourceName,
+                                        Application.persistentDataPath);
   }
 
   public static void SaveData() {

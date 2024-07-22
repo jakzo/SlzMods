@@ -1,3 +1,8 @@
+## 2.4.2
+
+Fixes logger error on startup.
+
+
 ## 2.4.1
 
 Fixes logger error on startup.

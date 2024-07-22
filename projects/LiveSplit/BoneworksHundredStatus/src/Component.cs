@@ -8,13 +8,17 @@ using LiveSplit.UI.Components;
 using LiveSplit.Model;
 using Sst.Common.LiveSplit;
 using Sst.Common.Boneworks;
+using System.Xml;
 
 namespace Sst.Livesplit.BoneworksHundredStatus {
 public class Component : IComponent {
   public const string NAME = "Boneworks 100% Status";
 
+  private float _height = 240;
+  private bool _showMissingCollectibles = true;
+
   public float HorizontalWidth { get => 300; }
-  public float VerticalHeight { get => 240; }
+  public float VerticalHeight { get => _height; }
   public float MinimumWidth { get => HorizontalWidth; }
   public float MinimumHeight { get => VerticalHeight; }
 
@@ -105,23 +109,35 @@ public class Component : IComponent {
   public string ComponentName { get => NAME; }
 
   public Control GetSettingsControl(LayoutMode mode) => null;
-  public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document) =>
-      document.CreateElement("Settings");
-  public void SetSettings(System.Xml.XmlNode settings) {}
 
-  // TODO: Settings page
-  // public Control GetSettingsControl(LayoutMode mode) {
-  //   Settings.Mode = mode;
-  //   return Settings;
-  // }
+  public XmlNode GetSettings(XmlDocument document) {
+    var root = document.CreateElement("Settings");
 
-  // public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document) {
-  //   return Settings.GetSettings(document);
-  // }
+    var height = document.CreateElement("Height");
+    height.InnerText = _height.ToString();
+    root.AppendChild(height);
 
-  // public void SetSettings(System.Xml.XmlNode settings) {
-  //   Settings.SetSettings(settings);
-  // }
+    var showMissingCollectibles =
+        document.CreateElement("ShowMissingCollectibles");
+    showMissingCollectibles.InnerText = _showMissingCollectibles.ToString();
+    root.AppendChild(height);
+
+    return root;
+  }
+
+  public void SetSettings(XmlNode settings) {
+    foreach (var n in settings.ChildNodes) {
+      var node = n as XmlNode;
+      switch (node.Name) {
+      case "Height":
+        _height = float.Parse(node.InnerText);
+        break;
+      case "ShowMissingCollectibles":
+        _showMissingCollectibles = bool.Parse(node.InnerText);
+        break;
+      }
+    }
+  }
 
   public void Dispose() { _stateUpdater.Dispose(); }
 
@@ -135,13 +151,17 @@ public class Component : IComponent {
     if (state == null) {
       _progressLabel.Text = "";
     } else {
+      var missingCollectibleLines =
+          _showMissingCollectibles
+              ? _missingCollectibles.Select(c => $"Missed: {c.DisplayName}")
+              : new string[] {};
       var overallChance = state.rngUnlocks.Aggregate(
           1f, (chance, pair) =>
                   chance * (1f - pair.Value.probabilityNotDroppedYet));
       var overallChanceStr = (overallChance * 100f).ToString("N0");
       _progressLabel.Text = string.Join(
           "\n",
-          _missingCollectibles.Select(c => $"Missed: {c.DisplayName}")
+          missingCollectibleLines
               .Concat(state.rngUnlocks.All(pair => pair.Value.hasDropped)
                           ? new[] { $"Overall RNG chance: {overallChanceStr}%" }
                           : new string[] {})

@@ -21,6 +21,10 @@ Shows game progress and achievements for Boneworks 100% speedruns in LiveSplit.
 
 Be aware that some state may not be correct if you restart LiveSplit or Boneworks mid run
 
+## Configuration
+
+There is no UI for the component settings (yet) but you can change a few things (like height or whether to show missing items) by editing your layout file as a text file.
+
 ## How it works
 
 - The order of collectibles are stored in `BONEWORKS/UserData/SpeedrunTools/collectible_order/LEVEL_NAME.txt`

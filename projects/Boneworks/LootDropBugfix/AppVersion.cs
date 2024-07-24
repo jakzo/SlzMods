@@ -1,5 +1,5 @@
 namespace Sst.LootDropBugfix;
 
 static class AppVersion {
-  public const string Value = "2.0.1";
+  public const string Value = "2.1.0";
 }

@@ -1,3 +1,8 @@
+## 2.1.0
+
+Added back the fix to stop destructibles being destroyed before level start.
+
+
 ## 2.0.1
 
 Fixed a silly mistake I made in the algorithm which I didn't detect because I was testing on ammo boxes. 🤦

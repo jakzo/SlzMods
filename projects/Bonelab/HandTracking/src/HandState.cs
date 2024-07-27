@@ -26,6 +26,7 @@ public class HandState {
   public OVRPlugin.TrackingConfidence HandConfidence;
   public OVRPlugin.TrackingConfidence[] FingerConfidences;
   public bool IsPinching;
+  public bool HasState = false;
 
   private OVRPlugin.Hand _hand;
   private OVRPlugin.SkeletonType _skeletonType;
@@ -50,8 +51,10 @@ public class HandState {
 
   public void Update() {
     if (!OVRPlugin.GetHandState(OVRPlugin.Step.Render, _hand, _state)) {
-      throw new Exception("Failed to get hand state");
+      HasState = false;
+      return;
     }
+    HasState = true;
 
     Position = FromFlippedZVector3f(_state.RootPose.Position);
     Rotation = FromFlippedZQuatf(_state.RootPose.Orientation);

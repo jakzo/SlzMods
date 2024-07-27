@@ -12,24 +12,25 @@ using SLZ.Interaction;
 using SLZ.Rig;
 using System.Collections.Generic;
 using SLZ.Marrow.Interaction;
+using SLZ.Vehicle;
+using SLZ.VRMK;
 
 namespace Sst.HandTracking;
 
 public class Mod : MelonMod {
   public static Mod Instance;
 
+  private MelonPreferences_Entry<LocomotionType> _prefLoco;
   private HandTracker[] _trackers = { null, null };
-  private LocoState _locoState = new LocoState();
-  private FpsCounter _fpsRefresh = new(TimeSpan.FromSeconds(1f));
-  private FpsCounter _fpsUpdate = new(TimeSpan.FromSeconds(1f));
-  private FpsCounter _fpsFixed = new(TimeSpan.FromSeconds(1f));
+  private Locomotion _locoState;
+  private Jumping _jumping;
   private HashSet<LaserCursor> _visibleLaserCursors = new();
 
-  private HandTracker _trackerLeft {
+  public HandTracker TrackerLeft {
     get => _trackers[0];
     set => _trackers[0] = value;
   }
-  private HandTracker _trackerRight {
+  public HandTracker TrackerRight {
     get => _trackers[1];
     set => _trackers[1] = value;
   }
@@ -38,21 +39,41 @@ public class Mod : MelonMod {
     Dbg.Init(BuildInfo.NAME);
     Instance = this;
 
+    var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
+    _prefLoco = category.CreateEntry(
+        "locomotion_type", LocomotionType.HEAD, "Locomotion type",
+        "How running is performed (either \"HEAD\" or \"HANDS\")");
+    _prefLoco.OnEntryValueChanged.Subscribe((newValue, prevValue) =>
+                                                SetupLocomotion(newValue));
+    SetupLocomotion(_prefLoco.Value);
+
     LevelHooks.OnLoad += nextLevel => _visibleLaserCursors.Clear();
   }
 
-  public override void OnUpdate() {
-    _fpsUpdate.OnFrame();
-    // Dbg.Log(
-    //     $"fixed={_fpsFixed.Read().ToString("N1")},
-    //     update={_fpsUpdate.Read().ToString("N1")},
-    //     refresh={_fpsRefresh.Read().ToString("N1")}");
+  private void SetupLocomotion(LocomotionType type) {
+    switch (type) {
+    case LocomotionType.HANDS:
+      _locoState = new HandLocomotion();
+      break;
 
+    case LocomotionType.HEAD:
+    default:
+      _locoState = new HeadLocomotion();
+      break;
+    }
+
+    if (TrackerLeft != null)
+      _locoState.Init(TrackerLeft);
+    if (TrackerRight != null)
+      _locoState.Init(TrackerRight);
+  }
+
+  public override void OnUpdate() {
     if (!MarrowGame.IsInitialized || MarrowGame.xr == null)
       return;
 
-    if (_trackerLeft == null && MarrowGame.xr.LeftController != null) {
-      _trackerLeft = new(new() {
+    if (TrackerLeft == null && MarrowGame.xr.LeftController != null) {
+      TrackerLeft = new(new() {
         isLeft = true,
         marrowController = MarrowGame.xr.LeftController,
         setMarrowController = c => MarrowGame.xr.LeftController = c,
@@ -63,11 +84,11 @@ public class Mod : MelonMod {
                              Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(0.04f, 0.02f, 0.1f),
       });
-      _locoState.Init(_trackerLeft);
+      _locoState.Init(TrackerLeft);
     }
 
-    if (_trackerRight == null && MarrowGame.xr.RightController != null) {
-      _trackerRight = new(new() {
+    if (TrackerRight == null && MarrowGame.xr.RightController != null) {
+      TrackerRight = new(new() {
         isLeft = false,
         marrowController = MarrowGame.xr.RightController,
         setMarrowController = c => MarrowGame.xr.RightController = c,
@@ -78,18 +99,34 @@ public class Mod : MelonMod {
                              Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(-0.04f, 0.02f, 0.1f),
       });
-      _locoState.Init(_trackerRight);
+      _locoState.Init(TrackerRight);
     }
 
     // TODO: Can we do the updates right before the inputs are used?
-    _trackerLeft.OnUpdate();
-    _trackerRight.OnUpdate();
+    TrackerLeft.OnUpdate();
+    TrackerRight.OnUpdate();
 
     // TODO: Do this on fixed update or somewhere frame rate independent
     _locoState.Update();
-  }
 
-  public override void OnFixedUpdate() { _fpsFixed.OnFrame(); }
+    if (_jumping == null) {
+      if (TrackerLeft != null && TrackerRight != null) {
+        _jumping = new Jumping();
+        _jumping.Init();
+      }
+    } else {
+      _jumping.Update();
+    }
+
+    var nonDominantTracker =
+        Utils.IsLocoControllerLeft() ? TrackerRight : TrackerLeft;
+    nonDominantTracker.ProxyController.Joystick2DAxis =
+        new Vector2(0f, TrackerRight.PedalInput.HasValue
+                            ? TrackerRight.PedalInput.Value > 0f
+                                  ? TrackerRight.PedalInput ?? 0f
+                                  : TrackerLeft.PedalInput - 1f ?? 0f
+                            : 0f);
+  }
 
 #if DEBUG
   public override void OnSceneWasInitialized(int buildindex, string sceneName) {
@@ -97,7 +134,7 @@ public class Mod : MelonMod {
       return;
     AssetWarehouse.OnReady(new Action(() => {
       var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
-          c => c.Barcode.ID == Levels.Barcodes.HUB);
+          c => c.Barcode.ID == Levels.Barcodes.MONOGON_MOTORWAY);
       var bootstrapper =
           GameObject.FindObjectOfType<SceneBootstrapper_Bonelab>();
       var crateRef = new LevelCrateReference(crate.Barcode.ID);
@@ -108,12 +145,14 @@ public class Mod : MelonMod {
 #endif
 
   internal HandTracker GetTrackerFromProxyController(XRController controller) {
-    if (_trackerLeft.ProxyController.Equals(controller))
-      return _trackerLeft;
-    if (_trackerRight.ProxyController.Equals(controller))
-      return _trackerRight;
+    if (TrackerLeft.ProxyController.Equals(controller))
+      return TrackerLeft;
+    if (TrackerRight.ProxyController.Equals(controller))
+      return TrackerRight;
     return null;
   }
+
+  public enum LocomotionType { HEAD, HANDS }
 
   // TODO: Is there no way to make a ProxyController class with its own
   // Refresh?
@@ -126,10 +165,7 @@ public class Mod : MelonMod {
       if (tracker == null || !tracker.IsTracking)
         return true;
 
-      if (tracker.Opts.isLeft)
-        Instance._fpsRefresh.OnFrame();
-
-      tracker.UpdateProxyController();
+      tracker.UpdateProxyController(Instance._locoState.Axis);
       return false;
     }
   }
@@ -178,16 +214,42 @@ public class Mod : MelonMod {
 
       // Show laser pointer from the hand which is pinching
       var controller = Utils.RigControllerOf(pinchedTracker);
+      if (!controller)
+        return;
+
       Control_UI_InGameData.SetActiveController(controller);
-      // __instance.activeController = controller;
       __instance.controllerFocused = true;
       __state = true;
     }
 
     [HarmonyPostfix]
     private static void Postfix(LaserCursor __instance, ref bool __state) {
-      if (__state)
-        __instance.Trigger();
+      if (!__state)
+        return;
+
+      __instance.Trigger();
+      UIRig.Instance?.popUpMenu?.Trigger(true);
+    }
+  }
+
+  [HarmonyPatch(typeof(Seat), nameof(Seat.OnTriggerStay))]
+  internal static class Seat_OnTriggerStay {
+    [HarmonyPrefix]
+    private static bool Prefix(Seat __instance, Collider other) {
+      var crouchHand = Utils.IsLocoControllerLeft() ? Instance.TrackerRight
+                                                    : Instance.TrackerLeft;
+      if (crouchHand.IsControllerConnected() || __instance.rigManager)
+        return true;
+
+      var physicsRig = other?.GetComponent<PhysGrounder>()?.physRig;
+      if (physicsRig == null)
+        return true;
+
+      if (!physicsRig.manager.activeSeat &&
+          physicsRig.pelvisHeightMult < 0.6f) {
+        __instance.IngressRig(physicsRig.manager);
+      }
+      return false;
     }
   }
 }

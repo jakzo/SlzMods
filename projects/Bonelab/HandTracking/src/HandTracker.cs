@@ -66,9 +66,10 @@ public class HandTracker {
   public bool IsPinching = false;
   public bool IsMenuOpen = false;
   public bool IsGripping = false;
+  public float? PedalInput;
   public bool Proxy = false;
   public XRController ProxyController;
-  public LocoState LocoState;
+  public HandLocomotion LocoState;
   public HandState HandState;
 
   private OVRPlugin.HandState _handState;
@@ -80,18 +81,23 @@ public class HandTracker {
   private Hand _physicalHand;
 
   private int _logIndex = 0;
+  private static TMPro.TextMeshPro _wristLog;
+  private string LogString(params object[] messageParts) =>
+      string.Join(" ", messageParts.Select(part => part.ToString()));
   internal void Log(params object[] messageParts) {
-#if DEBUG
-    Mod.Instance.LoggerInstance.Msg(
-        (Opts.isLeft ? "[L] " : "[R] ") +
-        string.Join(" ", messageParts.Select(part => part.ToString())));
-#endif
+    var prefix = Opts.isLeft ? "[L] " : "[R] ";
+    Mod.Instance.LoggerInstance.Msg(prefix + LogString(messageParts));
   }
   internal void LogSpam(params object[] messageParts) {
-#if DEBUG
     if (_logIndex % 100 == 0)
       Log(messageParts);
-#endif
+  }
+  internal void LogToWrist(params object[] messageParts) {
+    if (LevelHooks.RigManager == null)
+      return;
+    if (!_wristLog)
+      _wristLog = Bonelab.CreateTextOnWrist("Sst_HandTracker_WristLog");
+    _wristLog.SetText(LogString(messageParts));
   }
 
   public HandTracker(Options options) {
@@ -134,47 +140,49 @@ public class HandTracker {
     }
   }
 
-  public void UpdateProxyController() {
+  public void UpdateProxyController(Vector2? locoAxis) {
     HandState.Update();
 
     ProxyController._IsConnected_k__BackingField = true;
     ProxyController.IsTracking = HandState.IsTracked();
-    if (!ProxyController.IsTracking)
-      return;
+    if (ProxyController.IsTracking) {
 
-    ProxyController.Rotation = HandState.Rotation * Opts.handRotationOffset;
-    ProxyController.Position =
-        HandState.Position + ProxyController.Rotation * Opts.handPositionOffset;
+      ProxyController.Rotation = HandState.Rotation * Opts.handRotationOffset;
+      ProxyController.Position =
+          HandState.Position +
+          ProxyController.Rotation * Opts.handPositionOffset;
 
-    var ovrHand =
-        Opts.isLeft ? OVRPlugin.Hand.HandLeft : OVRPlugin.Hand.HandRight;
-    if (_handState == null)
-      _handState = new OVRPlugin.HandState();
-    // TODO: Try out wide motion mode
-    if (!OVRPlugin.GetHandState(OVRPlugin.Step.Render, ovrHand, _handState)) {
-      _handState = null;
-      return;
-    }
-
-    if (_skeleton == null) {
-      _skeleton = new OVRPlugin.Skeleton2();
-      var skeletonType = Opts.isLeft ? OVRPlugin.SkeletonType.HandLeft
-                                     : OVRPlugin.SkeletonType.HandRight;
-      if (!OVRPlugin.GetSkeleton2(skeletonType, _skeleton)) {
-        _skeleton = null;
-        MelonLogger.Warning("Failed to get hand skeleton");
+      var ovrHand =
+          Opts.isLeft ? OVRPlugin.Hand.HandLeft : OVRPlugin.Hand.HandRight;
+      if (_handState == null)
+        _handState = new OVRPlugin.HandState();
+      // TODO: Try out wide motion mode
+      if (!OVRPlugin.GetHandState(OVRPlugin.Step.Render, ovrHand, _handState)) {
+        _handState = null;
         return;
       }
+
+      if (_skeleton == null) {
+        _skeleton = new OVRPlugin.Skeleton2();
+        var skeletonType = Opts.isLeft ? OVRPlugin.SkeletonType.HandLeft
+                                       : OVRPlugin.SkeletonType.HandRight;
+        if (!OVRPlugin.GetSkeleton2(skeletonType, _skeleton)) {
+          _skeleton = null;
+          MelonLogger.Warning("Failed to get hand skeleton");
+          return;
+        }
+      }
+
+      UpdateFingerCurls();
+      UpdateUiPinch();
+      _forcePull.Update();
+      UpdateTrigger();
+      UpdateMenu();
+      UpdateVehiclePedals();
+      // TODO: Inventory
     }
 
-    UpdateFingerCurls();
-    UpdateLocomotion();
-    UpdateUiPinch();
-    _forcePull.Update();
-    UpdateTrigger();
-    UpdateMenu();
-    // TODO: Jumping
-    // TODO: Inventory
+    UpdateLocomotion(locoAxis);
   }
 
   private void UpdateFingerCurls() {
@@ -263,12 +271,11 @@ public class HandTracker {
   private Quaternion ToQuaternion(OVRPlugin.Quatf quatf) =>
       new Quaternion(quatf.x, quatf.y, quatf.z, quatf.w);
 
-  private void UpdateLocomotion() {
-    if (Opts.isLeft == Utils.IsLocoControllerLeft() &&
-        LocoState.Axis.HasValue) {
-      ProxyController.Joystick2DAxis = LocoState.Axis.Value;
+  private void UpdateLocomotion(Vector2? axis) {
+    if (Opts.isLeft == Utils.IsLocoControllerLeft() && axis.HasValue) {
+      ProxyController.Joystick2DAxis = axis.Value;
 
-      if (LocoState.Axis.Value.sqrMagnitude > 0.1f) {
+      if (axis.Value.sqrMagnitude > 0.1f) {
         ProxyController.JoystickButtonDown = !ProxyController.JoystickButton;
         ProxyController.JoystickButtonUp = false;
         ProxyController.JoystickButton = true;
@@ -316,16 +323,12 @@ public class HandTracker {
   }
 
   private bool IsTriggerPressed() {
-    var physicsRig = LevelHooks.RigManager?.physicsRig;
-    if (physicsRig == null)
-      return false;
-
-    var hand = Opts.isLeft ? physicsRig.leftHand : physicsRig.rightHand;
     if (_forcePull.IsPulling())
       return true;
 
     // TODO: Are there any triggerable objects which don't use TargetGrip?
-    var isHoldingObject = hand.AttachedReceiver?.TryCast<TargetGrip>() != null;
+    var isHoldingObject =
+        GetPhysicalHand()?.AttachedReceiver?.TryCast<TargetGrip>() != null;
     if (!isHoldingObject)
       return IsGripping;
 
@@ -352,6 +355,21 @@ public class HandTracker {
     return Opts.isLeft ? jointPos : -jointPos;
   }
 
+  private void UpdateVehiclePedals() {
+    // TODO: Only set PedalInput if gripping steering wheel?
+    if (!LevelHooks.RigManager?.activeSeat ||
+        GetPhysicalHand()?.AttachedReceiver == null) {
+      PedalInput = null;
+      return;
+    }
+
+    var indexPos = GetRelativeIndexTipPos();
+    var min = -0.01f;
+    var max = 0.01f;
+    PedalInput = Mathf.Clamp01((indexPos.x - min) / (max - min));
+  }
+
+  // TODO: Some weirdness with popup menu closing on first pinch
   private void UpdateMenu() {
     var menu = UIRig.Instance?.popUpMenu;
     if (!menu)

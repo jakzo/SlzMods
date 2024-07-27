@@ -1,11 +1,15 @@
 using System;
-using System.Linq;
-using MelonLoader;
 using UnityEngine;
 
 namespace Sst.HandTracking;
 
-public class LocoState {
+public abstract class Locomotion {
+  public Vector2? Axis;
+  public abstract void Init(HandTracker tracker);
+  public abstract void Update();
+}
+
+public class HandLocomotion : Locomotion {
   private const float CONFIDENCE_BUILD_RATE = 4f;
   private const float CONFIDENCE_DRAIN_RATE = 1f;
   private const float VELOCITY_MIN = 1f;
@@ -19,13 +23,12 @@ public class LocoState {
   private const float HEIGHT_MAX = 0.5f;
   private const float HEIGHT_FACTOR = 1f / (HEIGHT_MAX - HEIGHT_MIN);
 
-  public Vector2? Axis;
-
   private LocoHandState _left;
   private LocoHandState _right;
+  private float _lastCorrespondence = 0f;
   private float _confidence = 0f;
 
-  public void Init(HandTracker tracker) {
+  public override void Init(HandTracker tracker) {
     var state = new LocoHandState() { Tracker = tracker };
     if (tracker.Opts.isLeft) {
       _left = state;
@@ -35,16 +38,16 @@ public class LocoState {
     tracker.LocoState = this;
   }
 
-  public void Update() {
-    // Apparently the game just swaps the MarrowGame.xr controllers when the
-    // left handed setting is enabled so the left tracker always has the
-    // locomotion stick
-    var locoTracker = _left.Tracker;
+  public override void Update() {
+    var locoTracker =
+        Utils.IsLocoControllerLeft() ? _left.Tracker : _right.Tracker;
     if (locoTracker.IsControllerConnected() || _left == null ||
         _right == null) {
       Axis = null;
       return;
     }
+
+    var isConfident = _left.IsTrackedConfident && _right.IsTrackedConfident;
 
     _left.Update();
     _right.Update();
@@ -55,31 +58,25 @@ public class LocoState {
             : (_right, _left);
     var scoreMaxVelocity =
         (Mathf.Abs(stateMax.Velocity) - VELOCITY_MIN) * VELOCITY_FACTOR;
-    var scoreCorrespondence = Mathf.Clamp01(
-        (DIVERGENCE_MAX - Mathf.Abs(stateMax.Velocity + stateMin.Velocity)) *
-        DIVERGENCE_FACTOR);
+    var scoreCorrespondence =
+        isConfident
+            ? Mathf.Clamp01((DIVERGENCE_MAX -
+                             Mathf.Abs(stateMax.Velocity + stateMin.Velocity)) *
+                            DIVERGENCE_FACTOR)
+            : _lastCorrespondence;
     var scoreSwing = Mathf.Clamp01(
         (Mathf.Max(_left.SwingSize, _right.SwingSize) - HEIGHT_MIN) *
         HEIGHT_FACTOR);
 
-    // TODO: Allow one handed running after building confidence
+    _lastCorrespondence = scoreCorrespondence;
+
     var confidenceChangeRate = scoreMaxVelocity * scoreCorrespondence *
                                    scoreSwing * CONFIDENCE_BUILD_RATE -
                                CONFIDENCE_DRAIN_RATE;
-    _confidence = Mathf.Clamp(
-        _confidence + confidenceChangeRate * Time.deltaTime, 0f, 1.2f);
-
-    // Dbg.Log(string.Join(
-    //     ", ",
-    //     new[] {
-    //       ("c", _confidence),
-    //       ("sts", stateMax.SwingSize),
-    //       ("stv", stateMax.Velocity),
-    //       ("smv", scoreMaxVelocity),
-    //       ("sc", scoreCorrespondence),
-    //       ("ss", scoreSwing),
-    //     }
-    //         .Select(x => $"{x.Item1}={x.Item2.ToString(" 0.00;-0.00")}")));
+    if (isConfident) {
+      _confidence = Mathf.Clamp(
+          _confidence + confidenceChangeRate * Time.deltaTime, 0f, 1.2f);
+    }
 
     Axis = new Vector2(0f, Mathf.Clamp01(_confidence));
   }
@@ -87,21 +84,28 @@ public class LocoState {
 
 public class LocoHandState {
   public HandTracker Tracker;
+  public bool IsTrackedConfident;
   public float Velocity;
   public float SwingSize;
 
-  private bool _isTracked;
   private float _predictedNextHeight;
-  public float _height;
+  private float _height;
   private float _minHeight;
   private float _maxHeight;
+  private float _lastTime;
 
-  // TODO: Continue running with low confidence hand states
   public void Update() {
-    _isTracked =
-        Tracker.IsControllerConnected() || Tracker.HandState.IsActive();
-    if (!_isTracked || Time.deltaTime == 0f)
+    // TODO: Is there something else to say hand position is low confidence?
+    IsTrackedConfident = Tracker.IsControllerConnected() ||
+                         Tracker.HandState.IsActive() &&
+                             Tracker.HandState.HasState &&
+                             Tracker.HandState.HandConfidence ==
+                                 OVRPlugin.TrackingConfidence.High;
+    if (!IsTrackedConfident || Time.deltaTime == 0f)
       return;
+
+    var elapsed = Time.unscaledTime - _lastTime;
+    _lastTime = Time.unscaledTime;
 
     var prevHeight = _height;
     // TODO: Convert to game units (meters if player is 1.78m tall)
@@ -112,12 +116,14 @@ public class LocoHandState {
     var prevVelocity = Velocity;
     Velocity = (_height - prevHeight) / Time.deltaTime;
 
-    if (prevVelocity <= 0f && Velocity > 0f) {
-      _minHeight = _predictedNextHeight;
-    } else if (prevVelocity >= 0f && Velocity < 0f) {
-      _maxHeight = _predictedNextHeight;
+    if (elapsed < 0.2f) {
+      if (prevVelocity <= 0f && Velocity > 0f) {
+        _minHeight = _predictedNextHeight;
+      } else if (prevVelocity >= 0f && Velocity < 0f) {
+        _maxHeight = _predictedNextHeight;
+      }
+      SwingSize = _maxHeight - _minHeight;
     }
-    SwingSize = _maxHeight - _minHeight;
 
     _predictedNextHeight = _height + Velocity;
   }

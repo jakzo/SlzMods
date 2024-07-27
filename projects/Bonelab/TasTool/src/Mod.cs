@@ -50,11 +50,13 @@ public static class Tas {
         (DateTime.Now - _measureTimescaleStartRealtime).TotalSeconds;
     CheatEngineTimescale = (float)(elapsedUnity / elapsedRealtime);
     MelonLogger.Msg(
-        $"Time scale measured as: {CheatEngineTimescale.ToString("F2")}");
+        $"Time scale measured as: {CheatEngineTimescale.ToString("F2")}"
+    );
   }
 
-  [HarmonyPatch(typeof(AudioSource), nameof(AudioSource.pitch),
-                MethodType.Setter)]
+  [HarmonyPatch(
+      typeof(AudioSource), nameof(AudioSource.pitch), MethodType.Setter
+  )]
   class AudioSource_set_pitch_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(ref float value, AudioSource __instance) {
@@ -63,8 +65,9 @@ public static class Tas {
     }
   }
 
-  [HarmonyPatch(typeof(AudioSource), nameof(AudioSource.pitch),
-                MethodType.Getter)]
+  [HarmonyPatch(
+      typeof(AudioSource), nameof(AudioSource.pitch), MethodType.Getter
+  )]
   class AudioSource_get_pitch_Patch {
     [HarmonyPostfix()]
     internal static void Postfix(ref float __result) {

@@ -40,8 +40,8 @@ public class Mod : MelonMod {
     Dbg.Log($"Fixing level saving for: {levelKey}");
     var levelCompletion = new LevelCompletion();
     levelCompletion._LevelKey_k__BackingField = levelKey;
-    controller.onSessionBegin.AddListener(
-        new Action(levelCompletion.SaveWrite));
+    controller.onSessionBegin.AddListener(new Action(levelCompletion.SaveWrite)
+    );
   }
 
   // Tunnel Tipper does not mark itself as completed but it's an endless
@@ -66,9 +66,9 @@ public class Mod : MelonMod {
   private void FixKevinCCard(LevelCrate level) {
     if (level.Barcode.ID != Utilities.Levels.Barcodes.TUSCANY)
       return;
-    FixKevinCCardReceiver(
-        Resources.FindObjectsOfTypeAll<KeycardReciever>().First(
-            kr => kr.transform.parent?.parent == null));
+    FixKevinCCardReceiver(Resources.FindObjectsOfTypeAll<KeycardReciever>()
+                              .First(kr => kr.transform.parent?.parent == null)
+    );
   }
   private void FixKevinCCardReceiver(KeycardReciever kr) {
     var saveable = kr.gameObject.AddComponent<Saveable>();
@@ -132,7 +132,8 @@ public class Mod : MelonMod {
         var entry = __instance.scenesToList[i];
         if (_ammoCountsToFix.ContainsKey(entry.levelKey)) {
           __instance.references[i].totalPossible.SetText(
-              _ammoCountsToFix[entry.levelKey].ToString());
+              _ammoCountsToFix[entry.levelKey].ToString()
+          );
         }
       }
     }

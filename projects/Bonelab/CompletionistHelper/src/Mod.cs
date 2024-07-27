@@ -14,8 +14,9 @@ public class Mod : MelonMod {
   private const int NUM_DISPLAYED_ACHIEVEMENTS = 5;
 
   private MelonPreferences_Category TypesPrefCategory;
-  private (GameObject container, GameObject arrow,
-           TextMeshPro text)[] _hudSlots;
+  private (
+      GameObject container, GameObject arrow, TextMeshPro text
+  )[] _hudSlots;
   private TextMeshPro _completionTmp;
   private TextMeshPro _achievementTmp;
   private List<Collectible> _collectibles = new List<Collectible>();
@@ -32,10 +33,12 @@ public class Mod : MelonMod {
                   if (!collectibleType.Pref.Value)
                     return;
 
-                  _collectibles = _collectibles
-                                      .Where(collectible => collectible.Type !=
-                                                            collectibleType)
-                                      .ToList();
+                  _collectibles =
+                      _collectibles
+                          .Where(
+                              collectible => collectible.Type != collectibleType
+                          )
+                          .ToList();
 
                   foreach (var component in collectibleType.FindAll()) {
                     var collectible = new Collectible() {
@@ -60,7 +63,8 @@ public class Mod : MelonMod {
 
                     _collectibles.Add(collectible);
                   }
-                }))
+                }
+            ))
             .ToArray();
   }
 
@@ -71,7 +75,7 @@ public class Mod : MelonMod {
       _refreshIndex = 0;
     }
     var end = Math.Min(1f, (Time.time - _refreshStart) / REFRESH_FREQUENCY) *
-              _refreshActions.Length;
+        _refreshActions.Length;
     while (_refreshIndex < end)
       _refreshActions[_refreshIndex++]();
   }
@@ -81,7 +85,8 @@ public class Mod : MelonMod {
 
     TypesPrefCategory = MelonPreferences.CreateCategory(
         $"{BuildInfo.NAME}_TypesToShow",
-        "Types of collectibles to show locations of");
+        "Types of collectibles to show locations of"
+    );
 
     Utilities.LevelHooks.OnLoad += level => { _server?.SendStateIfChanged(); };
     Utilities.LevelHooks.OnLevelStart += level => {
@@ -108,24 +113,27 @@ public class Mod : MelonMod {
     var progress = _server?.Progress;
     if (progress == null)
       return null;
-    return string.Join("\n", new[] {
-      $"Arena: {(progress.Arena * 100):N1}%",
-      $"Avatar: {(progress.Avatar * 100):N1}%",
-      $"Campaign: {(progress.Campaign * 100):N1}%",
-      $"Experimental: {(progress.Experimental * 100):N1}%",
-      $"Parkour: {(progress.Parkour * 100):N1}%",
-      $"Sandbox: {(progress.Sandbox * 100):N1}%",
-      $"Tac Trial: {(progress.TacTrial * 100):N1}%",
-      $"Easter Eggs: {(progress.EasterEggs * 100):N1}%",
-      $"Unlocks: {(progress.Unlocks * 100):N1}%",
-      $"Total: {(progress.Total * 100):N1}%",
-      "",
-      $"100% complete: {progress.IsComplete}",
-      $"Beat game: {progress.HasBeatGame}",
-      $"Has body log: {progress.HasBodyLog}",
-      $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.PossibleAchievements.Count}",
-      $"Unlocks: {CapsuleTracker.Unlocked.Count} / {CapsuleTracker.NumTotalUnlocks}",
-    });
+    return string.Join(
+        "\n",
+        new[] {
+          $"Arena: {(progress.Arena * 100):N1}%",
+          $"Avatar: {(progress.Avatar * 100):N1}%",
+          $"Campaign: {(progress.Campaign * 100):N1}%",
+          $"Experimental: {(progress.Experimental * 100):N1}%",
+          $"Parkour: {(progress.Parkour * 100):N1}%",
+          $"Sandbox: {(progress.Sandbox * 100):N1}%",
+          $"Tac Trial: {(progress.TacTrial * 100):N1}%",
+          $"Easter Eggs: {(progress.EasterEggs * 100):N1}%",
+          $"Unlocks: {(progress.Unlocks * 100):N1}%",
+          $"Total: {(progress.Total * 100):N1}%",
+          "",
+          $"100% complete: {progress.IsComplete}",
+          $"Beat game: {progress.HasBeatGame}",
+          $"Has body log: {progress.HasBodyLog}",
+          $"Achievements: {AchievementTracker.Unlocked.Count} / {AchievementTracker.PossibleAchievements.Count}",
+          $"Unlocks: {CapsuleTracker.Unlocked.Count} / {CapsuleTracker.NumTotalUnlocks}",
+        }
+    );
   }
 
   private string GetAchievementText() {
@@ -135,16 +143,19 @@ public class Mod : MelonMod {
             .Where(entry => !AchievementTracker.Unlocked.Contains(entry.Key))
             .Take(NUM_DISPLAYED_ACHIEVEMENTS)
             .Reverse()
-            .Select(entry => $"\n{entry.Value}"));
+            .Select(entry => $"\n{entry.Value}")
+    );
     var unlockedAchievements = string.Join(
-        "", AchievementTracker.Unlocked.Reverse()
-                .Take(NUM_DISPLAYED_ACHIEVEMENTS)
-                .Reverse()
-                .Select(id => {
-                  string name;
-                  AchievementTracker.AllAchievements.TryGetValue(id, out name);
-                  return $"\n{name ?? "UNKNOWN"}";
-                }));
+        "",
+        AchievementTracker.Unlocked.Reverse()
+            .Take(NUM_DISPLAYED_ACHIEVEMENTS)
+            .Reverse()
+            .Select(id => {
+              string name;
+              AchievementTracker.AllAchievements.TryGetValue(id, out name);
+              return $"\n{name ?? "UNKNOWN"}";
+            })
+    );
     return $"Locked achievements:{lockedAchievements}\n\nUnlocked achievements:{unlockedAchievements}";
   }
 
@@ -162,12 +173,13 @@ public class Mod : MelonMod {
 
   private void SortCollectibles() {
     foreach (var collectible in _collectibles)
-      collectible.Distance =
-          CollectibleType.ShouldShow(collectible.GameObject)
-              ? Vector3.Distance(Utilities.LevelHooks.RigManager.ControllerRig
-                                     .leftController.transform.position,
-                                 collectible.GameObject.transform.position)
-              : float.PositiveInfinity;
+      collectible.Distance = CollectibleType.ShouldShow(collectible.GameObject)
+          ? Vector3.Distance(
+                Utilities.LevelHooks.RigManager.ControllerRig.leftController
+                    .transform.position,
+                collectible.GameObject.transform.position
+            )
+          : float.PositiveInfinity;
     _collectibles.Sort((x, y) => {
       var delta = x.Distance - y.Distance;
       return delta > 0 ? 1 : delta < 0 ? -1 : 0;

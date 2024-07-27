@@ -40,14 +40,17 @@ public class Mod : MelonMod {
 
     var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
     _prefFollowDistance = category.CreateEntry(
-        "follow_distance", 2f, "Distance the camera is behind the player");
+        "follow_distance", 2f, "Distance the camera is behind the player"
+    );
     _prefSmoothTime = category.CreateEntry(
         "smooth_time", 10f,
-        "Time it takes for the camera to catch up to player movements");
+        "Time it takes for the camera to catch up to player movements"
+    );
     _prefCameraRatio = category.CreateEntry(
         "camera_ratio", 1f,
         "Amount to split screen between first and third person cameras (0 = " +
-        "first person only, 1 = third person only)");
+            "first person only, 1 = third person only)"
+    );
 
     LevelHooks.OnLevelStart += level => Create();
     LevelHooks.OnLoad += level => ResetState();
@@ -58,8 +61,8 @@ public class Mod : MelonMod {
 
   public override void OnUpdate() {
 #if DEBUG
-    if (LevelHooks.RigManager?.ControllerRig.rightController
-            .GetThumbStickDown() ??
+    if (LevelHooks.RigManager?.ControllerRig.rightController.GetThumbStickDown(
+        ) ??
         false) {
       Toggle();
     }
@@ -74,15 +77,17 @@ public class Mod : MelonMod {
       var trot = rigScreen.TargetTransform.rotation;
       var targetTransformPos = tpos + trot * _followVec;
 
-      if (Physics.SphereCast(tpos, _cameraRadius, targetTransformPos - tpos,
-                             out var hit,
-                             Vector3.Distance(tpos, targetTransformPos),
-                             CAMERA_COLLISION_LAYER_MASK)) {
+      if (Physics.SphereCast(
+              tpos, _cameraRadius, targetTransformPos - tpos, out var hit,
+              Vector3.Distance(tpos, targetTransformPos),
+              CAMERA_COLLISION_LAYER_MASK
+          )) {
         targetTransformPos = hit.point + hit.normal * _cameraRadius;
       }
 
       _thirdPersonCamera.targetTransform.SetPositionAndRotation(
-          targetTransformPos, trot);
+          targetTransformPos, trot
+      );
     }
 
     _thirdPersonCamera.MoveCameraUpdate();
@@ -122,8 +127,9 @@ public class Mod : MelonMod {
     _thirdPersonCamera.RotationalSmoothTime = _prefSmoothTime.Value;
 
     var thirdPersonTarget = new GameObject("Third Person Target").transform;
-    thirdPersonTarget.SetParent(_thirdPersonCamera.targetTransform.parent,
-                                false);
+    thirdPersonTarget.SetParent(
+        _thirdPersonCamera.targetTransform.parent, false
+    );
     _thirdPersonCamera.targetTransform = thirdPersonTarget;
 
     spectatorCamera.GetComponent<Camera>().rect =
@@ -153,7 +159,8 @@ public class Mod : MelonMod {
     var cam = GetRigScreen().cam;
     if (cam)
       cam.rect = new Rect(
-          0f, 0f, 1f - (_thirdPersonCamera ? _prefCameraRatio.Value : 0f), 1f);
+          0f, 0f, 1f - (_thirdPersonCamera ? _prefCameraRatio.Value : 0f), 1f
+      );
     if (_thirdPersonCamera) {
       var camera = _thirdPersonCamera.GetComponent<Camera>();
       camera.rect =

@@ -20,8 +20,9 @@ public class Mod : MelonMod {
 
   public override void OnApplicationStart() {
     var prefCategory = MelonPreferences.CreateCategory(BuildInfo.NAME);
-    _prefEnabled = prefCategory.CreateEntry("enabled", true, "Enabled",
-                                            "Activates the fix for loot drops");
+    _prefEnabled = prefCategory.CreateEntry(
+        "enabled", true, "Enabled", "Activates the fix for loot drops"
+    );
     _ammoDebugger = new AmmoDebugger(prefCategory);
   }
 
@@ -56,8 +57,8 @@ public class Mod : MelonMod {
   [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
   class LootTableData_GetLootItem_Patch {
     [HarmonyPrefix()]
-    internal static bool Prefix(LootTableData __instance,
-                                ref SpawnableObject __result) {
+    internal static bool
+    Prefix(LootTableData __instance, ref SpawnableObject __result) {
       if (!Instance._prefEnabled.Value)
         return true;
 
@@ -66,8 +67,8 @@ public class Mod : MelonMod {
     }
 
     [HarmonyPostfix()]
-    internal static void Postfix(LootTableData __instance,
-                                 SpawnableObject __result) {
+    internal static void
+    Postfix(LootTableData __instance, SpawnableObject __result) {
       Instance._ammoDebugger.OnGetLootItem(__instance, __result);
     }
   }

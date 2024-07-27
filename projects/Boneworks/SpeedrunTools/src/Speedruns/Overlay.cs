@@ -18,13 +18,15 @@ class Overlay {
 
     if (s_overlayHandle == OpenVR.k_ulOverlayHandleInvalid) {
       var createError = OpenVR.Overlay.CreateOverlay(
-          OVERLAY_KEY, "SpeedrunTools Run Status", ref s_overlayHandle);
+          OVERLAY_KEY, "SpeedrunTools Run Status", ref s_overlayHandle
+      );
       if (createError != EVROverlayError.None) {
         var findError =
             OpenVR.Overlay.FindOverlay(OVERLAY_KEY, ref s_overlayHandle);
         if (findError != EVROverlayError.None)
           throw new System.Exception(
-              $"Could not find speedrun overlay: {findError}");
+              $"Could not find speedrun overlay: {findError}"
+          );
       }
     }
     var showError = OpenVR.Overlay.ShowOverlay(s_overlayHandle);
@@ -34,7 +36,8 @@ class Overlay {
           OpenVR.Overlay.FindOverlay(OVERLAY_KEY, ref s_overlayHandle);
       if (findError != EVROverlayError.None)
         throw new System.Exception(
-            $"Could not find speedrun overlay: {findError}");
+            $"Could not find speedrun overlay: {findError}"
+        );
     }
     var ovrTexture = new Texture_t() {
       handle = texture.GetNativeTexturePtr(),
@@ -44,8 +47,9 @@ class Overlay {
     OpenVR.Overlay.SetOverlayTexture(s_overlayHandle, ref ovrTexture);
     OpenVR.Overlay.SetOverlayAlpha(s_overlayHandle, 1);
     OpenVR.Overlay.SetOverlayWidthInMeters(s_overlayHandle, 0.6f);
-    OpenVR.Overlay.SetOverlayAutoCurveDistanceRangeInMeters(s_overlayHandle, 1,
-                                                            2);
+    OpenVR.Overlay.SetOverlayAutoCurveDistanceRangeInMeters(
+        s_overlayHandle, 1, 2
+    );
     var vecMouseScale = new HmdVector2_t() {
       v0 = 1,
       v1 = 1,
@@ -59,8 +63,9 @@ class Overlay {
     };
     OpenVR.Overlay.SetOverlayTextureBounds(s_overlayHandle, ref textureBounds);
     OpenVR.Overlay.SetOverlayMouseScale(s_overlayHandle, ref vecMouseScale);
-    OpenVR.Overlay.SetOverlayInputMethod(s_overlayHandle,
-                                         VROverlayInputMethod.None);
+    OpenVR.Overlay.SetOverlayInputMethod(
+        s_overlayHandle, VROverlayInputMethod.None
+    );
     var transform = new SteamVR_Utils.RigidTransform() {
       pos = new Vector3(-0.1f, -0.2f, 1),
       rot = Quaternion.identity,
@@ -68,10 +73,12 @@ class Overlay {
     };
     var ovrMatrix = transform.ToHmdMatrix34();
     OpenVR.Overlay.SetOverlayTransformTrackedDeviceRelative(
-        s_overlayHandle, OpenVR.k_unTrackedDeviceIndex_Hmd, ref ovrMatrix);
+        s_overlayHandle, OpenVR.k_unTrackedDeviceIndex_Hmd, ref ovrMatrix
+    );
     OpenVR.Overlay.SetHighQualityOverlay(s_overlayHandle);
-    OpenVR.Overlay.SetOverlayFlag(s_overlayHandle, VROverlayFlags.Curved,
-                                  false);
+    OpenVR.Overlay.SetOverlayFlag(
+        s_overlayHandle, VROverlayFlags.Curved, false
+    );
     OpenVR.Overlay.SetOverlayFlag(s_overlayHandle, VROverlayFlags.RGSS4X, true);
   }
 
@@ -109,11 +116,12 @@ class Overlay {
 
     // Point the projection matrix at our text
     GL.LoadIdentity();
-    GL.LoadProjectionMatrix(
-        Matrix4x4.Ortho(-tmp.rectTransform.sizeDelta.x / 2.0f,
-                        tmp.rectTransform.sizeDelta.x / 2.0f,
-                        -tmp.rectTransform.sizeDelta.x / 2.0f,
-                        tmp.rectTransform.sizeDelta.y / 2.0f, -10, 100));
+    GL.LoadProjectionMatrix(Matrix4x4.Ortho(
+        -tmp.rectTransform.sizeDelta.x / 2.0f,
+        tmp.rectTransform.sizeDelta.x / 2.0f,
+        -tmp.rectTransform.sizeDelta.x / 2.0f,
+        tmp.rectTransform.sizeDelta.y / 2.0f, -10, 100
+    ));
 
     // Render the viewed text to our texture
     var texture =

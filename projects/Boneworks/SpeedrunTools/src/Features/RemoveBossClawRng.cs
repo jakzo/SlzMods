@@ -5,8 +5,8 @@ namespace Sst.Features {
 class RemoveBossClawRng : Feature {
   public readonly Pref<float> PrefX = new Pref<float>() {
     Id = "bossClawX",
-    Name =
-        "The point the boss claw will always patrol to (should be between -100 and 140, default is 120 near level exit)",
+    Name = "The point the boss claw will always patrol to (should be between " +
+        "-100 and 140, default is 120 near level exit)",
     DefaultValue = 120.0f
   };
 
@@ -37,8 +37,8 @@ class RemoveBossClawRng : Feature {
       return;
     }
     Dbg.Log("Coloring boss claw");
-    var newMaterial = new Material(Shader.Find(
-        "Valve/vr_standard")) { color = new Color(0.8f, 0.8f, 0.2f) };
+    var newMaterial = new Material(Shader.Find("Valve/vr_standard")
+    ) { color = new Color(0.8f, 0.8f, 0.2f) };
     for (int i = 0; i < cabin.transform.childCount; i++) {
       var child = cabin.transform.GetChild(i).gameObject;
       if (!child.name.StartsWith("kitbash_plate_heavy_4m4m"))

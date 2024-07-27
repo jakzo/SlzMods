@@ -22,7 +22,8 @@ public class Client : IDisposable {
     Listen().ContinueWith(task => {
       if (task.Exception != null)
         Console.Error.WriteLine(
-            $"Pipe client listen failed: {task.Exception.ToString()}");
+            $"Pipe client listen failed: {task.Exception.ToString()}"
+        );
     });
   }
 
@@ -54,8 +55,9 @@ public class Client : IDisposable {
 
   private async Task Listen() {
     while (!_isDisposed) {
-      Stream = new NamedPipeClientStream(".", Name, PipeDirection.InOut,
-                                         PipeOptions.Asynchronous);
+      Stream = new NamedPipeClientStream(
+          ".", Name, PipeDirection.InOut, PipeOptions.Asynchronous
+      );
       await Stream.ConnectAsync();
       if (_isDisposed)
         return;

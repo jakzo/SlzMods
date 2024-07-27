@@ -34,9 +34,8 @@ f();
 var progression = SLZ.SaveData.DataManager.ActiveSave.Progression;
 
 bool completed;
-SLZ.Bonelab.BonelabProgressionHelper.TryGetLevelCompleted(progression,
-                                                          "Rooftops",
-                                                          out completed);
+SLZ.Bonelab.BonelabProgressionHelper
+    .TryGetLevelCompleted(progression, "Rooftops", out completed);
 completed;
 
 SLZ.Bonelab.BonelabGameControl.IsCompleted(progression, "Baseline");
@@ -49,26 +48,36 @@ var allUnlocks =
             SLZ.Marrow.Warehouse.AssetWarehouse.Instance.GetCrates(),
             new SLZ.Bonelab.CrateFilters.UnlockableAndNotRedactedCrateFilter()
                 .Cast<SLZ.Marrow.Warehouse
-                          .ICrateFilter<SLZ.Marrow.Warehouse.Crate>>())
+                          .ICrateFilter<SLZ.Marrow.Warehouse.Crate>>()
+        )
         .ToArray();
 var unlocked =
     SLZ.Marrow.Warehouse.AssetWarehouseExtensions
-        .Filter(SLZ.Marrow.Warehouse.AssetWarehouse.Instance.GetCrates(),
-                new SLZ.Bonelab.CrateFilters.UnlockedAndNotRedactedCrateFilter()
-                    .Cast<SLZ.Marrow.Warehouse
-                              .ICrateFilter<SLZ.Marrow.Warehouse.Crate>>())
+        .Filter(
+            SLZ.Marrow.Warehouse.AssetWarehouse.Instance.GetCrates(),
+            new SLZ.Bonelab.CrateFilters.UnlockedAndNotRedactedCrateFilter()
+                .Cast<SLZ.Marrow.Warehouse
+                          .ICrateFilter<SLZ.Marrow.Warehouse.Crate>>()
+        )
         .ToArray()
         .Select(crate => crate.Barcode.ID)
         .ToHashSet();
-string.Join("\n",
-            allUnlocks.Where(crate => !unlocked.Contains(crate.Barcode.ID))
-                .Select(crate => $"{crate.Title} ({crate.Barcode.ID})"));
+string.Join(
+    "\n",
+    allUnlocks.Where(crate => !unlocked.Contains(crate.Barcode.ID))
+        .Select(crate => $"{crate.Title} ({crate.Barcode.ID})")
+);
 
-string.Join("\n", progression.LevelState._entries.ToArray().SelectMany(
-                      entry => new string[] { entry.key }.Concat(
-                          (entry.value?._entries.ToArray().Select(
-                               entry2 => $"- {entry2.key}") ??
-                           new string[] {}))));
+string.Join(
+    "\n",
+    progression.LevelState._entries.ToArray().SelectMany(
+        entry => new string[] { entry.key }.Concat(
+            (entry.value?._entries.ToArray()
+                 .Select(entry2 => $"- {entry2.key}") ??
+             new string[] {})
+        )
+    )
+);
 
 // Remaining keycards
 var allKeycards = new string[] {
@@ -93,5 +102,6 @@ var collectedKeycards =
         .value._entries.ToArray()
         .Select(entry => entry.key)
         .ToHashSet();
-string.Join("\n",
-            allKeycards.Where(keycard => !collectedKeycards.Contains(keycard)));
+string.Join(
+    "\n", allKeycards.Where(keycard => !collectedKeycards.Contains(keycard))
+);

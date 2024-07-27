@@ -20,4 +20,5 @@ SLZ.Marrow.Pool.AssetSpawner.Spawn(
     rigManager.physicsRig.m_head.position +
         rigManager.physicsRig.m_head.rotation * Vector3.forward,
     Quaternion.identity, new Sst.Utilities.Il2CppNullable<Vector3>(null), false,
-    new Sst.Utilities.Il2CppNullable<int>(null));
+    new Sst.Utilities.Il2CppNullable<int>(null)
+);

@@ -9,8 +9,8 @@ using TMPro;
 
 namespace Sst.Utilities {
 public class Bonelab {
-  public static void DockToWrist(GameObject gameObject,
-                                 bool rightHand = false) {
+  public static void
+  DockToWrist(GameObject gameObject, bool rightHand = false) {
     var physicsRig = LevelHooks.RigManager.physicsRig;
     var hand = rightHand ? physicsRig.rightHand : physicsRig.leftHand;
     gameObject.transform.SetParent(hand.transform);
@@ -18,8 +18,8 @@ public class Bonelab {
     gameObject.transform.localRotation = Quaternion.Euler(32f, 4f, 3f);
   }
 
-  public static TextMeshPro CreateTextOnWrist(string name,
-                                              bool rightHand = false) {
+  public static TextMeshPro
+  CreateTextOnWrist(string name, bool rightHand = false) {
     var text = new GameObject(name);
     var tmp = text.AddComponent<TextMeshPro>();
     tmp.alignment = TextAlignmentOptions.BottomRight;

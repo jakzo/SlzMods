@@ -20,7 +20,8 @@ public class ItemSpawns : Feature {
     Instance = this;
 
     _prefMode = Mod.PrefCategory.CreateEntry(
-        "itemSpawnMode", Mode.SAME_CATEGORY, "Item spawn mode");
+        "itemSpawnMode", Mode.SAME_CATEGORY, "Item spawn mode"
+    );
 
     // PatchAllOverloads(
     //     typeof(PoolManager), nameof(PoolManager.Spawn),
@@ -28,8 +29,8 @@ public class ItemSpawns : Feature {
     //         .GetMethod(nameof(PoolManagerSpawnPrefix), AccessTools.all));
   }
 
-  private void PatchAllOverloads(Type type, string methodName,
-                                 MethodInfo prefix) {
+  private void
+  PatchAllOverloads(Type type, string methodName, MethodInfo prefix) {
     foreach (var method in type.GetMethods(AccessTools.all)) {
       if (method.Name == methodName) {
         Mod.HarmonyInstance.Patch(method, prefix: new HarmonyMethod(prefix));
@@ -52,12 +53,14 @@ public class ItemSpawns : Feature {
         _spawnablesByCategory[CategoryFilters.All].Add(spawnable);
         if (spawnable.category == CategoryFilters.All)
           continue;
-        if (_spawnablesByCategory.TryGetValue(spawnable.category,
-                                              out var categorySpawnables)) {
+        if (_spawnablesByCategory.TryGetValue(
+                spawnable.category, out var categorySpawnables
+            )) {
           categorySpawnables.Add(spawnable);
         } else {
-          _spawnablesByCategory.Add(spawnable.category,
-                                    new List<SpawnableObject>() { spawnable });
+          _spawnablesByCategory.Add(
+              spawnable.category, new List<SpawnableObject>() { spawnable }
+          );
         }
       }
     }
@@ -76,12 +79,13 @@ public class ItemSpawns : Feature {
     }
 
     var category = _prefMode.Value == Mode.SAME_CATEGORY ? spawnable.category
-                   : _prefMode.Value == Mode.PURE_RANDOM ? CategoryFilters.All
+        : _prefMode.Value == Mode.PURE_RANDOM            ? CategoryFilters.All
                                                          : CategoryFilters.All;
     _spawnablesByCategory.TryGetValue(category, out var spawnableChoices);
     if (spawnableChoices == null) {
-      MelonLogger.Warning("Spawnable category does not exist: " +
-                          spawnable.category);
+      MelonLogger.Warning(
+          "Spawnable category does not exist: " + spawnable.category
+      );
       return null;
     }
 

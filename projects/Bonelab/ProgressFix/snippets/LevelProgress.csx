@@ -2,7 +2,6 @@
 
 var progression = SLZ.SaveData.DataManager.ActiveSave.Progression;
 bool completed;
-SLZ.Bonelab.BonelabProgressionHelper.TryGetLevelCompleted(progression,
-                                                          "DistrictParkour",
-                                                          out completed);
+SLZ.Bonelab.BonelabProgressionHelper
+    .TryGetLevelCompleted(progression, "DistrictParkour", out completed);
 // completed;

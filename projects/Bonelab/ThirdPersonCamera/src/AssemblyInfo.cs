@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.ThirdPersonCamera.Mod), Sst.ThirdPersonCamera.BuildInfo.NAME,
     Sst.ThirdPersonCamera.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/ThirdPersonCamera/")]
+    "https://bonelab.thunderstore.io/package/jakzo/ThirdPersonCamera/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.ThirdPersonCamera;

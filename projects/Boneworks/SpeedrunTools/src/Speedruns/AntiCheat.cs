@@ -22,7 +22,8 @@ class AntiCheat {
 
 #if !DEBUG
     var disallowedMods = MelonHandler.Mods.Where(
-        mod => !(mod is Mod) && !ALLOWED_MODS.Contains(mod.Info.Name));
+        mod => !(mod is Mod) && !ALLOWED_MODS.Contains(mod.Info.Name)
+    );
     if (disallowedMods.Count() > 0) {
       var disallowedModNames =
           string.Join(", ", disallowedMods.Select(mod => mod.Info.Name));
@@ -31,7 +32,8 @@ class AntiCheat {
     }
 
     var disallowedPlugins = MelonHandler.Plugins.Where(
-        plugin => !ALLOWED_PLUGINS.Contains(plugin.Info.Name));
+        plugin => !ALLOWED_PLUGINS.Contains(plugin.Info.Name)
+    );
     if (disallowedPlugins.Count() > 0) {
       var disallowedPluginNames =
           disallowedPlugins.Select(mod => mod.Info.Name);

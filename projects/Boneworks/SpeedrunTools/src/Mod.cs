@@ -139,16 +139,18 @@ public class Mod : MelonMod {
         DisableFeature(feature);
       }
     }
-    OnFeatureCallback(feature =>
-                          feature.OnSceneWasLoaded(buildIndex, sceneName));
+    OnFeatureCallback(
+        feature => feature.OnSceneWasLoaded(buildIndex, sceneName)
+    );
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     Dbg.Log("OnSceneWasInitialized");
     GameState.rigManager = Utilities.Boneworks.GetRigManager();
     s_hotkeys.Init();
-    OnFeatureCallback(feature =>
-                          feature.OnSceneWasInitialized(buildIndex, sceneName));
+    OnFeatureCallback(
+        feature => feature.OnSceneWasInitialized(buildIndex, sceneName)
+    );
   }
 
   public override void OnUpdate() {
@@ -164,16 +166,18 @@ public class Mod : MelonMod {
     OnFeatureCallback(feature => feature.OnFixedUpdate());
   }
 
-  [HarmonyPatch(typeof(BoneworksSceneManager),
-                nameof(BoneworksSceneManager.LoadNext))]
+  [HarmonyPatch(
+      typeof(BoneworksSceneManager), nameof(BoneworksSceneManager.LoadNext)
+  )]
   class BoneworksSceneManager_LoadNext_Patch {
     [HarmonyPrefix()]
     internal static void Prefix() { GameState.didPrevLevelComplete = true; }
   }
 
-  [HarmonyPatch(typeof(BoneworksSceneManager),
-                nameof(BoneworksSceneManager.LoadScene),
-                new System.Type[] { typeof(string) })]
+  [HarmonyPatch(
+      typeof(BoneworksSceneManager), nameof(BoneworksSceneManager.LoadScene),
+      new System.Type[] { typeof(string) }
+  )]
   class BoneworksSceneManager_LoadScene_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(string sceneName) {
@@ -191,14 +195,18 @@ public class Mod : MelonMod {
         var prevSceneIdx = GameState.currentSceneIdx ?? 0;
         GameState.currentSceneIdx = null;
         GameState.rigManager = null;
-        OnFeatureCallback(feature => feature.OnLoadingScreen(
-                              GameState.nextSceneIdx ?? 0, prevSceneIdx));
+        OnFeatureCallback(
+            feature => feature.OnLoadingScreen(
+                GameState.nextSceneIdx ?? 0, prevSceneIdx
+            )
+        );
       } else {
         GameState.currentSceneIdx = GameState.nextSceneIdx;
         GameState.nextSceneIdx = null;
         GameState.rigManager = Utilities.Boneworks.GetRigManager();
         OnFeatureCallback(
-            feature => feature.OnLevelStart(GameState.currentSceneIdx ?? 0));
+            feature => feature.OnLevelStart(GameState.currentSceneIdx ?? 0)
+        );
         GameState.didPrevLevelComplete = false;
       }
     }

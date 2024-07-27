@@ -48,7 +48,8 @@ public class Server : IDisposable {
     try {
       var stream = new NamedPipeServerStream(
           Name, PipeDirection.InOut, MAX_NUMBER_OF_SERVER_INSTANCES,
-          PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+          PipeTransmissionMode.Message, PipeOptions.Asynchronous
+      );
       _streams.Add(stream);
       await stream.WaitForConnectionAsync();
       if (_isDisposed)
@@ -108,7 +109,8 @@ public class Server : IDisposable {
   // This is not implemented in the game/MelonLoader's build of Mono
   // https://github.com/mono/mono/blob/main/mcs/class/referencesource/System.Core/System/IO/Pipes/Pipe.cs
   private Task WaitForConnectionAsync(NamedPipeServerStream stream) =>
-      Task.Factory.FromAsync(stream.BeginWaitForConnection,
-                             stream.EndWaitForConnection, null);
+      Task.Factory.FromAsync(
+          stream.BeginWaitForConnection, stream.EndWaitForConnection, null
+      );
 }
 }

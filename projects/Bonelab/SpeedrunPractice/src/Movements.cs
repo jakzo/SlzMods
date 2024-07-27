@@ -72,7 +72,8 @@ public class Measurer {
          _startPos.Value)
             .magnitude;
     MelonLogger.Msg(
-        $"Movement: dist from start = {distFromStart.ToString("F1")}, max height = {_maxHeight.ToString("F1")}");
+        $"Movement: dist from start = {distFromStart.ToString("F1")}, max height = {_maxHeight.ToString("F1")}"
+    );
     _startPos = null;
   }
 }

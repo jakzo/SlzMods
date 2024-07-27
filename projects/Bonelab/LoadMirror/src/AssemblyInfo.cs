@@ -17,12 +17,15 @@ using System.Runtime.InteropServices;
 [assembly:AssemblyFileVersion(Sst.LoadMirror.AppVersion.Value)]
 [assembly:NeutralResourcesLanguage("en")]
 [assembly:MelonInfo(
-    typeof(Sst.LoadMirror.Mod), Sst.LoadMirror.BuildInfo.NAME, Sst.LoadMirror.AppVersion.Value,
-    Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/LoadMirror/")]
+    typeof(Sst.LoadMirror.Mod), Sst.LoadMirror.BuildInfo.NAME,
+    Sst.LoadMirror.AppVersion.Value, Sst.Metadata.AUTHOR,
+    "https://bonelab.thunderstore.io/package/jakzo/LoadMirror/"
+)]
 
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.LoadMirror {
-public static class BuildInfo { public const string NAME = "LoadMirror"; }
+public static class BuildInfo {
+  public const string NAME = "LoadMirror";
+}
 }

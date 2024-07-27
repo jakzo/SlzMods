@@ -29,9 +29,10 @@ class Checkpoint : Feature {
     // Set checkpoint
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Utils.State.rigManager != null &&
-                              !Utilities.Levels.IsMenu(
-                                  Utils.State.currentLevel?.Barcode.ID ?? "") &&
-                              cl.GetBButton() && cr.GetBButton(),
+          !Utilities.Levels.IsMenu(
+              Utils.State.currentLevel?.Barcode.ID ?? ""
+          ) &&
+          cl.GetBButton() && cr.GetBButton(),
       Handler =
           () => {
             var state = PlayerState.Read();
@@ -43,8 +44,9 @@ class Checkpoint : Feature {
               go.layer = LayerMask.NameToLayer("Trigger");
               var collider = go.AddComponent<BoxCollider>();
               collider.isTrigger = true;
-              collider.size = new Vector3(CHECKPOINT_SIZE, CHECKPOINT_SIZE,
-                                          CHECKPOINT_DEPTH);
+              collider.size = new Vector3(
+                  CHECKPOINT_SIZE, CHECKPOINT_SIZE, CHECKPOINT_DEPTH
+              );
               collider.center = new Vector3(0f, 0f, CHECKPOINT_DEPTH / 2f);
               var trigger = go.AddComponent<TriggerLasers>();
               trigger.LayerFilter =
@@ -52,7 +54,8 @@ class Checkpoint : Feature {
               trigger.onlyTriggerOnPlayer = true;
               trigger.OnTriggerEnterEvent = new UnityEventTrigger();
               trigger.OnTriggerEnterEvent.AddCall(
-                  UnityEvent.GetDelegate(new Action(OnCheckpointEnter)));
+                  UnityEvent.GetDelegate(new Action(OnCheckpointEnter))
+              );
               _checkpoint = go.transform;
             }
             if (!_timeDisplay) {
@@ -74,9 +77,10 @@ class Checkpoint : Feature {
     // Teleport to set position
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Utils.State.rigManager != null &&
-                              !Utilities.Levels.IsMenu(
-                                  Utils.State.currentLevel?.Barcode.ID ?? "") &&
-                              _startState.HasValue && cr.GetThumbStick(),
+          !Utilities.Levels.IsMenu(
+              Utils.State.currentLevel?.Barcode.ID ?? ""
+          ) &&
+          _startState.HasValue && cr.GetThumbStick(),
       Handler =
           () => {
             MelonLogger.Msg("Teleporting to checkpoint");
@@ -100,8 +104,9 @@ class Checkpoint : Feature {
     // Reset level
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => !Utilities.Levels.IsMenu(
-                                  Utils.State.currentLevel?.Barcode.ID ?? "") &&
-                              cl.GetAButton() && cl.GetBButton(),
+                                  Utils.State.currentLevel?.Barcode.ID ?? ""
+                              ) &&
+          cl.GetAButton() && cl.GetBButton(),
       Handler =
           () => {
             MelonLogger.Msg("Resetting level");
@@ -123,8 +128,8 @@ class Checkpoint : Feature {
     _timeDisplay = null;
   }
 
-  public override void OnLoadingScreen(LevelCrate nextLevel,
-                                       LevelCrate prevLevel) {
+  public override void
+  OnLoadingScreen(LevelCrate nextLevel, LevelCrate prevLevel) {
     if (nextLevel.Barcode.ID != prevLevel.Barcode.ID || !_resetState.HasValue)
       ResetCheckpoints();
   }

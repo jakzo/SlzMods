@@ -29,21 +29,25 @@ public class Mod : MelonMod {
   private void ShowTriggers() {
     _visualizations = new List<Utilities.Colliders.ColliderVisualization>();
     foreach (var trigger in GameObject.FindObjectsOfType<TriggerLasers>()) {
-      VisualizeColliders(trigger,
-                         trigger.gameObject.GetComponents<BoxCollider>());
-      VisualizeColliders(trigger,
-                         trigger.gameObject.GetComponents<SphereCollider>());
-      VisualizeColliders(trigger,
-                         trigger.gameObject.GetComponents<CapsuleCollider>());
+      VisualizeColliders(
+          trigger, trigger.gameObject.GetComponents<BoxCollider>()
+      );
+      VisualizeColliders(
+          trigger, trigger.gameObject.GetComponents<SphereCollider>()
+      );
+      VisualizeColliders(
+          trigger, trigger.gameObject.GetComponents<CapsuleCollider>()
+      );
     }
   }
 
-  private void VisualizeColliders(TriggerLasers trigger,
-                                  IEnumerable<Collider> colliders) {
+  private void
+  VisualizeColliders(TriggerLasers trigger, IEnumerable<Collider> colliders) {
     foreach (var collider in colliders) {
       Dbg.Log($"TriggerLasers visualized: {trigger.gameObject.name}");
       var visualization = Utilities.Colliders.Visualize(
-          collider, COLOR_RED, Utilities.Shaders.HighlightShader);
+          collider, COLOR_RED, Utilities.Shaders.HighlightShader
+      );
       _visualizations.Add(visualization);
     }
   }

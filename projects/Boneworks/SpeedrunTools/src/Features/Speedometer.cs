@@ -39,7 +39,8 @@ class Speedometer : Feature {
       _speedDisplays.Add(new SpeedDisplay(
           PrefWindowDuration.Read(),
           new Vector3(-0.36f, 0.24f + 0.03f * i, 0f + 0.03f * i),
-          _calculations[i]));
+          _calculations[i]
+      ));
     }
   }
 
@@ -56,9 +57,11 @@ class SpeedDisplay {
   private SpeedLogger _speedLogger;
   private Func<Vector3> _getPosition;
 
-  public SpeedDisplay(float windowDuration, Vector3 localPosition,
-                      Func<Vector3, Vector3, float> calculateDistance,
-                      Func<Vector3> getPosition = null) {
+  public SpeedDisplay(
+      float windowDuration, Vector3 localPosition,
+      Func<Vector3, Vector3, float> calculateDistance,
+      Func<Vector3> getPosition = null
+  ) {
     _getPosition = getPosition ?? (() => Camera.main.transform.position);
 
     _speedLogger = new SpeedLogger() {
@@ -73,7 +76,8 @@ class SpeedDisplay {
     _tmp.fontSize = 0.5f;
     _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
     speedometerText.transform.SetParent(
-        Mod.GameState.rigManager.ControllerRig.leftController.transform);
+        Mod.GameState.rigManager.ControllerRig.leftController.transform
+    );
     _tmp.rectTransform.localPosition = localPosition;
     _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
   }

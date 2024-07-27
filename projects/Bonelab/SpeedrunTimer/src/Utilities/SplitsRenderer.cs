@@ -22,8 +22,8 @@ class SplitsRenderer {
     Dbg.Log("RenderLoadingWatermark");
     var head = LevelHooks.BasicTrackingRig?.head;
     if (!head) {
-      MelonLogger.Warning(
-          "Failed to render watermark in loading screen because could not find head position");
+      MelonLogger.Warning("Failed to render watermark in loading screen " +
+                          "because could not find head position");
       return;
     }
     var text = CreateText(head, "Watermark");
@@ -38,9 +38,11 @@ class SplitsRenderer {
 #endif
     var timeStr = DurationToString(time);
     var modNames = string.Join(
-        "\n", MelonMod.RegisteredMelons.Select(mod => mod.Info.Name));
+        "\n", MelonMod.RegisteredMelons.Select(mod => mod.Info.Name)
+    );
     text.SetText(
-        $"{BuildInfo.Name} v{AppVersion.Value}{debugText}\n{timeStr}\n\nMods:\n{modNames}");
+        $"{BuildInfo.Name} v{AppVersion.Value}{debugText}\n{timeStr}\n\nMods:\n{modNames}"
+    );
   }
 
   public static void RenderSplits(Splits splits) {
@@ -59,8 +61,8 @@ class SplitsRenderer {
         var timeText =
             CreateText(container.transform, $"Splits_Time_{split.Name}");
         var format = split.Duration.Value >= TimeSpan.FromHours(1)
-                         ? "h\\:mm\\:ss"
-                         : "m\\:ss\\.f";
+            ? "h\\:mm\\:ss"
+            : "m\\:ss\\.f";
         timeText.SetText(split.Duration.Value.ToString(format));
         timeText.alignment = TextAlignmentOptions.Right;
         timeText.overflowMode = TextOverflowModes.Truncate;
@@ -77,8 +79,9 @@ class SplitsRenderer {
 
       var nameText =
           CreateText(container.transform, $"Splits_Name_{split.Name}");
-      var cleanedName = Regex.Replace(split.Name, @"^boneworks(?:_\d+)?\s+", "",
-                                      RegexOptions.IgnoreCase);
+      var cleanedName = Regex.Replace(
+          split.Name, @"^boneworks(?:_\d+)?\s+", "", RegexOptions.IgnoreCase
+      );
       nameText.SetText(cleanedName);
       nameText.alignment = TextAlignmentOptions.Left;
       nameText.overflowMode = TextOverflowModes.Truncate;
@@ -87,13 +90,14 @@ class SplitsRenderer {
           new Vector2(0f, 0.5f);
       nameText.rectTransform.offsetMin = new Vector2(SPLITS_LEFT, top);
       nameText.rectTransform.offsetMax = new Vector2(
-          SPLITS_WIDTH + SPLITS_LEFT - timeTextWidth, top + SPLITS_LINE_HEIGHT);
+          SPLITS_WIDTH + SPLITS_LEFT - timeTextWidth, top + SPLITS_LINE_HEIGHT
+      );
       nameText.fontSize = SPLITS_FONT_SIZE;
     }
   }
 
-  public static string DurationToString(TimeSpan duration) =>
-      duration.ToString($"{(duration.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff");
+  public static string DurationToString(TimeSpan duration
+  ) => duration.ToString($"{(duration.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff");
 
   private static TextMeshPro CreateText(Transform parent, string name) {
     var go = new GameObject($"{BuildInfo.Name}_{name}");

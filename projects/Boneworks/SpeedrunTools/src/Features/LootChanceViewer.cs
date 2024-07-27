@@ -45,24 +45,30 @@ class LootChanceViewer : Feature {
     LogPositionsOfLoot(destructables, "Baton");
   }
 
-  private void LogPositionsOfLoot(IEnumerable<ObjectDestructable> destructables,
-                                  string title) {
+  private void LogPositionsOfLoot(
+      IEnumerable<ObjectDestructable> destructables, string title
+  ) {
     var found = destructables.Select(
         destructable => destructable.lootTable?.items?.First(
-            item => item.spawnable.title == title));
+            item => item.spawnable.title == title
+        )
+    );
     foreach (var destructable in destructables) {
       var items = destructable.lootTable?.items;
       if (items == null)
         continue;
       var lootTotal = items.Aggregate(
-          0f, (acc, item) =>
-                  item.spawnable.title == title ? acc + item.percentage : acc);
+          0f,
+          (acc, item) =>
+              item.spawnable.title == title ? acc + item.percentage : acc
+      );
       if (lootTotal == 0f)
         continue;
       var total = items.Aggregate(0f, (acc, item) => acc + item.percentage);
       var percentage = (lootTotal / total * 100f).ToString("F1");
       MelonLogger.Msg(
-          $"Found loot [{title}] with {percentage}% chance at {destructable.transform.position.ToString()}");
+          $"Found loot [{title}] with {percentage}% chance at {destructable.transform.position.ToString()}"
+      );
     }
   }
 
@@ -90,7 +96,8 @@ class LootChanceViewer : Feature {
         tmp.fontSize = 0.2f;
         tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
         wristText.transform.SetParent(
-            Mod.GameState.rigManager.ControllerRig.leftController.transform);
+            Mod.GameState.rigManager.ControllerRig.leftController.transform
+        );
         tmp.rectTransform.localPosition = new Vector3(0.1f, 0.24f, 0f);
         tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
         tmp.text = GetLootText(heldDestructable.lootTable);

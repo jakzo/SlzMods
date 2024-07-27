@@ -15,14 +15,15 @@ using LiveSplit.UI.Components;
 //[assembly: Guid("")]
 [assembly:AssemblyVersion(Sst.Livesplit.BonelabHundredStatus.AppVersion.Value)]
 [assembly:AssemblyFileVersion(
-    Sst.Livesplit.BonelabHundredStatus.AppVersion.Value)]
+    Sst.Livesplit.BonelabHundredStatus.AppVersion.Value
+)]
 [assembly:NeutralResourcesLanguage("en")]
 [assembly:ComponentFactory(typeof(LiveSplit.UI.Components.Factory))]
 
 namespace Sst {
 public static class BuildInfo {
   public const string NAME = "BonelabHundredStatus";
-  public const string DESCRIPTION =
-      "Shows game progress and achievements for Bonelab 100% speedruns in LiveSplit.";
+  public const string DESCRIPTION = "Shows game progress and achievements " +
+                                    "for Bonelab 100% speedruns in LiveSplit.";
 }
 }

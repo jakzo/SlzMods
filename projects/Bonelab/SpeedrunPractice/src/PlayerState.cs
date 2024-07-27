@@ -33,13 +33,15 @@ public struct PlayerState {
       headPos = rigManager.physicsRig.m_head.position,
       headRot = rigManager.physicsRig.m_head.rotation,
       rigidbodies = rigManager.GetComponentsInChildren<Rigidbody>()
-                        .Select(rb => new SerializedRigidbody() {
-                          name = rb.name,
-                          position = rb.transform.position,
-                          rotation = rb.transform.rotation,
-                          velocity = rb.velocity,
-                          angularVelocity = rb.angularVelocity,
-                        })
+                        .Select(
+                            rb => new SerializedRigidbody() {
+                              name = rb.name,
+                              position = rb.transform.position,
+                              rotation = rb.transform.rotation,
+                              velocity = rb.velocity,
+                              angularVelocity = rb.angularVelocity,
+                            }
+                        )
                         .ToDictionary(item => item.name),
     };
   }
@@ -49,7 +51,8 @@ public struct PlayerState {
     var pos = rigManager.physicsRig._feetRb.transform.position;
     rigManager.Teleport(
         new Vector3(pos.x, pos.y - rigManager.physicsRig.footballRadius, pos.z),
-        true);
+        true
+    );
     foreach (var rb in rigManager.GetComponentsInChildren<Rigidbody>()) {
       SerializedRigidbody data;
       if (!state.rigidbodies.TryGetValue(rb.name, out data))

@@ -19,13 +19,14 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.AmmoBugFix.Mod), Sst.AmmoBugFix.BuildInfo.NAME,
     Sst.AmmoBugFix.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/AmmoBugFix/")]
+    "https://bonelab.thunderstore.io/package/jakzo/AmmoBugFix/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.AmmoBugFix {
 public static class BuildInfo {
   public const string NAME = "AmmoBugFix";
-  public const string DESCRIPTION =
-      "Fixes bug where ammo sometimes doesn't spawn after breaking ammo crates.";
+  public const string DESCRIPTION = "Fixes bug where ammo sometimes doesn't " +
+                                    "spawn after breaking ammo crates.";
 }
 }

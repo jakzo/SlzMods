@@ -184,10 +184,10 @@
 var result = "";
 foreach (var entry in SLZ.SaveData.DataManager.ActiveSave.Unlocks.Unlocks)
   result += entry.Key + " (" +
-            SLZ.Marrow.Warehouse.AssetWarehouse.Instance
-                .GetCrate(new SLZ.Marrow.Warehouse.Barcode(entry.Key))
-                .Title +
-            "): " + entry.Value + "\n";
+      SLZ.Marrow.Warehouse.AssetWarehouse.Instance
+          .GetCrate(new SLZ.Marrow.Warehouse.Barcode(entry.Key))
+          .Title +
+      "): " + entry.Value + "\n";
 result;
 
 // All possible achievements
@@ -303,20 +303,21 @@ result;
 var unlockTags =
     SLZ.SaveData.DataManager.ActiveSave.Unlocks.Unlocks._entries.ToArray()
         .SelectMany(
-            entry =>
-                entry.key == null
-                    ? new string[] {}
-                    : SLZ.Marrow.Warehouse.AssetWarehouse.Instance
-                          .GetCrate(new SLZ.Marrow.Warehouse.Barcode(entry.key))
-                          .Tags.ToArray())
+            entry => entry.key == null
+                ? new string[] {}
+                : SLZ.Marrow.Warehouse.AssetWarehouse.Instance
+                      .GetCrate(new SLZ.Marrow.Warehouse.Barcode(entry.key))
+                      .Tags.ToArray()
+        )
         .ToHashSet();
 var ids = new HashSet<string>();
 foreach (var entry in SLZ.Marrow.Warehouse.AssetWarehouse.Instance
              .InventoryRegistry._entries) {
   if (entry.value == null)
     continue;
-  var crate = SLZ.Marrow.Warehouse.AssetWarehouse.Instance.GetCrate(
-      entry.value.Barcode);
+  var crate =
+      SLZ.Marrow.Warehouse.AssetWarehouse.Instance.GetCrate(entry.value.Barcode
+      );
   if (crate == null ||
       crate.Tags.ToArray().All(tag => !unlockTags.Contains(tag)))
     continue;
@@ -325,15 +326,19 @@ foreach (var entry in SLZ.Marrow.Warehouse.AssetWarehouse.Instance
 foreach (var entry in SLZ.SaveData.DataManager.ActiveSave.Unlocks.Unlocks) {
   ids.Remove(entry.key);
 }
-string.Join("\n",
-            ids.Select(id => SLZ.Marrow.Warehouse.AssetWarehouse.Instance
-                                 .GetCrate(new SLZ.Marrow.Warehouse.Barcode(id))
-                                 .Title));
+string.Join(
+    "\n",
+    ids.Select(
+        id => SLZ.Marrow.Warehouse.AssetWarehouse.Instance
+                  .GetCrate(new SLZ.Marrow.Warehouse.Barcode(id))
+                  .Title
+    )
+);
 
 // All unlocks
 var result = "";
-foreach (var crate in SLZ.Marrow.Warehouse.AssetWarehouse.Instance
-             .GetCrates()) {
+foreach (var crate in SLZ.Marrow.Warehouse.AssetWarehouse.Instance.GetCrates(
+         )) {
   if (crate.Unlockable)
     result += crate.Title + "\n";
 }

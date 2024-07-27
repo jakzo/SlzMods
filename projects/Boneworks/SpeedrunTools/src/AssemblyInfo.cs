@@ -16,7 +16,9 @@ using System.Runtime.InteropServices;
 [assembly:AssemblyVersion(Sst.BuildInfo.Version)]
 [assembly:AssemblyFileVersion(Sst.BuildInfo.Version)]
 [assembly:NeutralResourcesLanguage("en")]
-[assembly:MelonInfo(typeof(Sst.Mod), Sst.BuildInfo.Name, Sst.BuildInfo.Version,
-                    Sst.BuildInfo.Author, Sst.BuildInfo.DownloadLink)]
+[assembly:MelonInfo(
+    typeof(Sst.Mod), Sst.BuildInfo.Name, Sst.BuildInfo.Version,
+    Sst.BuildInfo.Author, Sst.BuildInfo.DownloadLink
+)]
 
 [assembly:MelonGame(Sst.BuildInfo.Developer, Sst.BuildInfo.GameName)]

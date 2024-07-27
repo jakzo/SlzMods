@@ -17,8 +17,9 @@ void CopyBuildsToBin() {
       var buildFile = Path.Combine(debugDir, buildFilename);
       if (File.Exists(buildFile)) {
         Console.WriteLine($"Copying {buildFile}");
-        File.Copy(buildFile,
-                  Path.Combine(BIN_DIR, $"{gameName}{buildFilename}"));
+        File.Copy(
+            buildFile, Path.Combine(BIN_DIR, $"{gameName}{buildFilename}")
+        );
       } else {
         foreach (var buildDir in Directory.EnumerateDirectories(debugDir)) {
           Console.WriteLine($"buildDir = {buildDir}");

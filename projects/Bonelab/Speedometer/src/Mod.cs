@@ -26,13 +26,13 @@ public class Mod : MelonMod {
 
     var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
     _prefRightHand = category.CreateEntry(
-        "right_hand", false,
-        "Show speed reading on right hand instead of left");
+        "right_hand", false, "Show speed reading on right hand instead of left"
+    );
     _prefUnits =
         category.CreateEntry("units", Units.MS, "Units to measure speed in");
-    _prefWindowDuration =
-        category.CreateEntry("window_duration", 0.25f,
-                             "Number of seconds to average the speed over");
+    _prefWindowDuration = category.CreateEntry(
+        "window_duration", 0.25f, "Number of seconds to average the speed over"
+    );
 
     Utilities.LevelHooks.OnLevelStart += OnLevelStart;
   }
@@ -44,8 +44,9 @@ public class Mod : MelonMod {
       BufferSize = Mathf.CeilToInt(windowDuration * 240),
     };
 
-    _tmp = Utilities.Bonelab.CreateTextOnWrist(SPEEDOMETER_TEXT_NAME,
-                                               _prefRightHand.Value);
+    _tmp = Utilities.Bonelab.CreateTextOnWrist(
+        SPEEDOMETER_TEXT_NAME, _prefRightHand.Value
+    );
   }
 
   public override void OnUpdate() {

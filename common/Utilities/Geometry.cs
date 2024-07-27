@@ -6,10 +6,10 @@ using System.Linq;
 
 namespace Sst.Utilities {
 public class Geometry {
-  public static GameObject CreatePrefabCube(string name, Color color,
-                                            float left, float right, float top,
-                                            float bottom, float front,
-                                            float back) {
+  public static GameObject CreatePrefabCube(
+      string name, Color color, float left, float right, float top,
+      float bottom, float front, float back
+  ) {
     var gameObject = CreatePrefab(name);
     var meshRenderer =
         AddCubeMesh(ref gameObject, left, right, top, bottom, front, back);
@@ -17,9 +17,10 @@ public class Geometry {
     return gameObject;
   }
 
-  public static GameObject
-  CreatePrefabUnclosedCylinder(string name, Color color, float radius,
-                               int segments, float top, float bottom) {
+  public static GameObject CreatePrefabUnclosedCylinder(
+      string name, Color color, float radius, int segments, float top,
+      float bottom
+  ) {
     var gameObject = CreatePrefab(name);
     var meshRenderer =
         AddUnclosedCylinderMesh(ref gameObject, radius, segments, top, bottom);
@@ -27,8 +28,8 @@ public class Geometry {
     return gameObject;
   }
 
-  public static GameObject CreatePrefabSphere(string name, Color color,
-                                              float radius, int subdivisions) {
+  public static GameObject
+  CreatePrefabSphere(string name, Color color, float radius, int subdivisions) {
     var gameObject = CreatePrefab(name);
     var meshRenderer = AddSphereMesh(ref gameObject, radius, subdivisions);
     meshRenderer.material.color = color;
@@ -45,9 +46,10 @@ public class Geometry {
     return gameObject;
   }
 
-  public static MeshRenderer AddCubeMesh(ref GameObject gameObject, float left,
-                                         float right, float bottom, float top,
-                                         float back, float front) {
+  public static MeshRenderer AddCubeMesh(
+      ref GameObject gameObject, float left, float right, float bottom,
+      float top, float back, float front
+  ) {
     var meshFilter = gameObject.AddComponent<MeshFilter>();
     meshFilter.mesh.Clear();
     meshFilter.mesh.vertices = new[] {
@@ -71,8 +73,8 @@ public class Geometry {
     return gameObject.AddComponent<MeshRenderer>();
   }
 
-  public static MeshRenderer AddSphereMesh(ref GameObject gameObject,
-                                           float radius, int subdivisions) {
+  public static MeshRenderer
+  AddSphereMesh(ref GameObject gameObject, float radius, int subdivisions) {
     var meshFilter = gameObject.AddComponent<MeshFilter>();
     meshFilter.mesh.Clear();
     var (vertices, triangles, normals) = IcoSphere.Create(radius, subdivisions);
@@ -86,9 +88,10 @@ public class Geometry {
     return gameObject.AddComponent<MeshRenderer>();
   }
 
-  public static MeshRenderer AddUnclosedCylinderMesh(ref GameObject gameObject,
-                                                     float radius, int segments,
-                                                     float top, float bottom) {
+  public static MeshRenderer AddUnclosedCylinderMesh(
+      ref GameObject gameObject, float radius, int segments, float top,
+      float bottom
+  ) {
     var meshFilter = gameObject.AddComponent<MeshFilter>();
     meshFilter.mesh.Clear();
     var circleCoords = Enumerable.Range(0, segments).Select(i => {
@@ -97,8 +100,11 @@ public class Geometry {
     });
     meshFilter.mesh.vertices =
         new[] { bottom, top }
-            .SelectMany(y => circleCoords.Select(
-                            coord => new Vector3(coord.x, y, coord.y)))
+            .SelectMany(
+                y => circleCoords.Select(
+                    coord => new Vector3(coord.x, y, coord.y)
+                )
+            )
             .ToArray();
     meshFilter.mesh.triangles = Enumerable.Range(0, segments)
                                     .SelectMany(idx => {
@@ -121,10 +127,10 @@ public class Geometry {
   }
 
   public static class IcoSphere {
-    private static int getMiddlePoint(int p1, int p2,
-                                      ref List<Vector3> vertices,
-                                      ref Dictionary<long, int> cache,
-                                      float radius) {
+    private static int getMiddlePoint(
+        int p1, int p2, ref List<Vector3> vertices,
+        ref Dictionary<long, int> cache, float radius
+    ) {
       var firstIsSmaller = p1 < p2;
       var pMin = firstIsSmaller ? p1 : p2;
       var pMax = firstIsSmaller ? p2 : p1;
@@ -137,9 +143,10 @@ public class Geometry {
       var index = vertices.Count;
       var point1 = vertices[p1];
       var point2 = vertices[p2];
-      var middle =
-          new Vector3((point1.x + point2.x) / 2f, (point1.y + point2.y) / 2f,
-                      (point1.z + point2.z) / 2f);
+      var middle = new Vector3(
+          (point1.x + point2.x) / 2f, (point1.y + point2.y) / 2f,
+          (point1.z + point2.z) / 2f
+      );
       vertices.Add(middle.normalized * radius);
       cache.Add(key, index);
       return index;
@@ -207,12 +214,15 @@ public class Geometry {
           var i2 = triangles[j + 2];
 
           // Replace triangle with 4 sub-triangles
-          int a = getMiddlePoint(i0, i1, ref vertices,
-                                 ref middlePointIndexCache, radius);
-          int b = getMiddlePoint(i1, i2, ref vertices,
-                                 ref middlePointIndexCache, radius);
-          int c = getMiddlePoint(i2, i0, ref vertices,
-                                 ref middlePointIndexCache, radius);
+          int a = getMiddlePoint(
+              i0, i1, ref vertices, ref middlePointIndexCache, radius
+          );
+          int b = getMiddlePoint(
+              i1, i2, ref vertices, ref middlePointIndexCache, radius
+          );
+          int c = getMiddlePoint(
+              i2, i0, ref vertices, ref middlePointIndexCache, radius
+          );
           new int[] {
             i0, a, c, // 0
             i1, b, a, // 1

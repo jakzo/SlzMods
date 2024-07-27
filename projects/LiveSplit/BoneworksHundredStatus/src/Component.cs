@@ -52,8 +52,9 @@ public class Component : IComponent {
     }
     if (receivedState.justCollected != null) {
       foreach (var collectible in receivedState.justCollected) {
-        if (!_stateUpdater.LevelCollectableIndexes.TryGetValue(collectible.Uuid,
-                                                               out var index))
+        if (!_stateUpdater.LevelCollectableIndexes.TryGetValue(
+                collectible.Uuid, out var index
+            ))
           continue;
 
         if (index >= _collectiblePos) {
@@ -68,30 +69,36 @@ public class Component : IComponent {
           var lastCollectibleIndex = _stateUpdater.LevelCollectibles.Length - 1;
           if (index == lastCollectibleIndex - 1) {
             _missingCollectibles.Add(
-                _stateUpdater.LevelCollectibles[lastCollectibleIndex]);
+                _stateUpdater.LevelCollectibles[lastCollectibleIndex]
+            );
           }
         }
 
-        if (_missingCollectibles.Contains(
-                _stateUpdater.LevelCollectibles[index])) {
+        if (_missingCollectibles.Contains(_stateUpdater.LevelCollectibles[index]
+            )) {
           _missingCollectibles.Remove(_stateUpdater.LevelCollectibles[index]);
         }
       }
     }
   }
 
-  public void DrawHorizontal(Graphics g, LiveSplitState state, float height,
-                             Region clipRegion) {
+  public void DrawHorizontal(
+      Graphics g, LiveSplitState state, float height, Region clipRegion
+  ) {
     DrawGeneral(g, state, HorizontalWidth, height, LayoutMode.Horizontal);
   }
 
-  public void DrawVertical(System.Drawing.Graphics g, LiveSplitState state,
-                           float width, Region clipRegion) {
+  public void DrawVertical(
+      System.Drawing.Graphics g, LiveSplitState state, float width,
+      Region clipRegion
+  ) {
     DrawGeneral(g, state, width, VerticalHeight, LayoutMode.Vertical);
   }
 
-  private void DrawGeneral(Graphics g, LiveSplitState state, float width,
-                           float height, LayoutMode mode) {
+  private void DrawGeneral(
+      Graphics g, LiveSplitState state, float width, float height,
+      LayoutMode mode
+  ) {
     _progressLabel.HorizontalAlignment = StringAlignment.Near;
     _progressLabel.VerticalAlignment = StringAlignment.Far;
     _progressLabel.X = 4;
@@ -141,8 +148,10 @@ public class Component : IComponent {
 
   public void Dispose() { _stateUpdater.Dispose(); }
 
-  public void Update(IInvalidator invalidator, LiveSplitState livesplitState,
-                     float width, float height, LayoutMode mode) {
+  public void Update(
+      IInvalidator invalidator, LiveSplitState livesplitState, float width,
+      float height, LayoutMode mode
+  ) {
     if (!_isDirty)
       return;
 
@@ -151,20 +160,22 @@ public class Component : IComponent {
     if (state == null) {
       _progressLabel.Text = "";
     } else {
-      var missingCollectibleLines =
-          _showMissingCollectibles
-              ? _missingCollectibles.Select(c => $"Missed: {c.DisplayName}")
-              : new string[] {};
+      var missingCollectibleLines = _showMissingCollectibles
+          ? _missingCollectibles.Select(c => $"Missed: {c.DisplayName}")
+          : new string[] {};
       var overallChance = state.rngUnlocks.Aggregate(
-          1f, (chance, pair) =>
-                  chance * (1f - pair.Value.probabilityNotDroppedYet));
+          1f,
+          (chance, pair) => chance * (1f - pair.Value.probabilityNotDroppedYet)
+      );
       var overallChanceStr = (overallChance * 100f).ToString("N0");
       _progressLabel.Text = string.Join(
           "\n",
           missingCollectibleLines
-              .Concat(state.rngUnlocks.All(pair => pair.Value.hasDropped)
-                          ? new[] { $"Overall RNG chance: {overallChanceStr}%" }
-                          : new string[] {})
+              .Concat(
+                  state.rngUnlocks.All(pair => pair.Value.hasDropped)
+                      ? new[] { $"Overall RNG chance: {overallChanceStr}%" }
+                      : new string[] {}
+              )
               .Concat(new[] {
                 $"Level unlocks: {state.unlockLevelCount} / {state.unlockLevelMax}",
                 $"Level Ammo: {state.ammoLevelCount} / {state.ammoLevelMax}",
@@ -178,7 +189,8 @@ public class Component : IComponent {
                 var total = 1f - u.probabilityNotDroppedYet;
                 var totalStr = (total * 100f).ToString("N0");
                 return $"{status} {u.name}: {u.attempts} {triesStr} @ {attemptChanceStr}% per try = {totalStr}% total";
-              })));
+              }))
+      );
     }
     invalidator?.Invalidate(0, 0, width, height);
   }

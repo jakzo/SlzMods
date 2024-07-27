@@ -92,13 +92,16 @@ class Replay : Feature {
               Directory.GetFiles(Utils.REPLAYS_DIR)
                   .Where(
                       filePath => Path.GetFileName(filePath).StartsWith(
-                          $"{Replays.Recorder.FILENAME_PREFIXES[Bwr.GameMode.NONE]}-"))
+                          $"{Replays.Recorder.FILENAME_PREFIXES[Bwr.GameMode.NONE]}-"
+                      )
+                  )
                   .ToArray();
           if (manualReplayFiles.Length == 0)
             return;
           System.Array.Sort(
               manualReplayFiles.Select(Path.GetFileName).ToArray(),
-              manualReplayFiles);
+              manualReplayFiles
+          );
           _hotkeyReplay = new Replays.Replay(manualReplayFiles.Last());
         }
         if (_hotkeyGhost != null &&
@@ -109,9 +112,10 @@ class Replay : Feature {
           _hotkeyReplay = null;
           MelonLogger.Msg("Playback stopped");
         } else {
-          _hotkeyGhost =
-              new Replays.Ghost(_hotkeyReplay, true, new Color(1, 1, 1, 0.5f),
-                                parent => new Replays.BlockRig(parent));
+          _hotkeyGhost = new Replays.Ghost(
+              _hotkeyReplay, true, new Color(1, 1, 1, 0.5f),
+              parent => new Replays.BlockRig(parent)
+          );
           _hotkeyGhost.Start();
           MelonLogger.Msg("Playback started");
         }
@@ -177,10 +181,11 @@ class Replay : Feature {
       if (_runGhosts == null) {
         var requiredGameMode =
             Speedruns.Mode.CurrentMode.replayMode == Bwr.GameMode.NONE
-                ? Bwr.GameMode.SPEEDRUN
-                : Speedruns.Mode.CurrentMode.replayMode;
-        var replays = AllReplays.Where(replay => replay.Metadata.GameMode ==
-                                                 requiredGameMode);
+            ? Bwr.GameMode.SPEEDRUN
+            : Speedruns.Mode.CurrentMode.replayMode;
+        var replays = AllReplays.Where(
+            replay => replay.Metadata.GameMode == requiredGameMode
+        );
         _runGhosts = new List<Replays.Ghost>();
         switch (setting) {
         case RunGhostsSetting.ALL_RUN:
@@ -202,7 +207,8 @@ class Replay : Feature {
             var color = Utilities.Unity.GenerateColor(0);
             color.a = 0.5f;
             _runGhosts.Add(
-                new Replays.Ghost(replays.First(), true, color, _createRig));
+                new Replays.Ghost(replays.First(), true, color, _createRig)
+            );
           }
           break;
         }
@@ -219,8 +225,10 @@ class Replay : Feature {
             ghost.Stop();
         var replays =
             AllReplays
-                .Where(replay => replay.Metadata.GameMode ==
-                                 Speedruns.Mode.CurrentMode.replayMode)
+                .Where(
+                    replay => replay.Metadata.GameMode ==
+                        Speedruns.Mode.CurrentMode.replayMode
+                )
                 .Select(replay => {
                   Bwr.Level? minLevel = null;
                   for (var i = 0; i < replay.Metadata.LevelsLength; i++) {

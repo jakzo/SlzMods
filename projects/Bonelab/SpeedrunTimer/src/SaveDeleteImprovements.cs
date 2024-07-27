@@ -27,7 +27,11 @@ public static class SaveDeleteImprovements {
   public static void OnInitialize() {
     _prefDeleteModsOnWipe = Mod.Instance.PrefCategory.CreateEntry<bool>(
         "deleteModsOnWipe", false, "Let mods be deleted when wiping all data",
-        "Normally when resetting your save state through the main menu the game will delete all mods including the SpeedrunTimer. For convenience the timer will keep your mods folder. This option reverts to the original behavior of deleting mods.");
+        "Normally when resetting your save state through the main menu the " +
+        "game will delete all mods including the SpeedrunTimer. For " +
+        "convenience the timer will keep your mods folder. This option " +
+        "reverts to the original behavior of deleting mods."
+    );
   }
 
   [HarmonyPatch(typeof(DataManager), nameof(DataManager._MSAFAIGE))]
@@ -50,8 +54,8 @@ public static class SaveDeleteImprovements {
       if (_modsBackupPath == null)
         return;
       if (Directory.Exists(_modsBackupPath))
-        MelonLogger.Warning(
-            "Failed to restore mods folder on data wipe! Old mods are in Mods.backup now.");
+        MelonLogger.Warning("Failed to restore mods folder on data wipe! Old " +
+                            "mods are in Mods.backup now.");
       _modsBackupPath = null;
     }
   }
@@ -75,9 +79,11 @@ public static class SaveDeleteImprovements {
 // According to Ghidra this is the only hookable method which is called after
 // the Mods folder is deleted and before the application quits
 #if ML6
-  [HarmonyPatch(typeof(MarrowDataManager<DataManager, Save, Settings,
-                                         PlayerProgression, PlayerUnlocks>),
-                "get_SavePath")]
+  [HarmonyPatch(
+      typeof(MarrowDataManager<
+             DataManager, Save, Settings, PlayerProgression, PlayerUnlocks>),
+      "get_SavePath"
+  )]
   class MarrowDataManager_SavePath_Patch {
     [HarmonyPrefix()]
     internal static void Prefix() {
@@ -86,8 +92,9 @@ public static class SaveDeleteImprovements {
     }
   }
 #else
-  [HarmonyPatch(typeof(DataManager), nameof(DataManager.SavePath),
-                MethodType.Getter)]
+  [HarmonyPatch(
+      typeof(DataManager), nameof(DataManager.SavePath), MethodType.Getter
+  )]
   class DataManager_SavePath_Patch {
     [HarmonyPrefix()]
     internal static void Prefix() {

@@ -9,5 +9,6 @@ var head = rigManager.physicsRig.m_head;
 bool? nullableTrue = true;
 var go = StressLevelZero.Pool.PoolManager.Spawn(
     "Baton", head.position + head.rotation * new Vector3(0, 0, 2),
-    Quaternion.identity, new Sst.Utilities.Il2CppNullable<bool>(nullableTrue));
+    Quaternion.identity, new Sst.Utilities.Il2CppNullable<bool>(nullableTrue)
+);
 go;

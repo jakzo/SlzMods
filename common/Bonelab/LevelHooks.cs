@@ -27,8 +27,8 @@ static class LevelHooks {
 
   private static Scene _loadingScene;
 
-  private static void SafeInvoke(string name, Action<LevelCrate> action,
-                                 LevelCrate level) {
+  private static void
+  SafeInvoke(string name, Action<LevelCrate> action, LevelCrate level) {
     try {
       action?.Invoke(level);
     } catch (Exception ex) {

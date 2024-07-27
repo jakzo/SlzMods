@@ -14,8 +14,8 @@ using LiveSplit.UI.Components;
 [assembly:ComVisible(false)]
 //[assembly: Guid("")]
 [assembly:AssemblyVersion(Sst.Livesplit.BoneworksDebugStats.AppVersion.Value)]
-[assembly:AssemblyFileVersion(
-    Sst.Livesplit.BoneworksDebugStats.AppVersion.Value)]
+[assembly:AssemblyFileVersion(Sst.Livesplit.BoneworksDebugStats.AppVersion.Value
+)]
 [assembly:NeutralResourcesLanguage("en")]
 [assembly:ComponentFactory(typeof(LiveSplit.UI.Components.Factory))]
 

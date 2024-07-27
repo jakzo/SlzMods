@@ -26,7 +26,8 @@ class Timer : Feature {
       _tmp.fontSize = 0.5f;
       _tmp.rectTransform.sizeDelta = new Vector2(0.8f, 0.5f);
       timerText.transform.SetParent(
-          Mod.GameState.rigManager.ControllerRig.leftController.transform);
+          Mod.GameState.rigManager.ControllerRig.leftController.transform
+      );
       _tmp.rectTransform.localPosition = new Vector3(-0.36f, 0.24f, 0f);
       _tmp.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);
     } else {
@@ -39,7 +40,8 @@ class Timer : Feature {
     if (!duration.HasValue)
       return;
     _tmp?.SetText(duration.Value.ToString(
-        $"{(duration.Value.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff"));
+        $"{(duration.Value.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff"
+    ));
   }
 }
 }

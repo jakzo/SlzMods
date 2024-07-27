@@ -36,13 +36,18 @@ class SplitsTimer {
   public static void OnInitialize() {
     _prefHide = Mod.Instance.PrefCategory.CreateEntry(
         "hide", false, "Hide in-game timer",
-        "Stops the timer from displaying on your wrist. Does not hide loading screen timer.");
+        "Stops the timer from displaying on your wrist. Does not hide " +
+        "loading screen timer."
+    );
     _prefHideIl = Mod.Instance.PrefCategory.CreateEntry(
         "hideIl", false, "Hide level timer",
-        "Stops the individual level timer from displaying on your wrist.");
+        "Stops the individual level timer from displaying on your wrist."
+    );
     _prefHideSplits = Mod.Instance.PrefCategory.CreateEntry(
         "hideSplits", false, "Hides split display in loading screen",
-        "Stops the individual level times from displaying in the loading screen.");
+        "Stops the individual level times from displaying in the loading " +
+        "screen."
+    );
   }
 
   public void Reset() {

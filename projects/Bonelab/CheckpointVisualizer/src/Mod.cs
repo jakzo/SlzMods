@@ -32,7 +32,8 @@ public class Mod : MelonMod {
       return;
     AssetWarehouse.OnReady(new System.Action(() => {
       var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
-          c => c.Title == Utilities.Levels.TITLE_MONOGON_MOTORWAY);
+          c => c.Title == Utilities.Levels.TITLE_MONOGON_MOTORWAY
+      );
       var bootstrapper =
           GameObject.FindObjectOfType<SceneBootstrapper_Bonelab>();
       var crateRef = new LevelCrateReference(crate.Barcode.ID);
@@ -63,8 +64,10 @@ public class Mod : MelonMod {
     _gameControl = GameObject.FindObjectOfType<GameControl_KartRace>();
     _checkpointTriggers =
         _gameControl.trackCheckPoint
-            .Select((_, i) => GameObject.Find($"trigger_{(char)(65 + i)}")
-                                  .GetComponent<TriggerLasers>())
+            .Select(
+                (_, i) => GameObject.Find($"trigger_{(char)(65 + i)}")
+                              .GetComponent<TriggerLasers>()
+            )
             .ToArray();
     _checkpointColliders =
         _checkpointTriggers
@@ -76,8 +79,10 @@ public class Mod : MelonMod {
 
     foreach (var (trigger, i) in _checkpointTriggers.Select((t, i) => (t, i))) {
       trigger.OnTriggerEnterEvent.AddListener(
-          new System.Action<UnityEngine.Collider>((collider) =>
-                                                      RerenderTrigger(i)));
+          new System.Action<UnityEngine.Collider>(
+              (collider) => RerenderTrigger(i)
+          )
+      );
     }
 
     foreach (var name in new[] { "trigger_newLap", "trigger_start" }) {
@@ -86,8 +91,10 @@ public class Mod : MelonMod {
               .FindDescendantTransform(_gameControl.gameObject.transform, name)
               .gameObject;
       trigger.GetComponent<TriggerLasers>().OnTriggerEnterEvent.AddListener(
-          new System.Action<UnityEngine.Collider>(collider =>
-                                                      RerenderAllTriggers()));
+          new System.Action<UnityEngine.Collider>(
+              collider => RerenderAllTriggers()
+          )
+      );
       RenderTrigger(trigger.GetComponent<BoxCollider>(), false);
     }
     Dbg.Log("Rendered triggers");
@@ -109,8 +116,9 @@ public class Mod : MelonMod {
 
   private Utilities.Colliders.ColliderVisualization
   RenderTrigger(Collider collider, bool isTriggered) =>
-      Utilities.Colliders.Visualize(collider,
-                                    isTriggered ? COLOR_GREEN : COLOR_RED,
-                                    Utilities.Shaders.HighlightShader);
+      Utilities.Colliders.Visualize(
+          collider, isTriggered ? COLOR_GREEN : COLOR_RED,
+          Utilities.Shaders.HighlightShader
+      );
 }
 }

@@ -24,8 +24,8 @@ class Livesplit {
     0x00,
   };
 
-  public static void SetState(bool isLoading, bool isSittingInTaxi,
-                              string levelTitle = "") {
+  public static void
+  SetState(bool isLoading, bool isSittingInTaxi, string levelTitle = "") {
     State[0] = 0xD4;
     State[8] =
         (byte)((isLoading ? 1 : 0) << 0 | (isSittingInTaxi ? 1 : 0) << 1);

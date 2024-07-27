@@ -35,18 +35,22 @@ public class Component : IComponent {
     _stateUpdater.OnReceivedState += receivedState => _isDirty = true;
   }
 
-  public void DrawHorizontal(Graphics g, LiveSplitState state, float height,
-                             Region clipRegion) {
+  public void DrawHorizontal(
+      Graphics g, LiveSplitState state, float height, Region clipRegion
+  ) {
     DrawGeneral(g, state, HorizontalWidth, height, LayoutMode.Horizontal);
   }
 
-  public void DrawVertical(Graphics g, LiveSplitState state, float width,
-                           Region clipRegion) {
+  public void DrawVertical(
+      Graphics g, LiveSplitState state, float width, Region clipRegion
+  ) {
     DrawGeneral(g, state, width, VerticalHeight, LayoutMode.Vertical);
   }
 
-  private void DrawGeneral(Graphics g, LiveSplitState state, float width,
-                           float height, LayoutMode mode) {
+  private void DrawGeneral(
+      Graphics g, LiveSplitState state, float width, float height,
+      LayoutMode mode
+  ) {
     _statsLabel.HorizontalAlignment = StringAlignment.Near;
     _statsLabel.VerticalAlignment = StringAlignment.Far;
     _statsLabel.X = 4;
@@ -64,14 +68,16 @@ public class Component : IComponent {
   public string ComponentName { get => NAME; }
 
   public Control GetSettingsControl(LayoutMode mode) => null;
-  public XmlNode
-  GetSettings(XmlDocument document) => document.CreateElement("Settings");
+  public XmlNode GetSettings(XmlDocument document
+  ) => document.CreateElement("Settings");
   public void SetSettings(XmlNode settings) {}
 
   public void Dispose() { _stateUpdater.Dispose(); }
 
-  public void Update(IInvalidator invalidator, LiveSplitState livesplitState,
-                     float width, float height, LayoutMode mode) {
+  public void Update(
+      IInvalidator invalidator, LiveSplitState livesplitState, float width,
+      float height, LayoutMode mode
+  ) {
     if (!_isDirty)
       return;
 
@@ -87,9 +93,13 @@ public class Component : IComponent {
   }
 
   public static string PrintFields(object obj) => string.Join(
-      "\n", obj.GetType()
-                .GetFields(BindingFlags.Public | BindingFlags.NonPublic |
-                           BindingFlags.Instance)
-                .Select(field => $"{field.Name}: {field.GetValue(obj)}"));
+      "\n",
+      obj.GetType()
+          .GetFields(
+              BindingFlags.Public | BindingFlags.NonPublic |
+              BindingFlags.Instance
+          )
+          .Select(field => $"{field.Name}: {field.GetValue(obj)}")
+  );
 }
 }

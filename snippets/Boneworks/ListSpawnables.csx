@@ -1,7 +1,10 @@
 #r "../../references/Boneworks/Assembly-CSharp.dll"
 
-string.Join("\n", StressLevelZero.Pool.PoolManager._registeredSpawnableObjects
-                      .entries.Select(entry => entry.value?.title));
+string.Join(
+    "\n",
+    StressLevelZero.Pool.PoolManager._registeredSpawnableObjects.entries
+        .Select(entry => entry.value?.title)
+);
 
 // Omni Projector
 // VFX Despawn Mesh

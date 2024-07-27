@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.SpeedrunTimer.Mod), Sst.SpeedrunTimer.BuildInfo.Name,
     Sst.SpeedrunTimer.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/")]
+    "https://bonelab.thunderstore.io/package/jakzo/SpeedrunTimer/"
+)]
 
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 

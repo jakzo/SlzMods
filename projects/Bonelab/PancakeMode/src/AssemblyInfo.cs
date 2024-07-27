@@ -19,12 +19,15 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.PancakeMode.Mod), Sst.PancakeMode.BuildInfo.NAME,
     Sst.PancakeMode.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/PancakeMode/")]
+    "https://bonelab.thunderstore.io/package/jakzo/PancakeMode/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.PancakeMode {
 public static class BuildInfo {
   public const string NAME = "PancakeMode";
-  public const string DESCRIPTION = "Allows playing the game with a keyboard, mouse and monitor instead of VR.";
+  public const string DESCRIPTION =
+      "Allows playing the game with a keyboard, mouse and monitor instead of " +
+      "VR.";
 }
 }

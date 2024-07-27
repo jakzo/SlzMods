@@ -42,8 +42,9 @@ public class InputServer {
 
     AddToData(data, MarrowGame.xr.HMD);
 
-    foreach (var controller in new[] { MarrowGame.xr.LeftController,
-                                       MarrowGame.xr.RightController }) {
+    foreach (var controller in new[] {
+               MarrowGame.xr.LeftController, MarrowGame.xr.RightController
+             }) {
       if (controller != null) {
         AddToData(data, controller);
       } else {

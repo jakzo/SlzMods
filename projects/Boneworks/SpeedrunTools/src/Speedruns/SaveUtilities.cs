@@ -14,8 +14,9 @@ class SaveUtilities {
 
   public static string GetBackupPath() {
     var dirName = Path.GetFileName(Application.persistentDataPath);
-    return Path.Combine(Application.persistentDataPath, "..",
-                        $"{dirName}.speedrun_backup");
+    return Path.Combine(
+        Application.persistentDataPath, "..", $"{dirName}.speedrun_backup"
+    );
   }
 
   public static void BackupSave() {
@@ -26,7 +27,8 @@ class SaveUtilities {
     MelonLogger.Msg($"Backing up save to: {backupPath}");
     Directory.CreateDirectory(backupPath);
     foreach (var filePath in Directory.EnumerateFiles(
-                 Application.persistentDataPath)) {
+                 Application.persistentDataPath
+             )) {
       if (filePath.EndsWith("output_log.txt"))
         continue;
       File.Copy(filePath, Path.Combine(backupPath, Path.GetFileName(filePath)));
@@ -36,8 +38,9 @@ class SaveUtilities {
   public static void RestoreSaveFileResource(string saveResourceName) {
     Dbg.Log($"Loading save: {saveResourceName}");
     DeleteSave();
-    Utilities.Resources.ExtractResource(saveResourceName,
-                                        Application.persistentDataPath);
+    Utilities.Resources.ExtractResource(
+        saveResourceName, Application.persistentDataPath
+    );
   }
 
   public static void SaveData() {
@@ -62,7 +65,8 @@ class SaveUtilities {
   public static void DeleteSave() {
     Dbg.Log("Deleting save");
     foreach (var filePath in Directory.EnumerateFiles(
-                 Application.persistentDataPath)) {
+                 Application.persistentDataPath
+             )) {
       if (filePath.EndsWith("output_log.txt"))
         continue;
       File.Delete(filePath);
@@ -76,15 +80,20 @@ class SaveUtilities {
         MelonLogger.Msg($"Restoring save backup from: {backupPath}");
         DeleteSave();
         foreach (var filePath in Directory.EnumerateFiles(backupPath)) {
-          File.Copy(filePath, Path.Combine(Application.persistentDataPath,
-                                           Path.GetFileName(filePath)));
+          File.Copy(
+              filePath,
+              Path.Combine(
+                  Application.persistentDataPath, Path.GetFileName(filePath)
+              )
+          );
         }
         Directory.Delete(backupPath, true);
       }
     } catch (System.Exception err) {
       MelonLogger.Error(
-          "WARNING: A backup of your save file exists because speedrun mode was " +
-          "enabled but restoring it failed with this error:");
+          "WARNING: A backup of your save file exists because speedrun mode " +
+          "was " + "enabled but restoring it failed with this error:"
+      );
       MelonLogger.Error(err);
     }
   }

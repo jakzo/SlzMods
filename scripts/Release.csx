@@ -13,8 +13,9 @@ string SemverIncrement(string version, int semverTypeIdx) {
   return String.Join(".", parts);
 }
 
-bool ShouldReleaseToThunderstore(string projectRelativePath,
-                                 string newVersion) {
+bool ShouldReleaseToThunderstore(
+    string projectRelativePath, string newVersion
+) {
   if (!File.Exists($"{projectRelativePath}/thunderstore/thunderstore.toml")) {
     Console.WriteLine($"No ThunderStore manifest found. Skipping.");
     return false;
@@ -22,8 +23,9 @@ bool ShouldReleaseToThunderstore(string projectRelativePath,
   return true;
 }
 
-void UpdateChangelog(string projectRelativePath, string newVersion,
-                     string changelogDescription) {
+void UpdateChangelog(
+    string projectRelativePath, string newVersion, string changelogDescription
+) {
   string changelogPath = $"{projectRelativePath}/CHANGELOG.md";
   if (!File.Exists(changelogPath)) {
     Console.WriteLine($"No changelog found. Skipping.");
@@ -38,8 +40,10 @@ void UpdateChangelog(string projectRelativePath, string newVersion,
   Console.WriteLine("CHANGELOG.md updated");
 }
 
-bool UpdateLiveSplitChangelog(string projectRelativePath, string projectName,
-                              string newVersion, string changelogDescription) {
+bool UpdateLiveSplitChangelog(
+    string projectRelativePath, string projectName, string newVersion,
+    string changelogDescription
+) {
   string changelogPath =
       $"{projectRelativePath}/update.LiveSplit.{projectName}.xml";
   if (!File.Exists(changelogPath)) {
@@ -71,8 +75,10 @@ bool UpdateLiveSplitChangelog(string projectRelativePath, string projectName,
   return true;
 }
 
-void ReleaseProject(string gameName, string projectName, string semverTypeArg,
-                    string changelogDescription) {
+void ReleaseProject(
+    string gameName, string projectName, string semverTypeArg,
+    string changelogDescription
+) {
   var semverTypeIdx =
       Array.FindIndex(semverTypes, type => type == semverTypeArg);
   if (semverTypeIdx == -1)
@@ -95,9 +101,11 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
   Console.WriteLine($"Version increment type = {semverTypeArg}");
   Console.WriteLine($"New version = {newVersion}");
 
-  File.WriteAllText(appVersionPath, appVersionCode.Substring(0, appStartIdx) +
-                                        newVersion +
-                                        appVersionCode.Substring(appEndIdx));
+  File.WriteAllText(
+      appVersionPath,
+      appVersionCode.Substring(0, appStartIdx) + newVersion +
+          appVersionCode.Substring(appEndIdx)
+  );
 
   Console.WriteLine("Setting Github action outputs");
   var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
@@ -106,18 +114,21 @@ void ReleaseProject(string gameName, string projectName, string semverTypeArg,
       $"https://github.com/jakzo/SlzMods/tree/main/projects/{gameName}/{projectName}#readme";
   File.AppendAllText(
       githubOutput,
-      $"changelog<<EOF\n{changelogDescription}\n\n[{projectName} README]({readmeUrl})\nEOF\n");
+      $"changelog<<EOF\n{changelogDescription}\n\n[{projectName} README]({readmeUrl})\nEOF\n"
+  );
 
   UpdateChangelog(projectRelativePath, newVersion, changelogDescription);
 
   var isLiveSplitComponent = UpdateLiveSplitChangelog(
-      projectRelativePath, projectName, newVersion, changelogDescription);
+      projectRelativePath, projectName, newVersion, changelogDescription
+  );
 
   var releaseThunderstore =
       ShouldReleaseToThunderstore(projectRelativePath, newVersion) ? "true"
                                                                    : "false";
-  File.AppendAllText(githubOutput,
-                     $"release_thunderstore={releaseThunderstore}\n");
+  File.AppendAllText(
+      githubOutput, $"release_thunderstore={releaseThunderstore}\n"
+  );
   var releaseLiveSplit = isLiveSplitComponent ? "true" : "false";
   File.AppendAllText(githubOutput, $"release_livesplit={releaseLiveSplit}\n");
 }

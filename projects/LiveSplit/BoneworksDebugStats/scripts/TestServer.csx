@@ -8,8 +8,8 @@ using Sst.Common.Boneworks;
 
 class ConsoleLogger : Sst.Common.Ipc.Logger {
   public override void Debug(string message) => Console.WriteLine(message);
-  public override void
-  Error(string message) => Console.Error.WriteLine(message);
+  public override void Error(string message) => Console.Error.WriteLine(message
+  );
 }
 
 try {

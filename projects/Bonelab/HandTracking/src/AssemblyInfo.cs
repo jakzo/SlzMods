@@ -16,14 +16,15 @@ using System.Runtime.InteropServices;
 [assembly:AssemblyVersion(Sst.HandTracking.AppVersion.Value)]
 [assembly:AssemblyFileVersion(Sst.HandTracking.AppVersion.Value)]
 [assembly:NeutralResourcesLanguage("en")]
-[assembly:MelonInfo(typeof(Sst.HandTracking.Mod),
-                    Sst.HandTracking.BuildInfo.NAME,
-                    Sst.HandTracking.AppVersion.Value, Sst.Metadata.AUTHOR, "")]
+[assembly:MelonInfo(
+    typeof(Sst.HandTracking.Mod), Sst.HandTracking.BuildInfo.NAME,
+    Sst.HandTracking.AppVersion.Value, Sst.Metadata.AUTHOR, ""
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
-namespace Sst.HandTracking {
+namespace Sst.HandTracking;
+
 public static class BuildInfo {
   public const string NAME = "HandTracking";
   public const string DESCRIPTION = "Adds support for hand tracking.";
-}
 }

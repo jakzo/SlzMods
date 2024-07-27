@@ -21,8 +21,9 @@ public static class Colliders {
   private static Assembly _unityAssembly;
   public static Assembly UnityAssembly {
     get => _unityAssembly ??
-           (_unityAssembly = AppDomain.CurrentDomain.GetAssemblies().First(
-                asm => asm.GetType("UnityEngine.Collider") != null));
+        (_unityAssembly = AppDomain.CurrentDomain.GetAssemblies().First(
+             asm => asm.GetType("UnityEngine.Collider") != null
+         ));
   }
 
   public static int NonPhysicalLayerMask = LayerMask.GetMask(
@@ -98,42 +99,51 @@ public static class Colliders {
       new LayerMask() { value = 0x7fffffff };
 
   public static class DebugColliderPrefabs {
-    public static GameObject BOX =
-        Geometry.CreatePrefabCube("DebugCollider_Box", Color.magenta, -0.5f,
-                                  0.5f, -0.5f, 0.5f, -0.5f, 0.5f);
+    public static GameObject BOX = Geometry.CreatePrefabCube(
+        "DebugCollider_Box", Color.magenta, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f,
+        0.5f
+    );
     public static GameObject SPHERE = Geometry.CreatePrefabSphere(
-        "DebugCollider_Sphere", Color.magenta, 0.5f, 2);
+        "DebugCollider_Sphere", Color.magenta, 0.5f, 2
+    );
     public static GameObject CYLINDER = Geometry.CreatePrefabUnclosedCylinder(
-        "DebugCollider_Cylinder", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
+        "DebugCollider_Cylinder", Color.magenta, 0.5f, 20, 0.5f, -0.5f
+    );
   }
 
   public static IEnumerable<Collider> AllColliders() {
     foreach (var rootObject in Utilities.Unity.RootObjects()) {
       var colliders = new List<Collider>();
       Utilities.Unity.FindDescendantComponentsOfType(
-          ref colliders, rootObject.transform, true);
+          ref colliders, rootObject.transform, true
+      );
       foreach (var unknownCollider in colliders) {
         yield return ToUnderlyingType(unknownCollider);
       }
     }
   }
 
-  public static void VisualizeAllIn(GameObject ancestor,
-                                    bool visualizeTriggers = false) =>
-      VisualizeAllIn(ancestor, DEFAULT_LAYER_MASK, visualizeTriggers);
-  public static void VisualizeAllIn(GameObject ancestor, LayerMask layerMask,
-                                    bool visualizeTriggers = false) {
-    DebugColliderPrefabs.BOX =
-        Geometry.CreatePrefabCube("DebugCollider_Box", Color.magenta, -0.5f,
-                                  0.5f, -0.5f, 0.5f, -0.5f, 0.5f);
+  public static void VisualizeAllIn(
+      GameObject ancestor, bool visualizeTriggers = false
+  ) => VisualizeAllIn(ancestor, DEFAULT_LAYER_MASK, visualizeTriggers);
+  public static void VisualizeAllIn(
+      GameObject ancestor, LayerMask layerMask, bool visualizeTriggers = false
+  ) {
+    DebugColliderPrefabs.BOX = Geometry.CreatePrefabCube(
+        "DebugCollider_Box", Color.magenta, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f,
+        0.5f
+    );
     DebugColliderPrefabs.SPHERE = Geometry.CreatePrefabSphere(
-        "DebugCollider_Sphere", Color.magenta, 0.5f, 2);
+        "DebugCollider_Sphere", Color.magenta, 0.5f, 2
+    );
     DebugColliderPrefabs.CYLINDER = Geometry.CreatePrefabUnclosedCylinder(
-        "DebugCollider_Cylinder", Color.magenta, 0.5f, 20, 0.5f, -0.5f);
+        "DebugCollider_Cylinder", Color.magenta, 0.5f, 20, 0.5f, -0.5f
+    );
 
     var colliders = new List<Collider>();
-    Unity.FindDescendantComponentsOfType(ref colliders, ancestor.transform,
-                                         true);
+    Unity.FindDescendantComponentsOfType(
+        ref colliders, ancestor.transform, true
+    );
     foreach (var unknownCollider in colliders) {
       var collider = ToUnderlyingType(unknownCollider);
       var isMatchingLayer = (layerMask.value & collider.gameObject.layer) != 0;
@@ -147,19 +157,20 @@ public static class Colliders {
       // Mesh colliders only have collision in the direction of their faces
       // but convex mesh colliders are solid.
       if (collider is MeshCollider && !((MeshCollider)collider).convex) {
-        Visualize(collider, _colorHighlighter,
-                  Utilities.Shaders.HighlightShader);
+        Visualize(
+            collider, _colorHighlighter, Utilities.Shaders.HighlightShader
+        );
       } else {
         Visualize(collider, _colorDefault, Utilities.Shaders.DefaultShader);
       }
     }
   }
 
-  public static ColliderVisualization
-  Visualize(Collider collider, Color color, Shader shader,
-            bool watchForChanges = true,
-            Func<ColliderVisualization, bool> onUpdate = null,
-            Transform parent = null) {
+  public static ColliderVisualization Visualize(
+      Collider collider, Color color, Shader shader,
+      bool watchForChanges = true,
+      Func<ColliderVisualization, bool> onUpdate = null, Transform parent = null
+  ) {
     var castedCollider = ToUnderlyingType(collider);
 
     if (parent == null)
@@ -184,17 +195,20 @@ public static class Colliders {
 
     case CapsuleCollider capsuleCollider: {
       visualization = new GameObject("SpeedrunTools_DebugCollider_Capsule");
-      var cylinder = GameObject.Instantiate(DebugColliderPrefabs.CYLINDER,
-                                            visualization.transform);
+      var cylinder = GameObject.Instantiate(
+          DebugColliderPrefabs.CYLINDER, visualization.transform
+      );
       SetMaterial(cylinder, color, shader);
       cylinder.active = true;
-      var endA = GameObject.Instantiate(DebugColliderPrefabs.SPHERE,
-                                        visualization.transform);
+      var endA = GameObject.Instantiate(
+          DebugColliderPrefabs.SPHERE, visualization.transform
+      );
       SetMaterial(endA, color, shader);
       endA.active = true;
       endA.transform.localPosition = new Vector3(0, -0.5f, 0);
-      var endB = GameObject.Instantiate(DebugColliderPrefabs.SPHERE,
-                                        visualization.transform);
+      var endB = GameObject.Instantiate(
+          DebugColliderPrefabs.SPHERE, visualization.transform
+      );
       SetMaterial(endB, color, shader);
       endB.active = true;
       endB.transform.localPosition = new Vector3(0, 0.5f, 0);
@@ -215,7 +229,8 @@ public static class Colliders {
 
     default: {
       MelonLogger.Warning(
-          $"Cannot render collider of unsupported type: {castedCollider}");
+          $"Cannot render collider of unsupported type: {castedCollider}"
+      );
       return null;
     }
     }
@@ -265,8 +280,10 @@ public static class Colliders {
       }
 
       case SphereCollider sphereCollider: {
-        if (!NeedsUpdate(sphereCollider.center,
-                         new Vector3(sphereCollider.radius, 0f, 0f)))
+        if (!NeedsUpdate(
+                sphereCollider.center,
+                new Vector3(sphereCollider.radius, 0f, 0f)
+            ))
           break;
         transform.localPosition = sphereCollider.center;
         var diameter = sphereCollider.radius * 2;
@@ -275,14 +292,17 @@ public static class Colliders {
       }
 
       case CapsuleCollider capsuleCollider: {
-        if (!NeedsUpdate(capsuleCollider.center,
-                         new Vector3(capsuleCollider.direction,
-                                     capsuleCollider.radius,
-                                     capsuleCollider.height)))
+        if (!NeedsUpdate(
+                capsuleCollider.center,
+                new Vector3(
+                    capsuleCollider.direction, capsuleCollider.radius,
+                    capsuleCollider.height
+                )
+            ))
           break;
         transform.localPosition = capsuleCollider.center;
-        transform.localRotation =
-            capsuleCollider.direction == 0   ? Quaternion.Euler(0, 0, 90)
+        transform.localRotation = capsuleCollider.direction == 0
+            ? Quaternion.Euler(0, 0, 90)
             : capsuleCollider.direction == 2 ? Quaternion.Euler(90, 0, 0)
                                              : Quaternion.identity;
         var diameter = capsuleCollider.radius * 2;
@@ -321,8 +341,8 @@ public static class Colliders {
     }
   }
 
-  private static void SetMaterial(GameObject gameObject, Color color,
-                                  Shader shader = null) {
+  private static void
+  SetMaterial(GameObject gameObject, Color color, Shader shader = null) {
     var meshRenderer = gameObject.GetComponent<MeshRenderer>();
     meshRenderer.shadowCastingMode =
         UnityEngine.Rendering.ShadowCastingMode.Off;

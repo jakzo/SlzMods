@@ -19,12 +19,14 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.ProgressFix.Mod), Sst.ProgressFix.BuildInfo.NAME,
     Sst.ProgressFix.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/ProgressFix/")]
+    "https://bonelab.thunderstore.io/package/jakzo/ProgressFix/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.ProgressFix {
 public static class BuildInfo {
   public const string NAME = "ProgressFix";
-  public const string DESCRIPTION = "Fixes the game progression percentage displayed in the main menu.";
+  public const string DESCRIPTION =
+      "Fixes the game progression percentage displayed in the main menu.";
 }
 }

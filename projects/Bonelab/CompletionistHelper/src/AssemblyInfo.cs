@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.CompletionistHelper.Mod), Sst.BuildInfo.NAME,
     Sst.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/CompletionistHelper/")]
+    "https://bonelab.thunderstore.io/package/jakzo/CompletionistHelper/"
+)]
 
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 

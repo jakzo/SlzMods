@@ -40,18 +40,23 @@ public class Component : IComponent {
     _stateUpdater.OnReceivedState += UpdateTimer;
   }
 
-  public void DrawHorizontal(Graphics g, LiveSplitState state, float height,
-                             Region clipRegion) {
+  public void DrawHorizontal(
+      Graphics g, LiveSplitState state, float height, Region clipRegion
+  ) {
     DrawGeneral(g, state, HorizontalWidth, height, LayoutMode.Horizontal);
   }
 
-  public void DrawVertical(System.Drawing.Graphics g, LiveSplitState state,
-                           float width, Region clipRegion) {
+  public void DrawVertical(
+      System.Drawing.Graphics g, LiveSplitState state, float width,
+      Region clipRegion
+  ) {
     DrawGeneral(g, state, width, VerticalHeight, LayoutMode.Vertical);
   }
 
-  private void DrawGeneral(Graphics g, LiveSplitState state, float width,
-                           float height, LayoutMode mode) {
+  private void DrawGeneral(
+      Graphics g, LiveSplitState state, float width, float height,
+      LayoutMode mode
+  ) {
     _progressLabel.HorizontalAlignment = StringAlignment.Near;
     _progressLabel.VerticalAlignment = StringAlignment.Far;
     _progressLabel.X = 4;
@@ -69,14 +74,16 @@ public class Component : IComponent {
   public string ComponentName { get => NAME; }
 
   public Control GetSettingsControl(LayoutMode mode) => null;
-  public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document) =>
-      document.CreateElement("Settings");
+  public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document
+  ) => document.CreateElement("Settings");
   public void SetSettings(System.Xml.XmlNode settings) {}
 
   public void Dispose() { _stateUpdater.Dispose(); }
 
-  public void Update(IInvalidator invalidator, LiveSplitState livesplitState,
-                     float width, float height, LayoutMode mode) {
+  public void Update(
+      IInvalidator invalidator, LiveSplitState livesplitState, float width,
+      float height, LayoutMode mode
+  ) {
     UpdateEventList();
 
     if (_isDirty) {
@@ -99,7 +106,8 @@ public class Component : IComponent {
                 $"Unlocks: {state.capsulesUnlocked} / {state.capsulesTotal}",
                 $"Achievements: {state.achievementsUnlocked} / {state.achievementsTotal}",
                 $"Game Progress: {(state.percentageComplete * 100f):N1}%",
-              }));
+              })
+      );
       invalidator.Invalidate(0, 0, width, height);
     }
   }
@@ -118,10 +126,10 @@ public class Component : IComponent {
     _timer.CurrentState.IsGameTimePaused = receivedState.isLoading;
 
     var hasLevelChanged = receivedState.levelBarcode != null &&
-                          receivedState.levelBarcode != _prevLevelBarcode;
+        receivedState.levelBarcode != _prevLevelBarcode;
     if (isTimerStarted) {
-      var isSplittableLevelChange =
-          hasLevelChanged && !Levels.IsMenu(receivedState.levelBarcode) &&
+      var isSplittableLevelChange = hasLevelChanged &&
+          !Levels.IsMenu(receivedState.levelBarcode) &&
           (!receivedState.beatGame ||
            receivedState.levelBarcode != Levels.Barcodes.HUB);
       var hasArenaChallengeCompleted = receivedState.arenaJustCompleted != null;

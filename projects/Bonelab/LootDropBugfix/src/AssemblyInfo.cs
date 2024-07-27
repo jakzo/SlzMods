@@ -19,12 +19,14 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.LootDropBugfix.Mod), Sst.LootDropBugfix.BuildInfo.NAME,
     Sst.LootDropBugfix.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/LootDropBugfix/")]
+    "https://bonelab.thunderstore.io/package/jakzo/LootDropBugfix/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.LootDropBugfix {
 public static class BuildInfo {
   public const string NAME = "LootDropBugfix";
-  public const string DESCRIPTION = "Fixes bug where dropped loot sometimes does not spawn.";
+  public const string DESCRIPTION =
+      "Fixes bug where dropped loot sometimes does not spawn.";
 }
 }

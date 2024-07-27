@@ -43,12 +43,14 @@ static class CapsuleTracker {
       return;
 
     Unlocked.Add(id);
-    OnUnlock?.Invoke(id,
-                     AssetWarehouse.Instance.GetCrate(new Barcode(id))?.Title);
+    OnUnlock?.Invoke(
+        id, AssetWarehouse.Instance.GetCrate(new Barcode(id))?.Title
+    );
   }
 
-  [HarmonyPatch(typeof(PlayerUnlocks),
-                nameof(PlayerUnlocks.IncrementUnlockForBarcode))]
+  [HarmonyPatch(
+      typeof(PlayerUnlocks), nameof(PlayerUnlocks.IncrementUnlockForBarcode)
+  )]
   class PlayerUnlocks_IncrementUnlockForBarcode_Patch {
     [HarmonyPostfix()]
     internal static void Postfix(string barcode) {

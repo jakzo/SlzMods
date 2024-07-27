@@ -5,5 +5,6 @@ using UnityEngine;
 
 var rigManager =
     GameObject.Find("[RigManager (Blank)]").GetComponent<SLZ.Rig.RigManager>();
-Sst.Utilities.Collider.VisualizeAllIn(rigManager.gameObject,
-                                      Sst.Utilities.Bonelab.HighlightShader);
+Sst.Utilities.Collider.VisualizeAllIn(
+    rigManager.gameObject, Sst.Utilities.Bonelab.HighlightShader
+);

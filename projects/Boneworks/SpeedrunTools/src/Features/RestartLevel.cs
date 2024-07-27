@@ -19,8 +19,8 @@ class RestartLevel : Feature {
   private void SetLevelLocked(bool levelLocked) {
     if (levelLocked) {
       s_lockedLevel = Mod.GameState.currentSceneIdx;
-      MelonLogger.Msg(
-          "Locking level (will now restart when finishing instead of going to next level)");
+      MelonLogger.Msg("Locking level (will now restart when finishing " +
+                      "instead of going to next level)");
     } else {
       s_lockedLevel = null;
       MelonLogger.Msg("Unlocking level");
@@ -34,8 +34,9 @@ class RestartLevel : Feature {
       SetLevelLocked(false);
   }
 
-  [HarmonyPatch(typeof(BoneworksSceneManager),
-                nameof(BoneworksSceneManager.LoadNext))]
+  [HarmonyPatch(
+      typeof(BoneworksSceneManager), nameof(BoneworksSceneManager.LoadNext)
+  )]
   class BoneworksSceneManager_LoadNext_Patch {
     [HarmonyPrefix()]
     internal static bool Prefix() {

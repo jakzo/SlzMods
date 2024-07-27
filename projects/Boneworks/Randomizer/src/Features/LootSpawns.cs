@@ -20,8 +20,9 @@ public class LootSpawns : Feature {
   public override void Initialize() {
     Instance = this;
 
-    _prefMode = Mod.PrefCategory.CreateEntry("lootSpawnMode", Mode.PURE_RANDOM,
-                                             "Loot spawn mode");
+    _prefMode = Mod.PrefCategory.CreateEntry(
+        "lootSpawnMode", Mode.PURE_RANDOM, "Loot spawn mode"
+    );
   }
 
   private void UpdateSpawnablesListIfNecessary() {
@@ -39,12 +40,14 @@ public class LootSpawns : Feature {
         _spawnablesByCategory[CategoryFilters.All].Add(spawnable);
         if (spawnable.category == CategoryFilters.All)
           continue;
-        if (_spawnablesByCategory.TryGetValue(spawnable.category,
-                                              out var categorySpawnables)) {
+        if (_spawnablesByCategory.TryGetValue(
+                spawnable.category, out var categorySpawnables
+            )) {
           categorySpawnables.Add(spawnable);
         } else {
-          _spawnablesByCategory.Add(spawnable.category,
-                                    new List<SpawnableObject>() { spawnable });
+          _spawnablesByCategory.Add(
+              spawnable.category, new List<SpawnableObject>() { spawnable }
+          );
         }
       }
     }
@@ -57,12 +60,13 @@ public class LootSpawns : Feature {
     UpdateSpawnablesListIfNecessary();
 
     var category = _prefMode.Value == Mode.SAME_CATEGORY ? spawnable.category
-                   : _prefMode.Value == Mode.PURE_RANDOM ? CategoryFilters.All
+        : _prefMode.Value == Mode.PURE_RANDOM            ? CategoryFilters.All
                                                          : CategoryFilters.All;
     _spawnablesByCategory.TryGetValue(category, out var spawnableChoices);
     if (spawnableChoices == null) {
-      MelonLogger.Warning("Spawnable category does not exist: " +
-                          spawnable.category);
+      MelonLogger.Warning(
+          "Spawnable category does not exist: " + spawnable.category
+      );
       return null;
     }
 
@@ -72,12 +76,14 @@ public class LootSpawns : Feature {
   [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
   class LootTableData_GetLootItem_Patch {
     [HarmonyPostfix()]
-    internal static void Postfix(LootTableData __instance,
-                                 ref SpawnableObject __result) {
+    internal static void
+    Postfix(LootTableData __instance, ref SpawnableObject __result) {
       var randomLoot = Instance.GetRandomizedLoot(__result);
       if (randomLoot != null) {
-        Dbg.Log("Randomizing LootTableData.GetLootItem from", __result.title,
-                "to", randomLoot.title);
+        Dbg.Log(
+            "Randomizing LootTableData.GetLootItem from", __result.title, "to",
+            randomLoot.title
+        );
         __result = randomLoot;
       }
     }

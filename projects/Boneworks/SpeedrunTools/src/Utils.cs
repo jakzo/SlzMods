@@ -109,14 +109,19 @@ public class Hotkeys {
             .Select(type => $"Controller ({type})")
             .Select(name => {
               try {
-                return controllerObjects.First(controller =>
-                                                   controller.name == name);
+                return controllerObjects.First(
+                    controller => controller.name == name
+                );
               } catch {
                 var foundControllers = string.Join(
-                    "", controllerObjects.Select(controller =>
-                                                     $"\n- {controller.name}"));
+                    "",
+                    controllerObjects.Select(
+                        controller => $"\n- {controller.name}"
+                    )
+                );
                 MelonLogger.Warning(
-                    $"Could not find {name}. Hotkeys will not work until reloading the level. Found controllers are:{foundControllers}");
+                    $"Could not find {name}. Hotkeys will not work until reloading the level. Found controllers are:{foundControllers}"
+                );
                 return new BaseController();
               }
             })
@@ -135,10 +140,13 @@ public class Hotkeys {
     if (_controllers == null || _controllers.Length < 2)
       return;
 
-    var entries = _hotkeys
-                      .Select((entry, i) => (i, entry.Key, entry.Value.Item1,
-                                             entry.Value.Item2))
-                      .ToArray();
+    var entries =
+        _hotkeys
+            .Select(
+                (entry, i) =>
+                    (i, entry.Key, entry.Value.Item1, entry.Value.Item2)
+            )
+            .ToArray();
     foreach (var (i, hotkey, feature, isDown) in entries) {
       if (Mod.IsRunActive && !feature.IsAllowedInRuns)
         continue;

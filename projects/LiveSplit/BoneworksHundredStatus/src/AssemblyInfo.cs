@@ -13,10 +13,11 @@ using LiveSplit.UI.Components;
 [assembly:AssemblyCulture("")]
 [assembly:ComVisible(false)]
 //[assembly: Guid("")]
-[assembly:AssemblyVersion(
-    Sst.Livesplit.BoneworksHundredStatus.AppVersion.Value)]
+[assembly:AssemblyVersion(Sst.Livesplit.BoneworksHundredStatus.AppVersion.Value
+)]
 [assembly:AssemblyFileVersion(
-    Sst.Livesplit.BoneworksHundredStatus.AppVersion.Value)]
+    Sst.Livesplit.BoneworksHundredStatus.AppVersion.Value
+)]
 [assembly:NeutralResourcesLanguage("en")]
 [assembly:ComponentFactory(typeof(LiveSplit.UI.Components.Factory))]
 

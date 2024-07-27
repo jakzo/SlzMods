@@ -30,7 +30,8 @@ class BlockRigPrefab {
     var head = CreateGameObject("Head", root);
     Utilities.Geometry.AddCubeMesh(
         ref head, HEAD_WIDTH * -0.5f, HEAD_WIDTH * 0.5f, HEAD_HEIGHT * -0.5f,
-        HEAD_HEIGHT * 0.5f, HEAD_DEPTH * -1.0f, HEAD_DEPTH * 0.0f);
+        HEAD_HEIGHT * 0.5f, HEAD_DEPTH * -1.0f, HEAD_DEPTH * 0.0f
+    );
     return head;
   }
 
@@ -40,7 +41,8 @@ class BlockRigPrefab {
     Utilities.Geometry.AddCubeMesh(
         ref controller, CONTROLLER_WIDTH * -0.5f, CONTROLLER_WIDTH * 0.5f,
         CONTROLLER_HEIGHT * -0.4f, CONTROLLER_HEIGHT * 0.6f,
-        CONTROLLER_DEPTH * -0.5f, CONTROLLER_DEPTH * 0.5f);
+        CONTROLLER_DEPTH * -0.5f, CONTROLLER_DEPTH * 0.5f
+    );
     return controller;
   }
 
@@ -81,8 +83,9 @@ class BlockRig : GhostRig {
       var material = gameObject.GetComponent<MeshRenderer>().material;
       material.SetFloat("_Mode", 3);
       material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-      material.SetInt("_DstBlend",
-                      (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+      material.SetInt(
+          "_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha
+      );
       material.SetInt("_ZWrite", 0);
       material.DisableKeyword("_ALPHATEST_ON");
       material.DisableKeyword("_ALPHABLEND_ON");
@@ -103,27 +106,33 @@ class BlockRig : GhostRig {
   public override void SetState(Bwr.Frame frame1, Bwr.Frame frame2, float t) {
     _head.position = Vector3.Lerp(
         GhostRig.ToUnityVec3(frame1.PlayerState.Value.HeadPosition),
-        GhostRig.ToUnityVec3(frame2.PlayerState.Value.HeadPosition), t);
+        GhostRig.ToUnityVec3(frame2.PlayerState.Value.HeadPosition), t
+    );
     _head.rotation = Quaternion.Lerp(
         GhostRig.ToUnityQuaternion(
             frame1.VrInput.Value.Headset.Transform.RotationEuler,
-            frame1.PlayerState.Value.RootRotation),
+            frame1.PlayerState.Value.RootRotation
+        ),
         GhostRig.ToUnityQuaternion(
             frame2.VrInput.Value.Headset.Transform.RotationEuler,
-            frame2.PlayerState.Value.RootRotation),
-        t);
+            frame2.PlayerState.Value.RootRotation
+        ),
+        t
+    );
     foreach (var (controller, handCur, handNext) in new[] {
                (_controllerLeft, frame1.PlayerState.Value.LeftHand,
                 frame2.PlayerState.Value.LeftHand),
                (_controllerRight, frame1.PlayerState.Value.RightHand,
                 frame2.PlayerState.Value.RightHand),
              }) {
-      controller.position =
-          Vector3.Lerp(GhostRig.ToUnityVec3(handCur.Position),
-                       GhostRig.ToUnityVec3(handNext.Position), t);
+      controller.position = Vector3.Lerp(
+          GhostRig.ToUnityVec3(handCur.Position),
+          GhostRig.ToUnityVec3(handNext.Position), t
+      );
       controller.rotation = Quaternion.Lerp(
           GhostRig.ToUnityQuaternion(handCur.RotationEuler),
-          GhostRig.ToUnityQuaternion(handNext.RotationEuler), t);
+          GhostRig.ToUnityQuaternion(handNext.RotationEuler), t
+      );
     }
   }
 }

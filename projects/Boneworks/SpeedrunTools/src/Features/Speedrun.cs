@@ -66,7 +66,8 @@ class Speedrun : Feature {
           MelonLogger.Msg("Loading custom save");
           _playerPrefsToRestoreOnLoad = Data_Manager.Instance.data_player;
           Speedruns.SaveUtilities.RestoreSaveFileResource(
-              Mode.CurrentMode.saveResourceFilename);
+              Mode.CurrentMode.saveResourceFilename
+          );
           Speedruns.SaveUtilities.LoadData();
           _didReset = true;
         } else if (Mode.CurrentMode.resetSaveOnEnable) {
@@ -78,11 +79,14 @@ class Speedrun : Feature {
         MelonLogger.Msg($"{Mode.CurrentMode.name} mode enabled");
       } else {
         var reasonMessages = string.Join(
-            "", illegitimacyReasons.Select(reason => $"\n» {reason.Value}"));
+            "", illegitimacyReasons.Select(reason => $"\n» {reason.Value}")
+        );
         UpdateMainMenuText(
-            $"{ColorText("Could not enable speedrun mode", Mode.DISABLED)} because:{reasonMessages}");
+            $"{ColorText("Could not enable speedrun mode", Mode.DISABLED)} because:{reasonMessages}"
+        );
         MelonLogger.Msg(
-            $"Could not enable speedrun mode because:{reasonMessages}");
+            $"Could not enable speedrun mode because:{reasonMessages}"
+        );
       }
     } else {
       DisableSpeedrunMode();
@@ -152,10 +156,12 @@ class Speedrun : Feature {
       var text = string.Join(
           "\n",
           new string[] {
-            ColorText(Mode.CurrentMode == Mode.DISABLED
-                          ? "Speedrun mode disabled"
-                          : $"{Mode.CurrentMode.name} mode enabled",
-                      Mode.CurrentMode),
+            ColorText(
+                Mode.CurrentMode == Mode.DISABLED
+                    ? "Speedrun mode disabled"
+                    : $"{Mode.CurrentMode.name} mode enabled",
+                Mode.CurrentMode
+            ),
             $"» You are{(Mode.CurrentMode == Mode.DISABLED ? " not" : "")} allowed to submit runs to leaderboard",
             $"» Practice features are {(Mode.CurrentMode == Mode.DISABLED ? "enabled" : "disabled")}",
             $"» Press A + B on both controllers at once (or CTRL + S) to toggle speedrun mode",
@@ -163,11 +169,12 @@ class Speedrun : Feature {
                 ? "» Press CTRL + N for Newgame+ runs or CTRL + H for 100% runs"
                 : null,
             _didReset ? Mode.CurrentMode == Mode.NEWGAME_PLUS
-                            ? "» Completed save was loaded"
-                            : "» Save state was reset"
+                    ? "» Completed save was loaded"
+                    : "» Save state was reset"
                       : null,
           }
-              .Where(line => line != null));
+              .Where(line => line != null)
+      );
       UpdateMainMenuText(text);
     }
     _didReset = false;
@@ -194,15 +201,19 @@ class Speedrun : Feature {
     _overlay.Show(string.Join(
         "\n",
         new string[] {
-          ColorText(Mode.CurrentMode == Mode.DISABLED
-                        ? "Speedrun mode disabled"
-                        : $"{Mode.CurrentMode.name} mode enabled",
-                    Mode.CurrentMode),
+          ColorText(
+              Mode.CurrentMode == Mode.DISABLED
+                  ? "Speedrun mode disabled"
+                  : $"{Mode.CurrentMode.name} mode enabled",
+              Mode.CurrentMode
+          ),
           $"v{BuildInfo.Version}{debugStr}",
           duration?.ToString(
-              $"{(duration.Value.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff"),
+              $"{(duration.Value.Hours >= 1 ? "h\\:m" : "")}m\\:ss\\.ff"
+          ),
         }
-            .Where(line => line != null)));
+            .Where(line => line != null)
+    ));
   }
 
   public override void OnLevelStart(int sceneIdx) {
@@ -237,9 +248,10 @@ class Speedrun : Feature {
           .ContinueWith(o => HideOverlayIfNotLoading());
   }
 
-  [HarmonyPatch(typeof(BoneworksSceneManager),
-                nameof(BoneworksSceneManager.LoadScene),
-                new System.Type[] { typeof(string) })]
+  [HarmonyPatch(
+      typeof(BoneworksSceneManager), nameof(BoneworksSceneManager.LoadScene),
+      new System.Type[] { typeof(string) }
+  )]
   class BoneworksSceneManager_LoadScene_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(string sceneName) {
@@ -256,8 +268,9 @@ class Speedrun : Feature {
     }
   }
 
-  [HarmonyPatch(typeof(GameControl_ThroneRoom),
-                nameof(GameControl_ThroneRoom.NEXTLEVEL))]
+  [HarmonyPatch(
+      typeof(GameControl_ThroneRoom), nameof(GameControl_ThroneRoom.NEXTLEVEL)
+  )]
   class ThroneRoom_NEXTLEVEL_Patch {
     [HarmonyPrefix()]
     internal static void Postfix() {

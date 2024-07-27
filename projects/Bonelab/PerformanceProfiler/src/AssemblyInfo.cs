@@ -18,7 +18,8 @@ using System.Runtime.InteropServices;
 [assembly:NeutralResourcesLanguage("en")]
 [assembly:MelonInfo(
     typeof(Sst.PerformanceProfiler.Mod), Sst.PerformanceProfiler.BuildInfo.NAME,
-    Sst.PerformanceProfiler.AppVersion.Value, Sst.Metadata.AUTHOR, "")]
+    Sst.PerformanceProfiler.AppVersion.Value, Sst.Metadata.AUTHOR, ""
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.PerformanceProfiler {

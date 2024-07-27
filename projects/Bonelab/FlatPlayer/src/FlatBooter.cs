@@ -49,8 +49,9 @@ public class FlatBooter : MelonMod {
     }
   }
 
-  [HarmonyPatch(typeof(ControllerActionMap),
-                nameof(ControllerActionMap.Refresh))]
+  [HarmonyPatch(
+      typeof(ControllerActionMap), nameof(ControllerActionMap.Refresh)
+  )]
   internal static class ControllerActionMap_Refresh {
     [HarmonyPrefix]
     private static bool Prefix(ControllerActionMap __instance) {
@@ -95,8 +96,7 @@ public class FlatBooter : MelonMod {
       var xrApi = typeof(XRApi);
       return xrApi.GetNestedType(STEAM_CLASS_NAME)
                  ?.GetMethod(STEAM_METHOD_NAME) ??
-             xrApi.GetNestedType(OCULUS_CLASS_NAME)
-                 ?.GetMethod(OCULUS_METHOD_NAME);
+          xrApi.GetNestedType(OCULUS_CLASS_NAME)?.GetMethod(OCULUS_METHOD_NAME);
     }
 
     [HarmonyPrefix]
@@ -106,9 +106,11 @@ public class FlatBooter : MelonMod {
     }
   }
 
-  [HarmonyPatch(typeof(InputDevice), nameof(InputDevice.TryGetFeatureValue),
-                new Type[] { typeof(InputFeatureUsage<bool>), typeof(bool) },
-                new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out })]
+  [HarmonyPatch(
+      typeof(InputDevice), nameof(InputDevice.TryGetFeatureValue),
+      new Type[] { typeof(InputFeatureUsage<bool>), typeof(bool) },
+      new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out }
+  )]
   internal static class XRDevice_IsPresent {
     [HarmonyPrefix]
     private static bool Prefix(InputFeatureUsage<bool> usage, out bool value) {
@@ -117,9 +119,10 @@ public class FlatBooter : MelonMod {
     }
   }
 
-  [HarmonyPatch(typeof(SLZ.Marrow.Input.XRDevice),
-                nameof(SLZ.Marrow.Input.XRDevice.IsTracking),
-                MethodType.Getter)]
+  [HarmonyPatch(
+      typeof(SLZ.Marrow.Input.XRDevice),
+      nameof(SLZ.Marrow.Input.XRDevice.IsTracking), MethodType.Getter
+  )]
   internal static class XRDevice_IsTracking {
     [HarmonyPrefix]
     public static bool Prefix(ref bool __result) {
@@ -128,8 +131,9 @@ public class FlatBooter : MelonMod {
     }
   }
 
-  [HarmonyPatch(typeof(InputSubsystemManager),
-                nameof(InputSubsystemManager.HasFocus))]
+  [HarmonyPatch(
+      typeof(InputSubsystemManager), nameof(InputSubsystemManager.HasFocus)
+  )]
   internal static class InputSubsystemManager_HasFocus {
     [HarmonyPrefix]
     public static bool Prefix(ref bool __result) {

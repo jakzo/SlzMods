@@ -19,12 +19,13 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.$$NAME$$.Mod), Sst.$$NAME$$.BuildInfo.NAME,
     Sst.$$NAME$$.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://$$GAME_LOWER$$.thunderstore.io/package/jakzo/$$NAME$$/")]
+    "https://$$GAME_LOWER$$.thunderstore.io/package/jakzo/$$NAME$$/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
-namespace Sst.$$NAME$$ {
+namespace Sst.$$NAME$$;
+
 public static class BuildInfo {
   public const string NAME = "$$NAME$$";
   public const string DESCRIPTION = "$$DESCRIPTION$$";
-}
 }

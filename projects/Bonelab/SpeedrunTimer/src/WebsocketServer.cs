@@ -128,29 +128,34 @@ public class WebsocketServer {
     }
   }
 
-  private bool IsClientHandshake(byte[] request) =>
-      Regex.IsMatch(Encoding.UTF8.GetString(request, 0, 4), "^GET\\s",
-                    RegexOptions.IgnoreCase);
+  private bool IsClientHandshake(byte[] request) => Regex.IsMatch(
+      Encoding.UTF8.GetString(request, 0, 4), "^GET\\s", RegexOptions.IgnoreCase
+  );
 
   private void RespondToClientHandshake(byte[] request, Client client) {
     var stream = client.TcpClient.GetStream();
     var requestString = Encoding.UTF8.GetString(request);
-    var response = Encoding.UTF8.GetBytes(string.Join("\r\n", new[] {
-      "HTTP/1.1 101 Switching Protocols",
-      "Connection: Upgrade",
-      "Upgrade: websocket",
-      $"Sec-WebSocket-Accept: {GenerateWebsocketAcceptToken(requestString)}",
-      "",
-      "",
-    }));
+    var response = Encoding.UTF8.GetBytes(string.Join(
+        "\r\n",
+        new[] {
+          "HTTP/1.1 101 Switching Protocols",
+          "Connection: Upgrade",
+          "Upgrade: websocket",
+          $"Sec-WebSocket-Accept: {GenerateWebsocketAcceptToken(requestString)}",
+          "",
+          "",
+        }
+    ));
     stream.Write(response, 0, response.Length);
     OnConnect(client);
   }
 
   private string GenerateWebsocketAcceptToken(string request) {
     var swk = Regex
-                  .Match(request, "\\n\\s*Sec-WebSocket-Key\\s*:(.*)",
-                         RegexOptions.IgnoreCase)
+                  .Match(
+                      request, "\\n\\s*Sec-WebSocket-Key\\s*:(.*)",
+                      RegexOptions.IgnoreCase
+                  )
                   .Groups[1]
                   .Value.Trim();
     var swka = swk + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
@@ -172,9 +177,12 @@ public class WebsocketServer {
       offset = 4;
     } else if (msglen == 127) {
       msglen = BitConverter.ToUInt64(
-          new byte[] { request[9], request[8], request[7], request[6],
-                       request[5], request[4], request[3], request[2] },
-          0);
+          new byte[] {
+            request[9], request[8], request[7], request[6], request[5],
+            request[4], request[3], request[2]
+          },
+          0
+      );
       offset = 10;
     }
 

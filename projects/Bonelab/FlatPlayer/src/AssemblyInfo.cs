@@ -16,9 +16,10 @@ using System.Runtime.InteropServices;
 [assembly:AssemblyVersion(Sst.FlatPlayer.AppVersion.Value)]
 [assembly:AssemblyFileVersion(Sst.FlatPlayer.AppVersion.Value)]
 [assembly:NeutralResourcesLanguage("en")]
-[assembly:MelonInfo(typeof(Sst.FlatPlayer.FlatBooter),
-                    Sst.FlatPlayer.BuildInfo.NAME,
-                    Sst.FlatPlayer.AppVersion.Value, Sst.Metadata.AUTHOR, "")]
+[assembly:MelonInfo(
+    typeof(Sst.FlatPlayer.FlatBooter), Sst.FlatPlayer.BuildInfo.NAME,
+    Sst.FlatPlayer.AppVersion.Value, Sst.Metadata.AUTHOR, ""
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.FlatPlayer {

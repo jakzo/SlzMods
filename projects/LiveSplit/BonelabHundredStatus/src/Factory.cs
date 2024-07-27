@@ -10,13 +10,14 @@ public class Factory : IComponentFactory {
 
   public ComponentCategory Category => ComponentCategory.Other;
 
-  public IComponent Create(LiveSplitState state) =>
-      new Sst.Livesplit.BonelabHundredStatus.Component(state);
+  public IComponent Create(LiveSplitState state
+  ) => new Sst.Livesplit.BonelabHundredStatus.Component(state);
 
   public string UpdateName => ComponentName;
 
   public string UpdateURL =>
-      "https://raw.githubusercontent.com/jakzo/SlzMods/main/projects/LiveSplit/BonelabHundredStatus";
+      "https://raw.githubusercontent.com/jakzo/SlzMods/main/projects/" +
+      "LiveSplit/BonelabHundredStatus";
 
   public string XMLURL =>
       $"{UpdateURL}/update.LiveSplit.BonelabHundredStatus.xml";

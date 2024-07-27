@@ -50,9 +50,12 @@ static class AchievementTracker {
 
   private static async Task SaveUnlockedToFile() {
     byte[] bytes = Encoding.UTF8.GetBytes(string.Join("\n", Unlocked));
-    using (var stream = new FileStream(SAVE_PATH, FileMode.Create,
-                                       FileAccess.Write, FileShare.Read,
-                                       bufferSize: 4096, useAsync: true)) {
+    using (
+        var stream = new FileStream(
+            SAVE_PATH, FileMode.Create, FileAccess.Write, FileShare.Read,
+            bufferSize: 4096, useAsync: true
+        )
+    ) {
       await stream.WriteAsync(bytes, 0, bytes.Length);
     };
   }

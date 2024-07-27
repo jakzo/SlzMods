@@ -82,8 +82,8 @@ public class HandTracker {
 
   private int _logIndex = 0;
   private static TMPro.TextMeshPro _wristLog;
-  private string LogString(params object[] messageParts) =>
-      string.Join(" ", messageParts.Select(part => part.ToString()));
+  private string LogString(params object[] messageParts
+  ) => string.Join(" ", messageParts.Select(part => part.ToString()));
   internal void Log(params object[] messageParts) {
     var prefix = Opts.isLeft ? "[L] " : "[R] ";
     Mod.Instance.LoggerInstance.Msg(prefix + LogString(messageParts));
@@ -148,8 +148,7 @@ public class HandTracker {
     if (ProxyController.IsTracking) {
 
       ProxyController.Rotation = HandState.Rotation * Opts.handRotationOffset;
-      ProxyController.Position =
-          HandState.Position +
+      ProxyController.Position = HandState.Position +
           ProxyController.Rotation * Opts.handPositionOffset;
 
       var ovrHand =
@@ -230,11 +229,12 @@ public class HandTracker {
     }
   }
 
-  private float CalculateFingerCurl(OVRPlugin.BoneId[] fingerJoints,
-                                    float maxRotation) {
+  private float
+  CalculateFingerCurl(OVRPlugin.BoneId[] fingerJoints, float maxRotation) {
     var totalRotation = 0f;
     var prevJointRot = ToQuaternion(
-        _handState.BoneRotations[(int)OVRPlugin.BoneId.Hand_WristRoot]);
+        _handState.BoneRotations[(int)OVRPlugin.BoneId.Hand_WristRoot]
+    );
     for (var i = 0; i < fingerJoints.Length; i++) {
       var jointRotation =
           ToQuaternion(_handState.BoneRotations[(int)fingerJoints[i]]);
@@ -268,8 +268,8 @@ public class HandTracker {
   }
 
   // TODO: Replace with utils
-  private Quaternion ToQuaternion(OVRPlugin.Quatf quatf) =>
-      new Quaternion(quatf.x, quatf.y, quatf.z, quatf.w);
+  private Quaternion ToQuaternion(OVRPlugin.Quatf quatf
+  ) => new Quaternion(quatf.x, quatf.y, quatf.z, quatf.w);
 
   private void UpdateLocomotion(Vector2? axis) {
     if (Opts.isLeft == Utils.IsLocoControllerLeft() && axis.HasValue) {
@@ -349,8 +349,9 @@ public class HandTracker {
       var rot = _handState.BoneRotations[(int)boneId];
       jointRot *=
           Utils.FromFlippedXQuatf(_handState.BoneRotations[(int)boneId]);
-      jointPos += jointRot * Utils.FromFlippedXVector3f(
-                                 _skeleton.Bones[(int)boneId].Pose.Position);
+      jointPos += jointRot *
+          Utils.FromFlippedXVector3f(_skeleton.Bones[(int)boneId].Pose.Position
+          );
     }
     return Opts.isLeft ? jointPos : -jointPos;
   }
@@ -386,8 +387,10 @@ public class HandTracker {
         menu.Deactivate();
       } else {
         var physicsRig = rigManager.physicsRig;
-        menu.Activate(rigManager.ControllerRig.m_head, physicsRig.m_chest,
-                      GetUiControllerInput(rigController), rigController);
+        menu.Activate(
+            rigManager.ControllerRig.m_head, physicsRig.m_chest,
+            GetUiControllerInput(rigController), rigController
+        );
       }
       return;
     }

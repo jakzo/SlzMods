@@ -19,13 +19,14 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.ColliderScope.Mod), Sst.ColliderScope.BuildInfo.NAME,
     Sst.ColliderScope.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/ColliderScope/")]
+    "https://bonelab.thunderstore.io/package/jakzo/ColliderScope/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.ColliderScope {
 public static class BuildInfo {
   public const string NAME = "ColliderScope";
-  public const string DESCRIPTION =
-      "Shows the shape of physical colliders and hitboxes. Kinda like X-ray vision.";
+  public const string DESCRIPTION = "Shows the shape of physical colliders " +
+                                    "and hitboxes. Kinda like X-ray vision.";
 }
 }

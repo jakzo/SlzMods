@@ -67,12 +67,12 @@ string.Join("\n", allTags);
 var unlockTags =
     SLZ.Data.DataManager.Instance._activeSave.Unlocks.Unlocks._entries.ToArray()
         .SelectMany(
-            entry =>
-                entry.key == null
-                    ? new string[] {}
-                    : SLZ.Marrow.Warehouse.AssetWarehouse.Instance
-                          .GetCrate(new SLZ.Marrow.Warehouse.Barcode(entry.key))
-                          .Tags.ToArray())
+            entry => entry.key == null
+                ? new string[] {}
+                : SLZ.Marrow.Warehouse.AssetWarehouse.Instance
+                      .GetCrate(new SLZ.Marrow.Warehouse.Barcode(entry.key))
+                      .Tags.ToArray()
+        )
         .ToHashSet()
         .ToArray();
 Array.Sort(unlockTags);

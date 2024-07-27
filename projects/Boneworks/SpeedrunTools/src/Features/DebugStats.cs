@@ -20,8 +20,9 @@ class DebugStats : Feature {
   public DebugStats() { IsDev = IsEnabledByDefault = true; }
 
   public override void OnApplicationStart() {
-    _ipcServer = new Common.Ipc.Server(Common.Boneworks.DebugStats.NAMED_PIPE,
-                                       new Logger());
+    _ipcServer = new Common.Ipc.Server(
+        Common.Boneworks.DebugStats.NAMED_PIPE, new Logger()
+    );
     _ipcServer.OnClientConnected += stream => { Dbg.Log("OnClientConnected"); };
     _ipcServer.OnClientDisconnected +=
         stream => { Dbg.Log("OnClientDisconnected"); };
@@ -35,7 +36,8 @@ class DebugStats : Feature {
         Utilities.Unity
             .FindAllInDescendants(
                 Mod.GameState.rigManager.gameWorldSkeletonRig.gameObject,
-                "WeaponReciever")
+                "WeaponReciever"
+            )
             .Select(wr => wr.GetComponent<HandWeaponSlotReciever>())
             .ToArray();
   }
@@ -74,22 +76,28 @@ class DebugStats : Feature {
       return false;
     var magazines = new List<Magazine>();
     Utilities.Unity.FindDescendantComponentsOfType<Magazine>(
-        ref magazines, magSocket.transform, true);
+        ref magazines, magSocket.transform, true
+    );
     var magazine = magazines.FirstOrDefault(
-        mag => mag != magSocket._magazinePlug?.magazine);
+        mag => mag != magSocket._magazinePlug?.magazine
+    );
     if (!magazine)
       return false;
     var colliders = new List<Collider>();
     Utilities.Unity.FindDescendantComponentsOfType<Collider>(
-        ref colliders, magazine.transform, true);
+        ref colliders, magazine.transform, true
+    );
     var playerColliders = physicsRig.m_chest.GetComponents<Collider>();
     return !playerColliders.Any(
-        playerCol => colliders.Any(magCol => Physics.ComputePenetration(
-                                       magCol, magCol.transform.position,
-                                       magCol.transform.rotation, playerCol,
-                                       playerCol.transform.position,
-                                       playerCol.transform.rotation,
-                                       out var direction, out var distance)));
+        playerCol => colliders.Any(
+            magCol => Physics.ComputePenetration(
+                magCol, magCol.transform.position, magCol.transform.rotation,
+                playerCol, playerCol.transform.position,
+                playerCol.transform.rotation, out var direction,
+                out var distance
+            )
+        )
+    );
   }
 
   class Logger : Common.Ipc.Logger {

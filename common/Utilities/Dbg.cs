@@ -7,9 +7,10 @@ public class Dbg {
 
   public static void Init(string prefCategoryId) {
     var category = MelonPreferences.CreateCategory(prefCategoryId);
-    _prefPrintDebugLogs =
-        category.CreateEntry("printDebugLogs", false, "Print debug logs",
-                             "Print debug logs to console", false, true);
+    _prefPrintDebugLogs = category.CreateEntry(
+        "printDebugLogs", false, "Print debug logs",
+        "Print debug logs to console", false, true
+    );
   }
 
   public static void Log(params object[] data) {

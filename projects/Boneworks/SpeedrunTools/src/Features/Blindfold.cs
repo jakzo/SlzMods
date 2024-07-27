@@ -37,7 +37,8 @@ public class Blindfolder {
     var compositor = Valve.VRRenderingPackage.OpenVR.Compositor;
     if (compositor == null)
       throw new System.Exception(
-          "Failed to blindfold (could not find Steam OpenVR compositor)");
+          "Failed to blindfold (could not find Steam OpenVR compositor)"
+      );
     compositor.FadeToColor(fadeTime, 0, 0, 0, blindfolded ? 1 : 0, false);
     IsBlindfolded = blindfolded;
   }

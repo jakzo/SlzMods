@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.CheckpointVisualizer.Mod), Sst.BuildInfo.NAME,
     Sst.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/CheckpointVisualizer/")]
+    "https://bonelab.thunderstore.io/package/jakzo/CheckpointVisualizer/"
+)]
 
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 

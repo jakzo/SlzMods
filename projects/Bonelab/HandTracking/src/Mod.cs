@@ -42,9 +42,11 @@ public class Mod : MelonMod {
     var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
     _prefLoco = category.CreateEntry(
         "locomotion_type", LocomotionType.HEAD, "Locomotion type",
-        "How running is performed (either \"HEAD\" or \"HANDS\")");
-    _prefLoco.OnEntryValueChanged.Subscribe((newValue, prevValue) =>
-                                                SetupLocomotion(newValue));
+        "How running is performed (either \"HEAD\" or \"HANDS\")"
+    );
+    _prefLoco.OnEntryValueChanged.Subscribe(
+        (newValue, prevValue) => SetupLocomotion(newValue)
+    );
     SetupLocomotion(_prefLoco.Value);
 
     LevelHooks.OnLoad += nextLevel => _visibleLaserCursors.Clear();
@@ -80,8 +82,7 @@ public class Mod : MelonMod {
         ovrController = OVRInput.Controller.LTouch,
         ovrHand = OVRInput.Controller.LHand,
         handRotationOffset = Quaternion.Euler(0f, 90f, 0f) *
-                             Quaternion.Euler(0f, 0f, 95f) *
-                             Quaternion.Euler(345f, 0f, 0f),
+            Quaternion.Euler(0f, 0f, 95f) * Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(0.04f, 0.02f, 0.1f),
       });
       _locoState.Init(TrackerLeft);
@@ -95,8 +96,7 @@ public class Mod : MelonMod {
         ovrController = OVRInput.Controller.RTouch,
         ovrHand = OVRInput.Controller.RHand,
         handRotationOffset = Quaternion.Euler(275f, 0f, 0f) *
-                             Quaternion.Euler(0f, 270f, 0f) *
-                             Quaternion.Euler(345f, 0f, 0f),
+            Quaternion.Euler(0f, 270f, 0f) * Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(-0.04f, 0.02f, 0.1f),
       });
       _locoState.Init(TrackerRight);
@@ -120,12 +120,13 @@ public class Mod : MelonMod {
 
     var nonDominantTracker =
         Utils.IsLocoControllerLeft() ? TrackerRight : TrackerLeft;
-    nonDominantTracker.ProxyController.Joystick2DAxis =
-        new Vector2(0f, TrackerRight.PedalInput.HasValue
-                            ? TrackerRight.PedalInput.Value > 0f
-                                  ? TrackerRight.PedalInput ?? 0f
-                                  : TrackerLeft.PedalInput - 1f ?? 0f
-                            : 0f);
+    nonDominantTracker.ProxyController.Joystick2DAxis = new Vector2(
+        0f,
+        TrackerRight.PedalInput.HasValue ? TrackerRight.PedalInput.Value > 0f
+                ? TrackerRight.PedalInput ?? 0f
+                : TrackerLeft.PedalInput - 1f ?? 0f
+                                         : 0f
+    );
   }
 
 #if DEBUG
@@ -134,7 +135,8 @@ public class Mod : MelonMod {
       return;
     AssetWarehouse.OnReady(new Action(() => {
       var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
-          c => c.Barcode.ID == Levels.Barcodes.MONOGON_MOTORWAY);
+          c => c.Barcode.ID == Levels.Barcodes.MONOGON_MOTORWAY
+      );
       var bootstrapper =
           GameObject.FindObjectOfType<SceneBootstrapper_Bonelab>();
       var crateRef = new LevelCrateReference(crate.Barcode.ID);
@@ -156,8 +158,9 @@ public class Mod : MelonMod {
 
   // TODO: Is there no way to make a ProxyController class with its own
   // Refresh?
-  [HarmonyPatch(typeof(ControllerActionMap),
-                nameof(ControllerActionMap.Refresh))]
+  [HarmonyPatch(
+      typeof(ControllerActionMap), nameof(ControllerActionMap.Refresh)
+  )]
   internal static class ControllerActionMap_Refresh {
     [HarmonyPrefix]
     private static bool Prefix(ControllerActionMap __instance) {
@@ -175,7 +178,8 @@ public class Mod : MelonMod {
     [HarmonyPrefix]
     private static bool Prefix(OpenController __instance) {
       var tracker = Mod.Instance.GetTrackerFromProxyController(
-          Utils.XrControllerOf(__instance));
+          Utils.XrControllerOf(__instance)
+      );
       if (tracker == null || !tracker.IsTracking)
         return true;
 
@@ -258,20 +262,20 @@ public static class Utils {
   public static bool IsLocoControllerLeft() =>
       UIRig.Instance?.controlPlayer?.body_vitals?.isRightHanded ?? true;
 
-  public static Vector3 FromFlippedXVector3f(OVRPlugin.Vector3f vector) =>
-      new Vector3(-vector.x, vector.y, vector.z);
+  public static Vector3 FromFlippedXVector3f(OVRPlugin.Vector3f vector
+  ) => new Vector3(-vector.x, vector.y, vector.z);
 
-  public static Vector3 FromFlippedZVector3f(OVRPlugin.Vector3f vector) =>
-      new Vector3(vector.x, vector.y, -vector.z);
+  public static Vector3 FromFlippedZVector3f(OVRPlugin.Vector3f vector
+  ) => new Vector3(vector.x, vector.y, -vector.z);
 
-  public static Quaternion FromFlippedXQuatf(OVRPlugin.Quatf quat) =>
-      new Quaternion(quat.x, -quat.y, -quat.z, quat.w);
+  public static Quaternion FromFlippedXQuatf(OVRPlugin.Quatf quat
+  ) => new Quaternion(quat.x, -quat.y, -quat.z, quat.w);
 
-  public static XRController XrControllerOf(BaseController controller) =>
-      controller.handedness == Handedness.LEFT ? MarrowGame.xr.LeftController
+  public static XRController XrControllerOf(BaseController controller
+  ) => controller.handedness == Handedness.LEFT ? MarrowGame.xr.LeftController
       : controller.handedness == Handedness.RIGHT
-          ? MarrowGame.xr.RightController
-          : null;
+      ? MarrowGame.xr.RightController
+      : null;
 
   public static BaseController RigControllerOf(HandTracker tracker) {
     var controllerRig = LevelHooks.RigManager?.ControllerRig;
@@ -293,8 +297,10 @@ public static class Utils {
 
     [HarmonyPrefix]
     private static bool Prefix(ForcePullGrip __instance, Hand hand) {
-      if (_enableForcePull || Mod.Instance.GetTrackerFromProxyController(
-                                  XrControllerOf(hand.Controller)) == null)
+      if (_enableForcePull ||
+          Mod.Instance.GetTrackerFromProxyController(
+              XrControllerOf(hand.Controller)
+          ) == null)
         return true;
 
       Dbg.Log("ForcePullGrip.Pull was called but is disabled");

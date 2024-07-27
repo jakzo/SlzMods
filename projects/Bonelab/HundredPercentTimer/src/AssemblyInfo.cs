@@ -19,12 +19,14 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.HundredPercentTimer.Mod), Sst.HundredPercentTimer.BuildInfo.NAME,
     Sst.HundredPercentTimer.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/HundredPercentTimer/")]
+    "https://bonelab.thunderstore.io/package/jakzo/HundredPercentTimer/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.HundredPercentTimer {
 public static class BuildInfo {
   public const string NAME = "HundredPercentTimer";
-  public const string DESCRIPTION = "LiveSplit integration for timing 100% speedruns.";
+  public const string DESCRIPTION =
+      "LiveSplit integration for timing 100% speedruns.";
 }
 }

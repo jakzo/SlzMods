@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.GunGlitcher.Mod), Sst.GunGlitcher.BuildInfo.NAME,
     Sst.GunGlitcher.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/GunGlitcher/")]
+    "https://bonelab.thunderstore.io/package/jakzo/GunGlitcher/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.GunGlitcher {

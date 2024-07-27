@@ -65,8 +65,8 @@ public class Server : IDisposable {
       SendState(state);
   }
 
-  private bool IsStateDifferentFromLastSent(GameState state) =>
-      _lastSentState == null || state.isComplete != _lastSentState.isComplete
+  private bool IsStateDifferentFromLastSent(GameState state
+  ) => _lastSentState == null || state.isComplete != _lastSentState.isComplete
       || state.isLoading != _lastSentState.isLoading
       || state.levelBarcode != _lastSentState.levelBarcode
       || state.capsulesUnlocked != _lastSentState.capsulesUnlocked
@@ -98,8 +98,9 @@ public class Server : IDisposable {
       onStateCreated(state);
       SendStateIfChanged(state);
     };
-    MelonEvents.OnLateUpdate.Subscribe(onAfterUpdate,
-                                       unsubscribeOnFirstInvocation: true);
+    MelonEvents.OnLateUpdate.Subscribe(
+        onAfterUpdate, unsubscribeOnFirstInvocation: true
+    );
   }
 
   public void Dispose() { _ipcServer.Dispose(); }

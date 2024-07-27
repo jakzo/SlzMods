@@ -5,7 +5,8 @@ server.SendState(server.BuildGameState());
 
 var stream = new System.IO.Pipes.NamedPipeServerStream(
     "BonelabHundredPercent", System.IO.Pipes.PipeDirection.InOut, 10,
-    System.IO.Pipes.PipeTransmissionMode.Message);
+    System.IO.Pipes.PipeTransmissionMode.Message
+);
 stream.WaitForConnection();
 // stream.IsConnected;
 var bytes = System.Text.Encoding.UTF8.GetBytes("{\"capsulesUnlocked\":123}");

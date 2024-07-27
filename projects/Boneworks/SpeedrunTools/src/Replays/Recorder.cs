@@ -58,8 +58,9 @@ class Recorder {
     }
   }
 
-  public Recorder(Bwr.GameMode gameMode, float maxFps = 15,
-                  float maxDuration = 60 * 60 * 10) {
+  public Recorder(
+      Bwr.GameMode gameMode, float maxFps = 15, float maxDuration = 60 * 60 * 10
+  ) {
     GameMode = gameMode;
     MaxFps = maxFps;
     MaxDuration = maxDuration;
@@ -70,9 +71,10 @@ class Recorder {
     IsRecording = true;
 
     Directory.CreateDirectory(Utils.REPLAYS_DIR);
-    _fileStream =
-        new FileStream(TEMP_FILE_PATH, FileMode.Create, FileAccess.Write,
-                       FileShare.Read, 4096, useAsync: true);
+    _fileStream = new FileStream(
+        TEMP_FILE_PATH, FileMode.Create, FileAccess.Write, FileShare.Read, 4096,
+        useAsync: true
+    );
     QueueWrite(Constants.FILE_START_BYTES);
 
     _levelStartTime = Time.time;
@@ -97,7 +99,8 @@ class Recorder {
 
     var metadata = Bwr.Metadata.CreateMetadata(
         _metaBuilder, GameMode, _startTime.ToBinary(), didComplete, duration,
-        Bwr.Metadata.CreateLevelsVector(_metaBuilder, _levels.ToArray()));
+        Bwr.Metadata.CreateLevelsVector(_metaBuilder, _levels.ToArray())
+    );
     _metaBuilder.Finish(metadata.Value);
     var metadataOffset = (uint)_fileIdx;
     QueueWrite(_metaBuilder.SizedByteArray()).Wait();
@@ -112,7 +115,8 @@ class Recorder {
     var durationTs = System.TimeSpan.FromSeconds(duration);
     FilePath = Path.Combine(
         Utils.REPLAYS_DIR,
-        $"{FILENAME_PREFIXES[GameMode]}{resultText}-{_startTime:yyyy\\_MM\\_dd\\-HH\\_mm\\_ss}-{durationTs:h\\_mm\\_ss}.{Constants.REPLAY_EXTENSION}");
+        $"{FILENAME_PREFIXES[GameMode]}{resultText}-{_startTime:yyyy\\_MM\\_dd\\-HH\\_mm\\_ss}-{durationTs:h\\_mm\\_ss}.{Constants.REPLAY_EXTENSION}"
+    );
     File.Move(TEMP_FILE_PATH, FilePath);
     var replay = new Replay(FilePath);
     Features.Replay.AllReplays.Add(replay);
@@ -126,7 +130,8 @@ class Recorder {
         _metaBuilder, _levelStartTime - _relativeStartTime,
         Time.time - _levelStartTime, _prevLoadDuration,
         Mod.GameState.didPrevLevelComplete, endedSceneIdx,
-        _levelStartFrameOffset));
+        _levelStartFrameOffset
+    ));
     _loadStartTime = Time.time;
   }
 

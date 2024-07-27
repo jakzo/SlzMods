@@ -93,7 +93,7 @@ public class FlatMode {
     rightHand._xrDevice = rightHandXrDevice;
 
     var characteristics = InputDeviceCharacteristics.Controller |
-                          InputDeviceCharacteristics.TrackedDevice;
+        InputDeviceCharacteristics.TrackedDevice;
     leftController._Characteristics_k__BackingField =
         characteristics | InputDeviceCharacteristics.Left;
     rightController._Characteristics_k__BackingField =
@@ -178,8 +178,10 @@ public class FlatMode {
     if (leftHandLocked)
       leftHandGrip = Input.GetMouseButton(0);
 
-    HandleControllerInput(LeftController, leftHandGrip, leftHandLocked,
-                          leftHandDefaultPos, leftHandRot);
+    HandleControllerInput(
+        LeftController, leftHandGrip, leftHandLocked, leftHandDefaultPos,
+        leftHandRot
+    );
   }
 
   public void UpdateRightController() {
@@ -210,13 +212,16 @@ public class FlatMode {
     if (rightHandLocked)
       rightHandGrip = Input.GetMouseButton(1);
 
-    HandleControllerInput(RightController, rightHandGrip, rightHandLocked,
-                          rightHandDefaultPos, rightHandRot);
+    HandleControllerInput(
+        RightController, rightHandGrip, rightHandLocked, rightHandDefaultPos,
+        rightHandRot
+    );
   }
 
-  private void HandleControllerInput(ControllerActionMap controller,
-                                     bool isGripping, bool isLocked,
-                                     Vector3 defaultPos, Quaternion rot) {
+  private void HandleControllerInput(
+      ControllerActionMap controller, bool isGripping, bool isLocked,
+      Vector3 defaultPos, Quaternion rot
+  ) {
     controller.Grip = isGripping ? 1f : 0f;
     controller.GripButton = isGripping;
 

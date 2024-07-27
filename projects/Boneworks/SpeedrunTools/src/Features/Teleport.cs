@@ -12,8 +12,8 @@ class Teleport : Feature {
     // Set position
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
-                              s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
-                              cl.GetBButton() && cr.GetBButton(),
+          s_currentSceneIdx != Utils.SCENE_MENU_IDX && cl.GetBButton() &&
+          cr.GetBButton(),
       Handler =
           () => {
             var pos = Utils.GetPlayerPos();
@@ -25,8 +25,8 @@ class Teleport : Feature {
     // Teleport to set position
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
-                              s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
-                              s_teleportPos.HasValue && cr.GetThumbStick(),
+          s_currentSceneIdx != Utils.SCENE_MENU_IDX && s_teleportPos.HasValue &&
+          cr.GetThumbStick(),
       Handler =
           () => {
             MelonLogger.Msg("Teleporting");
@@ -37,7 +37,7 @@ class Teleport : Feature {
     // Reset level state
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => s_currentSceneIdx != Utils.SCENE_MENU_IDX &&
-                              cl.GetAButton() && cl.GetBButton(),
+          cl.GetAButton() && cl.GetBButton(),
       Handler =
           () => {
             MelonLogger.Msg("Resetting level");

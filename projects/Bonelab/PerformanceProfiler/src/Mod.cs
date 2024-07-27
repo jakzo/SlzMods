@@ -36,7 +36,8 @@ public class Mod : MelonMod {
         Il2CppSystem.GC.CollectionCount(2) > 0) {
       // Happens every frame
       MelonLogger.Msg(
-          $"GC Collection occurred at {_gcStopwatch.ElapsedMilliseconds}ms");
+          $"GC Collection occurred at {_gcStopwatch.ElapsedMilliseconds}ms"
+      );
       _gcStopwatch.Restart();
     }
   }

@@ -32,8 +32,10 @@ class Ghost {
   private float _transparencyThresholdFar;
   private float _transparencyThresholdNear;
 
-  public Ghost(Replay replay, bool hideWhenNear, Color ghostColor,
-               System.Func<Transform, GhostRig> createRig) {
+  public Ghost(
+      Replay replay, bool hideWhenNear, Color ghostColor,
+      System.Func<Transform, GhostRig> createRig
+  ) {
     Replay = replay;
     HideWhenNear = hideWhenNear;
     GhostColor = ghostColor;
@@ -136,22 +138,21 @@ class Ghost {
     if (Rig == null)
       return;
 
-    var position =
-        _frameNext.HasValue
-            ? Vector3.Lerp(GhostRig.ToUnityVec3(
-                               _frameCur.PlayerState.Value.HeadPosition),
-                           GhostRig.ToUnityVec3(
-                               _frameNext.Value.PlayerState.Value.HeadPosition),
-                           (time - _frameCur.Time) /
-                               (_frameNext.Value.Time - _frameCur.Time))
-            : GhostRig.ToUnityVec3(_frameCur.PlayerState.Value.HeadPosition);
+    var position = _frameNext.HasValue
+        ? Vector3.Lerp(
+              GhostRig.ToUnityVec3(_frameCur.PlayerState.Value.HeadPosition),
+              GhostRig.ToUnityVec3(
+                  _frameNext.Value.PlayerState.Value.HeadPosition
+              ),
+              (time - _frameCur.Time) / (_frameNext.Value.Time - _frameCur.Time)
+          )
+        : GhostRig.ToUnityVec3(_frameCur.PlayerState.Value.HeadPosition);
 
     var rigManager = Mod.GameState.rigManager;
-    var sqrDist =
-        rigManager != null
-            ? (position - rigManager.ControllerRig.hmdTransform.position)
-                  .sqrMagnitude
-            : 1000;
+    var sqrDist = rigManager != null
+        ? (position - rigManager.ControllerRig.hmdTransform.position)
+              .sqrMagnitude
+        : 1000;
     if (sqrDist < _transparencyThresholdNear) {
       if (Rig.IsVisible) {
         Rig.SetVisible(false);
@@ -164,10 +165,12 @@ class Ghost {
       Rig.IsVisible = true;
     }
 
-    var newAlpha = Mathf.Min((sqrDist - _transparencyThresholdNear) /
-                                 _transparencyThresholdFar,
-                             1f) /
-                   2f;
+    var newAlpha =
+        Mathf.Min(
+            (sqrDist - _transparencyThresholdNear) / _transparencyThresholdFar,
+            1f
+        ) /
+        2f;
     if (Rig.color.a != newAlpha) {
       var newColor = new Color(Rig.color.r, Rig.color.g, Rig.color.b, newAlpha);
       Rig.SetColor(newColor);
@@ -226,15 +229,15 @@ public abstract class GhostRig {
   public bool IsVisible;
   public Color color;
   public abstract void SetColor(Color color);
-  public abstract void SetState(Bwr.Frame currentFrame, Bwr.Frame nextFrame,
-                                float t);
+  public abstract void
+  SetState(Bwr.Frame currentFrame, Bwr.Frame nextFrame, float t);
   public abstract void SetVisible(bool isVisible);
   public abstract void Destroy();
 
-  public static Vector3
-  ToUnityVec3(Bwr.Vector3 vec) => new Vector3(vec.X, vec.Y, vec.Z);
-  public static Quaternion ToUnityQuaternion(Bwr.Vector3 vec,
-                                             float yOffset = 0) =>
-      Quaternion.Euler(vec.X, vec.Y + yOffset, vec.Z);
+  public static Vector3 ToUnityVec3(Bwr.Vector3 vec
+  ) => new Vector3(vec.X, vec.Y, vec.Z);
+  public static Quaternion ToUnityQuaternion(
+      Bwr.Vector3 vec, float yOffset = 0
+  ) => Quaternion.Euler(vec.X, vec.Y + yOffset, vec.Z);
 }
 }

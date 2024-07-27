@@ -34,8 +34,9 @@ public class HeadLocomotion : Locomotion {
     var hmd = MarrowGame.xr.HMD;
 
     // TODO: Account for controller-rotation movement setting
-    var direction = Rotate(new Vector2(hmd.Position.x, hmd.Position.z),
-                           hmd.Rotation.eulerAngles.y);
+    var direction = Rotate(
+        new Vector2(hmd.Position.x, hmd.Position.z), hmd.Rotation.eulerAngles.y
+    );
     var directionAmount =
         Mathf.Clamp01((direction.magnitude - DEADZONE) / MAX_DIST);
 

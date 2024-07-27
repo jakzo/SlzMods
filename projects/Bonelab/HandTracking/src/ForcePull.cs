@@ -101,15 +101,17 @@ public class ForcePull {
         reciever = hand.farHoveringReciever,
         localPos = rigController.localPosition,
         localRotXY = localRotXY,
-        angleFromObject = GetRotationDifference(rotationCache, rigPosRotNoZ,
-                                                hoveringForcePullGrip),
+        angleFromObject = GetRotationDifference(
+            rotationCache, rigPosRotNoZ, hoveringForcePullGrip
+        ),
       });
     }
   }
 
-  private float GetRotationDifference(Dictionary<ForcePullGrip, float> cache,
-                                      SimpleTransform rigPosRotNoZ,
-                                      ForcePullGrip grip) {
+  private float GetRotationDifference(
+      Dictionary<ForcePullGrip, float> cache, SimpleTransform rigPosRotNoZ,
+      ForcePullGrip grip
+  ) {
     if (cache.TryGetValue(grip, out var cached))
       return cached;
     var direction = grip.transform.position - rigPosRotNoZ.position;

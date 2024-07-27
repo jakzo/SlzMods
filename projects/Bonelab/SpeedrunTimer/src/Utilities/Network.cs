@@ -9,8 +9,10 @@ public static class Network {
     return new[] { "127.0.0.1" }
         .Concat(Dns.GetHostEntry(Dns.GetHostName())
                     .AddressList
-                    .Where(address => address.AddressFamily ==
-                                      AddressFamily.InterNetwork)
+                    .Where(
+                        address =>
+                            address.AddressFamily == AddressFamily.InterNetwork
+                    )
                     .Select(address => address.ToString()))
         .ToArray();
   }

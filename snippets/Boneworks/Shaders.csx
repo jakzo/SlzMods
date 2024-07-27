@@ -1,5 +1,4 @@
-Resources
-    .FindObjectsOfTypeAll<Shader>()
+Resources.FindObjectsOfTypeAll<Shader>()
     .Select(shader => shader.name)
     .Aggregate((current, next) => current + "\n" + next);
 

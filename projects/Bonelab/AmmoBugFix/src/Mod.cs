@@ -76,22 +76,26 @@ public class Mod : MelonMod {
       }
 
       MelonLogger.Warning(
-          $"No spawned ammo found, spawning replacement now: {dac.Spawnable.crateRef.Crate.Title}");
+          $"No spawned ammo found, spawning replacement now: {dac.Spawnable.crateRef.Crate.Title}"
+      );
       _destroyedAmmoCrates.Remove(dac);
       AssetSpawner.Spawn(
           dac.Spawnable, dac.SpawnPosition, dac.SpawnRotation, _nullableVector,
           false, _nullableInt, new System.Action<GameObject>(ammoBox => {
             if (dac.PlacerSaver != null) {
               Dbg.Log("Calling PlacerSaver.OnAmmoCrateLootSpawned");
-              dac.PlacerSaver.OnAmmoCrateLootSpawned(dac.ObjectDestructable,
-                                                     dac.Spawnable, ammoBox);
+              dac.PlacerSaver.OnAmmoCrateLootSpawned(
+                  dac.ObjectDestructable, dac.Spawnable, ammoBox
+              );
             }
-          }));
+          })
+      );
     }
   }
 
-  [HarmonyPatch(typeof(ObjectDestructable),
-                nameof(ObjectDestructable.TakeDamage))]
+  [HarmonyPatch(
+      typeof(ObjectDestructable), nameof(ObjectDestructable.TakeDamage)
+  )]
   class ObjectDestructable_TakeDamage_Patch {
     [HarmonyPrefix()]
     internal static void Prefix(ObjectDestructable __instance) {
@@ -119,7 +123,8 @@ public class Mod : MelonMod {
         return;
 
       Dbg.Log(
-          $"Ammo crate destroyed at {__instance.spawnTarget.position.ToString()}");
+          $"Ammo crate destroyed at {__instance.spawnTarget.position.ToString()}"
+      );
 
       _destroyedAmmoCrates.Add(new DestroyedAmmoCrate() {
         TimeDestroyed = Time.time,

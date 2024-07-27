@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.TriggerVisualizer.Mod), Sst.BuildInfo.NAME, Sst.AppVersion.Value,
     Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/TriggerVisualizer/")]
+    "https://bonelab.thunderstore.io/package/jakzo/TriggerVisualizer/"
+)]
 
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 

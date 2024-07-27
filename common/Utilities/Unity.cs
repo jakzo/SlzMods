@@ -7,8 +7,8 @@ using UnityEngine.SceneManagement;
 
 namespace Sst.Utilities {
 public static class Unity {
-  public static Transform FindDescendantTransform(Transform transform,
-                                                  string name) {
+  public static Transform
+  FindDescendantTransform(Transform transform, string name) {
     if (transform.name == name)
       return transform;
     for (var i = 0; i < transform.childCount; i++) {
@@ -20,15 +20,16 @@ public static class Unity {
     return null;
   }
 
-  public static void FindDescendantComponentsOfType<T>(ref List<T> output,
-                                                       Transform parent,
-                                                       bool includeInactive) {
+  public static void FindDescendantComponentsOfType<T>(
+      ref List<T> output, Transform parent, bool includeInactive
+  ) {
     if (!includeInactive && !parent.gameObject.active)
       return;
     output.AddRange(parent.GetComponents<T>());
     for (var i = 0; i < parent.childCount; i++)
-      FindDescendantComponentsOfType(ref output, parent.GetChild(i),
-                                     includeInactive);
+      FindDescendantComponentsOfType(
+          ref output, parent.GetChild(i), includeInactive
+      );
   }
 
   public static IEnumerable<Transform>
@@ -47,25 +48,28 @@ public static class Unity {
     }
   }
 
-  public static IEnumerable<T> AllDescendantComponents<T>(Transform parent,
-                                                          bool includeInactive)
+  public static IEnumerable<T>
+  AllDescendantComponents<T>(Transform parent, bool includeInactive)
       where T : Component {
-    foreach (var transform in AllDescendantTransforms(parent,
-                                                      includeInactive)) {
+    foreach (var transform in AllDescendantTransforms(
+                 parent, includeInactive
+             )) {
       foreach (var component in transform.GetComponents<T>()) {
         yield return component;
       }
     }
   }
 
-  public static GameObject[] FindAllInDescendants(GameObject root,
-                                                  string name) {
+  public static GameObject[] FindAllInDescendants(
+      GameObject root, string name
+  ) {
     var result = new List<GameObject>();
     _FindAllInDescendants(root.transform, name, ref result);
     return result.ToArray();
   }
-  private static void _FindAllInDescendants(Transform transform, string name,
-                                            ref List<GameObject> result) {
+  private static void _FindAllInDescendants(
+      Transform transform, string name, ref List<GameObject> result
+  ) {
     if (transform.name == name)
       result.Add(transform.gameObject);
     for (int i = 0, count = transform.childCount; i < count; i++)
@@ -90,11 +94,11 @@ public static class Unity {
     }
   }
 
-  public static Color GenerateColor(int i) =>
-      Color.HSVToRGB(i * 0.064f % 1f, 0.9f - i / 16 * 0.3f % 0.8f, 0.9f);
+  public static Color GenerateColor(int i
+  ) => Color.HSVToRGB(i * 0.064f % 1f, 0.9f - i / 16 * 0.3f % 0.8f, 0.9f);
 
-  public static Shader FindShader(string name) =>
-      UnityEngine.Resources.FindObjectsOfTypeAll<Shader>().First(
-          shader => shader.name == name);
+  public static Shader FindShader(string name
+  ) => UnityEngine.Resources.FindObjectsOfTypeAll<Shader>()
+           .First(shader => shader.name == name);
 }
 }

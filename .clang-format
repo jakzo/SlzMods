@@ -1,0 +1,9 @@
+BasedOnStyle: LLVM
+UseTab: Never
+IndentWidth: 2
+TabWidth: 2
+ColumnLimit: 80
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: true
+AlignAfterOpenBracket: BlockIndent
+AlignOperands: DontAlign

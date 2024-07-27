@@ -53,8 +53,8 @@ public class Server : IDisposable {
     }
   }
 
-  public static void SendToStream(NamedPipeServerStream stream,
-                                  string message) {
+  public static void
+  SendToStream(NamedPipeServerStream stream, string message) {
     if (!stream.IsConnected)
       return;
 
@@ -69,7 +69,8 @@ public class Server : IDisposable {
       var stream = new NamedPipeServerStream(
           Name, PipeDirection.InOut, MAX_NUMBER_OF_SERVER_INSTANCES,
           PipeTransmissionMode.Message, PipeOptions.None, BUFFER_SIZE,
-          BUFFER_SIZE);
+          BUFFER_SIZE
+      );
       _streams.Add(stream);
       stream.WaitForConnection();
       _logger.Debug("Client connected");
@@ -181,8 +182,9 @@ public class Server : IDisposable {
           }
         }
 
-        _logger.Debug("IPC waiting " + stream.IsConnected + " " +
-                      stream.IsMessageComplete);
+        _logger.Debug(
+            "IPC waiting " + stream.IsConnected + " " + stream.IsMessageComplete
+        );
         Thread.Sleep(1000);
       }
     } catch (Exception ex) {

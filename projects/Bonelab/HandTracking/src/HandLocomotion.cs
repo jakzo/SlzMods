@@ -54,28 +54,31 @@ public class HandLocomotion : Locomotion {
 
     var (stateMax, stateMin) =
         Mathf.Abs(_left.Velocity) > Mathf.Abs(_right.Velocity)
-            ? (_left, _right)
-            : (_right, _left);
+        ? (_left, _right)
+        : (_right, _left);
     var scoreMaxVelocity =
         (Mathf.Abs(stateMax.Velocity) - VELOCITY_MIN) * VELOCITY_FACTOR;
-    var scoreCorrespondence =
-        isConfident
-            ? Mathf.Clamp01((DIVERGENCE_MAX -
-                             Mathf.Abs(stateMax.Velocity + stateMin.Velocity)) *
-                            DIVERGENCE_FACTOR)
-            : _lastCorrespondence;
+    var scoreCorrespondence = isConfident
+        ? Mathf.Clamp01(
+              (DIVERGENCE_MAX - Mathf.Abs(stateMax.Velocity + stateMin.Velocity)
+              ) *
+              DIVERGENCE_FACTOR
+          )
+        : _lastCorrespondence;
     var scoreSwing = Mathf.Clamp01(
         (Mathf.Max(_left.SwingSize, _right.SwingSize) - HEIGHT_MIN) *
-        HEIGHT_FACTOR);
+        HEIGHT_FACTOR
+    );
 
     _lastCorrespondence = scoreCorrespondence;
 
     var confidenceChangeRate = scoreMaxVelocity * scoreCorrespondence *
-                                   scoreSwing * CONFIDENCE_BUILD_RATE -
-                               CONFIDENCE_DRAIN_RATE;
+            scoreSwing * CONFIDENCE_BUILD_RATE -
+        CONFIDENCE_DRAIN_RATE;
     if (isConfident) {
       _confidence = Mathf.Clamp(
-          _confidence + confidenceChangeRate * Time.deltaTime, 0f, 1.2f);
+          _confidence + confidenceChangeRate * Time.deltaTime, 0f, 1.2f
+      );
     }
 
     Axis = new Vector2(0f, Mathf.Clamp01(_confidence));
@@ -97,10 +100,9 @@ public class LocoHandState {
   public void Update() {
     // TODO: Is there something else to say hand position is low confidence?
     IsTrackedConfident = Tracker.IsControllerConnected() ||
-                         Tracker.HandState.IsActive() &&
-                             Tracker.HandState.HasState &&
-                             Tracker.HandState.HandConfidence ==
-                                 OVRPlugin.TrackingConfidence.High;
+        Tracker.HandState.IsActive() && Tracker.HandState.HasState &&
+            Tracker.HandState.HandConfidence ==
+                OVRPlugin.TrackingConfidence.High;
     if (!IsTrackedConfident || Time.deltaTime == 0f)
       return;
 

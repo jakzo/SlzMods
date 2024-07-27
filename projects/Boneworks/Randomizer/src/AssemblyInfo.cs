@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.Randomizer.Mod), Sst.Randomizer.BuildInfo.NAME,
     Sst.Randomizer.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://boneworks.thunderstore.io/package/jakzo/Randomizer/")]
+    "https://boneworks.thunderstore.io/package/jakzo/Randomizer/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME_BONEWORKS)]
 
 namespace Sst.Randomizer {

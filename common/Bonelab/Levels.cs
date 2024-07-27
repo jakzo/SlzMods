@@ -101,7 +101,7 @@ public class Levels {
       CAMPAIGN_LEVEL_BARCODES.ToHashSet();
 
   public static bool IsMenu(string barcode) => barcode == Barcodes.MAIN_MENU
-                                               || barcode == Barcodes.VOID_G114;
+      || barcode == Barcodes.VOID_G114;
 
   public class LabworksBarcodes {
     public const string BREAKROOM =

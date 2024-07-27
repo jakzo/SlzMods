@@ -48,15 +48,17 @@ class GripFlyFinder : Feature {
       tmp.text = $"{grip.name} (bd = {grip.bodyDominance})";
       go.transform.localPosition = Vector3.zero;
       go.transform.SetParent(grip.transform, false);
-      go.transform.localScale =
-          new Vector3(go.transform.localScale.x / go.transform.lossyScale.x,
-                      go.transform.localScale.y / go.transform.lossyScale.y,
-                      go.transform.localScale.z / go.transform.lossyScale.z);
+      go.transform.localScale = new Vector3(
+          go.transform.localScale.x / go.transform.lossyScale.x,
+          go.transform.localScale.y / go.transform.lossyScale.y,
+          go.transform.localScale.z / go.transform.lossyScale.z
+      );
       tmps.Add(tmp);
 
       var pos = grip.transform.position;
       MelonLogger.Msg(
-          $"Flyable grip {FullName(grip)} with body dominance {grip.bodyDominance} at: {pos.x} {pos.y} {pos.z}");
+          $"Flyable grip {FullName(grip)} with body dominance {grip.bodyDominance} at: {pos.x} {pos.y} {pos.z}"
+      );
     }
   }
 

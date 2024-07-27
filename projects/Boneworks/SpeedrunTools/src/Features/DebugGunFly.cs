@@ -12,8 +12,12 @@ class DebugGunFly : Feature {
   private static readonly string CSV_PATH =
       Path.Combine(Utils.DIR, "gun-fly-debug.csv");
   private static readonly string CSV_HEADER = string.Join(
-      ",", new string[] { "Time", "IsFixedUpdate", "PlayerX", "PlayerY",
-                          "PlayerZ", "GunX", "GunY", "GunZ" });
+      ",",
+      new string[] {
+        "Time", "IsFixedUpdate", "PlayerX", "PlayerY", "PlayerZ", "GunX",
+        "GunY", "GunZ"
+      }
+  );
 
   public float UpdateFrequency = 1;
 
@@ -38,9 +42,12 @@ class DebugGunFly : Feature {
         Utilities.Unity
             .FindAllInDescendants(
                 Mod.GameState.rigManager.gameWorldSkeletonRig.gameObject,
-                "WeaponReciever")
-            .Select(wr => wr.GetComponent<StressLevelZero.Props.Weapons
-                                              .HandWeaponSlotReciever>())
+                "WeaponReciever"
+            )
+            .Select(
+                wr => wr.GetComponent<
+                      StressLevelZero.Props.Weapons.HandWeaponSlotReciever>()
+            )
             .ToArray();
     MelonLogger.Msg($"found {_weaponReceivers.Count()} weapon recs");
   }
@@ -63,9 +70,10 @@ class DebugGunFly : Feature {
         return;
       }
       var gunPos = receiverWithWeapon.m_WeaponHost.transform.position;
-      _data.Add(new float[] { _lastFrameTime, _isLastFrameFixedUpdate ? 1f : 0f,
-                              playerPos.x, playerPos.y, playerPos.z, gunPos.x,
-                              gunPos.y, gunPos.z });
+      _data.Add(new float[] {
+        _lastFrameTime, _isLastFrameFixedUpdate ? 1f : 0f, playerPos.x,
+        playerPos.y, playerPos.z, gunPos.x, gunPos.y, gunPos.z
+      });
     }
 
     _lastFrameTime = Time.time;
@@ -80,9 +88,12 @@ class DebugGunFly : Feature {
   private void Toggle() {
     if (_isDebugging) {
       MelonLogger.Msg("Gun fly debug stop");
-      File.WriteAllLines(CSV_PATH,
-                         new string[] { CSV_HEADER }.Concat(_data.Select(
-                             dataPoints => string.Join(",", dataPoints))));
+      File.WriteAllLines(
+          CSV_PATH,
+          new string[] { CSV_HEADER }.Concat(
+              _data.Select(dataPoints => string.Join(",", dataPoints))
+          )
+      );
       _data = null;
       _lastFrameTime = 0f;
     } else {

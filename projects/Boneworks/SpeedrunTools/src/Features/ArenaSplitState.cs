@@ -24,8 +24,9 @@ class ArenaSplitState : Feature {
 
   public ArenaSplitState() { State[0] = 0xD5; }
 
-  [HarmonyPatch(typeof(Arena_GameManager),
-                nameof(Arena_GameManager.RingTheBell))]
+  [HarmonyPatch(
+      typeof(Arena_GameManager), nameof(Arena_GameManager.RingTheBell)
+  )]
   class ArenaGameManager_RingTheBell_Patch {
     [HarmonyPostfix()]
     internal static void Postfix(Arena_GameManager __instance) {
@@ -34,8 +35,10 @@ class ArenaSplitState : Feature {
     }
   }
 
-  [HarmonyPatch(typeof(Arena_GameManager),
-                nameof(Arena_GameManager.SaveChallengeCompletion))]
+  [HarmonyPatch(
+      typeof(Arena_GameManager),
+      nameof(Arena_GameManager.SaveChallengeCompletion)
+  )]
   class ArenaGameManager_SaveChallengeCompletion_Patch {
     [HarmonyPostfix()]
     internal static void Postfix(Arena_GameManager __instance) {

@@ -49,35 +49,42 @@ public class Mod : MelonMod {
     Dbg.Init(BuildInfo.NAME);
 
     var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
-    _prefMode = category.CreateEntry("mode", Mode.PHYSICAL, "Mode",
-                                     "Which things to show colliders of");
+    _prefMode = category.CreateEntry(
+        "mode", Mode.PHYSICAL, "Mode", "Which things to show colliders of"
+    );
     _prefHideVisuals = category.CreateEntry(
         "hideVisuals", true, "Hide visuals",
-        "Hides visuals so that only collider visualizations can be seen");
+        "Hides visuals so that only collider visualizations can be seen"
+    );
     _prefHideHeadColliders = category.CreateEntry(
         "hideHeadColliders", true, "Hide head colliders",
-        "Hides head colliders so that they do not obscure your vision");
+        "Hides head colliders so that they do not obscure your vision"
+    );
     _prefOnlyResizeRigColliders = category.CreateEntry(
         "onlyResizeRigColliders", true, "Only resize rig colliders",
         "Improves performance by watching for changes to collider size on " +
-            "only the rig");
+            "only the rig"
+    );
     // TODO: Change to frame time allocated for colliders
     _prefIterationsPerFrame = category.CreateEntry(
         "iterationsPerFrame", 8f, "Iterations per frame",
         "Number of game objects to show colliders of per frame on load " +
-            "(higher loads faster but too high lags and crashes the game)");
+            "(higher loads faster but too high lags and crashes the game)"
+    );
     _prefBackgroundIterationsPerFrame = category.CreateEntry(
         "backgroundIterationsPerFrame", 2f, "Background iterations per frame",
         "Number of game objects to show colliders of per frame in the " +
             "background (runs continuously to catch any objects added during " +
-            "play)");
+            "play)"
+    );
 
     LevelHooks.OnLoad += nextLevel => ResetState();
     LevelHooks.OnLevelStart += level => Visualize(false);
     _prefMode.OnEntryValueChanged.Subscribe((a, b) => Visualize(true));
     _prefHideVisuals.OnEntryValueChanged.Subscribe((a, b) => Visualize(true));
-    _prefHideHeadColliders.OnEntryValueChanged.Subscribe((a, b) =>
-                                                             Visualize(true));
+    _prefHideHeadColliders.OnEntryValueChanged.Subscribe(
+        (a, b) => Visualize(true)
+    );
   }
 
   public override void OnUpdate() {
@@ -86,11 +93,12 @@ public class Mod : MelonMod {
 
 // TODO: Replace with a check for third person camera
 #if DEBUG
-    if (LevelHooks.RigManager?.ControllerRig.rightController
-            .GetThumbStickDown() ??
+    if (LevelHooks.RigManager?.ControllerRig.rightController.GetThumbStickDown(
+        ) ??
         false) {
       foreach (var transform in Utilities.Unity.AllDescendantTransforms(
-                   LevelHooks.RigManager.physicsRig.m_head, true)) {
+                   LevelHooks.RigManager.physicsRig.m_head, true
+               )) {
         if (transform.name.StartsWith("SpeedrunTools_")) {
           transform.gameObject.SetActive(!transform.gameObject.active);
         }
@@ -109,8 +117,8 @@ public class Mod : MelonMod {
     // After the level has loaded, creating all visualizations at once causes
     // a GC crash, so we instead create them a bit at a time
     var iterationsPerFrame = _isInitializing
-                                 ? _prefIterationsPerFrame.Value
-                                 : _prefBackgroundIterationsPerFrame.Value;
+        ? _prefIterationsPerFrame.Value
+        : _prefBackgroundIterationsPerFrame.Value;
     var startingIterationCount = Mathf.Ceil(_iterationCount);
     _iterationCount += iterationsPerFrame;
     for (var i = startingIterationCount; i < _iterationCount; i += 1f) {
@@ -145,8 +153,8 @@ public class Mod : MelonMod {
     }
   }
 
-  private IEnumerator<bool> VisualizeEnumerator(bool clear,
-                                                bool onlyUnprocessedScenes) {
+  private IEnumerator<bool>
+  VisualizeEnumerator(bool clear, bool onlyUnprocessedScenes) {
     if (clear) {
       foreach (var value in ClearVisualizations()) {
         yield return value;
@@ -154,8 +162,8 @@ public class Mod : MelonMod {
     }
 
     var transformsToVisualize = _prefMode.Value == Mode.RIG
-                                    ? RigTransforms()
-                                    : AllTransforms(onlyUnprocessedScenes);
+        ? RigTransforms()
+        : AllTransforms(onlyUnprocessedScenes);
     foreach (var value in VisualizeTransforms(transformsToVisualize)) {
       yield return value;
     }
@@ -163,7 +171,8 @@ public class Mod : MelonMod {
 
   private IEnumerable<Transform> RigTransforms() {
     return Utilities.Unity.AllDescendantTransforms(
-        LevelHooks.RigManager.transform, true);
+        LevelHooks.RigManager.transform, true
+    );
   }
 
   private IEnumerable<Transform> AllTransforms(bool onlyUnprocessedScenes) {
@@ -174,8 +183,7 @@ public class Mod : MelonMod {
     }
 
     foreach (var scene in scenes) {
-      var shouldVisualizeScene =
-          scene.isLoaded && scene.IsValid() &&
+      var shouldVisualizeScene = scene.isLoaded && scene.IsValid() &&
           (!onlyUnprocessedScenes || !_processedScenes.Contains(scene.name));
       if (!shouldVisualizeScene)
         continue;
@@ -184,7 +192,8 @@ public class Mod : MelonMod {
         if (!rootObject) // in case scene was unloaded
           continue;
         foreach (var transform in Utilities.Unity.AllDescendantTransforms(
-                     rootObject.transform, true)) {
+                     rootObject.transform, true
+                 )) {
           yield return transform;
         }
       }
@@ -226,8 +235,8 @@ public class Mod : MelonMod {
 
     foreach (var visualization in IterateAndRemove(_visualizations)) {
       if (visualization) {
-        _collidersBeingVisualized.Remove(
-            visualization.Collider.GetInstanceID());
+        _collidersBeingVisualized.Remove(visualization.Collider.GetInstanceID()
+        );
         GameObject.Destroy(visualization.gameObject);
         yield return true;
       }
@@ -245,8 +254,8 @@ public class Mod : MelonMod {
     }
   }
 
-  public IEnumerable<bool>
-  VisualizeTransforms(IEnumerable<Transform> transforms) {
+  public IEnumerable<bool> VisualizeTransforms(IEnumerable<Transform> transforms
+  ) {
     var head = LevelHooks.RigManager.physicsRig.m_head;
 
     foreach (var transform in transforms) {
@@ -277,9 +286,10 @@ public class Mod : MelonMod {
 
         var watchForChanges =
             !_prefOnlyResizeRigColliders.Value || IsInRig(transform);
-        var visualization =
-            Colliders.Visualize(collider, Color.black, Shaders.DefaultShader,
-                                watchForChanges, OnVisualizationUpdate);
+        var visualization = Colliders.Visualize(
+            collider, Color.black, Shaders.DefaultShader, watchForChanges,
+            OnVisualizationUpdate
+        );
         _visualizations.Add(visualization);
         _collidersBeingVisualized.Add(collider.GetInstanceID());
       }
@@ -290,8 +300,7 @@ public class Mod : MelonMod {
 
   private bool
   OnVisualizationUpdate(Colliders.ColliderVisualization visualization) {
-    var shouldBeVisible =
-        visualization.Collider.enabled &&
+    var shouldBeVisible = visualization.Collider.enabled &&
         Colliders.IsColliderPhysical(visualization.Collider) ==
             OnlyShowPhysicalColliders();
 
@@ -307,13 +316,14 @@ public class Mod : MelonMod {
         // TODO: Change
         visualization.Collider.attachedRigidbody
             ? visualization.Collider.gameObject.layer + 2
-            : 1);
+            : 1
+    );
     color.a = 0.05f;
 
     // Mesh colliders only have collision in the direction of their faces
     // but convex mesh colliders are solid
     var isOneSided = visualization.Collider is MeshCollider &&
-                     !((MeshCollider)visualization.Collider).convex;
+        !((MeshCollider)visualization.Collider).convex;
     // Shader default renders double sided but highlighter does not
     var shader = isOneSided ? Shaders.HighlightShader : Shaders.DefaultShader;
 
@@ -371,7 +381,8 @@ public class Mod : MelonMod {
       return;
     AssetWarehouse.OnReady(new Action(() => {
       var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
-          c => c.Barcode.ID == Levels.Barcodes.HUB);
+          c => c.Barcode.ID == Levels.Barcodes.HUB
+      );
       var bootstrapper =
           GameObject.FindObjectOfType<SceneBootstrapper_Bonelab>();
       var crateRef = new LevelCrateReference(crate.Barcode.ID);

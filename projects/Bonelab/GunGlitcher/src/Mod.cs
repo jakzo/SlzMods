@@ -13,10 +13,13 @@ public class Mod : MelonMod {
     if (IsControlDown() && Input.GetKeyDown(KeyCode.G)) {
       var rigManager = GameObject.FindObjectOfType<RigManager>();
       var heldGun =
-          new[] { rigManager.physicsRig.leftHand,
-                  rigManager.physicsRig.rightHand }
-              .Select(hand => hand.AttachedReceiver?.Host?.GetHostGameObject()
-                                  ?.GetComponent<Gun>())
+          new[] {
+            rigManager.physicsRig.leftHand, rigManager.physicsRig.rightHand
+          }
+              .Select(
+                  hand => hand.AttachedReceiver?.Host?.GetHostGameObject()
+                              ?.GetComponent<Gun>()
+              )
               .Where(gun => gun && gun.HasMagazine())
               .FirstOrDefault();
       if (heldGun)

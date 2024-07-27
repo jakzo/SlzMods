@@ -416,8 +416,8 @@ result;
 
 // List levels
 var result = "";
-foreach (var crate in SLZ.Marrow.Warehouse.AssetWarehouse.Instance
-             .GetCrates()) {
+foreach (var crate in SLZ.Marrow.Warehouse.AssetWarehouse.Instance.GetCrates(
+         )) {
   if (crate.AssetType == Il2CppType.Of<UnityEngine.SceneManagement.Scene>())
     result += $"{crate.Title} ({crate.Barcode.ID})\n";
 }

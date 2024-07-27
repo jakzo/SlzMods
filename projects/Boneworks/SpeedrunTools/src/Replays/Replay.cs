@@ -16,9 +16,10 @@ class Replay {
   public Replay(string filePath) {
     FilePath = filePath;
 
-    _fileStream =
-        new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-                       FrameReader.BUFFER_SIZE, FileOptions.SequentialScan);
+    _fileStream = new FileStream(
+        filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+        FrameReader.BUFFER_SIZE, FileOptions.SequentialScan
+    );
     _reader = new BinaryReader(_fileStream);
 
     var magicHeader = _reader.ReadBytes(Constants.MAGIC_HEADER_BYTES.Length);
@@ -32,11 +33,12 @@ class Replay {
 
     _framesEndIdx = metadataIdx;
     _reader.BaseStream.Position = metadataIdx;
-    var metadataBytes = _reader.ReadBytes(
-        (int)(_reader.BaseStream.Length - _reader.BaseStream.Position));
+    var metadataBytes = _reader.ReadBytes((int)(_reader.BaseStream.Length -
+                                                _reader.BaseStream.Position));
     _reader.BaseStream.Position = Constants.FILE_START_BYTES.Length;
-    Metadata = Bwr.Metadata.GetRootAsMetadata(
-        new FlatBuffers.ByteBuffer(metadataBytes));
+    Metadata =
+        Bwr.Metadata.GetRootAsMetadata(new FlatBuffers.ByteBuffer(metadataBytes)
+        );
     _reader.BaseStream.Position = Constants.FILE_START_BYTES.Length;
   }
 
@@ -75,8 +77,9 @@ class FrameReader {
   private int _nextLevelIdx;
   private Bwr.Level? _nextLevel;
 
-  public FrameReader(FileStream fileStream, Bwr.Metadata metadata,
-                     int framesEndIdx) {
+  public FrameReader(
+      FileStream fileStream, Bwr.Metadata metadata, int framesEndIdx
+  ) {
     _fileStream = fileStream;
     _metadata = metadata;
     _framesEndIdx = framesEndIdx;
@@ -90,8 +93,8 @@ class FrameReader {
     if (_fileIdx >= _nextLevel?.FrameOffset) {
       sceneIdx = _nextLevel?.SceneIndex;
       _nextLevel = ++_nextLevelIdx >= _metadata.LevelsLength
-                       ? null
-                       : _metadata.Levels(_nextLevelIdx);
+          ? null
+          : _metadata.Levels(_nextLevelIdx);
     }
     var frameLen = ReadUInt16();
     if (frameLen == 0 || _fileIdx + frameLen > _framesEndIdx) {
@@ -149,13 +152,15 @@ class FrameReader {
       // NOTE: Assumes we only have two buffers and the read is smaller than the
       // buffer size
       var firstCopySize = bufferRemainingSize;
-      System.Array.Copy(_buffers[_bufferNum], _bufferIdx, result, 0,
-                        firstCopySize);
+      System.Array.Copy(
+          _buffers[_bufferNum], _bufferIdx, result, 0, firstCopySize
+      );
       SwitchBuffer();
       AssertBufferAvailable(_bufferNum);
       var secondCopySize = count - firstCopySize;
-      System.Array.Copy(_buffers[_bufferNum], 0, result, firstCopySize,
-                        secondCopySize);
+      System.Array.Copy(
+          _buffers[_bufferNum], 0, result, firstCopySize, secondCopySize
+      );
       _bufferIdx = secondCopySize;
     }
     _fileIdx += count;
@@ -180,7 +185,8 @@ class FrameReader {
   private void AssertBufferAvailable(int bufferNum) {
     if (_buffers[_bufferNum] == null)
       throw new System.Exception(
-          "Replay data not read from disk in time (frames will be dropped)");
+          "Replay data not read from disk in time (frames will be dropped)"
+      );
   }
 }
 }

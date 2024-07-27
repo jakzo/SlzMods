@@ -53,11 +53,11 @@ public class Armless : Feature {
 
   public override void OnDisabled() { SetArmsEnabled(true, true, true); }
 
-  public override void OnSceneWasInitialized(int buildIndex,
-                                             string sceneName) =>
-      OnSceneWasInitializedStatic(buildIndex, sceneName);
-  public static void OnSceneWasInitializedStatic(int buildIndex,
-                                                 string sceneName) {
+  public override void OnSceneWasInitialized(
+      int buildIndex, string sceneName
+  ) => OnSceneWasInitializedStatic(buildIndex, sceneName);
+  public static void
+  OnSceneWasInitializedStatic(int buildIndex, string sceneName) {
     if (buildIndex == Utils.SCENE_MENU_IDX)
       return;
     if (!IsLeftArmEnabled)
@@ -66,9 +66,9 @@ public class Armless : Feature {
       SetArmEnabled(false, false);
   }
 
-  public static void SetArmsEnabled(bool isLeftArmEnabled,
-                                    bool isRightArmEnabled,
-                                    bool alsoSetControllers) {
+  public static void SetArmsEnabled(
+      bool isLeftArmEnabled, bool isRightArmEnabled, bool alsoSetControllers
+  ) {
     SetArmEnabled(true, isLeftArmEnabled);
     SetArmEnabled(false, isRightArmEnabled);
     IsLeftControllerEnabled = !alsoSetControllers || isLeftArmEnabled;
@@ -94,7 +94,8 @@ public class Armless : Feature {
       collider.enabled = isEnabled;
     var armTransform = Utilities.Unity.FindDescendantTransform(
         Mod.GameState.rigManager.gameWorldSkeletonRig.gameObject.transform,
-        leftArm ? "l_AC_AuxSHJnt" : "r_AC_AuxSHJnt");
+        leftArm ? "l_AC_AuxSHJnt" : "r_AC_AuxSHJnt"
+    );
     if (armTransform == null)
       Dbg.Log("Arm bone not found");
     else
@@ -106,16 +107,16 @@ public class Armless : Feature {
       dummyPalm.transform.localPosition = new Vector3(0, -99999, 0);
     }
     hand.palmPositionTransform = isEnabled
-                                     ? hand.transform.FindChild("PalmCenter")
-                                     : dummyPalm.transform;
+        ? hand.transform.FindChild("PalmCenter")
+        : dummyPalm.transform;
   }
 
-  private static bool IsControllerEnabled(Controller controller) =>
-      controller.handedness == StressLevelZero.Handedness.LEFT
-          ? IsLeftControllerEnabled
+  private static bool IsControllerEnabled(Controller controller
+  ) => controller.handedness == StressLevelZero.Handedness.LEFT
+      ? IsLeftControllerEnabled
       : controller.handedness == StressLevelZero.Handedness.RIGHT
-          ? IsRightControllerEnabled
-          : false;
+      ? IsRightControllerEnabled
+      : false;
 
   public static void OnCacheInputs(Controller controller) {
     if (!IsControllerEnabled(controller) &&

@@ -13,14 +13,16 @@ class Teleport : Feature {
     // Set teleport position
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Utils.State.rigManager != null &&
-                              !Utilities.Levels.IsMenu(
-                                  Utils.State.currentLevel?.Barcode.ID ?? "") &&
-                              cl.GetBButton() && cr.GetBButton(),
+          !Utilities.Levels.IsMenu(
+              Utils.State.currentLevel?.Barcode.ID ?? ""
+          ) &&
+          cl.GetBButton() && cr.GetBButton(),
       Handler =
           () => {
             var state = PlayerState.Read();
             MelonLogger.Msg(
-                $"Setting teleport position at: {state.pos.ToString()}");
+                $"Setting teleport position at: {state.pos.ToString()}"
+            );
             _teleportState = state;
           },
     });
@@ -28,9 +30,10 @@ class Teleport : Feature {
     // Teleport to set position
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Utils.State.rigManager != null &&
-                              !Utilities.Levels.IsMenu(
-                                  Utils.State.currentLevel?.Barcode.ID ?? "") &&
-                              _teleportState.HasValue && cr.GetThumbStick(),
+          !Utilities.Levels.IsMenu(
+              Utils.State.currentLevel?.Barcode.ID ?? ""
+          ) &&
+          _teleportState.HasValue && cr.GetThumbStick(),
       Handler =
           () => {
             MelonLogger.Msg("Teleporting");
@@ -41,8 +44,9 @@ class Teleport : Feature {
     // Reset level
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => !Utilities.Levels.IsMenu(
-                                  Utils.State.currentLevel?.Barcode.ID ?? "") &&
-                              cl.GetAButton() && cl.GetBButton(),
+                                  Utils.State.currentLevel?.Barcode.ID ?? ""
+                              ) &&
+          cl.GetAButton() && cl.GetBButton(),
       Handler =
           () => {
             MelonLogger.Msg("Resetting level");
@@ -52,8 +56,8 @@ class Teleport : Feature {
     });
   }
 
-  public override void OnLoadingScreen(LevelCrate nextLevel,
-                                       LevelCrate prevLevel) {
+  public override void
+  OnLoadingScreen(LevelCrate nextLevel, LevelCrate prevLevel) {
     if (nextLevel.Barcode.ID != prevLevel.Barcode.ID)
       _teleportState = null;
   }

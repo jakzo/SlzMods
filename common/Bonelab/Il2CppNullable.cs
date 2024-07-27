@@ -18,8 +18,9 @@ public class Il2CppNullable<T> : Il2CppSystem.ValueType
     TClassPtr = Il2CppClassPointerStore<T>.NativeClassPtr;
 
     uint align = 0;
-    hasValueOffset = (int)IL2CPP.il2cpp_field_get_offset(
-        IL2CPP.GetIl2CppField(classPtr, "hasValue"));
+    hasValueOffset = (int
+    )IL2CPP.il2cpp_field_get_offset(IL2CPP.GetIl2CppField(classPtr, "hasValue")
+    );
     valueSize = IL2CPP.il2cpp_class_value_size(TClassPtr, ref align);
     marshalSize = Marshal.SizeOf(typeof(T));
   }
@@ -59,8 +60,8 @@ public class Il2CppNullable<T> : Il2CppSystem.ValueType
     IntPtr obj = IL2CPP.il2cpp_object_new(classPtr);
 
     uint gcHandle = RuntimeSpecificsStore.ShouldUseWeakRefs(classPtr)
-                        ? IL2CPP.il2cpp_gchandle_new_weakref(obj, false)
-                        : IL2CPP.il2cpp_gchandle_new(obj, false);
+        ? IL2CPP.il2cpp_gchandle_new_weakref(obj, false)
+        : IL2CPP.il2cpp_gchandle_new(obj, false);
     AccessTools.Field(typeof(Il2CppObjectBase), "myGcHandle")
         .SetValue(this, gcHandle);
 
@@ -85,8 +86,8 @@ public class Il2CppNullable<T> : Il2CppSystem.ValueType
     *(byte *)(dataPtr + hasValueOffset) = 1;
 
     uint gcHandle = RuntimeSpecificsStore.ShouldUseWeakRefs(classPtr)
-                        ? IL2CPP.il2cpp_gchandle_new_weakref(obj, false)
-                        : IL2CPP.il2cpp_gchandle_new(obj, false);
+        ? IL2CPP.il2cpp_gchandle_new_weakref(obj, false)
+        : IL2CPP.il2cpp_gchandle_new(obj, false);
 
     AccessTools.Field(typeof(Il2CppObjectBase), "myGcHandle")
         .SetValue(this, gcHandle);
@@ -95,8 +96,8 @@ public class Il2CppNullable<T> : Il2CppSystem.ValueType
   private static unsafe void Set<U>(IntPtr tgt, U value)
       where U : unmanaged { *(U *)tgt = value; }
 
-  public static implicit
-  operator Il2CppSystem.Nullable<T>(Il2CppNullable<T> me) {
+  public static implicit operator Il2CppSystem.Nullable<T>(Il2CppNullable<T> me
+  ) {
     return new Il2CppSystem.Nullable<T>(me.Pointer);
   }
 }

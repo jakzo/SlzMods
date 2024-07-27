@@ -5,17 +5,17 @@ using UnityEngine;
 namespace Sst.HandTracking;
 
 public class HandState {
-  private static Vector3 FromFlippedXVector3f(OVRPlugin.Vector3f vector) =>
-      new Vector3(-vector.x, vector.y, vector.z);
+  private static Vector3 FromFlippedXVector3f(OVRPlugin.Vector3f vector
+  ) => new Vector3(-vector.x, vector.y, vector.z);
 
-  private static Vector3 FromFlippedZVector3f(OVRPlugin.Vector3f vector) =>
-      new Vector3(vector.x, vector.y, -vector.z);
+  private static Vector3 FromFlippedZVector3f(OVRPlugin.Vector3f vector
+  ) => new Vector3(vector.x, vector.y, -vector.z);
 
-  private static Quaternion FromFlippedXQuatf(OVRPlugin.Quatf quat) =>
-      new Quaternion(quat.x, -quat.y, -quat.z, quat.w);
+  private static Quaternion FromFlippedXQuatf(OVRPlugin.Quatf quat
+  ) => new Quaternion(quat.x, -quat.y, -quat.z, quat.w);
 
-  private static Quaternion FromFlippedZQuatf(OVRPlugin.Quatf quat) =>
-      new Quaternion(-quat.x, -quat.y, quat.z, quat.w);
+  private static Quaternion FromFlippedZQuatf(OVRPlugin.Quatf quat
+  ) => new Quaternion(-quat.x, -quat.y, quat.z, quat.w);
 
   public bool IsLeft;
   public Vector3 Position;
@@ -65,10 +65,10 @@ public class HandState {
       var parentIdx = _skeleton.Bones[i].ParentBoneIndex;
       var parentJoint =
           OVRPlugin.IsValidBone((OVRPlugin.BoneId)parentIdx, _skeletonType)
-              // parentIdx will always be less than i so Joints[parentIdx] will
-              // already be updated
-              ? Joints[parentIdx]
-              : JointTransform.IDENTITY;
+          // parentIdx will always be less than i so Joints[parentIdx] will
+          // already be updated
+          ? Joints[parentIdx]
+          : JointTransform.IDENTITY;
       var handRot = parentJoint.HandRotation * localRot;
       var localPos =
           handRot * FromFlippedXVector3f(_skeleton.Bones[i].Pose.Position);
@@ -92,8 +92,8 @@ public class HandState {
       // NOTE: Requires OVRInput.Update() to be called (game already does this)
       OVRInput.IsControllerConnected(_controller);
 
-  public bool IsTracked() => (_state.Status &
-                              OVRPlugin.HandStatus.HandTracked) != 0;
+  public bool IsTracked() => (_state.Status & OVRPlugin.HandStatus.HandTracked
+                             ) != 0;
 }
 
 public struct JointTransform {

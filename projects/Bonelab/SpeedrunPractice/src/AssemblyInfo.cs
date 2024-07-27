@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.SpeedrunPractice.Mod), Sst.SpeedrunPractice.BuildInfo.NAME,
     Sst.SpeedrunPractice.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/SpeedrunPractice/")]
+    "https://bonelab.thunderstore.io/package/jakzo/SpeedrunPractice/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.SpeedrunPractice {

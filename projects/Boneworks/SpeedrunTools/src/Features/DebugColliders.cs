@@ -26,32 +26,27 @@ class DebugColliders : Feature {
 
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
-                              Utils.GetKeyControl() &&
-                              Input.GetKey(KeyCode.Alpha1),
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.Alpha1),
       Handler = () => ShowRigColliders(true),
     });
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
-                              Utils.GetKeyControl() &&
-                              Input.GetKey(KeyCode.Alpha2),
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.Alpha2),
       Handler = ShowHeldMagColliders,
     });
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
-                              Utils.GetKeyControl() &&
-                              Input.GetKey(KeyCode.Alpha3),
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.Alpha3),
       Handler = ToggleCameraLockedToKnee,
     });
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
-                              Utils.GetKeyControl() &&
-                              Input.GetKey(KeyCode.Alpha4),
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.Alpha4),
       Handler = () => Time.timeScale = Time.timeScale == 0f ? 1f : 0f,
     });
     Hotkeys.Add(new Hotkey() {
       Predicate = (cl, cr) => Mod.GameState.rigManager != null &&
-                              Utils.GetKeyControl() &&
-                              Input.GetKey(KeyCode.Alpha5),
+          Utils.GetKeyControl() && Input.GetKey(KeyCode.Alpha5),
       // Pimax Reality 12k QLED
       Handler = () => SetPhysicsRate(_physicsRate == 0f ? 200f : 0f),
     });
@@ -76,7 +71,8 @@ class DebugColliders : Feature {
 
     var preview = cam.transform.Find("ScaleFix").Find("Plane");
     preview.transform.SetParent(
-        Mod.GameState.rigManager.ControllerRig.rightController.transform);
+        Mod.GameState.rigManager.ControllerRig.rightController.transform
+    );
     preview.transform.localPosition = new Vector3(0f, 0f, 0.05f);
     preview.transform.localRotation = Quaternion.Euler(45f, 160f, 340f);
     Component.Destroy(preview.GetComponent<Collider>());
@@ -103,8 +99,9 @@ class DebugColliders : Feature {
     }, Mod.GameState.rigManager.physicsRig.transform);
 
     CreateVisualizationFromCollider<SphereCollider>(collider => {
-      var visualization = GameObject.Instantiate(_prefabs.SPHERE,
-                                                 collider.gameObject.transform);
+      var visualization = GameObject.Instantiate(
+          _prefabs.SPHERE, collider.gameObject.transform
+      );
       visualization.active = true;
       if (transparent)
         SetShader(visualization, transparentShader);
@@ -163,8 +160,8 @@ class DebugColliders : Feature {
 
       case CapsuleCollider capsuleCollider: {
         visualization.transform.localPosition = capsuleCollider.center;
-        visualization.transform.localRotation =
-            capsuleCollider.direction == 0   ? Quaternion.Euler(0, 0, 90)
+        visualization.transform.localRotation = capsuleCollider.direction == 0
+            ? Quaternion.Euler(0, 0, 90)
             : capsuleCollider.direction == 2 ? Quaternion.Euler(90, 0, 0)
                                              : Quaternion.identity;
         var diameter = capsuleCollider.radius * 2;
@@ -182,16 +179,16 @@ class DebugColliders : Feature {
     }
   }
 
-  private void
-  CreateVisualizationFromCollider<T>(System.Func<T, GameObject> action,
-                                     Transform parent)
+  private void CreateVisualizationFromCollider<T>(
+      System.Func<T, GameObject> action, Transform parent
+  )
       where T : Collider {
     var colliders = new List<T>();
     Utilities.Unity.FindDescendantComponentsOfType(ref colliders, parent, true);
     var activeColliders = colliders.Where(
         collider => collider.enabled && collider.attachedRigidbody != null &&
-                    !collider.isTrigger &&
-                    IsPhysicalLayer(collider.gameObject.layer));
+            !collider.isTrigger && IsPhysicalLayer(collider.gameObject.layer)
+    );
     foreach (var collider in activeColliders) {
       var visualization = action(collider);
       if (visualization != null)
@@ -254,15 +251,17 @@ class DebugColliders : Feature {
   private void DisableRenderersInternal<T>(Transform parent)
       where T : Renderer {
     var meshRenderers = new List<T>();
-    Utilities.Unity.FindDescendantComponentsOfType(ref meshRenderers, parent,
-                                                   true);
+    Utilities.Unity.FindDescendantComponentsOfType(
+        ref meshRenderers, parent, true
+    );
     foreach (var renderer in meshRenderers)
       renderer.enabled = false;
   }
 
   private GameObject FindMag(GameObject gun) {
     var potentialMags = Utilities.Unity.ChildrenToArray(
-        gun.GetComponent<Gun>().magazineSocket.gameObject);
+        gun.GetComponent<Gun>().magazineSocket.gameObject
+    );
     foreach (var go in potentialMags) {
       if (go.GetComponent<Magazine>())
         return go;
@@ -273,12 +272,15 @@ class DebugColliders : Feature {
   private class DebugColliderPrefabs {
     // TODO: Be consistent about whether positive Y means up or down
     public readonly GameObject BOX = Utilities.Geometry.CreatePrefabCube(
-        "BoxCollider", Color.red, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f, 0.5f);
+        "BoxCollider", Color.red, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f, 0.5f
+    );
     public readonly GameObject SPHERE = Utilities.Geometry.CreatePrefabSphere(
-        "SphereCollider", Color.red, 0.5f, 2);
+        "SphereCollider", Color.red, 0.5f, 2
+    );
     public readonly GameObject CYLINDER =
         Utilities.Geometry.CreatePrefabUnclosedCylinder(
-            "CylinderCollider", Color.red, 0.5f, 20, 0.5f, -0.5f);
+            "CylinderCollider", Color.red, 0.5f, 20, 0.5f, -0.5f
+        );
   }
 }
 }

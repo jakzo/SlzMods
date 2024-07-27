@@ -50,11 +50,10 @@ public class Mod : MelonMod {
           cr._aButtonUp = true;
 
         if (LevelHooks.RigManager) {
-          cr._thumbstickAxis +=
-              Input.GetKey(KeyCode.LeftControl) ? Vector2.down
+          cr._thumbstickAxis += Input.GetKey(KeyCode.LeftControl) ? Vector2.down
               : LevelHooks.RigManager.remapHeptaRig._crouchTarget < 0f
-                  ? Vector2.up
-                  : Vector2.zero;
+              ? Vector2.up
+              : Vector2.zero;
         }
       }
 
@@ -152,7 +151,8 @@ public class Mod : MelonMod {
     [HarmonyFinalizer()]
     internal static void Finalizer(Exception __exception) {
       Dbg.Log(
-          $"MarrowGame.Initialize Finalizer {__exception != null}: {__exception}");
+          $"MarrowGame.Initialize Finalizer {__exception != null}: {__exception}"
+      );
     }
   }
 }

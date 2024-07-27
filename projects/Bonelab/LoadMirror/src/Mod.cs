@@ -27,7 +27,7 @@ public class Mod : MelonMod {
     var rootObjects =
         LevelHooks.BasicTrackingRig.gameObject.scene.GetRootGameObjects();
     _overlay = rootObjects.FirstOrDefault(go => go.name == "2D_Overlay") ??
-               rootObjects.FirstOrDefault(go => go.name == "Canvas");
+        rootObjects.FirstOrDefault(go => go.name == "Canvas");
     if (_overlay != null) {
       _overlay.SetActive(false);
     } else {

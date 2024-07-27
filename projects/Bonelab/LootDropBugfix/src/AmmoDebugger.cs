@@ -17,7 +17,8 @@ public static class AmmoDebugger {
     var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
     _prefDebugAmmo = category.CreateEntry(
         "debug_ammo", false,
-        "Teleports and breaks ammo boxes to test item replacement");
+        "Teleports and breaks ammo boxes to test item replacement"
+    );
   }
 
   public static void OnAmmoReplaced() { _replacedAmmo = true; }
@@ -37,10 +38,10 @@ public static class AmmoDebugger {
       var head = GameObject.FindObjectOfType<RigManager>().physicsRig.m_head;
       var ammoCrates =
           GameObject.FindObjectsOfType<ObjectDestructable>()
-              .Where(obj =>
-                         obj.lootTable != null && Mod.IsAmmoCrate(obj) &&
-                         (obj.transform.position - head.position).sqrMagnitude >
-                             25)
+              .Where(
+                  obj => obj.lootTable != null && Mod.IsAmmoCrate(obj) &&
+                      (obj.transform.position - head.position).sqrMagnitude > 25
+              )
               .ToArray();
       if (ammoCrates.Length > 0) {
         _toBreak = ammoCrates[0];

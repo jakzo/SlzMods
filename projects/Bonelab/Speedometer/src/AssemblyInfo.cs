@@ -19,7 +19,8 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.Speedometer.Mod), Sst.Speedometer.BuildInfo.NAME,
     Sst.Speedometer.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/Speedometer/")]
+    "https://bonelab.thunderstore.io/package/jakzo/Speedometer/"
+)]
 
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 

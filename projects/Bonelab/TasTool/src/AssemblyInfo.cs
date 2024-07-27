@@ -19,12 +19,14 @@ using System.Runtime.InteropServices;
 [assembly:MelonInfo(
     typeof(Sst.TasTool.Mod), Sst.TasTool.BuildInfo.NAME,
     Sst.TasTool.AppVersion.Value, Sst.Metadata.AUTHOR,
-    "https://bonelab.thunderstore.io/package/jakzo/TasTool/")]
+    "https://bonelab.thunderstore.io/package/jakzo/TasTool/"
+)]
 [assembly:MelonGame(Sst.Metadata.DEVELOPER, Sst.Metadata.GAME)]
 
 namespace Sst.TasTool {
 public static class BuildInfo {
   public const string NAME = "TasTool";
-  public const string DESCRIPTION = "Utilities for building tool assisted speedruns.";
+  public const string DESCRIPTION =
+      "Utilities for building tool assisted speedruns.";
 }
 }

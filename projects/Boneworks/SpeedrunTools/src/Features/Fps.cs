@@ -21,7 +21,8 @@ class Fps : Feature {
 
       var timing = new Valve.VR.Compositor_FrameTiming();
       timing.m_nSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(
-          typeof(Valve.VR.Compositor_FrameTiming));
+          typeof(Valve.VR.Compositor_FrameTiming)
+      );
       Valve.VR.OpenVR.Compositor.GetFrameTiming(ref timing, 0);
 
       var updateFps = _updateTimer.GetFps(Time.time).ToString("N1");
@@ -29,7 +30,8 @@ class Fps : Feature {
       var refreshRate =
           (1f / (timing.m_flClientFrameIntervalMs / 1000f)).ToString("N1");
       MelonLogger.Msg(
-          $"FPS Refresh: {refreshRate}, Update: {updateFps}, FixedUpdate: {fixedUpdateFps}");
+          $"FPS Refresh: {refreshRate}, Update: {updateFps}, FixedUpdate: {fixedUpdateFps}"
+      );
     }
   }
 }
@@ -64,8 +66,8 @@ class FpsTimer {
         _idxStart = 0;
     }
     var numFramesInWindow = _idxEnd >= _idxStart
-                                ? _idxEnd - _idxStart
-                                : _times.Length - _idxStart + _idxEnd;
+        ? _idxEnd - _idxStart
+        : _times.Length - _idxStart + _idxEnd;
     return (float)numFramesInWindow / WindowDuration;
   }
 }

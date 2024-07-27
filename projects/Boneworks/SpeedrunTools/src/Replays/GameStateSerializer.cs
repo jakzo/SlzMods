@@ -19,16 +19,19 @@ class GameStateSerializer {
       return;
 
     _skippedFrames++;
-    RegisterButtonPresses(Mod.GameState.rigManager.ControllerRig.leftController,
-                          ref _buttonsPressedLeft);
+    RegisterButtonPresses(
+        Mod.GameState.rigManager.ControllerRig.leftController,
+        ref _buttonsPressedLeft
+    );
     RegisterButtonPresses(
         Mod.GameState.rigManager.ControllerRig.rightController,
-        ref _buttonsPressedRight);
+        ref _buttonsPressedRight
+    );
   }
 
-  private void
-  RegisterButtonPresses(StressLevelZero.Rig.BaseController controller,
-                        ref byte pressed) {
+  private void RegisterButtonPresses(
+      StressLevelZero.Rig.BaseController controller, ref byte pressed
+  ) {
     if (controller.GetAButton())
       pressed |= (byte)Bwr.ButtonPress.A;
     if (controller.GetBButton())
@@ -75,13 +78,11 @@ class GameStateSerializer {
       (Bwr.SettingType.STANDING, dataPlayer.standing ? 1 : 0),
       (Bwr.SettingType.VIRTUAL_CROUCHING, dataPlayer.VirtualCrouching ? 1 : 0),
     };
-    var changedSettings =
-        _prevSettings == null
-            ? settings
-            : settings
-                  .Where((setting, i) =>
-                             setting.Item2 != _prevSettings[i].Item2)
-                  .ToArray();
+    var changedSettings = _prevSettings == null
+        ? settings
+        : settings
+              .Where((setting, i) => setting.Item2 != _prevSettings[i].Item2)
+              .ToArray();
     FlatBuffers.VectorOffset? changedSettingsOffset = null;
     if (changedSettings.Length > 0) {
       Bwr.Frame.StartChangedSettingsVector(builder, changedSettings.Length);
@@ -94,8 +95,8 @@ class GameStateSerializer {
     Bwr.Frame.StartFrame(builder);
     Bwr.Frame.AddTime(builder, secondsElapsed);
     Bwr.Frame.AddSkippedFrames(
-        builder,
-        (byte)Mathf.Clamp(_skippedFrames, byte.MinValue, byte.MaxValue));
+        builder, (byte)Mathf.Clamp(_skippedFrames, byte.MinValue, byte.MaxValue)
+    );
     if (changedSettingsOffset.HasValue)
       Bwr.Frame.AddChangedSettings(builder, changedSettingsOffset.Value);
 
@@ -123,7 +124,9 @@ class GameStateSerializer {
             controllerRightThumbstickAxis.x, controllerRightThumbstickAxis.y,
             controllerRightPosition.x, controllerRightPosition.y,
             controllerRightPosition.z, controllerRightEulerAngles.x,
-            controllerRightEulerAngles.y, controllerRightEulerAngles.z));
+            controllerRightEulerAngles.y, controllerRightEulerAngles.z
+        )
+    );
 
     var bodyPosition = rigManager.gameWorldSkeletonRig.transform.position;
     var handLeft = rigManager.physicsRig.leftHand.palmPositionTransform;
@@ -140,7 +143,9 @@ class GameStateSerializer {
             handLeft.position.z, handLeftEulerAngles.x, handLeftEulerAngles.y,
             handLeftEulerAngles.z, handRight.position.x, handRight.position.y,
             handRight.position.z, handRightEulerAngles.x,
-            handRightEulerAngles.y, handRightEulerAngles.z));
+            handRightEulerAngles.y, handRightEulerAngles.z
+        )
+    );
 
     var frame = Bwr.Frame.EndFrame(builder);
     builder.Finish(frame.Value);

@@ -5,8 +5,8 @@ const string PROJECT_CONFIG_SECTION =
 
 void CreateNewProject() {
   if (Args.Count != 3) {
-    Console.WriteLine(
-        "Usage: csi ./scripts/CreateNewProject \"game\" \"ProjectName\" \"Description of project.\"");
+    Console.WriteLine("Usage: csi ./scripts/CreateNewProject \"game\" " +
+                      "\"ProjectName\" \"Description of project.\"");
     throw new ArgumentException("Wrong number of arguments provided");
   }
 
@@ -16,27 +16,31 @@ void CreateNewProject() {
     Description = Args[2],
   };
 
-  CopyTemplateDir(templateVars, Path.Combine("scripts", "PackageTemplate"),
-                  Path.Combine("projects", templateVars.GameCapitalized,
-                               templateVars.Name));
+  CopyTemplateDir(
+      templateVars, Path.Combine("scripts", "PackageTemplate"),
+      Path.Combine("projects", templateVars.GameCapitalized, templateVars.Name)
+  );
 
   var projectUuid = GenerateUuid();
   var solutionContents = File.ReadAllText("SlzMods.sln");
   var lastProjectIdx =
       solutionContents.LastIndexOf("EndProject") + "EndProject".Length;
   var projectConfigIdx = solutionContents.LastIndexOf(PROJECT_CONFIG_SECTION) +
-                         PROJECT_CONFIG_SECTION.Length;
-  var newSolutionContents =
-      solutionContents.Substring(0, lastProjectIdx) +
+      PROJECT_CONFIG_SECTION.Length;
+  var newSolutionContents = solutionContents.Substring(0, lastProjectIdx) +
       $"\nProject(\"{{{GenerateUuid()}}}\") = \"{templateVars.GameCapitalized}{templateVars.Name}\", \"projects\\{templateVars.GameCapitalized}\\{templateVars.Name}\\{templateVars.Name}.csproj\", \"{{{projectUuid}}}\"\nEndProject" +
-      solutionContents.Substring(lastProjectIdx,
-                                 projectConfigIdx - lastProjectIdx) +
+      solutionContents.Substring(
+          lastProjectIdx, projectConfigIdx - lastProjectIdx
+      ) +
       string.Join(
           "",
           new[] { "Debug", "Release" }.SelectMany(
               type => new[] { "ActiveCfg", "Build.0" }.Select(
                   config =>
-                      $"\n    {{{projectUuid}}}.{type}|Any CPU.{config} = {type}|Any CPU"))) +
+                      $"\n    {{{projectUuid}}}.{type}|Any CPU.{config} = {type}|Any CPU"
+              )
+          )
+      ) +
       "\n" + solutionContents.Substring(projectConfigIdx);
   File.WriteAllText("SlzMods.sln", newSolutionContents);
 }
@@ -49,8 +53,9 @@ void CopyTemplateDir(TemplateVars templateVars, string from, string to) {
     File.WriteAllText(Path.Combine(to, newFilename), newContents);
   }
   foreach (var dirPath in Directory.EnumerateDirectories(from))
-    CopyTemplateDir(templateVars, dirPath,
-                    Path.Combine(to, Path.GetFileName(dirPath)));
+    CopyTemplateDir(
+        templateVars, dirPath, Path.Combine(to, Path.GetFileName(dirPath))
+    );
 }
 
 string GenerateUuid() =>
@@ -83,23 +88,23 @@ class TemplateVars {
     get => char.ToUpper(Game[0]) + Game.Substring(1).ToLower();
   }
 
-  public string ReplaceContents(string contents) =>
-      Regex.Replace(contents, @"\$\$(\w*)\$\$", (match) => {
-        switch (match.Groups[1].Value.ToUpper()) {
-        case "NAME":
-          return Name;
-        case "DESCRIPTION":
-          return Description;
-        case "GAME":
-          return Game;
-        case "GAME_UPPER":
-          return Game.ToUpper();
-        case "GAME_LOWER":
-          return Game.ToLower();
-        case "GAME_CAPITALIZED":
-          return GameCapitalized;
-        default:
-          return match.Value;
-        }
-      });
+  public string ReplaceContents(string contents
+  ) => Regex.Replace(contents, @"\$\$(\w*)\$\$", (match) => {
+    switch (match.Groups[1].Value.ToUpper()) {
+    case "NAME":
+      return Name;
+    case "DESCRIPTION":
+      return Description;
+    case "GAME":
+      return Game;
+    case "GAME_UPPER":
+      return Game.ToUpper();
+    case "GAME_LOWER":
+      return Game.ToLower();
+    case "GAME_CAPITALIZED":
+      return GameCapitalized;
+    default:
+      return match.Value;
+    }
+  });
 }

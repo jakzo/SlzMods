@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
 using SLZ.Marrow.Input;
@@ -83,7 +82,7 @@ public class HandTracker {
   private int _logIndex = 0;
   private static TMPro.TextMeshPro _wristLog;
   private string LogString(params object[] messageParts
-  ) => string.Join(" ", messageParts.Select(part => part.ToString()));
+  ) => string.Join(" ", messageParts.Select(part => part?.ToString()));
   internal void Log(params object[] messageParts) {
     var prefix = Opts.isLeft ? "[L] " : "[R] ";
     Mod.Instance.LoggerInstance.Msg(prefix + LogString(messageParts));

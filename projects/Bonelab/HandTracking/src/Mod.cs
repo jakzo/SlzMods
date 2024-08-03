@@ -21,9 +21,11 @@ public class Mod : MelonMod {
   public static Mod Instance;
 
   private MelonPreferences_Entry<LocomotionType> _prefLoco;
+  private MelonPreferences_Entry<bool> _prefForwardsOnly;
   private HandTracker[] _trackers = { null, null };
   private Locomotion _locoState;
   private Jumping _jumping;
+  private Inventory _inventory;
   private HashSet<LaserCursor> _visibleLaserCursors = new();
 
   public HandTracker TrackerLeft {
@@ -44,6 +46,10 @@ public class Mod : MelonMod {
         "locomotion_type", LocomotionType.HEAD, "Locomotion type",
         "How running is performed (either \"HEAD\" or \"HANDS\")"
     );
+    _prefForwardsOnly = category.CreateEntry(
+        "forwards_only", true, "Locomotion forwards only",
+        "Locks movement to forwards only (no strafing)"
+    );
     _prefLoco.OnEntryValueChanged.Subscribe(
         (newValue, prevValue) => SetupLocomotion(newValue)
     );
@@ -60,7 +66,7 @@ public class Mod : MelonMod {
 
     case LocomotionType.HEAD:
     default:
-      _locoState = new HeadLocomotion();
+      _locoState = new HeadLocomotion(_prefForwardsOnly);
       break;
     }
 
@@ -118,6 +124,10 @@ public class Mod : MelonMod {
       _jumping.Update();
     }
 
+    if (_inventory == null) {
+      _inventory = new Inventory();
+    }
+
     var nonDominantTracker =
         Utils.IsLocoControllerLeft() ? TrackerRight : TrackerLeft;
     nonDominantTracker.ProxyController.Joystick2DAxis = new Vector2(
@@ -164,11 +174,12 @@ public class Mod : MelonMod {
   internal static class ControllerActionMap_Refresh {
     [HarmonyPrefix]
     private static bool Prefix(ControllerActionMap __instance) {
-      var tracker = Mod.Instance.GetTrackerFromProxyController(__instance);
+      var tracker = Instance.GetTrackerFromProxyController(__instance);
       if (tracker == null || !tracker.IsTracking)
         return true;
 
       tracker.UpdateProxyController(Instance._locoState.Axis);
+      Instance._inventory?.OnHandUpdate(tracker);
       return false;
     }
   }
@@ -194,7 +205,7 @@ public class Mod : MelonMod {
     private static void Postfix(LaserCursor __instance) {
       // TODO: Point laser pointer in direction of hand
       if (!__instance.cursorHidden)
-        Mod.Instance._visibleLaserCursors.Add(__instance);
+        Instance._visibleLaserCursors.Add(__instance);
     }
   }
 
@@ -203,7 +214,7 @@ public class Mod : MelonMod {
     [HarmonyPostfix]
     private static void Postfix(LaserCursor __instance) {
       if (__instance.cursorHidden)
-        Mod.Instance._visibleLaserCursors.Remove(__instance);
+        Instance._visibleLaserCursors.Remove(__instance);
     }
   }
 
@@ -212,7 +223,7 @@ public class Mod : MelonMod {
     [HarmonyPrefix]
     private static void Prefix(LaserCursor __instance, ref bool __state) {
       var pinchedTracker =
-          Mod.Instance._trackers.FirstOrDefault(t => t?.PinchUp ?? false);
+          Instance._trackers.FirstOrDefault(t => t?.PinchUp ?? false);
       if (pinchedTracker == null)
         return;
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MelonLoader;
 using UnityEngine;
 using Sst.Utilities;
 using SLZ.Marrow.Utilities;
@@ -19,14 +20,16 @@ public class HeadLocomotion : Locomotion {
   private const float RUN_SCORE_DECAY = 2f;
   private const float RUN_REMAINDER = 1f - WALK_SPEED;
 
-  // Only run forwards instead of any direction (easier to control)
-  private const bool LOCK_FORWARDS = true;
-
   // TODO: Running start still seems a bit too sensitive
   private float _startY = 0f;
   private bool _isHeadDirUp = false;
   private bool _isRunning = false;
   private float _runningScore = 0f;
+  private MelonPreferences_Entry<bool> _prefForwardsOnly;
+
+  public HeadLocomotion(MelonPreferences_Entry<bool> prefForwardsOnly) {
+    _prefForwardsOnly = prefForwardsOnly;
+  }
 
   public override void Init(HandTracker tracker) {}
 
@@ -34,9 +37,9 @@ public class HeadLocomotion : Locomotion {
     var hmd = MarrowGame.xr.HMD;
 
     // TODO: Account for controller-rotation movement setting
-    var direction = Rotate(
-        new Vector2(hmd.Position.x, hmd.Position.z), hmd.Rotation.eulerAngles.y
-    );
+    var hmdRotY = hmd.Rotation.eulerAngles.y;
+    var direction =
+        Rotate(new Vector2(hmd.Position.x, hmd.Position.z), hmdRotY);
     var directionAmount =
         Mathf.Clamp01((direction.magnitude - DEADZONE) / MAX_DIST);
 
@@ -67,8 +70,11 @@ public class HeadLocomotion : Locomotion {
         _isRunning ? RUN_REMAINDER * Mathf.Clamp01(_runningScore) : 0f;
 
     var stickAmount = directionAmount * (WALK_SPEED + runningSpeed);
-    Axis = LOCK_FORWARDS ? new Vector2(0f, stickAmount)
-                         : direction.normalized *stickAmount;
+
+    Axis = direction.normalized * stickAmount;
+    if (_prefForwardsOnly.Value) {
+      Axis = new Vector2(0f, Mathf.Clamp01(Axis.Value.y));
+    }
 
     // Mod.Instance.TrackerLeft.LogToWrist(
     //     "dir=" + direction.ToString() + ", rs=" +

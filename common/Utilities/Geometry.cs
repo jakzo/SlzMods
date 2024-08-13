@@ -239,5 +239,17 @@ public class Geometry {
       return (vertices.ToArray(), triangles, normals);
     }
   }
+
+  public static void
+  SetMaterial(GameObject gameObject, Color color, Shader shader = null) {
+    var meshRenderer = gameObject.GetComponent<MeshRenderer>();
+    meshRenderer.shadowCastingMode =
+        UnityEngine.Rendering.ShadowCastingMode.Off;
+    meshRenderer.receiveShadows = false;
+    var material = meshRenderer.material;
+    if (shader != null)
+      material.shader = shader;
+    material.color = color;
+  }
 }
 }

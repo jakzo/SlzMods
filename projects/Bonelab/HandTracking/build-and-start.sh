@@ -4,7 +4,7 @@ cd "$(dirname $0)"
 dotnet build ./Project.csproj
 
 # TIP: Enable wireless mode from SideQuest
-adb connect 192.168.0.69
+# adb connect 192.168.0.69
 
 FILE=HandTracking.P4.ML5.dll
 adb shell am force-stop com.StressLevelZero.BONELAB

@@ -1,22 +1,9 @@
 using System;
-using MelonLoader;
 using UnityEngine;
 
 namespace Sst.HandTracking;
 
 public class HandState {
-  private static Vector3 FromFlippedXVector3f(OVRPlugin.Vector3f vector
-  ) => new Vector3(-vector.x, vector.y, vector.z);
-
-  private static Vector3 FromFlippedZVector3f(OVRPlugin.Vector3f vector
-  ) => new Vector3(vector.x, vector.y, -vector.z);
-
-  private static Quaternion FromFlippedXQuatf(OVRPlugin.Quatf quat
-  ) => new Quaternion(quat.x, -quat.y, -quat.z, quat.w);
-
-  private static Quaternion FromFlippedZQuatf(OVRPlugin.Quatf quat
-  ) => new Quaternion(-quat.x, -quat.y, quat.z, quat.w);
-
   public bool IsLeft;
   public Vector3 Position;
   public Quaternion Rotation;
@@ -33,6 +20,7 @@ public class HandState {
   private OVRInput.Controller _controller;
   private OVRPlugin.HandState _state = new();
   private OVRPlugin.Skeleton2 _skeleton = new();
+  private DebugHand _debugHand;
 
   public HandState(bool isLeft) {
     IsLeft = isLeft;
@@ -45,6 +33,10 @@ public class HandState {
       throw new Exception("Failed to get hand skeleton");
     }
 
+#if DEBUG
+    _debugHand = new(_skeleton);
+#endif
+
     _hand = isLeft ? OVRPlugin.Hand.HandLeft : OVRPlugin.Hand.HandRight;
     Update();
   }
@@ -56,12 +48,12 @@ public class HandState {
     }
     HasState = true;
 
-    Position = FromFlippedZVector3f(_state.RootPose.Position);
-    Rotation = FromFlippedZQuatf(_state.RootPose.Orientation);
+    Position = Utils.FromFlippedZVector3f(_state.RootPose.Position);
+    Rotation = Utils.FromFlippedZQuatf(_state.RootPose.Orientation);
     Scale = _state.HandScale;
 
     for (var i = 0; i < Joints.Length; i++) {
-      var localRot = FromFlippedXQuatf(_state.BoneRotations[i]);
+      var localRot = Utils.FromFlippedZQuatf(_state.BoneRotations[i]);
       var parentIdx = _skeleton.Bones[i].ParentBoneIndex;
       var parentJoint =
           OVRPlugin.IsValidBone((OVRPlugin.BoneId)parentIdx, _skeletonType)
@@ -70,8 +62,8 @@ public class HandState {
           ? Joints[parentIdx]
           : JointTransform.IDENTITY;
       var handRot = parentJoint.HandRotation * localRot;
-      var localPos =
-          handRot * FromFlippedXVector3f(_skeleton.Bones[i].Pose.Position);
+      var localPos = handRot *
+          Utils.FromFlippedZVector3f(_skeleton.Bones[i].Pose.Position);
       var handPos = parentJoint.HandPosition + localPos;
 
       Joints[i] = new JointTransform() {
@@ -79,7 +71,13 @@ public class HandState {
         LocalRotation = localRot,
         HandPosition = handPos,
         HandRotation = handRot,
+        TrackingPosition = Position + Rotation * (handPos * Scale),
+        TrackingRotation = Rotation * handRot,
       };
+
+#if DEBUG
+      _debugHand.Update(this);
+#endif
     }
 
     HandConfidence = _state.HandConfidence;
@@ -97,10 +95,16 @@ public class HandState {
 }
 
 public struct JointTransform {
-  public static JointTransform IDENTITY;
+  public static JointTransform IDENTITY = new JointTransform() {
+    LocalPosition = Vector3.zero,    LocalRotation = Quaternion.identity,
+    HandPosition = Vector3.zero,     HandRotation = Quaternion.identity,
+    TrackingPosition = Vector3.zero, TrackingRotation = Quaternion.identity,
+  };
 
   public Vector3 LocalPosition;
   public Quaternion LocalRotation;
   public Vector3 HandPosition;
   public Quaternion HandRotation;
+  public Vector3 TrackingPosition;
+  public Quaternion TrackingRotation;
 }

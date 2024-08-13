@@ -1,15 +1,18 @@
 using System;
 using UnityEngine;
+using SLZ.Rig;
+using Sst.Utilities;
 
 namespace Sst.HandTracking;
 
 public abstract class Locomotion {
-  public Vector2? Axis;
+  public Vector2 Axis;
   public abstract void Init(HandTracker tracker);
   public abstract void Update();
 }
 
 public class HandLocomotion : Locomotion {
+  private const float DEFAULT_HEIGHT = 1.75f;
   private const float CONFIDENCE_BUILD_RATE = 4f;
   private const float CONFIDENCE_DRAIN_RATE = 1f;
   private const float VELOCITY_MIN = 1f;
@@ -35,22 +38,18 @@ public class HandLocomotion : Locomotion {
     } else {
       _right = state;
     }
-    tracker.LocoState = this;
   }
 
   public override void Update() {
-    var locoTracker =
-        Utils.IsLocoControllerLeft() ? _left.Tracker : _right.Tracker;
-    if (locoTracker.IsControllerConnected() || _left == null ||
-        _right == null) {
-      Axis = null;
-      return;
-    }
-
     var isConfident = _left.IsTrackedConfident && _right.IsTrackedConfident;
 
-    _left.Update();
-    _right.Update();
+    var player =
+        LevelHooks.RigManager?.controllerRig.TryCast<OpenControllerRig>()
+            ?.player;
+    var scale = player != null ? DEFAULT_HEIGHT / player.realWorldHeight : 1f;
+
+    _left.Update(scale);
+    _right.Update(scale);
 
     var (stateMax, stateMin) =
         Mathf.Abs(_left.Velocity) > Mathf.Abs(_right.Velocity)
@@ -97,7 +96,7 @@ public class LocoHandState {
   private float _maxHeight;
   private float _lastTime;
 
-  public void Update() {
+  public void Update(float scale) {
     // TODO: Is there something else to say hand position is low confidence?
     IsTrackedConfident = Tracker.IsControllerConnected() ||
         Tracker.HandState.IsActive() && Tracker.HandState.HasState &&
@@ -110,10 +109,10 @@ public class LocoHandState {
     _lastTime = Time.unscaledTime;
 
     var prevHeight = _height;
-    // TODO: Convert to game units (meters if player is 1.78m tall)
-    _height = (Tracker.HandState.IsActive() ? Tracker.ProxyController
-                                            : Tracker.Opts.marrowController)
-                  .Position.y;
+    _height = scale *
+        (Tracker.HandState.IsActive() ? Tracker.ProxyController
+                                      : Tracker.Opts.marrowController)
+            .Position.y;
 
     var prevVelocity = Velocity;
     Velocity = (_height - prevHeight) / Time.deltaTime;

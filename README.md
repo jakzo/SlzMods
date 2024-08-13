@@ -1,5 +1,5 @@
-Speedrun utilities for Stress Level Zero games.
+Collection of my Boneworks/Bonelab mods and tools.
 
 ## Structure
 
-The speedrun mods are under `projects/GAMENAME`. Common code is included in `common`.
+The mods/tools are under `projects/CATEGORY`. Common code is included in `common`.

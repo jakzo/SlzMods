@@ -7,6 +7,8 @@ using SLZ.Rig;
 using SLZ.Interaction;
 using Sst.Utilities;
 using SLZ.Bonelab;
+using SLZ.VRMK;
+using SLZ.Data;
 
 namespace Sst.HandTracking;
 
@@ -19,9 +21,12 @@ public class HandTracker {
     public OVRInput.Controller ovrHand;
     // Rotation is off for some reason so we need to correct it
     // TODO: Are these offsets related to HandActionMap.LeftAnimSpace?
-    // TODO: Seem to be different offsets per avatar
+    // TODO: Seem to be different offsets per avatar (or maybe that's just the
+    // avatar space remapping)
     public Quaternion handRotationOffset;
     public Vector3 handPositionOffset;
+    public Func<Vector2> getLocoAxis;
+    public Func<bool> getWeaponButtonPressed;
   }
 
   private const float GRIP_CURL_THRESHOLD = 0.6f;
@@ -68,7 +73,6 @@ public class HandTracker {
   public float? PedalInput;
   public bool Proxy = false;
   public XRController ProxyController;
-  public HandLocomotion LocoState;
   public HandState HandState;
 
   private OVRPlugin.HandState _handState;
@@ -139,7 +143,7 @@ public class HandTracker {
     }
   }
 
-  public void UpdateProxyController(Vector2? locoAxis) {
+  public void UpdateProxyController() {
     HandState.Update();
 
     ProxyController._IsConnected_k__BackingField = true;
@@ -177,10 +181,10 @@ public class HandTracker {
       UpdateTrigger();
       UpdateMenu();
       UpdateVehiclePedals();
-      // TODO: Inventory
+      UpdateWeaponButton();
     }
 
-    UpdateLocomotion(locoAxis);
+    UpdateLocomotion();
   }
 
   private void UpdateFingerCurls() {
@@ -231,16 +235,10 @@ public class HandTracker {
   private float
   CalculateFingerCurl(OVRPlugin.BoneId[] fingerJoints, float maxRotation) {
     var totalRotation = 0f;
-    var prevJointRot = ToQuaternion(
-        _handState.BoneRotations[(int)OVRPlugin.BoneId.Hand_WristRoot]
-    );
-    for (var i = 0; i < fingerJoints.Length; i++) {
-      var jointRotation =
-          ToQuaternion(_handState.BoneRotations[(int)fingerJoints[i]]);
-      var relativeRotation = Quaternion.Inverse(prevJointRot) * jointRotation;
-      totalRotation += (relativeRotation.eulerAngles.z + 180f) % 360f - 180f;
+    foreach (var joint in fingerJoints) {
+      var rot = HandState.Joints[(int)joint].LocalRotation.eulerAngles.z;
+      totalRotation += 180f - (360f + 180f - rot) % 360f;
     }
-
     return MapToFingerCurve(Mathf.Clamp01(totalRotation / maxRotation));
   }
 
@@ -266,25 +264,22 @@ public class HandTracker {
     return linearCurl;
   }
 
-  // TODO: Replace with utils
-  private Quaternion ToQuaternion(OVRPlugin.Quatf quatf
-  ) => new Quaternion(quatf.x, quatf.y, quatf.z, quatf.w);
+  private void UpdateLocomotion() {
+    if (Opts.isLeft != Utils.IsLocoControllerLeft())
+      return;
 
-  private void UpdateLocomotion(Vector2? axis) {
-    if (Opts.isLeft == Utils.IsLocoControllerLeft() && axis.HasValue) {
-      ProxyController.Joystick2DAxis = axis.Value;
+    ProxyController.Joystick2DAxis = Opts.getLocoAxis();
 
-      if (axis.Value.sqrMagnitude > 0.1f) {
-        ProxyController.JoystickButtonDown = !ProxyController.JoystickButton;
-        ProxyController.JoystickButtonUp = false;
-        ProxyController.JoystickButton = true;
-        ProxyController.JoystickTouch = true;
-      } else {
-        ProxyController.JoystickButtonUp = ProxyController.JoystickButton;
-        ProxyController.JoystickButtonDown = false;
-        ProxyController.JoystickButton = false;
-        ProxyController.JoystickTouch = false;
-      }
+    if (ProxyController.Joystick2DAxis.sqrMagnitude > 0.1f) {
+      ProxyController.JoystickButtonDown = !ProxyController.JoystickButton;
+      ProxyController.JoystickButtonUp = false;
+      ProxyController.JoystickButton = true;
+      ProxyController.JoystickTouch = true;
+    } else {
+      ProxyController.JoystickButtonUp = ProxyController.JoystickButton;
+      ProxyController.JoystickButtonDown = false;
+      ProxyController.JoystickButton = false;
+      ProxyController.JoystickTouch = false;
     }
   }
 
@@ -325,16 +320,18 @@ public class HandTracker {
     if (_forcePull.IsPulling())
       return true;
 
-    // TODO: Are there any triggerable objects which don't use TargetGrip?
-    var isHoldingObject =
-        GetPhysicalHand()?.AttachedReceiver?.TryCast<TargetGrip>() != null;
-    if (!isHoldingObject)
+    if (!IsHoldingInteractableItem())
       return IsGripping;
 
     var indexPos = GetRelativeIndexTipPos();
     return indexPos.x > 0f;
   }
 
+  private bool
+  IsHoldingInteractableItem() => GetPhysicalHand()?.AttachedReceiver?.Host
+      != null;
+
+  // TODO: Just use HandState.HandPosition
   private Vector3 GetRelativeIndexTipPos() {
     var jointPos = Vector3.zero;
     var jointRot = Quaternion.identity;
@@ -356,9 +353,13 @@ public class HandTracker {
   }
 
   private void UpdateVehiclePedals() {
-    // TODO: Only set PedalInput if gripping steering wheel?
     if (!LevelHooks.RigManager?.activeSeat ||
         GetPhysicalHand()?.AttachedReceiver == null) {
+      PedalInput = null;
+      return;
+    }
+
+    if (!IsGrippingSteeringWheel()) {
       PedalInput = null;
       return;
     }
@@ -367,6 +368,15 @@ public class HandTracker {
     var min = -0.01f;
     var max = 0.01f;
     PedalInput = Mathf.Clamp01((indexPos.x - min) / (max - min));
+  }
+
+  // TODO: Is this reliable enough to detect modded vehicle steering wheels?
+  private bool IsGrippingSteeringWheel() {
+    var attachedHost =
+        GetPhysicalHand()?.AttachedReceiver?.Host?.TryCast<InteractableHost>();
+    var hingeHost = attachedHost?.GetComponent<HingeVirtualController>()
+                        ?.host?.TryCast<InteractableHost>();
+    return hingeHost?.GetInstanceID() == attachedHost.GetInstanceID();
   }
 
   // TODO: Some weirdness with popup menu closing on first pinch
@@ -399,21 +409,20 @@ public class HandTracker {
         menu.Trigger(false, false, GetUiControllerInput(rigController));
       }
     }
+  }
 
-    // TODO: Do I need this for things like changing constrainer mode?
-    // if ((_handState.Status & OVRPlugin.HandStatus.MenuPressed) != 0) {
-    //   ProxyController.BButtonDown = !ProxyController.BButton;
-    //   ProxyController.BButtonUp = false;
-    //   ProxyController.BButton = true;
-    //   if (ProxyController.BButtonDown)
-    //     Log("B pressed via menu gesture");
-    // } else {
-    //   ProxyController.BButtonUp = ProxyController.BButton;
-    //   ProxyController.BButtonDown = false;
-    //   ProxyController.BButton = false;
-    //   if (ProxyController.BButtonUp)
-    //     Log("B up");
-    // }
+  private void UpdateWeaponButton() {
+    if (Opts.getWeaponButtonPressed() && IsHoldingInteractableItem()) {
+      ProxyController.BButtonDown = !ProxyController.BButton;
+      ProxyController.BButtonUp = false;
+      ProxyController.BButton = true;
+      if (ProxyController.BButtonDown)
+        Log("Weapon button down");
+    } else {
+      ProxyController.BButtonUp = ProxyController.BButton;
+      ProxyController.BButtonDown = false;
+      ProxyController.BButton = false;
+    }
   }
 
   private UIControllerInput GetUiControllerInput(BaseController rigController) {
@@ -435,7 +444,6 @@ public class HandTracker {
     return _physicalHand;
   }
 
-  // TODO: Animate fingers to the tracked joint positions instead of using curl
   public void OnOpenControllerProcessFingers(OpenController openController) {
     // Skip processing our curl values because they are already good
     openController._processedThumb = ProxyController.ThumbFinger;
@@ -443,5 +451,57 @@ public class HandTracker {
     openController._processedMiddle = ProxyController.MiddleFinger;
     openController._processedRing = ProxyController.RingFinger;
     openController._processedPinky = ProxyController.PinkyFinger;
+  }
+
+  public void OnHandAnimate(HandPoseAnimator animator) {
+    var hand = GetPhysicalHand();
+    if (!IsTracking || hand.AttachedReceiver != null)
+      return;
+
+    var openPose = hand.Animator._openPose;
+    Quaternion FingerJointRotation(
+        Quaternion baseRotation, OVRPlugin.BoneId boneId
+    ) => baseRotation *
+        Utils.FlipXY(HandState.Joints[(int)boneId].LocalRotation);
+    float FingerJointAngle(float baseAngleDegrees, OVRPlugin.BoneId boneId) =>
+        baseAngleDegrees +
+        HandState.Joints[(int)boneId].LocalRotation.eulerAngles.z;
+
+    // TODO: Tune these values to match the default hand tracking pose
+    // TODO: How do we know when the hand is in the open pose?
+    // TODO: Can we have it smoothly transition from hand tracked joints to
+    // other poses?
+    hand.Animator._currentPoseData = new HandPose.PoseData() {
+      thumb1 = FingerJointRotation(
+          Quaternion.Euler(54.7015f, 80.8802f, 36.1174f),
+          OVRPlugin.BoneId.Hand_Thumb1
+      ),
+      thumb2 = FingerJointAngle(0.9604f, OVRPlugin.BoneId.Hand_Thumb2),
+      thumb3 = FingerJointAngle(-0.7674f, OVRPlugin.BoneId.Hand_Thumb3),
+      index1 = FingerJointRotation(
+          Quaternion.Euler(359.7946f, 10.2376f, 4.6807f),
+          OVRPlugin.BoneId.Hand_Index1
+      ),
+      index2 = FingerJointAngle(-0.045f, OVRPlugin.BoneId.Hand_Index2),
+      index3 = FingerJointAngle(-0.2698f, OVRPlugin.BoneId.Hand_Index3),
+      middle1 = FingerJointRotation(
+          Quaternion.Euler(355.5994f, 359.7487f + 8f, 0.4831f),
+          OVRPlugin.BoneId.Hand_Middle1
+      ),
+      middle2 = FingerJointAngle(0.1587f, OVRPlugin.BoneId.Hand_Middle2),
+      middle3 = FingerJointAngle(-0.0703f, OVRPlugin.BoneId.Hand_Middle3),
+      ring1 = FingerJointRotation(
+          Quaternion.Euler(356.0975f, 355.5379f + 8f, 6.0902f),
+          OVRPlugin.BoneId.Hand_Ring1
+      ),
+      ring2 = FingerJointAngle(-0.064f, OVRPlugin.BoneId.Hand_Ring2),
+      ring3 = FingerJointAngle(-0.064f, OVRPlugin.BoneId.Hand_Ring3),
+      pinky1 = FingerJointRotation(
+          Quaternion.Euler(355.7065f - 15f, 345.3653f - 5f, 10.7265f),
+          OVRPlugin.BoneId.Hand_Pinky1
+      ),
+      pinky2 = FingerJointAngle(0f, OVRPlugin.BoneId.Hand_Pinky2),
+      pinky3 = FingerJointAngle(0f, OVRPlugin.BoneId.Hand_Pinky3),
+    };
   }
 }

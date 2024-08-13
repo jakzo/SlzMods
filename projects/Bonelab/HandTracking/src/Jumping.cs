@@ -1,19 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using MelonLoader;
 using UnityEngine;
-using SLZ.Rig;
 using SLZ.Marrow.Utilities;
 using Sst.Utilities;
 
 namespace Sst.HandTracking;
 
 public class Jumping {
-  private const float WINDOW_DURATION = 0.3f;
+  private const double WINDOW_DURATION = 0.3;
   private const float HEIGHT_THRESHOLD = 0.3f;
 
-  private Queue<(float Time, float Y)> _minHmdHeightInWindow = new();
+  private Queue<(double Time, float Y)> _minHmdHeightInWindow = new();
   private float _lastAddedHmdHeight;
   private bool _isJumping = false;
 
@@ -22,7 +19,7 @@ public class Jumping {
   // TODO: Handle short jumps and long uncrouches properly
   public void Update() {
     var y = MarrowGame.xr.HMD.Position.y;
-    var windowStart = Time.unscaledTime - WINDOW_DURATION;
+    var windowStart = Time.timeAsDouble - WINDOW_DURATION;
 
     while (_minHmdHeightInWindow.Count > 0 &&
            _minHmdHeightInWindow.Peek().Time < windowStart) {
@@ -30,7 +27,7 @@ public class Jumping {
     }
 
     if (_minHmdHeightInWindow.Count == 0 || y > _lastAddedHmdHeight) {
-      _minHmdHeightInWindow.Enqueue((Time.unscaledTime, y));
+      _minHmdHeightInWindow.Enqueue((Time.timeAsDouble, y));
       _lastAddedHmdHeight = y;
     }
 

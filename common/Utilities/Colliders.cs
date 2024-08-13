@@ -180,7 +180,7 @@ public static class Colliders {
     switch (castedCollider) {
     case BoxCollider boxCollider: {
       visualization = GameObject.Instantiate(DebugColliderPrefabs.BOX, parent);
-      SetMaterial(visualization, color, shader);
+      Geometry.SetMaterial(visualization, color, shader);
       visualization.active = true;
       break;
     }
@@ -188,7 +188,7 @@ public static class Colliders {
     case SphereCollider sphereCollider: {
       visualization =
           GameObject.Instantiate(DebugColliderPrefabs.SPHERE, parent);
-      SetMaterial(visualization, color, shader);
+      Geometry.SetMaterial(visualization, color, shader);
       visualization.active = true;
       break;
     }
@@ -198,18 +198,18 @@ public static class Colliders {
       var cylinder = GameObject.Instantiate(
           DebugColliderPrefabs.CYLINDER, visualization.transform
       );
-      SetMaterial(cylinder, color, shader);
+      Geometry.SetMaterial(cylinder, color, shader);
       cylinder.active = true;
       var endA = GameObject.Instantiate(
           DebugColliderPrefabs.SPHERE, visualization.transform
       );
-      SetMaterial(endA, color, shader);
+      Geometry.SetMaterial(endA, color, shader);
       endA.active = true;
       endA.transform.localPosition = new Vector3(0, -0.5f, 0);
       var endB = GameObject.Instantiate(
           DebugColliderPrefabs.SPHERE, visualization.transform
       );
-      SetMaterial(endB, color, shader);
+      Geometry.SetMaterial(endB, color, shader);
       endB.active = true;
       endB.transform.localPosition = new Vector3(0, 0.5f, 0);
       visualization.transform.SetParent(parent, false);
@@ -221,7 +221,7 @@ public static class Colliders {
       var meshFilter = visualization.AddComponent<MeshFilter>();
       meshFilter.mesh = meshCollider.sharedMesh;
       var meshRenderer = visualization.AddComponent<MeshRenderer>();
-      SetMaterial(meshRenderer.gameObject, color, shader);
+      Geometry.SetMaterial(meshRenderer.gameObject, color, shader);
       visualization.transform.SetParent(parent, false);
       visualization.active = true;
       break;
@@ -339,18 +339,6 @@ public static class Colliders {
       _cachedOther = other;
       return true;
     }
-  }
-
-  private static void
-  SetMaterial(GameObject gameObject, Color color, Shader shader = null) {
-    var meshRenderer = gameObject.GetComponent<MeshRenderer>();
-    meshRenderer.shadowCastingMode =
-        UnityEngine.Rendering.ShadowCastingMode.Off;
-    meshRenderer.receiveShadows = false;
-    var material = meshRenderer.material;
-    if (shader != null)
-      material.shader = shader;
-    material.color = color;
   }
 }
 }

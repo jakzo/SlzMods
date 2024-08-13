@@ -14,40 +14,9 @@ public class HeadLocomotion : Locomotion {
   private const float DEADZONE = 0.1f;
   private const float MAX_DIST = 0.1f;
   private const float WALK_SPEED = 0.4f;
-  private const float RUN_SCORE_MAX = 1.2f;
-  private const float RUN_SCORE_DECAY = 2f;
   private const float RUN_REMAINDER = 1f - WALK_SPEED;
 
-  private const float HEAD_BOB_DEADZONE = 0.01f;
-  private const float HEAD_BOB_MAX = 0.05f;
-  private const float HEAD_BOB_MULTIPLIER = 100f;
-
-  private const int FFT_BUFFER_SIZE = 64;
-  private const float FFT_REFRESH_RATE = 90f;
-  private const float FFT_SAMPLE_DURATION = 1f / FFT_REFRESH_RATE;
-  private const float FFT_HALF_SAMPLE_DURATION = FFT_SAMPLE_DURATION / 2f;
-  private const float FFT_WINDOW_DURATION =
-      FFT_SAMPLE_DURATION * FFT_BUFFER_SIZE; // 0.71 seconds
-  private const float HEAD_BOB_MIN_DURATION = 0.2f;
-  private const float HEAD_BOB_MAX_DURATION = 0.5f;
-  private static readonly int HEAD_BOB_MIN_FFT_BIN = Mathf.RoundToInt(
-      FFT_BUFFER_SIZE / (HEAD_BOB_MAX_DURATION * FFT_WINDOW_DURATION)
-  );
-  private static readonly int HEAD_BOB_MAX_FFT_BIN = Mathf.RoundToInt(
-      FFT_BUFFER_SIZE / (HEAD_BOB_MIN_DURATION * FFT_WINDOW_DURATION)
-  );
-  private const float HEAD_BOB_THRESHOLD_STEEPNESS = 10f;
-  private const float HEAD_BOB_BASE_TIME = 0.25f;
-  private const float HEAD_BOB_METERS_PER_SECOND = 0.7f;
-
-  // TODO: Running start still seems a bit too sensitive
-  private float _startY = 0f;
-  private bool _isHeadDirUp = false;
-  private bool _isRunning = false;
-  private float _runningScore = 0f;
-  private RollingFft _fft;
-  private double _lastFftUpdate;
-  private float _lastFftResult;
+  private RunningDetector _runningDetector = new();
   private MelonPreferences_Entry<bool> _prefForwardsOnly;
 
   public HeadLocomotion(MelonPreferences_Entry<bool> prefForwardsOnly) {
@@ -65,84 +34,21 @@ public class HeadLocomotion : Locomotion {
     var directionAmount =
         Mathf.Clamp01((direction.magnitude - DEADZONE) / MAX_DIST);
 
-    var addedScore = CalculateAddedRunningScoreFft();
-    var decay = RUN_SCORE_DECAY * Time.deltaTime;
-    var newRunningScore =
-        Mathf.Clamp(_runningScore + addedScore - decay, 0f, RUN_SCORE_MAX);
-
-    if (_runningScore > 0f && newRunningScore <= 0f)
-      _isRunning = false;
-    _runningScore = newRunningScore;
-
-    var runningSpeed =
-        _isRunning ? RUN_REMAINDER * Mathf.Clamp01(_runningScore) : 0f;
+    var runningScore = _runningDetector.CalculateRunningScore(
+        Time.timeAsDouble, hmd.Position.y
+    );
+    var runningSpeed = RUN_REMAINDER * Mathf.Clamp01(runningScore);
 
     var stickAmount = directionAmount * (WALK_SPEED + runningSpeed);
 
     Axis = direction.normalized * stickAmount;
     if (_prefForwardsOnly.Value) {
-      Axis = new Vector2(0f, Mathf.Clamp01(Axis.Value.y));
+      Axis = new Vector2(0f, Mathf.Clamp01(Axis.y));
     }
-
-    // Mod.Instance.TrackerLeft.LogToWrist(
-    //     "dir=" + direction.ToString() + ", rs=" +
-    //     _runningScore.ToString("N1") +
-    //     ", dm=" + distMultiplier.ToString("N1") + ", as=" +
-    //     addedScore.ToString("N1") + ", da=" +
-    //     directionAmount.ToString("N1"));
 
 #if DEBUG
     UpdateRecordHmdY();
 #endif
-  }
-
-  private float CalculateAddedRunningScoreFast() {
-    var y = MarrowGame.xr.HMD.Position.y;
-    var prevY = MarrowGame.xr.HMD._lastPosition.y;
-    if ((y > prevY) != _isHeadDirUp) {
-      _isHeadDirUp = !_isHeadDirUp;
-      _startY = prevY;
-      if (_runningScore > 0f)
-        _isRunning = true;
-    }
-    var deadzoneDist =
-        Mathf.Max(HEAD_BOB_DEADZONE - Mathf.Abs(_startY - prevY), 0f);
-    var dist = Mathf.Max(Mathf.Abs(y - prevY) - deadzoneDist, 0f);
-    var prevTotalDist = Mathf.Abs(prevY - _startY);
-    var distMultiplier =
-        Mathf.Clamp01(1f - (prevTotalDist - HEAD_BOB_DEADZONE) / HEAD_BOB_MAX);
-    return dist * distMultiplier * HEAD_BOB_MULTIPLIER;
-  }
-
-  // TODO: Only compute FFT every 0.1s or so
-  private float CalculateAddedRunningScoreFft() {
-    if (_fft == null) {
-      _fft = new(FFT_BUFFER_SIZE);
-      _lastFftUpdate = Time.timeAsDouble;
-    }
-
-    var y = MarrowGame.xr.HMD.Position.y;
-    System.Numerics.Complex[] result = null;
-    while (Math.Abs(_lastFftUpdate - Time.timeAsDouble) >
-           FFT_HALF_SAMPLE_DURATION) {
-      result = _fft.Add(y);
-      _lastFftUpdate += FFT_SAMPLE_DURATION;
-    }
-    if (result == null)
-      return _lastFftResult;
-
-    var totalScore = 0f;
-    for (var i = HEAD_BOB_MIN_FFT_BIN; i <= HEAD_BOB_MAX_FFT_BIN; i++) {
-      var binDuration = FFT_WINDOW_DURATION / i;
-      var binAmplitude = (float)result[i].Magnitude / FFT_WINDOW_DURATION;
-      var binThreshold =
-          (binDuration - HEAD_BOB_BASE_TIME) / HEAD_BOB_METERS_PER_SECOND;
-      if (binAmplitude > binThreshold)
-        totalScore += (binAmplitude - binThreshold) * binDuration;
-    }
-
-    // TODO: Sigmoid activation
-    return totalScore * 2f;
   }
 
   public static Vector2 Rotate(Vector2 v, float degrees) {
@@ -174,4 +80,125 @@ public class HeadLocomotion : Locomotion {
     }
   }
 #endif
+}
+
+/// Detects running through the up/down bobbing of the player's head
+public class RunningDetector {
+  // Head bob threshold parameters
+  // NOTE: These values are for a single up or down head bob phase (not both)
+  private const double TIME_MIN = 0.1;
+  private const double TIME_MAX = 0.3;
+  private const float TIME_WINDOW = (float)(TIME_MAX - TIME_MIN);
+  private const float MIN_DIST_AT_TIME_MIN = 0.02f;
+  private const float MIN_DIST_AT_TIME_MAX = 0.12f;
+  private const float DIST_WINDOW =
+      (float)(MIN_DIST_AT_TIME_MAX - MIN_DIST_AT_TIME_MIN);
+  // Controls how the minimum head bob distance ramps from the value at TIME_MIN
+  // to the value at TIME_MAX with 1 being linear and above 1 being exponential
+  private const float DIST_EXPONENT = 2f;
+
+  // Number of phases required to register before running starts (to avoid
+  // starting running when crouching/uncrouching)
+  private const int WARMUP_PHASES = 2;
+  // Resets the running state and phase counter after this amount of time
+  // without a head bob
+  private const double RESET_TIME = 0.6;
+
+  // List of head positions during the current phase
+  private Queue<(double Time, float Y)> _phaseWindow = new();
+  // Whether the current phase is going up or down
+  private bool _isUpPhase;
+  // Number of head bobs up or down in the current run
+  private int _phaseCounter;
+  // Time and head position at the start of the phase
+  private (double Time, float Y) _phaseStart;
+  // Time and head position at the start of the previous phase (used to
+  // retroactively update the previous phase if the head continues moving past
+  // the minimum threshold which will have activated the next phase)
+  private (double Time, float Y) _prevPhaseStart;
+
+  // Returns 1 if running, else 0
+  public float CalculateRunningScore(double time, float hmdY) {
+    UpdateStartingPointIfNecessary(time, hmdY);
+
+    if (IsPhaseComplete(time, hmdY)) {
+      _prevPhaseStart = _phaseStart;
+      _phaseStart = (time, hmdY);
+      _phaseWindow.Clear();
+      _phaseWindow.Enqueue(_phaseStart);
+      _phaseCounter++;
+      _isUpPhase = !_isUpPhase;
+    }
+
+    var resetTime = _phaseCounter >= WARMUP_PHASES ? RESET_TIME : TIME_MAX;
+    if (_phaseCounter > 0 && time - _phaseStart.Time > resetTime) {
+      _phaseCounter = 0;
+    }
+
+    while (_phaseWindow.Count > 0 && time - _phaseWindow.Peek().Time > TIME_MAX
+    ) {
+      _phaseWindow.Dequeue();
+    }
+    _phaseWindow.Enqueue((time, hmdY));
+
+    // TODO: Return a number between 0 and 1 before warmup finishes?
+    // TODO: Lock running or only require infrequent head bobs after starting?
+    return _phaseCounter >= WARMUP_PHASES ? 1f : 0f;
+  }
+
+  // Once the head movement hits the minimum threshold to count as a head bob
+  // the next phase starts, however the head will probably continue moving and
+  // produce a larger head bob than the minimum threshold, so we check that the
+  // current time/position is still within the threshold for a head bob from the
+  // start of the previous phase and update the starting point of the current
+  // phase if so
+  private void UpdateStartingPointIfNecessary(double time, float hmdY) {
+    if (_phaseWindow.Count == 0)
+      return;
+
+    var phaseStartY = _phaseWindow.Peek().Y;
+    var isHeadLowerThanWindowStart = hmdY < phaseStartY;
+    if (_isUpPhase != isHeadLowerThanWindowStart)
+      return;
+
+    var duration = time - _prevPhaseStart.Time;
+    var dist = Mathf.Abs(hmdY - _prevPhaseStart.Y);
+    if (!IsWithinHeadBobThreshold(duration, dist))
+      return;
+
+    _phaseStart = (time, hmdY);
+    _phaseWindow.Clear();
+    _phaseWindow.Enqueue(_phaseStart);
+  }
+
+  // Moves to the next head bob phase (up or down) if the minimum head bob
+  // time/distance threshold has been reached
+  private bool IsPhaseComplete(double time, float hmdY) {
+    foreach (var (prevTime, prevY) in _phaseWindow) {
+      var duration = time - prevTime;
+      if (duration < TIME_MIN)
+        return false;
+
+      var isHmdGoingUp = hmdY > prevY;
+      if (_isUpPhase != isHmdGoingUp)
+        continue;
+
+      var dist = Mathf.Abs(hmdY - prevY);
+      if (!IsWithinHeadBobThreshold(duration, dist))
+        continue;
+
+      return true;
+    }
+    return false;
+  }
+
+  private bool IsWithinHeadBobThreshold(double duration, float dist) {
+    if (duration < TIME_MIN || duration > TIME_MAX)
+      return false;
+
+    var minDist = MIN_DIST_AT_TIME_MIN +
+        Mathf.Pow((float)(duration - TIME_MIN) / TIME_WINDOW, DIST_EXPONENT) *
+            DIST_WINDOW;
+    return dist >= minDist;
+  }
 }

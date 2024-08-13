@@ -4,8 +4,9 @@ Adds support for hand tracking.
 
 - This mod is for the **patch 4 Quest standalone** version of the game
 - Install **Melon Loader 0.5.7** via Lemon Loader
-- Add the hand tracking permission to the game APK using Quest Patcher
+- Add the hand tracking permission to the game APK using [Quest Patcher](https://github.com/Lauriethefish/QuestPatcher)
   - **IMPORTANT: This will RESET YOUR GAME and you will LOSE YOUR SAVE AND MODS so back them up first**
+  - Until [my PR to add the "mod loader: none" option](https://github.com/Lauriethefish/QuestPatcher/pull/188) is merged, you will need to download [my fork of Quest Patcher](https://github.com/jakzo/QuestPatcher/releases) instead of the official one
   - Go to the "Tools & Options" tab -> click the "Change App" button -> select `com.StressLevelZero.BONELAB`
   - Go to the "Patching" tab -> **select `None` for the mod loader** (you should have already installed Melon Loader)
   - Click "Patching Options" -> **scroll to "Hand Tracking Type" -> select `V2`**
@@ -14,6 +15,9 @@ Adds support for hand tracking.
 - Make sure hand tracking is enabled in your Quest settings
   - You should know by putting your controllers down while in the Quest menu and it switches to hands within a few seconds
 - Start the game
+- For best results make sure your settings match these defaults:
+  - Locomotion controlled by left controller (right handed mode)
+  - Movement direction is direction of head
 
 ## Usage
 

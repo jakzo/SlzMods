@@ -8,7 +8,6 @@ using SLZ.Bonelab;
 using SLZ.Marrow.Warehouse;
 using HarmonyLib;
 using SLZ.Marrow.Input;
-using SLZ.Interaction;
 using SLZ.Rig;
 using System.Collections.Generic;
 using SLZ.Marrow.Interaction;
@@ -20,13 +19,17 @@ namespace Sst.HandTracking;
 public class Mod : MelonMod {
   public static Mod Instance;
 
-  private MelonPreferences_Entry<LocomotionType> _prefLoco;
+  private MelonPreferences_Entry<bool> _prefHandLoco;
+  private MelonPreferences_Entry<bool> _prefHeadLoco;
   private MelonPreferences_Entry<bool> _prefForwardsOnly;
   private HandTracker[] _trackers = { null, null };
-  private Locomotion _locoState;
+  private HandLocomotion _handLoco;
+  private HeadLocomotion _headLoco;
   private Jumping _jumping;
   private Inventory _inventory;
   private HashSet<LaserCursor> _visibleLaserCursors = new();
+  private WeaponButtonDetector _weaponButtonLeft;
+  private WeaponButtonDetector _weaponButtonRight;
 
   public HandTracker TrackerLeft {
     get => _trackers[0];
@@ -42,38 +45,25 @@ public class Mod : MelonMod {
     Instance = this;
 
     var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
-    _prefLoco = category.CreateEntry(
-        "locomotion_type", LocomotionType.HEAD, "Locomotion type",
-        "How running is performed (either \"HEAD\" or \"HANDS\")"
+    _prefHandLoco = category.CreateEntry(
+        "hand_locomotion", true, "Hand locomotion",
+        "Allows locomotion by swinging hands in a running motion"
+    );
+    _prefHeadLoco = category.CreateEntry(
+        "head_locomotion", true, "Head locomotion",
+        "Allows locomotion by running on the spot in real life which the mod " +
+            "tracks via head up/down bobbing"
     );
     _prefForwardsOnly = category.CreateEntry(
         "forwards_only", true, "Locomotion forwards only",
-        "Locks movement to forwards only (no strafing)"
+        "Locks movement to forwards only (no strafing) to make controlling " +
+            "direction easier"
     );
-    _prefLoco.OnEntryValueChanged.Subscribe(
-        (newValue, prevValue) => SetupLocomotion(newValue)
-    );
-    SetupLocomotion(_prefLoco.Value);
+
+    _handLoco = new();
+    _headLoco = new(_prefForwardsOnly);
 
     LevelHooks.OnLoad += nextLevel => _visibleLaserCursors.Clear();
-  }
-
-  private void SetupLocomotion(LocomotionType type) {
-    switch (type) {
-    case LocomotionType.HANDS:
-      _locoState = new HandLocomotion();
-      break;
-
-    case LocomotionType.HEAD:
-    default:
-      _locoState = new HeadLocomotion(_prefForwardsOnly);
-      break;
-    }
-
-    if (TrackerLeft != null)
-      _locoState.Init(TrackerLeft);
-    if (TrackerRight != null)
-      _locoState.Init(TrackerRight);
   }
 
   public override void OnUpdate() {
@@ -90,8 +80,12 @@ public class Mod : MelonMod {
         handRotationOffset = Quaternion.Euler(0f, 90f, 0f) *
             Quaternion.Euler(0f, 0f, 95f) * Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(0.04f, 0.02f, 0.1f),
+        getLocoAxis = GetLocoAxis,
+        getWeaponButtonPressed = () =>
+            _weaponButtonLeft?.IsTriggered() ?? false,
       });
-      _locoState.Init(TrackerLeft);
+      _handLoco.Init(TrackerLeft);
+      _headLoco.Init(TrackerLeft);
     }
 
     if (TrackerRight == null && MarrowGame.xr.RightController != null) {
@@ -104,8 +98,18 @@ public class Mod : MelonMod {
         handRotationOffset = Quaternion.Euler(275f, 0f, 0f) *
             Quaternion.Euler(0f, 270f, 0f) * Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(-0.04f, 0.02f, 0.1f),
+        getLocoAxis = GetLocoAxis,
+        getWeaponButtonPressed = () =>
+            _weaponButtonRight?.IsTriggered() ?? false,
       });
-      _locoState.Init(TrackerRight);
+      _handLoco.Init(TrackerRight);
+      _headLoco.Init(TrackerRight);
+    }
+
+    if (_weaponButtonLeft == null && _weaponButtonRight == null &&
+        TrackerLeft != null && TrackerRight != null) {
+      _weaponButtonLeft = new(TrackerLeft, TrackerRight);
+      _weaponButtonRight = new(TrackerRight, TrackerLeft);
     }
 
     // TODO: Can we do the updates right before the inputs are used?
@@ -113,7 +117,12 @@ public class Mod : MelonMod {
     TrackerRight.OnUpdate();
 
     // TODO: Do this on fixed update or somewhere frame rate independent
-    _locoState.Update();
+    if (!IsLocoControllerTracked()) {
+      if (_prefHandLoco.Value)
+        _handLoco.Update();
+      if (_prefHeadLoco.Value)
+        _headLoco.Update();
+    }
 
     if (_jumping == null) {
       if (TrackerLeft != null && TrackerRight != null) {
@@ -132,12 +141,36 @@ public class Mod : MelonMod {
         Utils.IsLocoControllerLeft() ? TrackerRight : TrackerLeft;
     nonDominantTracker.ProxyController.Joystick2DAxis = new Vector2(
         0f,
-        TrackerRight.PedalInput.HasValue ? TrackerRight.PedalInput.Value > 0f
-                ? TrackerRight.PedalInput ?? 0f
-                : TrackerLeft.PedalInput - 1f ?? 0f
-                                         : 0f
+        (TrackerRight.PedalInput.HasValue ? TrackerRight.PedalInput.Value > 0f
+                 ? TrackerRight.PedalInput
+                 : TrackerLeft.PedalInput - 1f
+                                          : TrackerLeft.PedalInput) ??
+            0f
     );
   }
+
+  private bool IsLocoControllerTracked() {
+    if (TrackerLeft == null || TrackerRight == null)
+      return false;
+    var locoTracker = Utils.IsLocoControllerLeft() ? TrackerLeft : TrackerRight;
+    return locoTracker.IsControllerConnected();
+  }
+
+  private Vector2 GetLocoAxis() {
+    if (Instance.IsLocoControllerTracked())
+      return Vector2.zero;
+
+    var handLocoAxis =
+        Instance._prefHandLoco.Value ? Instance._handLoco.Axis : Vector2.zero;
+    var headLocoAxis =
+        Instance._prefHeadLoco.Value ? Instance._headLoco.Axis : Vector2.zero;
+    return Utils.Clamp01(handLocoAxis + headLocoAxis);
+  }
+
+  public HandTracker GetTrackerOfHand(Handedness handedness
+  ) => handedness == Handedness.LEFT   ? TrackerLeft
+      : handedness == Handedness.RIGHT ? TrackerRight
+                                       : null;
 
 #if DEBUG
   public override void OnSceneWasInitialized(int buildindex, string sceneName) {
@@ -145,7 +178,7 @@ public class Mod : MelonMod {
       return;
     AssetWarehouse.OnReady(new Action(() => {
       var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
-          c => c.Barcode.ID == Levels.Barcodes.MONOGON_MOTORWAY
+          c => c.Barcode.ID == Levels.Barcodes.HUB
       );
       var bootstrapper =
           GameObject.FindObjectOfType<SceneBootstrapper_Bonelab>();
@@ -178,7 +211,7 @@ public class Mod : MelonMod {
       if (tracker == null || !tracker.IsTracking)
         return true;
 
-      tracker.UpdateProxyController(Instance._locoState.Axis);
+      tracker.UpdateProxyController();
       Instance._inventory?.OnHandUpdate(tracker);
       return false;
     }
@@ -267,56 +300,15 @@ public class Mod : MelonMod {
       return false;
     }
   }
-}
 
-public static class Utils {
-  public static bool IsLocoControllerLeft() =>
-      UIRig.Instance?.controlPlayer?.body_vitals?.isRightHanded ?? true;
-
-  public static Vector3 FromFlippedXVector3f(OVRPlugin.Vector3f vector
-  ) => new Vector3(-vector.x, vector.y, vector.z);
-
-  public static Vector3 FromFlippedZVector3f(OVRPlugin.Vector3f vector
-  ) => new Vector3(vector.x, vector.y, -vector.z);
-
-  public static Quaternion FromFlippedXQuatf(OVRPlugin.Quatf quat
-  ) => new Quaternion(quat.x, -quat.y, -quat.z, quat.w);
-
-  public static XRController XrControllerOf(BaseController controller
-  ) => controller.handedness == Handedness.LEFT ? MarrowGame.xr.LeftController
-      : controller.handedness == Handedness.RIGHT
-      ? MarrowGame.xr.RightController
-      : null;
-
-  public static BaseController RigControllerOf(HandTracker tracker) {
-    var controllerRig = LevelHooks.RigManager?.ControllerRig;
-    if (controllerRig == null)
-      return null;
-    return tracker.Opts.isLeft ? controllerRig.leftController
-                               : controllerRig.rightController;
-  }
-
-  [HarmonyPatch(typeof(ForcePullGrip), nameof(ForcePullGrip.Pull))]
-  internal static class ForcePullGrip_Pull {
-    private static bool _enableForcePull = false;
-
-    public static void Call(ForcePullGrip grip, Hand hand) {
-      _enableForcePull = true;
-      grip.Pull(hand);
-      _enableForcePull = false;
-    }
-
+  [HarmonyPatch(
+      typeof(HandPoseAnimator), nameof(HandPoseAnimator.ApplyPoseToTransforms)
+  )]
+  internal static class HandPoseAnimator_ApplyPoseToTransforms {
     [HarmonyPrefix]
-    private static bool Prefix(ForcePullGrip __instance, Hand hand) {
-      if (_enableForcePull ||
-          Mod.Instance.GetTrackerFromProxyController(
-              XrControllerOf(hand.Controller)
-          ) == null)
-        return true;
-
-      Dbg.Log("ForcePullGrip.Pull was called but is disabled");
-      __instance._pullToHand = null;
-      return _enableForcePull;
+    private static void Prefix(HandPoseAnimator __instance) {
+      var tracker = Instance.GetTrackerOfHand(__instance.handedness);
+      tracker.OnHandAnimate(__instance);
     }
   }
 }

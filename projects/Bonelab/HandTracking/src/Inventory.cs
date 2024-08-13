@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using SLZ.Interaction;
-using SLZ.Marrow.Interaction;
 using SLZ.Marrow.Utilities;
 using Sst.Utilities;
 using UnityEngine;
@@ -10,8 +7,6 @@ using UnityEngine;
 namespace Sst.HandTracking;
 
 public class Inventory {
-  private const float SIZE_FACTOR = 1.5f;
-
   private HandState _lastStateLeft = new();
   private HandState _lastStateRight = new();
 
@@ -21,17 +16,6 @@ public class Inventory {
   }
 
   public void OnHandUpdate(HandTracker tracker) {
-    _OnHandUpdate(tracker);
-    if (!tracker.Opts.isLeft) {
-      // Mod.Instance.TrackerLeft.LogToWrist(
-      //     "lf", _lastStateRight.IsLeftZone, "grip",
-      //     _lastStateRight.IsGripping, "held",
-      //     _lastStateRight.HeldReceiver?.name, "lost",
-      //     _lastStateRight.HasLostTracking
-      // );
-    }
-  }
-  private void _OnHandUpdate(HandTracker tracker) {
     var state = tracker.Opts.isLeft ? _lastStateLeft : _lastStateRight;
     if (!tracker.IsTracking) {
       state.Reset();
@@ -44,10 +28,12 @@ public class Inventory {
       return;
     }
 
-    bool? isLeftZone = IsInGraceZone(tracker.ProxyController.Position, true)
+    bool? isLeftZone =
+        IsInProximityOfInventorySlot(tracker.ProxyController.Position, true)
         ? true
-        : IsInGraceZone(tracker.ProxyController.Position, false) ? false
-                                                                 : null;
+        : IsInProximityOfInventorySlot(tracker.ProxyController.Position, false)
+        ? false
+        : null;
     var hand = tracker.GetPhysicalHand();
     if (hand == null)
       return;
@@ -60,10 +46,12 @@ public class Inventory {
         var startedGripping = state.IsGripping && !tracker.IsGripping;
         var wasHolding =
             state.HeldReceiver != null && heldReceiver == state.HeldReceiver;
+        // TODO: Do nothing if too much time has passed
         if (startedGripping && wasHolding && hand.HasAttachedObject()) {
           var slot = GetBackInventorySlotReceiver(state.IsLeftZone.Value);
           if (slot._weaponHost == null) {
-            Dbg.Log("Inserting to inventory via grace zone");
+            Dbg.Log("Inserting into inventory via proximity zone");
+            // TODO: What if the gripped item cannot go in inventory?
             slot.InsertInSlot(hand.AttachedReceiver.Host.Cast<InteractableHost>(
             ));
           }
@@ -72,7 +60,7 @@ public class Inventory {
           if (startedUngripping && !hand.HasAttachedObject()) {
             var slot = GetBackInventorySlotReceiver(state.IsLeftZone.Value);
             if (slot._weaponHost != null) {
-              Dbg.Log("Removing from inventory via grace zone");
+              Dbg.Log("Removing from inventory via proximity zone");
               var item = slot._weaponHost;
               slot.DropWeapon();
               // TODO: Is this the right logic to get the grip? (seems to work)
@@ -91,7 +79,7 @@ public class Inventory {
     state.HeldReceiver = heldReceiver;
   }
 
-  private bool IsInGraceZone(Vector3 pos, bool left) {
+  private bool IsInProximityOfInventorySlot(Vector3 pos, bool left) {
     var d = left ? -1f : 1f;
     var hmd = MarrowGame.xr.HMD.Position;
     return pos.x * d > hmd.x * d + 0.1f && pos.x * d < hmd.x * d + 0.6f &&

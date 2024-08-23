@@ -1,3 +1,4 @@
+using System.Linq;
 using MelonLoader;
 using HarmonyLib;
 using UnityEngine;
@@ -5,6 +6,7 @@ using UnityEngine.Rendering;
 using Sst.Utilities;
 
 #if ML6
+using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Bonelab;
 using Il2CppSLZ.VRMK;
 using Il2CppSLZ.Rig;
@@ -27,6 +29,7 @@ public class Mod : MelonMod {
 
   public static Mod Instance;
 
+  private RigScreenOptions _rigScreen;
   private SmoothFollower _thirdPersonCamera;
   private float _cameraRadius;
   private Vector3 _followVec;
@@ -68,13 +71,12 @@ public class Mod : MelonMod {
     }
 #endif
 
-    if (!_thirdPersonCamera)
+    if (_thirdPersonCamera == null | _rigScreen == null)
       return;
 
-    var rigScreen = UIRig.Instance?.controlPlayer.rigScreen ?? GetRigScreen();
-    if (rigScreen?.TargetTransform) {
-      var tpos = rigScreen.TargetTransform.position;
-      var trot = rigScreen.TargetTransform.rotation;
+    if (_rigScreen?.TargetTransform) {
+      var tpos = _rigScreen.TargetTransform.position;
+      var trot = _rigScreen.TargetTransform.rotation;
       var targetTransformPos = tpos + trot * _followVec;
 
       if (Physics.SphereCast(
@@ -102,22 +104,26 @@ public class Mod : MelonMod {
   }
 
   public void Destroy() {
-    if (!_thirdPersonCamera)
+    if (_thirdPersonCamera == null || _rigScreen == null)
       return;
 
     Dbg.Log("Destroy");
     GameObject.Destroy(_thirdPersonCamera.gameObject);
     ResetState();
     SetCameraRatios();
-    GetSpectatorCamera().SetActive(true);
+    var spectatorCamera = _rigScreen.cam.gameObject;
+    spectatorCamera.SetActive(true);
   }
 
   public void Create() {
-    if (LevelHooks.IsLoading || _thirdPersonCamera)
+    if (LevelHooks.IsLoading || _thirdPersonCamera != null)
       return;
 
     Dbg.Log("Create");
-    var spectatorCamera = GetSpectatorCamera();
+    _rigScreen = Resources.FindObjectsOfTypeAll<RigScreenOptions>().First(
+        rs => rs.TargetTransform != null
+    );
+    var spectatorCamera = _rigScreen.cam.gameObject;
     var thirdPersonCamera = GameObject.Instantiate(spectatorCamera);
     thirdPersonCamera.name = "Third Person Camera";
     thirdPersonCamera.transform.parent = spectatorCamera.transform.parent;
@@ -140,7 +146,7 @@ public class Mod : MelonMod {
     SetCameraRatios();
     spectatorCamera.SetActive(false);
 
-    GetRigContainer().GetComponent<PlayerAvatarArt>()?.EnableHair();
+    GetPlayerAvatarArt()?.EnableHair();
 
 #if DEBUG
     // TAS
@@ -156,11 +162,12 @@ public class Mod : MelonMod {
   private void ResetState() { _thirdPersonCamera = null; }
 
   private void SetCameraRatios() {
-    var cam = GetRigScreen().cam;
-    if (cam)
+    var cam = _rigScreen?.cam;
+    if (cam != null) {
       cam.rect = new Rect(
           0f, 0f, 1f - (_thirdPersonCamera ? _prefCameraRatio.Value : 0f), 1f
       );
+    }
     if (_thirdPersonCamera) {
       var camera = _thirdPersonCamera.GetComponent<Camera>();
       camera.rect =
@@ -173,18 +180,21 @@ public class Mod : MelonMod {
     }
   }
 
-  private Component GetRigContainer() {
-#if PATCH4
+  private Component GetRigScreenContainer() {
+#if PATCH4 || PATCH5
     return LevelHooks.RigManager.ControllerRig;
-#else
+#elif PATCH3
     return LevelHooks.RigManager;
 #endif
   }
 
-  private RigScreenOptions
-  GetRigScreen() => GetRigContainer().GetComponent<RigScreenOptions>();
-
-  private GameObject GetSpectatorCamera() => GetRigScreen().cam.gameObject;
+  private PlayerAvatarArt GetPlayerAvatarArt() {
+#if PATCH4
+    return LevelHooks.RigManager.ControllerRig.GetComponent<PlayerAvatarArt>();
+#elif PATCH3 || PATCH5
+    return LevelHooks.RigManager.GetComponent<PlayerAvatarArt>();
+#endif
+  }
 
   private void SetFollowVec() {
     _followVec = Vector3.back * _prefFollowDistance.Value;

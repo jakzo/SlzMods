@@ -5,12 +5,18 @@ using UnityEngine;
 using UnityEngine.XR;
 using Sst.Utilities;
 
-#if PATCH4 && ML6
-using Il2CppSLZ.Bonelab.SaveData;
-using Il2CppSLZ.Marrow.Warehouse;
-#elif PATCH3
-using SLZ.SaveData;
+#if PATCH3
 using SLZ.Marrow.Warehouse;
+using SLZ.SaveData;
+#elif ML6
+using Il2CppSLZ.Marrow;
+using Il2CppSLZ.Marrow.Warehouse;
+using Il2CppSLZ.Bonelab.SaveData;
+
+#if PATCH5
+using Il2CppSLZ.Marrow.SaveData;
+#endif
+
 #endif
 
 namespace Sst.LoadMirror {

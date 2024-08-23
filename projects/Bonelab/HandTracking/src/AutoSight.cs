@@ -4,6 +4,7 @@ using SLZ.Bonelab;
 using SLZ.Interaction;
 using Sst.Utilities;
 using SLZ.Rig;
+using SLZ.Marrow;
 using HarmonyLib;
 using SLZ.VRMK;
 
@@ -98,11 +99,11 @@ public class AutoSight {
   // }
 
   // [HarmonyPatch(
-  //     typeof(GameWorldSkeletonRig), nameof(GameWorldSkeletonRig.OnUpdate)
+  //     typeof(RemapRig), nameof(RemapRig.OnEarlyUpdate)
   // )]
-  // internal static class GameWorldSkeletonRig_OnUpdate {
+  // internal static class RemapRig_OnEarlyUpdate {
   //   [HarmonyPostfix]
-  //   private static void Postfix(GameWorldSkeletonRig __instance) {
+  //   private static void Postfix(RemapRig __instance) {
   //     __instance.m_handLf.localPosition =
   //         new Vector3(Mathf.Sin(Time.time) * 0.25f, 1.5f, 0.2f);
   //     __instance.m_handLf.localRotation = Quaternion.identity;

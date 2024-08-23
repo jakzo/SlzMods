@@ -4,6 +4,7 @@ using System.Linq;
 using HarmonyLib;
 using SLZ.Bonelab;
 using SLZ.Interaction;
+using SLZ.Marrow;
 using SLZ.Marrow.Utilities;
 using Sst.Utilities;
 using UnityEngine;

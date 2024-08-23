@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 using SLZ.Interaction;
+using SLZ.Marrow;
 using SLZ.Marrow.Utilities;
 
 namespace Sst.HandTracking;

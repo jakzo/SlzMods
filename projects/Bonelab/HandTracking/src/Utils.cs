@@ -7,13 +7,22 @@ using HarmonyLib;
 using SLZ.Marrow.Input;
 using SLZ.Interaction;
 using SLZ.Rig;
+using SLZ.Marrow;
 using SLZ.Marrow.Interaction;
 
 namespace Sst.HandTracking;
 
 public static class Utils {
-  public static bool IsLocoControllerLeft() =>
-      UIRig.Instance?.controlPlayer?.body_vitals?.isRightHanded ?? true;
+  public static bool IsLocoControllerLeft() => GetBodyVitals()?.isRightHanded ??
+      true;
+
+  private static BodyVitals GetBodyVitals() {
+#if PATCH5
+    return PlayerRefs.Instance?.PlayerBodyVitals;
+#elif PATCH4
+    return UIRig.Instance?.controlPlayer?.body_vitals;
+#endif
+  }
 
   public static Vector3 FromFlippedZVector3f(OVRPlugin.Vector3f vector
   ) => new Vector3(vector.x, vector.y, -vector.z);

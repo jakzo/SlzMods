@@ -36,8 +36,14 @@ public class Ui {
 
   private UIControllerInput GetUiControllerInput() {
     if (_uiControllerInput == null) {
+#if PATCH5
+      _uiControllerInput = _tracker.Opts.isLeft
+          ? UIRig.Instance.leftUIController
+          : UIRig.Instance.rightUIController;
+#elif PATCH4
       _uiControllerInput =
           _tracker.RigController.GetComponent<UIControllerInput>();
+#endif
     }
     return _uiControllerInput;
   }

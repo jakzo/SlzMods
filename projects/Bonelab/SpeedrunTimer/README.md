@@ -2,7 +2,7 @@ Timer for Bonelab speedruns.
 
 The timer will appear and start when loading into Descent, pauses during loading screens and finishes when sitting in the taxi. Also has an option to time individual levels (see configuration section below).
 
-As a convenience it also stops your mods from being deleted when you delete your save from the menu but **this does not work on the Quest version of patch 4** due to a Melon Loader limitation.
+As a convenience it also stops your mods from being deleted when you delete your save from the menu but **this does not work on the Quest version of patch 4/5** due to a Melon Loader limitation.
 
 # Installation
 

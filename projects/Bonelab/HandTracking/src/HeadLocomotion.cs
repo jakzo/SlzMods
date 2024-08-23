@@ -13,13 +13,13 @@ public class HeadLocomotion : Locomotion {
   // TODO: Account for forwards HMD movement due to looking down or crouching
   private const float DEADZONE = 0.1f;
   private const float MAX_INPUT_DIST = DEADZONE + 0.1f;
-  private const float MAX_OFFSET = MAX_INPUT_DIST + 0.2f;
+  private const float MAX_OFFSET = MAX_INPUT_DIST + 0.15f;
   private const float DEFAULT_OFFSET = MAX_OFFSET;
   private const float LOCK_DISENGAGE_POINT = 0.25f;
   private const float WALK_SPEED = 0.4f;
   private const float RUN_REMAINDER = 1f - WALK_SPEED;
   // Amount added to offset per second while running is locked
-  private const float RECALIBRATION_RATE = 0.05f;
+  private const float RECALIBRATION_RATE = 0.025f;
 
   private RunningDetector _runningDetector = new();
   private float _offset;

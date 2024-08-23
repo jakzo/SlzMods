@@ -3,6 +3,13 @@ using UnityEngine;
 using SLZ.VRMK;
 using HarmonyLib;
 using SLZ.Rig;
+using SLZ.Marrow;
+
+#if PATCH5
+using SlzHandPose = SLZ.Marrow.HandPose;
+#elif PATCH4
+using SlzHandPose = SLZ.Data.HandPose;
+#endif
 
 namespace Sst.HandTracking;
 
@@ -34,7 +41,7 @@ public class HandPose {
     OVRPlugin.BoneId.Hand_Pinky3,
   };
 
-  private static SLZ.Data.HandPose.PoseData BASE_HAND_TRACKING_POSE = new() {
+  private static SlzHandPose.PoseData BASE_HAND_TRACKING_POSE = new() {
     thumb1 = Quaternion.Euler(54.7015f - 45f, 80.8802f - 80f, 36.1174f - 30f),
     thumb2 = 0.9604f,
     thumb3 = -0.7674f,
@@ -151,7 +158,7 @@ public class HandPose {
     // TODO: How do we know when the hand is in the open pose?
     // TODO: Can we have it smoothly transition from hand tracked joints to
     // other poses?
-    hand.Animator._currentPoseData = new SLZ.Data.HandPose.PoseData() {
+    hand.Animator._currentPoseData = new SlzHandPose.PoseData() {
       // Some clues to Oculus' rationale behind the bones they track:
       // https://github.com/immersive-web/webxr-hand-input/issues/1#issuecomment-575810282
       thumb1 = FingerJointRotation(

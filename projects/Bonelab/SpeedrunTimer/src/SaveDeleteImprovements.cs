@@ -4,10 +4,10 @@ using UnityEngine;
 using MelonLoader;
 using HarmonyLib;
 
-#if PATCH4 && ML6
+#if (PATCH4 || PATCH5) && ML6
 using Il2CppSLZ.Bonelab.SaveData;
 using Il2CppSLZ.Marrow.SaveData;
-#elif PATCH4 && ML5
+#elif (PATCH4 || PATCH5) && ML5
 using SLZ.Bonelab.SaveData;
 using SLZ.Marrow.SaveData;
 #elif PATCH2 || PATCH3
@@ -28,9 +28,9 @@ public static class SaveDeleteImprovements {
     _prefDeleteModsOnWipe = Mod.Instance.PrefCategory.CreateEntry<bool>(
         "deleteModsOnWipe", false, "Let mods be deleted when wiping all data",
         "Normally when resetting your save state through the main menu the " +
-        "game will delete all mods including the SpeedrunTimer. For " +
-        "convenience the timer will keep your mods folder. This option " +
-        "reverts to the original behavior of deleting mods."
+            "game will delete all mods including the SpeedrunTimer. For " +
+            "convenience the timer will keep your mods folder. This option " +
+            "reverts to the original behavior of deleting mods."
     );
   }
 
@@ -54,13 +54,15 @@ public static class SaveDeleteImprovements {
       if (_modsBackupPath == null)
         return;
       if (Directory.Exists(_modsBackupPath))
-        MelonLogger.Warning("Failed to restore mods folder on data wipe! Old " +
-                            "mods are in Mods.backup now.");
+        MelonLogger.Warning(
+            "Failed to restore mods folder on data wipe! Old " +
+            "mods are in Mods.backup now."
+        );
       _modsBackupPath = null;
     }
   }
 
-#if PATCH4 && ML5
+#if (PATCH4 || PATCH5) && ML5
 // Melon Loader 0.5 messes up the order of the generics in MarrowDataManager
 // so it cannot be patched unfortunately meaning no stopping Mods from being
 // deleted on Quest patch 4 :'(
@@ -78,7 +80,21 @@ public static class SaveDeleteImprovements {
 
 // According to Ghidra this is the only hookable method which is called after
 // the Mods folder is deleted and before the application quits
-#if ML6
+#if PATCH5 && ML6
+  [HarmonyPatch(
+      typeof(MarrowDataManager<
+             DataManager, Save, Settings, PlayerSettings, PlayerProgression,
+             PlayerUnlocks>),
+      "get_SavePath"
+  )]
+  class MarrowDataManager_SavePath_Patch {
+    [HarmonyPrefix()]
+    internal static void Prefix() {
+      Dbg.Log("MarrowDataManager_SavePath_Patch");
+      RestoreModsBackup();
+    }
+  }
+#elif PATCH4 && ML6
   [HarmonyPatch(
       typeof(MarrowDataManager<
              DataManager, Save, Settings, PlayerProgression, PlayerUnlocks>),

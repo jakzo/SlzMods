@@ -37,7 +37,7 @@ class SplitsTimer {
     _prefHide = Mod.Instance.PrefCategory.CreateEntry(
         "hide", false, "Hide in-game timer",
         "Stops the timer from displaying on your wrist. Does not hide " +
-        "loading screen timer."
+            "loading screen timer."
     );
     _prefHideIl = Mod.Instance.PrefCategory.CreateEntry(
         "hideIl", false, "Hide level timer",
@@ -46,7 +46,7 @@ class SplitsTimer {
     _prefHideSplits = Mod.Instance.PrefCategory.CreateEntry(
         "hideSplits", false, "Hides split display in loading screen",
         "Stops the individual level times from displaying in the loading " +
-        "screen."
+            "screen."
     );
   }
 
@@ -66,15 +66,16 @@ class SplitsTimer {
       _isFinished = false;
     }
 
-    if (nextLevel.Barcode == Levels.LabworksBarcodes.MAIN_MENU &&
-        LevelHooks.PrevLevel.Barcode == Levels.LabworksBarcodes.THRONE_ROOM) {
+    if (BarcodeOf(nextLevel) == Levels.LabworksBarcodes.MAIN_MENU &&
+        BarcodeOf(LevelHooks.PrevLevel) ==
+            Levels.LabworksBarcodes.THRONE_ROOM) {
       _splits.Split(null);
       Finish();
     } else {
       Livesplit.SetState(true, false, nextLevel.Title);
 
-      if (nextLevel.Barcode == Levels.Barcodes.DESCENT ||
-          nextLevel.Barcode == Levels.LabworksBarcodes.BREAKROOM) {
+      if (BarcodeOf(nextLevel) == Levels.Barcodes.DESCENT ||
+          BarcodeOf(nextLevel) == Levels.LabworksBarcodes.BREAKROOM) {
         Dbg.Log("Attempting to start timer");
         Mod.Instance.SplitsServer?.Start();
         _splits.ResetAndPause(nextLevel);
@@ -162,6 +163,14 @@ class SplitsTimer {
     MelonLogger.Msg($"Stopping timer at: {_splits.GetTime()}");
     if (_tmp != null)
       _tmp.color = FINISH_COLOR;
+  }
+
+  private string BarcodeOf(LevelCrate level) {
+#if PATCH5
+    return level.Barcode.ID;
+#else
+    return level.Barcode;
+#endif
   }
 
   [HarmonyPatch(typeof(TaxiController), nameof(TaxiController.Start))]

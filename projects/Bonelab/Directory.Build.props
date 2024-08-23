@@ -6,7 +6,7 @@
 
   <PropertyGroup Condition=" '$(IsNewProject)' == 'true' ">
     <!-- Defaults (used by IDE autocomplete/syntax highlighting) -->
-    <DefaultPatch>4</DefaultPatch>
+    <DefaultPatch>5</DefaultPatch>
     <DefaultMelonLoader>5</DefaultMelonLoader>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <TargetFrameworks Condition=" '$(MelonLoader)' == '' ">net6.0;net472</TargetFrameworks>

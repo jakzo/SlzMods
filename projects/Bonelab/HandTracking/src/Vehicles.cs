@@ -5,6 +5,7 @@ using SLZ.Interaction;
 using HarmonyLib;
 using SLZ.Vehicle;
 using SLZ.VRMK;
+using SLZ.Marrow;
 
 namespace Sst.HandTracking;
 

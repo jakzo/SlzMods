@@ -22,10 +22,10 @@ Adds support for hand tracking.
 
 - Click on UIs by pinching
 - Toggle the in-game menu by doing the standard Quest hand tracking menu gesture (left hand open, palm towards your face then touch the tips of your index finger and thumb) then normal pinch to select an item
-- Walk by moving your head away from the center of your play space
-  - Use the Oculus recenter gesture if needed (right hand open, palm towards your face then touch the tips of your index finger and thumb for a few seconds)
+- Walk by moving your head forwards by about a step, stop by moving your head backwards a step
 - Run by running on the spot in real life (the mod detects this by your head bobbing up and down)
-  - To stop running, step back to the center of your play space
+  - After 5 or 6 jogs the running will stay enabled and you can stop running on the spot
+  - To stop running, move your head backwards by about a step
 - Alternatively you can run by moving your hands up and down alternately in a running motion
 - Grab by curling middle, ring and pinky fingers into a fist (same effect as pressing trigger and grip on controller)
 - Force pull objects by forming a fist with these three fingers then flicking your wrist (in any direction)

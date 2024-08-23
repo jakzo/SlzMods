@@ -43,8 +43,6 @@ Project("{1D0D07E2-0C07-604C-1B55-2A84455C427E}") = "BonelabTasTool", "projects\
 EndProject
 Project("{9C2FCA83-0D5B-3617-C065-E60B9F23F746}") = "BonelabColliderScope", "projects\Bonelab\ColliderScope\Project.csproj", "{D7EA5AD4-3C6D-8FF3-4C0A-F1DE81B5FDF3}"
 EndProject
-Project("{DC2D8CF7-AF23-373A-3B1B-6B571C815BC7}") = "BonelabPancakeMode", "projects\Bonelab\PancakeMode\PancakeMode.csproj", "{36334481-E244-AFBB-451D-DC47A3ED475D}"
-EndProject
 Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabSpeedometer", "projects\Bonelab\Speedometer\Project.csproj", "{F13040F5-2641-6465-6E4A-FF7C0DA26BDF}"
 EndProject
 Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabFlatPlayer", "projects\Bonelab\FlatPlayer\Project.csproj", "{A479E098-5DBD-4032-B1F6-5886C0AD2B98}"

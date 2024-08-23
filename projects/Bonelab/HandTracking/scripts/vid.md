@@ -1,0 +1,22 @@
+- Tracking quality
+  - Sleeves block tracking/make hand movement choppy
+- Hand mapping
+  - Different bones in Oculus hand tracking API vs Bonelab
+- Movement
+  - Hand running
+  - Nimsony head bobbing
+- Jumping
+- Force pull
+- Vehicles
+- UI
+- Inventory
+- Guns
+  - Aiming is hard to be accurate with, but not unusable
+  - Two handed gun aiming is hard
+  - Hard for cameras to see trigger finger when aiming
+  - Added weapon rotation offset to help the headset see the trigger finger better while aiming down sights
+  - Struggling with auto sight
+- Minor tweaks
+  - Noose auto-attach
+- Future improvements
+  - Wife tried grabbing avatar selector with fingers (make different types of grips allow different hand shapes to grip?)

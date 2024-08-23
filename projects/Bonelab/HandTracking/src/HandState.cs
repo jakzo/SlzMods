@@ -11,8 +11,12 @@ public class HandState {
   public JointTransform[] Joints =
       new JointTransform[(int)OVRPlugin.SkeletonConstants.MaxHandBones];
   public OVRPlugin.TrackingConfidence HandConfidence;
-  public OVRPlugin.TrackingConfidence[] FingerConfidences;
+  public OVRPlugin.TrackingConfidence[] FingerConfidences =
+      new OVRPlugin.TrackingConfidence[(int)OVRPlugin.HandFinger.Max];
   public bool IsPinching;
+  public bool PinchUp;
+  public bool MenuDown;
+  public bool IsMenuPressed;
   public bool HasState = false;
 
   private OVRPlugin.Hand _hand;
@@ -33,16 +37,19 @@ public class HandState {
       throw new Exception("Failed to get hand skeleton");
     }
 
-#if DEBUG
     _debugHand = new(_skeleton);
-#endif
 
     _hand = isLeft ? OVRPlugin.Hand.HandLeft : OVRPlugin.Hand.HandRight;
     Update();
   }
 
   public void Update() {
-    if (!OVRPlugin.GetHandState(OVRPlugin.Step.Render, _hand, _state)) {
+    // TODO: Try out wide motion mode
+    if (!OVRPlugin.GetHandState(OVRPlugin.Step.Render, _hand, _state) ||
+        // Seems like confidence is only ever high when hand is tracked
+        // TODO: If state does not change at all, immediately mark state as
+        // untracked?
+        _state.HandConfidence != OVRPlugin.TrackingConfidence.High) {
       HasState = false;
       return;
     }
@@ -62,7 +69,7 @@ public class HandState {
           ? Joints[parentIdx]
           : JointTransform.IDENTITY;
       var handRot = parentJoint.HandRotation * localRot;
-      var localPos = handRot *
+      var localPos = parentJoint.HandRotation *
           Utils.FromFlippedZVector3f(_skeleton.Bones[i].Pose.Position);
       var handPos = parentJoint.HandPosition + localPos;
 
@@ -75,23 +82,28 @@ public class HandState {
         TrackingRotation = Rotation * handRot,
       };
 
-#if DEBUG
       _debugHand.Update(this);
-#endif
     }
 
     HandConfidence = _state.HandConfidence;
     FingerConfidences = _state.FingerConfidences;
 
-    IsPinching = (_state.Pinches & OVRPlugin.HandFingerPinch.Index) != 0;
+    MenuDown = (_state.Status & OVRPlugin.HandStatus.MenuPressed) != 0;
+    var isIndexPinching =
+        (_state.Pinches & OVRPlugin.HandFingerPinch.Index) != 0;
+    IsMenuPressed = isIndexPinching && (IsMenuPressed || MenuDown);
+
+    var wasPinching = IsPinching;
+    IsPinching = isIndexPinching && !IsMenuPressed;
+    PinchUp = wasPinching && !IsPinching;
   }
 
   public bool IsActive() =>
       // NOTE: Requires OVRInput.Update() to be called (game already does this)
       OVRInput.IsControllerConnected(_controller);
 
-  public bool IsTracked() => (_state.Status & OVRPlugin.HandStatus.HandTracked
-                             ) != 0;
+  public bool IsTracked() => HasState &&
+      (_state.Status & OVRPlugin.HandStatus.HandTracked) != 0;
 }
 
 public struct JointTransform {

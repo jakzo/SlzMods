@@ -1,5 +1,5 @@
 set -eux
-cd "$(dirname $0)"
+cd "$(dirname $0)/.."
 
 dotnet build ./Project.csproj
 
@@ -19,4 +19,4 @@ adb shell am start -n com.StressLevelZero.BONELAB/com.unity3d.player.UnityPlayer
 # adb pull /sdcard/Android/data/com.StressLevelZero.BONELAB/files/melonloader/etc/managed/Assembly-CSharp.dll
 # adb pull /sdcard/Android/data/com.StressLevelZero.BONELAB/files/melonloader/etc/managed/SLZ.Marrow.dll
 
-# adb logcat -v time MelonLoader:D CRASH:D Mono:W mono:D mono-rt:D Zygote:D A64_HOOK:V DEBUG:D Binder:D AndroidRuntime:D "*:S"
+# adb logcat -v time MelonLoader:D "*:S"

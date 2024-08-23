@@ -8,62 +8,45 @@ using SLZ.Bonelab;
 using SLZ.Marrow.Warehouse;
 using HarmonyLib;
 using SLZ.Marrow.Input;
-using SLZ.Rig;
-using System.Collections.Generic;
 using SLZ.Marrow.Interaction;
-using SLZ.Vehicle;
-using SLZ.VRMK;
 
 namespace Sst.HandTracking;
 
 public class Mod : MelonMod {
   public static Mod Instance;
+  public static Preferences Preferences;
 
-  private MelonPreferences_Entry<bool> _prefHandLoco;
-  private MelonPreferences_Entry<bool> _prefHeadLoco;
-  private MelonPreferences_Entry<bool> _prefForwardsOnly;
-  private HandTracker[] _trackers = { null, null };
   private HandLocomotion _handLoco;
   private HeadLocomotion _headLoco;
   private Jumping _jumping;
-  private Inventory _inventory;
-  private HashSet<LaserCursor> _visibleLaserCursors = new();
+  private Vehicles _vehicles;
   private WeaponButtonDetector _weaponButtonLeft;
   private WeaponButtonDetector _weaponButtonRight;
 
+  public NooseHelper NooseHelper;
+  public HandTracker[] Trackers = { null, null };
   public HandTracker TrackerLeft {
-    get => _trackers[0];
-    set => _trackers[0] = value;
+    get => Trackers[0];
+    set => Trackers[0] = value;
   }
   public HandTracker TrackerRight {
-    get => _trackers[1];
-    set => _trackers[1] = value;
+    get => Trackers[1];
+    set => Trackers[1] = value;
   }
 
   public override void OnInitializeMelon() {
     Dbg.Init(BuildInfo.NAME);
     Instance = this;
 
-    var category = MelonPreferences.CreateCategory(BuildInfo.NAME);
-    _prefHandLoco = category.CreateEntry(
-        "hand_locomotion", true, "Hand locomotion",
-        "Allows locomotion by swinging hands in a running motion"
-    );
-    _prefHeadLoco = category.CreateEntry(
-        "head_locomotion", true, "Head locomotion",
-        "Allows locomotion by running on the spot in real life which the mod " +
-            "tracks via head up/down bobbing"
-    );
-    _prefForwardsOnly = category.CreateEntry(
-        "forwards_only", true, "Locomotion forwards only",
-        "Locks movement to forwards only (no strafing) to make controlling " +
-            "direction easier"
+    Preferences.Init();
+    Preferences = new();
+    Preferences.WeaponRotationOffset.OnEntryValueChanged.Subscribe(
+        (a, b) => SetWeaponRotationOffsets()
     );
 
     _handLoco = new();
-    _headLoco = new(_prefForwardsOnly);
-
-    LevelHooks.OnLoad += nextLevel => _visibleLaserCursors.Clear();
+    _headLoco = new();
+    NooseHelper = new();
   }
 
   public override void OnUpdate() {
@@ -76,7 +59,6 @@ public class Mod : MelonMod {
         marrowController = MarrowGame.xr.LeftController,
         setMarrowController = c => MarrowGame.xr.LeftController = c,
         ovrController = OVRInput.Controller.LTouch,
-        ovrHand = OVRInput.Controller.LHand,
         handRotationOffset = Quaternion.Euler(0f, 90f, 0f) *
             Quaternion.Euler(0f, 0f, 95f) * Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(0.04f, 0.02f, 0.1f),
@@ -84,6 +66,7 @@ public class Mod : MelonMod {
         getWeaponButtonPressed = () =>
             _weaponButtonLeft?.IsTriggered() ?? false,
       });
+      SetWeaponRotationOffsets();
       _handLoco.Init(TrackerLeft);
       _headLoco.Init(TrackerLeft);
     }
@@ -94,7 +77,6 @@ public class Mod : MelonMod {
         marrowController = MarrowGame.xr.RightController,
         setMarrowController = c => MarrowGame.xr.RightController = c,
         ovrController = OVRInput.Controller.RTouch,
-        ovrHand = OVRInput.Controller.RHand,
         handRotationOffset = Quaternion.Euler(275f, 0f, 0f) *
             Quaternion.Euler(0f, 270f, 0f) * Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(-0.04f, 0.02f, 0.1f),
@@ -102,12 +84,13 @@ public class Mod : MelonMod {
         getWeaponButtonPressed = () =>
             _weaponButtonRight?.IsTriggered() ?? false,
       });
+      SetWeaponRotationOffsets();
       _handLoco.Init(TrackerRight);
       _headLoco.Init(TrackerRight);
     }
 
-    if (_weaponButtonLeft == null && _weaponButtonRight == null &&
-        TrackerLeft != null && TrackerRight != null) {
+    if (_vehicles == null && TrackerLeft != null && TrackerRight != null) {
+      _vehicles = new(TrackerLeft, TrackerRight);
       _weaponButtonLeft = new(TrackerLeft, TrackerRight);
       _weaponButtonRight = new(TrackerRight, TrackerLeft);
     }
@@ -118,9 +101,9 @@ public class Mod : MelonMod {
 
     // TODO: Do this on fixed update or somewhere frame rate independent
     if (!IsLocoControllerTracked()) {
-      if (_prefHandLoco.Value)
+      if (Preferences.HandLoco.Value)
         _handLoco.Update();
-      if (_prefHeadLoco.Value)
+      if (Preferences.HeadLoco.Value)
         _headLoco.Update();
     }
 
@@ -133,20 +116,8 @@ public class Mod : MelonMod {
       _jumping.Update();
     }
 
-    if (_inventory == null) {
-      _inventory = new Inventory();
-    }
-
-    var nonDominantTracker =
-        Utils.IsLocoControllerLeft() ? TrackerRight : TrackerLeft;
-    nonDominantTracker.ProxyController.Joystick2DAxis = new Vector2(
-        0f,
-        (TrackerRight.PedalInput.HasValue ? TrackerRight.PedalInput.Value > 0f
-                 ? TrackerRight.PedalInput
-                 : TrackerLeft.PedalInput - 1f
-                                          : TrackerLeft.PedalInput) ??
-            0f
-    );
+    _vehicles.Update();
+    NooseHelper.Update();
   }
 
   private bool IsLocoControllerTracked() {
@@ -157,14 +128,20 @@ public class Mod : MelonMod {
   }
 
   private Vector2 GetLocoAxis() {
-    if (Instance.IsLocoControllerTracked())
+    if (IsLocoControllerTracked())
       return Vector2.zero;
 
     var handLocoAxis =
-        Instance._prefHandLoco.Value ? Instance._handLoco.Axis : Vector2.zero;
+        Preferences.HandLoco.Value ? _handLoco.Axis : Vector2.zero;
     var headLocoAxis =
-        Instance._prefHeadLoco.Value ? Instance._headLoco.Axis : Vector2.zero;
+        Preferences.HeadLoco.Value ? _headLoco.Axis : Vector2.zero;
     return Utils.Clamp01(handLocoAxis + headLocoAxis);
+  }
+
+  private void SetWeaponRotationOffsets() {
+    foreach (var tracker in Trackers) {
+      tracker?.SetWeaponRotationOffset(Preferences.WeaponRotationOffset.Value);
+    }
   }
 
   public HandTracker GetTrackerOfHand(Handedness handedness
@@ -197,10 +174,11 @@ public class Mod : MelonMod {
     return null;
   }
 
+  public bool IsControllerConnected() => TrackerLeft.IsControllerConnected() ||
+      TrackerRight.IsControllerConnected();
+
   public enum LocomotionType { HEAD, HANDS }
 
-  // TODO: Is there no way to make a ProxyController class with its own
-  // Refresh?
   [HarmonyPatch(
       typeof(ControllerActionMap), nameof(ControllerActionMap.Refresh)
   )]
@@ -212,103 +190,15 @@ public class Mod : MelonMod {
         return true;
 
       tracker.UpdateProxyController();
-      Instance._inventory?.OnHandUpdate(tracker);
       return false;
     }
   }
 
-  [HarmonyPatch(typeof(OpenController), nameof(OpenController.ProcessFingers))]
-  internal static class OpenController_ProcessFingers {
+  [HarmonyPatch(typeof(TutorialTrigger), nameof(TutorialTrigger.TUTORIALSEND))]
+  internal static class TutorialTrigger_TUTORIALSEND {
     [HarmonyPrefix]
-    private static bool Prefix(OpenController __instance) {
-      var tracker = Mod.Instance.GetTrackerFromProxyController(
-          Utils.XrControllerOf(__instance)
-      );
-      if (tracker == null || !tracker.IsTracking)
-        return true;
-
-      tracker.OnOpenControllerProcessFingers(__instance);
-      return false;
-    }
-  }
-
-  [HarmonyPatch(typeof(LaserCursor), nameof(LaserCursor.ShowCursor))]
-  internal static class LaserCursor_ShowCursor {
-    [HarmonyPostfix]
-    private static void Postfix(LaserCursor __instance) {
-      // TODO: Point laser pointer in direction of hand
-      if (!__instance.cursorHidden)
-        Instance._visibleLaserCursors.Add(__instance);
-    }
-  }
-
-  [HarmonyPatch(typeof(LaserCursor), nameof(LaserCursor.HideCursor))]
-  internal static class LaserCursor_HideCursor {
-    [HarmonyPostfix]
-    private static void Postfix(LaserCursor __instance) {
-      if (__instance.cursorHidden)
-        Instance._visibleLaserCursors.Remove(__instance);
-    }
-  }
-
-  [HarmonyPatch(typeof(LaserCursor), nameof(LaserCursor.Update))]
-  internal static class LaserCursor_Update {
-    [HarmonyPrefix]
-    private static void Prefix(LaserCursor __instance, ref bool __state) {
-      var pinchedTracker =
-          Instance._trackers.FirstOrDefault(t => t?.PinchUp ?? false);
-      if (pinchedTracker == null)
-        return;
-
-      // Show laser pointer from the hand which is pinching
-      var controller = Utils.RigControllerOf(pinchedTracker);
-      if (!controller)
-        return;
-
-      Control_UI_InGameData.SetActiveController(controller);
-      __instance.controllerFocused = true;
-      __state = true;
-    }
-
-    [HarmonyPostfix]
-    private static void Postfix(LaserCursor __instance, ref bool __state) {
-      if (!__state)
-        return;
-
-      __instance.Trigger();
-      UIRig.Instance?.popUpMenu?.Trigger(true);
-    }
-  }
-
-  [HarmonyPatch(typeof(Seat), nameof(Seat.OnTriggerStay))]
-  internal static class Seat_OnTriggerStay {
-    [HarmonyPrefix]
-    private static bool Prefix(Seat __instance, Collider other) {
-      var crouchHand = Utils.IsLocoControllerLeft() ? Instance.TrackerRight
-                                                    : Instance.TrackerLeft;
-      if (crouchHand.IsControllerConnected() || __instance.rigManager)
-        return true;
-
-      var physicsRig = other?.GetComponent<PhysGrounder>()?.physRig;
-      if (physicsRig == null)
-        return true;
-
-      if (!physicsRig.manager.activeSeat &&
-          physicsRig.pelvisHeightMult < 0.6f) {
-        __instance.IngressRig(physicsRig.manager);
-      }
-      return false;
-    }
-  }
-
-  [HarmonyPatch(
-      typeof(HandPoseAnimator), nameof(HandPoseAnimator.ApplyPoseToTransforms)
-  )]
-  internal static class HandPoseAnimator_ApplyPoseToTransforms {
-    [HarmonyPrefix]
-    private static void Prefix(HandPoseAnimator __instance) {
-      var tracker = Instance.GetTrackerOfHand(__instance.handedness);
-      tracker.OnHandAnimate(__instance);
-    }
+    private static bool
+    Prefix() => (Instance.TrackerLeft?.IsControllerConnected() ?? true) ||
+        (Instance.TrackerRight?.IsControllerConnected() ?? true);
   }
 }

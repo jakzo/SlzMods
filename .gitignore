@@ -1,5 +1,6 @@
 /projects/*/*/thunderstore/build/
 generated-*
+MelonPreferences.cfg
 
 
 ## Ignore Visual Studio temporary files, build results, and

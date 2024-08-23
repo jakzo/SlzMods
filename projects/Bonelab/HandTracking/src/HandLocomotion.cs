@@ -97,7 +97,6 @@ public class LocoHandState {
   private float _lastTime;
 
   public void Update(float scale) {
-    // TODO: Is there something else to say hand position is low confidence?
     IsTrackedConfident = Tracker.IsControllerConnected() ||
         Tracker.HandState.IsActive() && Tracker.HandState.HasState &&
             Tracker.HandState.HandConfidence ==

@@ -19,7 +19,6 @@ public class WeaponButtonDetector {
     _otherHand = otherHand;
   }
 
-  // TODO: Allow pressing from any direction?
   public bool IsTriggered() {
     var wrist =
         _mainHand.HandState.Joints[(int)OVRPlugin.BoneId.Hand_WristRoot];
@@ -44,7 +43,6 @@ public class WeaponButtonDetector {
     return false;
   }
 
-  // TODO: Check index orientation
   private bool IsIndexInRadius(
       JointTransform wrist, JointTransform index, Vector3 wristUpDir,
       float indexToWristVerticalDist

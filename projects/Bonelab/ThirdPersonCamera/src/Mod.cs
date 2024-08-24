@@ -205,7 +205,7 @@ public class Mod : MelonMod {
     [HarmonyPrefix()]
     internal static bool Prefix() {
       Dbg.Log("PlayerAvatarArt_DisableHair_Patch");
-      return !Instance._thirdPersonCamera;
+      return false;
     }
   }
 
@@ -214,7 +214,7 @@ public class Mod : MelonMod {
     [HarmonyPrefix()]
     internal static bool Prefix() {
       Dbg.Log("PlayerAvatarArt_DisableHead_Patch");
-      return !Instance._thirdPersonCamera;
+      return false;
     }
   }
 }

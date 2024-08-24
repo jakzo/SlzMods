@@ -1,23 +1,29 @@
 using System;
+using System.Reflection;
 using HarmonyLib;
 using MelonLoader;
 using Unity.XR.MockHMD;
 using UnityEngine;
 using UnityEngine.XR.Management;
 using UnityEngine.XR;
+using Sst.Utilities;
+
+#if PATCH5 && ML6
+using Il2CppSLZ.Marrow;
+using Il2CppSLZ.Marrow.Input;
+using MarrowXrDevice = Il2CppSLZ.Marrow.Input.XRDevice;
+#elif PATCH3 && ML5
 using SLZ.Marrow.Input;
 using SLZ.Marrow.Utilities;
 using SLZ.Rig;
-using System.Reflection;
 using SLZ.Marrow.Warehouse;
-using Sst.Utilities;
 using SLZ.SaveData;
+using MarrowXrDevice = SLZ.Marrow.Input.XRDevice;
+#endif
 
 namespace Sst.FlatPlayer;
 
 public class FlatBooter : MelonMod {
-  private static Vector3 ORIGIN = new Vector3(0f, 1.76f, 0f);
-
   public static FlatBooter Instance;
 
   private FlatMode _flatMode;
@@ -40,13 +46,16 @@ public class FlatBooter : MelonMod {
 
   public override void OnUpdate() { _flatMode.OnUpdate(); }
 
+  public override void OnLateUpdate() {
+    _flatMode.UpdateHmd();
+    _flatMode.UpdateLeftController();
+    _flatMode.UpdateRightController();
+  }
+
   [HarmonyPatch(typeof(HmdActionMap), nameof(HmdActionMap.Refresh))]
   internal static class HmdActionMap_Refresh {
     [HarmonyPrefix]
-    private static bool Prefix() {
-      Instance._flatMode.UpdateHmd();
-      return false;
-    }
+    private static bool Prefix() => false;
   }
 
   [HarmonyPatch(
@@ -54,22 +63,16 @@ public class FlatBooter : MelonMod {
   )]
   internal static class ControllerActionMap_Refresh {
     [HarmonyPrefix]
-    private static bool Prefix(ControllerActionMap __instance) {
-      if (__instance.Equals(Instance._flatMode.LeftController)) {
-        Instance._flatMode.UpdateLeftController();
-      } else {
-        Instance._flatMode.UpdateRightController();
-      }
-      return false;
-    }
+    private static bool Prefix() => false;
   }
 
   [HarmonyPatch(typeof(OpenControllerRig), nameof(OpenControllerRig.OnAwake))]
   internal static class OpenControllerAwake {
     [HarmonyPrefix]
     private static void Prefix(OpenControllerRig __instance) {
-      if (__instance.transform.parent.gameObject.name != "[RigManager (Blank)]")
-        return;
+      // if (__instance.transform.parent.gameObject.name != "[RigManager
+      // (Blank)]")
+      //   return;
 
       Instance._flatMode.Start();
     }
@@ -79,8 +82,9 @@ public class FlatBooter : MelonMod {
   internal static class OpenControllerDestroy {
     [HarmonyPrefix]
     private static void Prefix(OpenControllerRig __instance) {
-      if (__instance.transform.parent.gameObject.name == "[RigManager (Blank)]")
-        Instance._flatMode.Stop();
+      // if (__instance.transform.parent.gameObject.name == "[RigManager
+      // (Blank)]")
+      Instance._flatMode.Stop();
     }
   }
 
@@ -93,10 +97,16 @@ public class FlatBooter : MelonMod {
 
     [HarmonyTargetMethod]
     public static MethodBase TargetMethod() {
+#if PATCH5 && ML6
+      return typeof(XRApi.__c__DisplayClass60_0)
+          .GetMethod(nameof(XRApi.__c__DisplayClass60_0._InitializeXRLoader_b__0
+          ));
+#elif PATCH3 && ML5
       var xrApi = typeof(XRApi);
       return xrApi.GetNestedType(STEAM_CLASS_NAME)
                  ?.GetMethod(STEAM_METHOD_NAME) ??
           xrApi.GetNestedType(OCULUS_CLASS_NAME)?.GetMethod(OCULUS_METHOD_NAME);
+#endif
     }
 
     [HarmonyPrefix]
@@ -114,14 +124,18 @@ public class FlatBooter : MelonMod {
   internal static class XRDevice_IsPresent {
     [HarmonyPrefix]
     private static bool Prefix(InputFeatureUsage<bool> usage, out bool value) {
+#if PATCH5 && ML6
+      value = true;
+#elif PATCH3 && ML5
       value = usage.name == "UserPresence";
+#endif
       return false;
     }
   }
 
   [HarmonyPatch(
-      typeof(SLZ.Marrow.Input.XRDevice),
-      nameof(SLZ.Marrow.Input.XRDevice.IsTracking), MethodType.Getter
+      typeof(MarrowXrDevice), nameof(MarrowXrDevice.IsTracking),
+      MethodType.Getter
   )]
   internal static class XRDevice_IsTracking {
     [HarmonyPrefix]

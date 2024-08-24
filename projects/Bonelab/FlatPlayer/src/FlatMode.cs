@@ -4,10 +4,18 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.XR;
 
+#if PATCH5 && ML6
+using Il2CppSLZ.Marrow.Input;
+using Il2CppSLZ.Marrow.Warehouse;
+using Il2CppSLZ.Marrow.Utilities;
+using Il2CppSLZ.Bonelab.SaveData;
+using Il2CppSLZ.Marrow.SaveData;
+#elif PATCH3 && ML5
 using SLZ.Marrow.Input;
 using SLZ.Marrow.Warehouse;
 using SLZ.Marrow.Utilities;
 using SLZ.SaveData;
+#endif
 
 namespace Sst.Utilities;
 
@@ -140,6 +148,9 @@ public class FlatMode {
   }
 
   public void UpdateHmd() {
+    if (Hmd == null)
+      return;
+
     var playerRotation =
         Quaternion.AngleAxis(cameraLastRotation.x, Vector3.up) *
         Quaternion.AngleAxis(cameraLastRotation.y, Vector3.left);
@@ -148,6 +159,9 @@ public class FlatMode {
   }
 
   public void UpdateLeftController() {
+    if (LeftController == null)
+      return;
+
     var moveDirection = Vector2.zero;
     if (Input.GetKey(KeyCode.W))
       moveDirection += Vector2.up;
@@ -185,6 +199,9 @@ public class FlatMode {
   }
 
   public void UpdateRightController() {
+    if (RightController == null)
+      return;
+
     var stickAxis = Vector2.zero;
     if (Input.GetKey(KeyCode.UpArrow))
       stickAxis += Vector2.up;

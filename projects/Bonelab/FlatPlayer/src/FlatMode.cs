@@ -20,8 +20,8 @@ public class FlatMode {
   public HandActionMap LeftHand;
   public HandActionMap RightHand;
 
-  public Camera mainCamera;
-  public bool isReady;
+  public Camera MainCamera;
+  public bool IsReady;
 
   private static FlatMode _instance;
   private MelonPreferences_Entry<float> _prefCameraSpeed;
@@ -121,18 +121,18 @@ public class FlatMode {
         DataManager.Instance._settings.SpectatorSettings.SpectatorCameraMode ==
         SpectatorCameraMode.Passthrough;
     if (isPassthroughCamera) {
-      mainCamera = Camera.main;
-      mainCamera.cameraType = CameraType.SceneView;
-      mainCamera.fieldOfView = 90f;
+      MainCamera = Camera.main;
+      MainCamera.cameraType = CameraType.SceneView;
+      MainCamera.fieldOfView = 90f;
     }
 
     ResetRotation();
-    isReady = true;
+    IsReady = true;
   }
 
   public void Stop() {
     ResetRotation();
-    isReady = false;
+    IsReady = false;
   }
 
   public void ResetRotation() {
@@ -256,7 +256,7 @@ public class FlatMode {
       Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl);
 
   public void OnUpdate() {
-    if (!isReady)
+    if (!IsReady)
       return;
 
     if (Input.GetKey(KeyCode.Escape))

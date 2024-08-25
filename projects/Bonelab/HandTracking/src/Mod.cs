@@ -149,10 +149,19 @@ public class Mod : MelonMod {
       : handedness == Handedness.RIGHT ? TrackerRight
                                        : null;
 
+  internal HandTracker GetTrackerFromProxyController(XRController controller) {
+    if (TrackerLeft.ProxyController.Equals(controller))
+      return TrackerLeft;
+    if (TrackerRight.ProxyController.Equals(controller))
+      return TrackerRight;
+    return null;
+  }
+
 #if DEBUG
   public override void OnSceneWasInitialized(int buildindex, string sceneName) {
     if (!sceneName.ToUpper().Contains("BOOTSTRAP"))
       return;
+
     AssetWarehouse.OnReady(new Action(() => {
       var crate = AssetWarehouse.Instance.GetCrates().ToArray().First(
           c => c.Barcode.ID == Levels.Barcodes.HUB
@@ -165,14 +174,6 @@ public class Mod : MelonMod {
     }));
   }
 #endif
-
-  internal HandTracker GetTrackerFromProxyController(XRController controller) {
-    if (TrackerLeft.ProxyController.Equals(controller))
-      return TrackerLeft;
-    if (TrackerRight.ProxyController.Equals(controller))
-      return TrackerRight;
-    return null;
-  }
 
   public bool IsControllerConnected() => TrackerLeft.IsControllerConnected() ||
       TrackerRight.IsControllerConnected();

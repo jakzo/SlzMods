@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
+  <Target Name="BuildAll">
+    <!-- All game/Melon Loader version combinations to build -->
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+      Properties="Configuration=$(Configuration);Patch=5;MelonLoader=6" />
+  </Target>
+
+  <PropertyGroup>
+    <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild>
+
+    <ProjectGuid>{1F09D27B-6C9F-48B2-86A9-DC5F7A70A45D}</ProjectGuid>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="AppVersion.cs" />
+    <Compile Include="src/**/*.cs" />
+    <Compile Include="../../../common/Utilities/Colliders.cs" />
+    <Compile Include="../../../common/Utilities/Dbg.cs" />
+    <Compile Include="../../../common/Utilities/Geometry.cs" />
+    <Compile Include="../../../common/Utilities/Metadata.cs" />
+    <Compile Include="../../../common/Utilities/Shaders.cs" />
+    <Compile Include="../../../common/Utilities/Unity.cs" />
+    <Compile Include="../../../common/Bonelab/Bonelab.cs" />
+    <Compile Include="../../../common/Bonelab/LevelHooks.cs" />
+    <Compile Include="../../../common/Bonelab/Levels.cs" />
+  </ItemGroup>
+
+</Project>

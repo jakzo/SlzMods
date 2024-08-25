@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using SLZ.Bonelab;
-using SLZ.Interaction;
 using Sst.Utilities;
-using SLZ.Rig;
-using SLZ.Marrow;
 using HarmonyLib;
-using SLZ.VRMK;
+
+using SLZ.Marrow;
+using SLZ.Interaction;
+using SLZ.Rig;
+using SLZ.Bonelab;
 
 namespace Sst.HandTracking;
 
 public class AutoSight {
-  private const float ROTATION_SIMILARITY_ACTIVATION_THRESHOLD = 0.95f;
-  private const float ROTATION_SIMILARITY_DEACTIVATION_THRESHOLD = 0.9f;
+  private const float ROTATION_SIMILARITY_ACTIVATION_THRESHOLD = 0.98f;
+  private const float ROTATION_SIMILARITY_DEACTIVATION_THRESHOLD = 0.96f;
   private const float ROTATION_FACTOR = 0.25f;
   private const float POSITION_DAMPING_FACTOR = 0.25f;
   // Sights have a slightly different offset depending on the gun but finding
@@ -26,7 +26,7 @@ public class AutoSight {
   public InteractableHost Weapon;
   public bool IsActive;
   public Quaternion TargetHandRotation;
-  public Vector3 DampedRemapHandPos;
+  public Vector3 DampedVirtualHandPos;
 
   public AutoSight(HandTracker tracker, HandTracker otherTracker) {
     Tracker = tracker;
@@ -34,45 +34,33 @@ public class AutoSight {
   }
 
   public void UpdateHand() {
-    // TODO: More efficient way to get held gun and cache all this stuff?
-    var hand = Tracker.GetPhysicalHand();
-    if (hand == null)
+    var result = CalculateHandToSightOffset();
+    if (!result.HasValue)
       return;
+    var handToSight = result.Value;
 
-    var host = hand?.AttachedReceiver?.TryCast<TargetGrip>()
-                   ?.Host?.TryCast<InteractableHost>();
-    var gun = host?.GetComponent<Gun>();
-    if (gun?.firePointTransform == null || host?.Rb == null)
-      return;
-
+    // TODO: Do for both eyes
     var eye = LevelHooks.RigManager.controllerRig.TryCast<OpenControllerRig>()
                   ?.cameras?[0];
     if (eye == null)
       return;
 
-    var sightRot = gun.firePointTransform.rotation;
-    var sightPos = gun.firePointTransform.position + sightRot * SIGHT_OFFSET;
+    var virtualRig = LevelHooks.RigManager.virtualHeptaRig;
+    var virtualHand =
+        Tracker.Opts.isLeft ? virtualRig.m_handLf : virtualRig.m_handRt;
+    var virtualHandPos = virtualHand.position;
+    var virtualHandRot = virtualHand.rotation;
 
-    var handToSightPos = sightPos - host.Rb.transform.position -
-        hand.joint.connectedAnchor + hand.joint.anchor;
-    var sightToHandPos = -handToSightPos;
-    var sightToHandRot =
-        sightRot * host.Rb.transform.rotation * hand.joint.targetRotation;
-    var handToSightRot = Quaternion.Inverse(sightToHandRot);
-
-    var sightPosOfHand = hand.transform.position + handToSightPos;
-    var sightRotOfHand = hand.transform.rotation * handToSightRot;
-
-    var remapRig = LevelHooks.RigManager.remapHeptaRig;
-    var remapHand = Tracker.Opts.isLeft ? remapRig.m_handLf : remapRig.m_handRt;
-    var remapHandPos = remapHand.position;
-    var remapHandRot = remapHand.rotation;
+    var sightPosOfHand =
+        virtualHand.position + virtualHand.rotation * handToSight.Pos;
+    var sightRotOfHand = virtualHand.rotation * handToSight.Rot;
 
     var targetSightRotation =
         Quaternion.LookRotation(sightPosOfHand - eye.transform.position);
-    TargetHandRotation = targetSightRotation * sightToHandRot;
+    TargetHandRotation =
+        targetSightRotation * Quaternion.Inverse(handToSight.Rot);
 
-    var rotationSimilarity = Quaternion.Dot(TargetHandRotation, remapHandRot);
+    var rotationSimilarity = Quaternion.Dot(TargetHandRotation, virtualHandRot);
 
     if (IsActive) {
       if (rotationSimilarity < ROTATION_SIMILARITY_DEACTIVATION_THRESHOLD) {
@@ -83,24 +71,61 @@ public class AutoSight {
     } else if (rotationSimilarity >= ROTATION_SIMILARITY_ACTIVATION_THRESHOLD) {
       Tracker.Log("Auto-sight activated");
       IsActive = true;
-      DampedRemapHandPos = remapHand.localPosition;
+      DampedVirtualHandPos = virtualHand.localPosition;
     } else {
       return;
     }
 
-    remapHand.rotation = TargetHandRotation;
+    virtualHand.rotation = TargetHandRotation;
 
     // TODO: Scale up damping factor when delta from last position increases
-    var remapHandPosDelta = remapHand.localPosition - DampedRemapHandPos;
-    DampedRemapHandPos += remapHandPosDelta * POSITION_DAMPING_FACTOR;
-    remapHand.localPosition = DampedRemapHandPos;
+    var virtualHandPosDelta = virtualHand.localPosition - DampedVirtualHandPos;
+    DampedVirtualHandPos += virtualHandPosDelta * POSITION_DAMPING_FACTOR;
+    virtualHand.localPosition = DampedVirtualHandPos;
   }
 
-  [HarmonyPatch(typeof(RemapRig), nameof(RemapRig.OnEarlyUpdate))]
-  internal static class RemapRig_OnEarlyUpdate {
+  public (Vector3 Pos, Quaternion Rot)? CalculateHandToSightOffset() {
+    // TODO: More efficient way to get held gun and cache all this stuff?
+    var physicalHand = Tracker.GetPhysicalHand();
+    if (physicalHand == null)
+      return null;
+
+    var host = physicalHand?.AttachedReceiver?.TryCast<TargetGrip>()
+                   ?.Host?.TryCast<InteractableHost>();
+
+    var result = GetSight(host);
+    if (!result.HasValue)
+      return null;
+    var sight = result.Value;
+
+    // TODO: This is a little bit off for some reason (depends on gun)
+    var handToSightPos = physicalHand.jointStartRotation *
+        (Quaternion.Inverse(host.Rb.rotation) * (sight.Pos - host.Rb.position) -
+         physicalHand.joint.connectedAnchor + physicalHand.joint.anchor);
+    var handToSightRot = sight.Rot * Quaternion.Inverse(host.Rb.rotation) *
+        physicalHand.jointStartRotation;
+
+    return (handToSightPos, handToSightRot);
+  }
+
+  public (Vector3 Pos, Quaternion Rot)? GetSight(InteractableHost host) {
+    var gun = host?.GetComponent<Gun>();
+    if (gun?.firePointTransform == null || host?.Rb == null)
+      return null;
+
+    var sightRot = gun.firePointTransform.rotation;
+    var sightPos = gun.firePointTransform.position + sightRot * SIGHT_OFFSET;
+
+    return (sightPos, sightRot);
+  }
+
+  [HarmonyPatch(
+      typeof(GameWorldSkeletonRig), nameof(GameWorldSkeletonRig.OnFixedUpdate)
+  )]
+  internal static class RemapRig_OnFixedUpdate {
     [HarmonyPostfix]
-    private static void Postfix(RemapRig __instance) {
-      if (!__instance.Equals(LevelHooks.RigManager?.remapHeptaRig))
+    private static void Postfix(GameWorldSkeletonRig __instance) {
+      if (!__instance.Equals(LevelHooks.RigManager?.virtualHeptaRig))
         return;
       // Mod.Instance.TrackerLeft?.AutoSight.UpdateHand();
       // Mod.Instance.TrackerRight?.AutoSight.UpdateHand();

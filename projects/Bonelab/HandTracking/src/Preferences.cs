@@ -48,4 +48,8 @@ public class Preferences {
           "[DEBUG] Shows the rotation of joints as text over the hand " +
               "tracking visualization"
       );
+  public MelonPreferences_Entry<bool> DebugShowAutoSight = Category.CreateEntry(
+      "debug_show_auto_sight", false, "[DEBUG] Show auto-sight",
+      "[DEBUG] Shows the relevant points used by the auto-sight system"
+  );
 }

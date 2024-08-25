@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using UnityEngine;
 using Sst.Utilities;
+using SLZ.Interaction;
+using SLZ.Bonelab;
 using SLZ.Rig;
 using SLZ.Marrow;
 using TMPro;
@@ -20,10 +22,17 @@ public class DebugHand {
   private Transform _root;
   private Joint[] _joints;
   private Transform _marker;
+  private Transform _calculatedSight;
+  private Transform _actualSight;
 
   public DebugHand(OVRPlugin.Skeleton2 skeleton) { _skeleton = skeleton; }
 
   public void Update(HandState handState) {
+    HandTrackingOnUpdate(handState);
+    AutoSightOnUpdate(handState);
+  }
+
+  private void HandTrackingOnUpdate(HandState handState) {
     if (!Mod.Preferences.DebugShowHandTracking.Value ||
         LevelHooks.RigManager == null)
       return;
@@ -149,6 +158,87 @@ public class DebugHand {
 
   private bool IsTip(OVRPlugin.BoneId boneId
   ) => boneId >= OVRPlugin.BoneId.Hand_MaxSkinnable;
+
+  private void AutoSightOnUpdate(HandState handState) {
+    if (!Mod.Preferences.DebugShowAutoSight.Value ||
+        LevelHooks.RigManager == null)
+      return;
+
+    var tracker =
+        handState.IsLeft ? Mod.Instance.TrackerLeft : Mod.Instance.TrackerRight;
+
+    if (_calculatedSight == null)
+      CreateAutoSightVisualization(tracker);
+
+    var result = tracker?.AutoSight.CalculateHandToSightOffset();
+    if (!result.HasValue) {
+      if (_actualSight.gameObject.active) {
+        Dbg.Log("Gun dropped");
+        _actualSight.gameObject.SetActive(false);
+        _calculatedSight.gameObject.SetActive(false);
+      }
+      return;
+    }
+
+    if (!_actualSight.gameObject.active) {
+      Dbg.Log("Gun held");
+      _actualSight.gameObject.SetActive(true);
+      _calculatedSight.gameObject.SetActive(true);
+    }
+
+    var handToSight = result.Value;
+    var virtualRig = LevelHooks.RigManager.virtualHeptaRig;
+    var hand = tracker.Opts.isLeft ? virtualRig.m_handLf : virtualRig.m_handRt;
+    _calculatedSight.SetPositionAndRotation(
+        hand.position + hand.rotation * handToSight.Pos,
+        hand.rotation * handToSight.Rot
+    );
+
+    var color = tracker.AutoSight.IsActive ? Color.magenta : Color.green;
+    var renderer = _calculatedSight.gameObject.GetComponent<MeshRenderer>();
+    if (color != renderer.material.color) {
+      renderer.material.color = color;
+    }
+
+    var sight = tracker.AutoSight
+                    .GetSight(tracker.GetPhysicalHand()
+                                  .AttachedReceiver.TryCast<TargetGrip>()
+                                  .Host.TryCast<InteractableHost>())
+                    .Value;
+    _actualSight.SetPositionAndRotation(sight.Pos, sight.Rot);
+  }
+
+  private void CreateAutoSightVisualization(HandTracker tracker) {
+    var size = JOINT_SIZE / 2f;
+    var cubePrefab = Geometry.CreatePrefabCube(
+        "HandTracking_DebugAutoSight", Color.red, -size, size, -size, size,
+        -size, size
+    );
+    Geometry.SetMaterial(cubePrefab, Color.red, Shaders.HighlightShader);
+
+    _calculatedSight = GameObject.Instantiate(cubePrefab).transform;
+    Geometry.SetMaterial(
+        _calculatedSight.gameObject, Color.green, Shaders.HighlightShader
+    );
+
+    _actualSight = GameObject.Instantiate(cubePrefab).transform;
+    Geometry.SetMaterial(
+        _actualSight.gameObject, Color.blue, Shaders.HighlightShader
+    );
+
+    foreach (var (rig, color) in new(Rig, Color)[] {
+               (LevelHooks.RigManager.virtualHeptaRig, Color.green),
+               (LevelHooks.RigManager.physicsRig, Color.blue),
+             }) {
+      var transform = tracker.Opts.isLeft ? rig.m_handLf : rig.m_handRt;
+      var cube = GameObject.Instantiate(cubePrefab, transform);
+      Geometry.SetMaterial(cube, color, Shaders.HighlightShader);
+      cube.SetActive(true);
+    }
+
+    GameObject.Destroy(cubePrefab);
+    Dbg.Log("Created auto-sight visualization");
+  }
 
   private class Joint {
     public OVRPlugin.BoneId BoneId;

@@ -179,7 +179,10 @@ switch (process.platform) {
         game === "bonelab"
           ? `${process.env.HOME}/Downloads/${bonelabDir}/${bonelabExe}`
           : `/Volumes/[C] ${vmName}.hidden/Program Files (x86)/Steam/steamapps/common/BONEWORKS/BONEWORKS/${boneworksExe}`;
-      spawnSync("open", [gamePath], { stdio: "inherit" });
+      spawnSync("open", [gamePath], {
+        stdio: "inherit",
+        cwd: path.dirname(gamePath),
+      });
     }
 
     break;

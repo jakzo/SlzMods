@@ -1,3 +1,8 @@
+## 2.5.0
+
+Allow PhysicsTickFixer mod to be used in runs.
+
+
 ## 2.4.2
 
 Fixes logger error on startup.

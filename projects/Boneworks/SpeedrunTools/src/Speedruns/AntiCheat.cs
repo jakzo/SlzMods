@@ -6,6 +6,7 @@ namespace Sst.Speedruns {
 class AntiCheat {
   private static HashSet<string> ALLOWED_MODS = new HashSet<string>() {
     "LootDropBugfix",
+    "PhysicsTickFixer",
   };
   private static HashSet<string> ALLOWED_PLUGINS = new HashSet<string>() {
     "Backwards Compatibility Plugin",

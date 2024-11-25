@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using UnityEngine;
 using Sst.Utilities;
 using SLZ.Marrow.Utilities;
-using System.IO;
+using SLZ.Marrow;
+using SLZ.Rig;
 
 namespace Sst.HandTracking;
 
@@ -13,17 +15,37 @@ public class HeadLocomotion : Locomotion {
   // TODO: Account for forwards HMD movement due to looking down or crouching
   private const float DEADZONE = 0.1f;
   private const float MAX_INPUT_DIST = DEADZONE + 0.1f;
-  private const float MAX_OFFSET = MAX_INPUT_DIST + 0.2f;
+  private const float MAX_OFFSET = MAX_INPUT_DIST + 0.1f;
   private const float DEFAULT_OFFSET = MAX_OFFSET;
-  private const float LOCK_DISENGAGE_POINT = 0.25f;
+  private const float DEFAULT_HEIGHT = 1.8f;
+  // Amount the headset travels forwards when looking straight down or backwards
+  // when looking straight up due to pivoting around the neck and leaning,
+  // expressed as a percentage of total body height
+  private const float LOOK_DOWN_OFFSET = 0.1f / DEFAULT_HEIGHT;
+  // Roughly how far a player's real world head might move forwards when
+  // crouching (to compensate for their shifting center of gravity) compared to
+  // how low it moves
+  private const float CROUCH_HEAD_FORWARDS_RATIO = 0.3f;
+  private const float CROUCH_HEAD_FORWARDS_MAX = 0.3f / DEFAULT_HEIGHT;
+  // Amount offset can temporarily exceed its limits by when crouching
+  // private const float OFFSET_CROUCH_BUFFER = 0.2f;
+  // private const float OFFSET_CROUCH_BUFFER_RESET_RATE = 0.2f;
+  private const float LOCK_DISENGAGE_POINT = 0.3f;
   private const float WALK_SPEED = 0.4f;
   private const float RUN_REMAINDER = 1f - WALK_SPEED;
   // Amount added to offset per second while running is locked
   private const float RECALIBRATION_RATE = 0.025f;
+  private const float FLOOR_OFFSET_RECALIBRATION_RATE = 0.025f;
 
   private RunningDetector _runningDetector = new();
   private float _offset;
+  private float _offsetBeforeHeadCompensation;
+  private float _offsetMaxExceeded;
+  private float _extraMaxOffset;
+  private float _floorOffset;
   private bool _isLocked;
+  private Vector3 _lastHeadPos;
+  private Vector3 _lastHeadPosRaw;
 
   public override void Init(HandTracker tracker) {}
 
@@ -36,35 +58,89 @@ public class HeadLocomotion : Locomotion {
     var hmd = MarrowGame.xr.HMD;
     var hmdRotY = hmd.Rotation.eulerAngles.y;
     var forwardsOnly = Mod.Preferences.ForwardsOnly.Value;
-    var delta = forwardsOnly ? hmd.Position - hmd._lastPosition : hmd.Position;
-    var direction = Rotate(new Vector2(delta.x, delta.z), hmdRotY);
+    var playerHeight = GetPlayerHeight();
+    var headPosRaw =
+        UntiltedHeadPosition(playerHeight, hmd.Position, hmd.Rotation);
+
+    if (!(LevelHooks.RigManager?.remapHeptaRig._jumping ?? true)) {
+      var calculatedHeight =
+          playerHeight * LevelHooks.RigManager.physicsRig.pelvisHeightMult;
+      // TODO: What should this actually be?
+      var foreheadHeight = 0.1f;
+      var floorOffset = hmd.Position.y + foreheadHeight - calculatedHeight;
+      _floorOffset = Mathf.MoveTowards(
+          _floorOffset, floorOffset, FLOOR_OFFSET_RECALIBRATION_RATE
+      );
+    }
+    var crouchDist = _floorOffset + playerHeight - hmd.Position.y;
+    var maxCrouchHeadForwards = playerHeight * CROUCH_HEAD_FORWARDS_MAX;
+    var headForwardsCompensationDist = Mathf.Clamp(
+        crouchDist * CROUCH_HEAD_FORWARDS_RATIO, 0f, maxCrouchHeadForwards
+    );
+    var headPos = headPosRaw -
+        Rotate(Vector3.forward * headForwardsCompensationDist, -hmdRotY);
+
+    var delta = forwardsOnly ? headPos - _lastHeadPos : headPos;
+    var deltaForwards = Rotate(delta, hmdRotY);
+    var direction = new Vector2(deltaForwards.x, deltaForwards.z);
+    _lastHeadPos = headPos;
 
     if (forwardsOnly) {
-      _offset = Mathf.Clamp(
-          _offset + direction.y +
-              (_isLocked ? RECALIBRATION_RATE * Time.deltaTime : 0f),
-          0f, MAX_OFFSET
+      var deltaRaw = headPosRaw - _lastHeadPosRaw;
+      var deltaForwardsRaw = Rotate(deltaRaw, hmdRotY);
+      _lastHeadPosRaw = headPosRaw;
+
+      var deltaExceedingMaxOffset =
+          deltaForwardsRaw.z < 0f || _offsetMaxExceeded > 0f
+          ? deltaForwardsRaw.z
+          : Mathf.Max(
+                deltaForwardsRaw.z -
+                    Mathf.Max(MAX_OFFSET - _offsetBeforeHeadCompensation, 0f),
+                0f
+            );
+      _offsetMaxExceeded = Mathf.Clamp(
+          _offsetMaxExceeded + deltaExceedingMaxOffset, 0f,
+          maxCrouchHeadForwards
+      );
+
+      var newExtraMaxOffset = Mathf.Min(
+          Mathf.Max(_extraMaxOffset, headForwardsCompensationDist),
+          _offsetMaxExceeded
+      );
+      var deltaMaxOffset = newExtraMaxOffset - _extraMaxOffset;
+      _extraMaxOffset = newExtraMaxOffset;
+      var modifiedMaxOffset = MAX_OFFSET + _extraMaxOffset;
+
+      var recalibrationAmount =
+          _isLocked ? RECALIBRATION_RATE * Time.deltaTime : 0f;
+      var deltaZ = deltaForwardsRaw.z + recalibrationAmount;
+      _offsetBeforeHeadCompensation = Mathf.Clamp(
+          _offsetBeforeHeadCompensation + deltaZ + deltaMaxOffset, 0f,
+          modifiedMaxOffset
+      );
+      _offset = _offsetBeforeHeadCompensation - headForwardsCompensationDist;
+
+      Mod.Instance.TrackerRight.LogToWrist(
+          "fo", _floorOffset.ToString("N2"), "ome",
+          _offsetMaxExceeded.ToString("N2"), "emo",
+          _extraMaxOffset.ToString("N2"), "obhc",
+          _offsetBeforeHeadCompensation.ToString("N2"), "o",
+          _offset.ToString("N2"), "hc",
+          headForwardsCompensationDist.ToString("N2")
       );
     }
 
-    var magnitude = forwardsOnly ? _offset : direction.magnitude;
+    var runningScore =
+        _runningDetector.CalculateRunningScore(Time.timeAsDouble, headPos.y);
+
+    var magnitude = forwardsOnly
+        ? _runningDetector.IsRunning(Time.timeAsDouble) ? MAX_OFFSET : _offset
+        : direction.magnitude;
     var directionAmount =
         Mathf.Clamp01((magnitude - DEADZONE) / (MAX_INPUT_DIST - DEADZONE));
 
     if (directionAmount <= LOCK_DISENGAGE_POINT) {
       _isLocked = false;
-    }
-
-    var runningScore = _runningDetector.CalculateRunningScore(
-        Time.timeAsDouble, hmd.Position.y
-    );
-
-    if (forwardsOnly) {
-      var timeSinceLastHeadBob =
-          Time.timeAsDouble - _runningDetector.PrevPhaseStart.Time;
-      if (timeSinceLastHeadBob < RunningDetector.RESET_TIME) {
-        _offset = DEFAULT_OFFSET;
-      }
     }
 
     var numPhasesUntilLock = Mod.Preferences.LockRunning.Value;
@@ -83,11 +159,28 @@ public class HeadLocomotion : Locomotion {
 #endif
   }
 
-  public static Vector2 Rotate(Vector2 v, float degrees) {
+  public static Vector3 Rotate(Vector3 v, float degrees) {
     var radians = degrees * (float)Math.PI / 180f;
     var cos = Mathf.Cos(radians);
     var sin = Mathf.Sin(radians);
-    return new Vector2(v.x * cos - v.y * sin, v.x * sin + v.y * cos);
+    return new Vector3(v.x * cos - v.z * sin, v.y, v.x * sin + v.z * cos);
+  }
+
+  public static float GetPlayerHeight() {
+    var player =
+        LevelHooks.RigManager?.controllerRig.TryCast<OpenControllerRig>()
+            ?.player;
+    return player?.realWorldHeight ?? DEFAULT_HEIGHT;
+  }
+
+  public static Vector3 UntiltedHeadPosition(
+      float playerHeight, Vector3 hmdPosition, Quaternion hmdRotation
+  ) {
+    var pivotLength = LOOK_DOWN_OFFSET * playerHeight;
+    var pivotSegment = Vector3.up * pivotLength;
+    var pivotSegmentTilted = hmdRotation * pivotSegment;
+
+    return hmdPosition - pivotSegmentTilted + pivotSegment;
   }
 
 #if DEBUG
@@ -134,7 +227,7 @@ public class RunningDetector {
   private const int PHASES_UNTIL_RUNNING = 2;
   // Resets the running state and phase counter after this amount of time
   // without a head bob
-  public const double RESET_TIME = 0.6;
+  public const double RESET_TIME = 0.4;
 
   // Number of head bobs up or down in the current run
   public int PhaseCounter;
@@ -240,5 +333,10 @@ public class RunningDetector {
     var resetTime =
         PhaseCounter >= PHASES_UNTIL_RUNNING ? RESET_TIME : TIME_MAX;
     return timeSinceLastHeadBob > resetTime;
+  }
+
+  public bool IsRunning(double time) {
+    var timeSinceLastHeadBob = time - _phaseStart.Time;
+    return timeSinceLastHeadBob < RESET_TIME;
   }
 }

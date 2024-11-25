@@ -8,25 +8,63 @@ using SLZ.Marrow;
 using SLZ.Interaction;
 using SLZ.Rig;
 using SLZ.Bonelab;
+using MelonLoader;
+using UnityEngine.XR;
+
+#if PATCH5
+using Hand = SLZ.Marrow.Hand;
+#elif PATCH4
+using Hand = SLZ.Interaction.Hand;
+#endif
 
 namespace Sst.HandTracking;
 
 public class AutoSight {
-  private const float ROTATION_SIMILARITY_ACTIVATION_THRESHOLD = 0.98f;
-  private const float ROTATION_SIMILARITY_DEACTIVATION_THRESHOLD = 0.96f;
-  private const float ROTATION_FACTOR = 0.25f;
-  private const float POSITION_DAMPING_FACTOR = 0.25f;
+  private const float ROTATION_SIMILARITY_ACTIVATION_THRESHOLD = 0.998f;
+  private const float MIN_OFFSET_DELTA = 0.005f;
+  private const float MIN_OFFSET_DELTA_SQR =
+      MIN_OFFSET_DELTA * MIN_OFFSET_DELTA;
+  private const float ROTATION_SIMILARITY_DEACTIVATION_THRESHOLD = 0.995f;
+  private const float TRANSITION_SPEED = 2f;
+  private const float ROTATION_FACTOR = 0.2f;
+  private const float POSITION_MAX_SPEED = 0.05f;
+
+  private const float STILLNESS_POSITION_THRESHOLD = 0.04f;
+  private const float STILLNESS_POSITION_THRESHOLD_SQR =
+      STILLNESS_POSITION_THRESHOLD * STILLNESS_POSITION_THRESHOLD;
+  private const float STILLNESS_ROTATION_THRESHOLD = 0.15f;
+  private const float STILLNESS_ROTATION_THRESHOLD_SQR =
+      STILLNESS_ROTATION_THRESHOLD * STILLNESS_ROTATION_THRESHOLD;
+
+  private const float OFFSET_UPDATE_RATE_POS = 1f;
+
   // Sights have a slightly different offset depending on the gun but finding
   // the specific value per gun is a lot of manual effort and won't work for
   // modded guns whereas hardcoding it works well enough
-  private static Vector3 SIGHT_OFFSET = new Vector3(0f, 0.03f, 0f);
+  private static Vector3 SIGHT_OFFSET = new Vector3(0f, 0.02f, 0f);
+  private static Vector3 OFFHAND_OFFSET_LEFT = new Vector3(-0.1f, 0f, 0f);
+  private static Vector3 OFFHAND_OFFSET_RIGHT = new Vector3(
+      -OFFHAND_OFFSET_LEFT.x, OFFHAND_OFFSET_LEFT.y, OFFHAND_OFFSET_LEFT.z
+  );
+  private static XRNode[] XR_EYES = { XRNode.LeftEye, XRNode.RightEye };
 
   public HandTracker Tracker;
   public HandTracker OtherTracker;
-  public InteractableHost Weapon;
+  public HandReciever AttachedReceiver;
+  public InteractableHost Host;
+  public Transform Sight;
+  public bool IsGunHeld;
+  public bool IsHoldingWithBothHands;
   public bool IsActive;
+  public float RotationFactor = 1f;
+  public Vector3 ActualVirtualHandPos;
+  public Quaternion ActualVirtualHandRot;
   public Quaternion TargetHandRotation;
-  public Vector3 DampedVirtualHandPos;
+  public Vector3 DefaultOffsetPos;
+  public Quaternion DefaultOffsetRot;
+  public Vector3 ObservedOffsetDelta;
+  public Vector3 ObservedOffsetPos;
+  public Quaternion ObservedOffsetRot;
 
   public AutoSight(HandTracker tracker, HandTracker otherTracker) {
     Tracker = tracker;
@@ -34,90 +72,178 @@ public class AutoSight {
   }
 
   public void UpdateHand() {
-    var result = CalculateHandToSightOffset();
-    if (!result.HasValue)
+    var physicalHand = Tracker.GetPhysicalHand();
+    if (physicalHand == null) {
+      RotationFactor = 1f;
       return;
-    var handToSight = result.Value;
+    }
 
-    // TODO: Do for both eyes
-    var eye = LevelHooks.RigManager.controllerRig.TryCast<OpenControllerRig>()
-                  ?.cameras?[0];
-    if (eye == null)
+    var hasHeldItemChanged =
+        physicalHand.AttachedReceiver != AttachedReceiver &&
+        (physicalHand.AttachedReceiver == null || physicalHand.joint != null);
+    if (hasHeldItemChanged) {
+      AttachedReceiver = physicalHand.AttachedReceiver;
+      Host = AttachedReceiver?.TryCast<TargetGrip>()
+                 ?.Host?.TryCast<InteractableHost>();
+      IsGunHeld = TryAddSightTransform();
+
+      if (IsGunHeld) {
+        ObservedOffsetPos = DefaultOffsetPos =
+            CalculateDefaultOffsetPos(physicalHand);
+        ObservedOffsetRot = DefaultOffsetRot =
+            CalculateDefaultOffsetRot(physicalHand);
+      }
+    }
+
+    if (!IsGunHeld) {
+      RotationFactor = 1f;
       return;
+    }
 
     var virtualRig = LevelHooks.RigManager.virtualHeptaRig;
     var virtualHand =
         Tracker.Opts.isLeft ? virtualRig.m_handLf : virtualRig.m_handRt;
-    var virtualHandPos = virtualHand.position;
-    var virtualHandRot = virtualHand.rotation;
 
-    var sightPosOfHand =
-        virtualHand.position + virtualHand.rotation * handToSight.Pos;
-    var sightRotOfHand = virtualHand.rotation * handToSight.Rot;
+    ActualVirtualHandPos = virtualHand.position;
+    ActualVirtualHandRot = virtualHand.rotation;
 
-    var targetSightRotation =
-        Quaternion.LookRotation(sightPosOfHand - eye.transform.position);
-    TargetHandRotation =
-        targetSightRotation * Quaternion.Inverse(handToSight.Rot);
+    // TODO: Dampen offhand position
+    // TODO: This doesn't affect this physical hand's target position at all
+    // var otherHandHost =
+    //     OtherTracker?.GetPhysicalHand()
+    //         ?.AttachedReceiver?.Host?.TryCast<InteractableHost>();
+    // IsHoldingWithBothHands = otherHandHost != null &&
+    //     Host.GetInstanceID() == otherHandHost.GetInstanceID();
+    // if (IsHoldingWithBothHands) {
+    //   if (OtherTracker.Opts.isLeft) {
+    //     virtualRig.m_handLf.localPosition += OFFHAND_OFFSET_LEFT;
+    //   } else {
+    //     virtualRig.m_handRt.localPosition += OFFHAND_OFFSET_RIGHT;
+    //   }
+    // }
 
-    var rotationSimilarity = Quaternion.Dot(TargetHandRotation, virtualHandRot);
+    UpdateObservedOffset(physicalHand);
+
+    var controllerRig =
+        LevelHooks.RigManager.controllerRig.TryCast<OpenControllerRig>();
+    if (controllerRig == null) {
+      RotationFactor = 1f;
+      return;
+    }
+
+    var virtualSightPos =
+        ActualVirtualHandPos + ActualVirtualHandRot * ObservedOffsetPos;
+
+    var rotationSimilarity =
+        GetMaxRotationSimilarity(controllerRig, virtualSightPos);
 
     if (IsActive) {
       if (rotationSimilarity < ROTATION_SIMILARITY_DEACTIVATION_THRESHOLD) {
         Tracker.Log("Auto-sight deactivated");
         IsActive = false;
-        return;
       }
-    } else if (rotationSimilarity >= ROTATION_SIMILARITY_ACTIVATION_THRESHOLD) {
-      Tracker.Log("Auto-sight activated");
-      IsActive = true;
-      DampedVirtualHandPos = virtualHand.localPosition;
     } else {
-      return;
+      if (rotationSimilarity >= ROTATION_SIMILARITY_ACTIVATION_THRESHOLD &&
+          ObservedOffsetDelta.sqrMagnitude <= MIN_OFFSET_DELTA_SQR) {
+        Tracker.Log("Auto-sight activated");
+        IsActive = true;
+      }
     }
 
-    virtualHand.rotation = TargetHandRotation;
+    var shouldUpdateRotation = IsActive;
+    var targetRotationFactor = IsActive ? ROTATION_FACTOR : 1f;
+    if (RotationFactor != targetRotationFactor) {
+      RotationFactor = Mathf.MoveTowards(
+          RotationFactor, targetRotationFactor,
+          TRANSITION_SPEED * Time.deltaTime
+      );
+      shouldUpdateRotation = true;
+    }
 
-    // TODO: Scale up damping factor when delta from last position increases
-    var virtualHandPosDelta = virtualHand.localPosition - DampedVirtualHandPos;
-    DampedVirtualHandPos += virtualHandPosDelta * POSITION_DAMPING_FACTOR;
-    virtualHand.localPosition = DampedVirtualHandPos;
+    if (shouldUpdateRotation) {
+      TargetHandRotation = CalculateTargetHandRotation(
+          controllerRig.headset.position, virtualSightPos
+      );
+
+      virtualHand.rotation = Quaternion.Slerp(
+          TargetHandRotation, ActualVirtualHandRot, RotationFactor
+      );
+    }
   }
 
-  public (Vector3 Pos, Quaternion Rot)? CalculateHandToSightOffset() {
-    // TODO: More efficient way to get held gun and cache all this stuff?
-    var physicalHand = Tracker.GetPhysicalHand();
-    if (physicalHand == null)
-      return null;
+  public Vector3 CalculateDefaultOffsetPos(Hand hand) =>
+      // TODO: This is a little bit off for some reason (depends on gun)
+      hand.jointStartRotation *
+      (Quaternion.Inverse(Host.Rb.rotation) *
+           (Sight.position - Host.Rb.position) -
+       hand.joint.connectedAnchor + hand.joint.anchor);
 
-    var host = physicalHand?.AttachedReceiver?.TryCast<TargetGrip>()
-                   ?.Host?.TryCast<InteractableHost>();
+  public Quaternion CalculateDefaultOffsetRot(Hand hand) => Sight.rotation
+      * Quaternion.Inverse(Host.Rb.rotation) * hand.jointStartRotation;
 
-    var result = GetSight(host);
-    if (!result.HasValue)
-      return null;
-    var sight = result.Value;
+  public bool TryAddSightTransform() {
+    var gun = Host?.GetComponent<Gun>();
+    if (Host?.Rb == null || gun?.firePointTransform == null ||
+        !AttachedReceiver.Equals(gun.triggerGrip))
+      return false;
 
-    // TODO: This is a little bit off for some reason (depends on gun)
-    var handToSightPos = physicalHand.jointStartRotation *
-        (Quaternion.Inverse(host.Rb.rotation) * (sight.Pos - host.Rb.position) -
-         physicalHand.joint.connectedAnchor + physicalHand.joint.anchor);
-    var handToSightRot = sight.Rot * Quaternion.Inverse(host.Rb.rotation) *
-        physicalHand.jointStartRotation;
+    if (Sight == null) {
+      Sight = new GameObject("HandTracking_Sight").transform;
+      Sight.SetLocalPositionAndRotation(SIGHT_OFFSET, Quaternion.identity);
+    }
 
-    return (handToSightPos, handToSightRot);
+    Sight.SetParent(gun.firePointTransform, false);
+    return true;
   }
 
-  public (Vector3 Pos, Quaternion Rot)? GetSight(InteractableHost host) {
-    var gun = host?.GetComponent<Gun>();
-    if (gun?.firePointTransform == null || host?.Rb == null)
-      return null;
+  public void UpdateObservedOffset(Hand physicalHand) {
+    var stillness =
+        Mathf.Min(StillnessOf(Host.Rb), StillnessOf(physicalHand.rb));
 
-    var sightRot = gun.firePointTransform.rotation;
-    var sightPos = gun.firePointTransform.position + sightRot * SIGHT_OFFSET;
+    var handToSightPos = Quaternion.Inverse(ActualVirtualHandRot) *
+        (Sight.position - ActualVirtualHandPos);
+    ObservedOffsetDelta = handToSightPos - ObservedOffsetPos;
+    ObservedOffsetPos += Vector3.ClampMagnitude(
+        ObservedOffsetDelta, OFFSET_UPDATE_RATE_POS * Time.deltaTime * stillness
+    );
 
-    return (sightPos, sightRot);
+    var handToSightRot =
+        Quaternion.Inverse(ActualVirtualHandRot) * Sight.rotation;
+    ObservedOffsetRot = handToSightRot;
   }
+
+  public float GetMaxRotationSimilarity(
+      OpenControllerRig controllerRig, Vector3 virtualSightPos
+  ) {
+    var maxRotationSimilarity = 0f;
+    for (var i = 0; i < XR_EYES.Length; i++) {
+      var eyePos = controllerRig.vrRoot.TransformPoint(
+          InputTracking.GetLocalPosition(XR_EYES[i])
+      );
+      var targetHandRot = CalculateTargetHandRotation(eyePos, virtualSightPos);
+      var rotationSimilarity =
+          Quaternion.Dot(targetHandRot, ActualVirtualHandRot);
+      if (rotationSimilarity > maxRotationSimilarity)
+        maxRotationSimilarity = rotationSimilarity;
+    }
+    return maxRotationSimilarity;
+  }
+
+  public Quaternion CalculateTargetHandRotation(
+      Vector3 eyePosition, Vector3 virtualSightPosition
+  ) {
+    var targetSightRotation =
+        Quaternion.LookRotation(virtualSightPosition - eyePosition);
+    return targetSightRotation * Quaternion.Inverse(ObservedOffsetRot);
+  }
+
+  public static float StillnessOf(Rigidbody rb) => Mathf.Min(
+      Mathf.Min(
+          STILLNESS_POSITION_THRESHOLD_SQR / rb.velocity.sqrMagnitude,
+          STILLNESS_ROTATION_THRESHOLD_SQR / rb.angularVelocity.sqrMagnitude
+      ),
+      1f
+  );
 
   [HarmonyPatch(
       typeof(GameWorldSkeletonRig), nameof(GameWorldSkeletonRig.OnFixedUpdate)
@@ -127,47 +253,11 @@ public class AutoSight {
     private static void Postfix(GameWorldSkeletonRig __instance) {
       if (!__instance.Equals(LevelHooks.RigManager?.virtualHeptaRig))
         return;
-      // Mod.Instance.TrackerLeft?.AutoSight.UpdateHand();
-      // Mod.Instance.TrackerRight?.AutoSight.UpdateHand();
+
+      if (Mod.Instance.TrackerLeft?.IsTracking ?? false)
+        Mod.Instance.AutoSightLeft?.UpdateHand();
+      if (Mod.Instance.TrackerRight?.IsTracking ?? false)
+        Mod.Instance.AutoSightRight?.UpdateHand();
     }
   }
-
-  // TODO: Do we still need this?
-  // [HarmonyPatch(
-  //     typeof(GameWorldSkeletonRig),
-  //     nameof(GameWorldSkeletonRig.OnFixedUpdate)
-  // )]
-  // internal static class GameWorldSkeletonRig_OnFixedUpdate {
-  //   // [HarmonyPrefix]
-  //   // private static bool Prefix(GameWorldSkeletonRig __instance) {
-  //   [HarmonyPostfix]
-  //   private static void Postfix(GameWorldSkeletonRig __instance) {
-  //     __instance.m_handLf.localPosition =
-  //         new Vector3(Mathf.Sin(Time.time) * 0.25f, 1.5f, 0.2f);
-  //     __instance.m_handLf.localRotation = Quaternion.identity;
-  //     // __instance.m_elbowLf.localPosition = new Vector3(0.2f, 1.2f, 0.2f);
-  //     // __instance.m_elbowLf.localRotation = Quaternion.identity;
-  //     // __instance.bodyPose = __instance._basePose;
-  //     // return false;
-  //   }
-  // }
-
-  // [HarmonyPatch(typeof(PhysHand), nameof(PhysHand.UpdateArmTargets))]
-  // internal static class PhysHand_UpdateArmTargets {
-  //   [HarmonyPrefix]
-  //   private static bool Prefix(PhysHand __instance) {
-  //     var tracker =
-  //     Mod.Instance.GetTrackerOfHand(__instance.hand.handedness);
-  //     tracker.AutoSight.UpdateHand();
-  //     if (!tracker.AutoSight.IsActive)
-  //       return;
-
-  //     tracker.LogSpam("maxTor", maxTor);
-  //     var delta = Quaternion.Inverse(targetRotation) *
-  //         tracker.AutoSight.TargetHandRotation;
-
-  //     targetRotation = tracker.AutoSight.TargetHandRotation *
-  //         Quaternion.Slerp(Quaternion.identity, delta, ROTATION_FACTOR);
-  //   }
-  // }
 }

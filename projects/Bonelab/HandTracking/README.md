@@ -45,6 +45,8 @@ Hand tracking's accuracy has several limitations and can be a frustrating experi
   - Don't hold them too close to your face while aiming (hand will lose tracking if too close to headset)
 - **While throwing things, climbing or any other action:**
   - Try not to bring your hands too close to the headset or out of your eye sight
+- Sometimes hand tracking doesn't work when the game starts
+  - Just open and close the Oculus menu and it should start working
 
 ## Fun facts
 

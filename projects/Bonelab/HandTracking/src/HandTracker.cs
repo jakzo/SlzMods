@@ -46,7 +46,6 @@ public class HandTracker {
   public HandState HandState;
   public HandPose HandPose;
   public Inventory Inventory;
-  public AutoSight AutoSight;
 
   private OVRPlugin.Skeleton2 _skeleton;
   private bool[] _fingerGripStates = new bool[(int)OVRPlugin.HandFinger.Max];
@@ -56,7 +55,7 @@ public class HandTracker {
   private Quaternion _weaponRotationOffset = Quaternion.identity;
 
   private int _logIndex = 0;
-  private static TMPro.TextMeshPro _wristLog;
+  private TMPro.TextMeshPro _wristLog;
   private string LogString(params object[] messageParts
   ) => string.Join(" ", messageParts.Select(part => part?.ToString()));
   internal void Log(params object[] messageParts) {
@@ -71,7 +70,8 @@ public class HandTracker {
     if (LevelHooks.RigManager == null)
       return;
     if (!_wristLog)
-      _wristLog = Bonelab.CreateTextOnWrist("Sst_HandTracker_WristLog");
+      _wristLog =
+          Bonelab.CreateTextOnWrist("Sst_HandTracker_WristLog", !Opts.isLeft);
     _wristLog.SetText(LogString(messageParts));
   }
 
@@ -89,7 +89,6 @@ public class HandTracker {
     _ui = new(this);
     Inventory = new(this);
     HandPose = new(this);
-    AutoSight = new(this, null);
 
     Log("Initialized HandTracker");
   }
@@ -214,7 +213,8 @@ public class HandTracker {
   }
 
   private void UpdateTrigger() {
-    if (_forcePull.IsPulling() || GetRelativeIndexTipPos() > 0f) {
+    if (_forcePull.IsPulling() ||
+        GetRelativeIndexTipPos() > 0f && HandState.HasState) {
       ProxyController.TriggerButtonDown = !ProxyController.TriggerButton;
       ProxyController.TriggerButtonUp = false;
       ProxyController.TriggerButton = true;

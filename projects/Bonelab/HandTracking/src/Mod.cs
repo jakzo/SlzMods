@@ -33,6 +33,8 @@ public class Mod : MelonMod {
     get => Trackers[1];
     set => Trackers[1] = value;
   }
+  public AutoSight AutoSightLeft;
+  public AutoSight AutoSightRight;
 
   public override void OnInitializeMelon() {
     Dbg.Init(BuildInfo.NAME);
@@ -59,6 +61,7 @@ public class Mod : MelonMod {
         marrowController = MarrowGame.xr.LeftController,
         setMarrowController = c => MarrowGame.xr.LeftController = c,
         ovrController = OVRInput.Controller.LTouch,
+        // TODO: OpenControllerRig.OculusHandOffsetLf ???
         handRotationOffset = Quaternion.Euler(0f, 90f, 0f) *
             Quaternion.Euler(0f, 0f, 95f) * Quaternion.Euler(345f, 0f, 0f),
         handPositionOffset = new Vector3(0.04f, 0.02f, 0.1f),
@@ -93,6 +96,8 @@ public class Mod : MelonMod {
       _vehicles = new(TrackerLeft, TrackerRight);
       _weaponButtonLeft = new(TrackerLeft, TrackerRight);
       _weaponButtonRight = new(TrackerRight, TrackerLeft);
+      AutoSightLeft = new(TrackerLeft, TrackerRight);
+      AutoSightRight = new(TrackerRight, TrackerLeft);
     }
 
     // TODO: Can we do the updates right before the inputs are used?

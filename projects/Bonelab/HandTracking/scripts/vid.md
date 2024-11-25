@@ -3,6 +3,8 @@
 - Hand mapping
   - Different bones in Oculus hand tracking API vs Bonelab
 - Movement
+  - Examples
+    - [Pinch and pull](https://x.com/haltor/status/1671163104175194113)
   - Hand running
   - Nimsony head bobbing
 - Jumping

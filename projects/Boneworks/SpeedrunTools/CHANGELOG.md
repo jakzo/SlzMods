@@ -1,3 +1,8 @@
+## 2.5.1
+
+Work around bug where MelonLoader thinks the scene has loaded multiple times.
+
+
 ## 2.5.0
 
 Allow PhysicsTickFixer mod to be used in runs.

@@ -77,7 +77,7 @@ class HundredPercentServer : Feature {
         CollectibleRecorder.Instance.LoadRecording(nextSceneIdx);
   }
 
-  public override void OnSceneWasLoaded(int buildIndex, string sceneName) {
+  public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     if (State.levelCollectibles == null)
       State.levelCollectibles = new Collectible[] {};
 
@@ -147,14 +147,14 @@ class HundredPercentServer : Feature {
   }
 
   private bool IsTypeAmmo(string type) => type == TYPE_AMMO_LIGHT
-                                          || type == TYPE_AMMO_MEDIUM;
+      || type == TYPE_AMMO_MEDIUM;
 
   // This can be slightly inaccurate if not using the latest LootDropBugfix mod
   [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
   class LootTableData_GetLootItem_Patch {
     [HarmonyPostfix()]
-    internal static void Postfix(LootTableData __instance,
-                                 SpawnableObject __result) {
+    internal static void
+    Postfix(LootTableData __instance, SpawnableObject __result) {
       try {
         if (Instance.State == null || __result == null)
           return;

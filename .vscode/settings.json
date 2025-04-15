@@ -110,6 +110,7 @@
     "BonelabPath",
     "BoneworksPath",
     "LiveSplitPath",
-    "PostBuildEvent"
+    "PostBuildEvent",
+    "IsNewProject"
   ]
 }

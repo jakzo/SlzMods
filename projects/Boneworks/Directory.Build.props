@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <IsNewProject Condition=" '$(MSBuildProjectName)' == 'Project' ">true</IsNewProject>
+    <IsNewProject>true</IsNewProject>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsNewProject)' == 'true' ">

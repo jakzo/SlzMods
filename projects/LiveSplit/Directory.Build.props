@@ -1,7 +1,10 @@
 <Project>
 
   <PropertyGroup>
-    <IsNewProject Condition=" '$(MSBuildProjectName)' == 'Project' ">true</IsNewProject>
+    <LegacyProjects>;BonelabHundredStatus;BoneworksDebugStats;</LegacyProjects>
+    <IsNewProject
+      Condition="!$([System.String]::new('$(LegacyProjects)').Contains(';$(MSBuildProjectName);'))"
+    >true</IsNewProject>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsNewProject)' == 'true' ">

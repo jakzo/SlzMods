@@ -1,3 +1,8 @@
+## 2.5.2
+
+Fixed 100% status LiveSplit component not automatically using the default list of collectible orderings.
+
+
 ## 2.5.1
 
 Work around bug where MelonLoader thinks the scene has loaded multiple times.

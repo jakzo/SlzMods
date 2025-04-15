@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "jakzo"
 name = "SpeedrunTools"
-versionNumber = "2.5.1"
+versionNumber = "2.5.2"
 description = "Utilities for Boneworks speedrunning."
 websiteUrl = "https://github.com/jakzo/SlzMods/tree/main/projects/Boneworks/SpeedrunTools"
 containsNsfwContent = false

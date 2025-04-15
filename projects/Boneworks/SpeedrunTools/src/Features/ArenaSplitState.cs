@@ -49,5 +49,7 @@ class ArenaSplitState : Feature {
       }
     }
   }
+
+  // TODO: Add zombie warehouse triggers
 }
 }

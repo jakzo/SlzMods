@@ -12,7 +12,8 @@ init {
       new SigScanTarget(3, "488B??????????FF????440F????4885??74??8B") {
         OnFound = (process, scanners, addr) =>
             addr + 0xC + process.ReadValue<int>(addr)
-      });
+      }
+  );
   if (vars.loadingPointer == IntPtr.Zero) {
     throw new Exception("Game engine not initialized - retrying");
   }
@@ -20,19 +21,22 @@ init {
   vars.isLoading =
       new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC64));
 
-  // var arenaTarget = new SigScanTarget(7, "D5 E2 03 34 C2 DF 63 ??");
-  // IntPtr ptr = IntPtr.Zero;
-  // foreach (var page in game.MemoryPages(true)) {
-  //   var pageScanner =
-  //       new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
-  //   ptr = pageScanner.Scan(arenaTarget);
-  //   if (ptr != IntPtr.Zero)
-  //     break;
-  // }
-  // if (ptr == IntPtr.Zero) {
-  //   throw new Exception("Arena state not found - retrying");
-  // }
-  // vars.arenaWatcher = new MemoryWatcher<byte>(ptr);
+  var arenaTarget = new SigScanTarget(7, "D5 E2 03 34 C2 DF 63 ??");
+  var ptr = IntPtr.Zero;
+  foreach (var page in game.MemoryPages(true)) {
+    var pageScanner =
+        new SignatureScanner(game, page.BaseAddress, (int)page.RegionSize);
+    ptr = pageScanner.Scan(arenaTarget);
+    if (ptr != IntPtr.Zero)
+      break;
+  }
+  if (ptr == IntPtr.Zero) {
+    vars.arenaWatcher = null;
+    // Disabling in case old mod version without arena state is being used
+    // throw new Exception("Arena state not found - retrying");
+  } else {
+    vars.arenaWatcher = new MemoryWatcher<byte>(ptr);
+  }
 
   // Index in levelOrder to start the run at (for practice)
   vars.startingSplit = 0;
@@ -56,10 +60,11 @@ init {
     18, // scene_redactedChamber
     19, // sandbox_handgunBox
     22, // scene_hoverJunkers
+    1,  // scene_mainMenu
     16, // arena_fantasy
     23, // zombie_warehouse
     1,  // scene_mainMenu
-    6,  // scene_runoff
+    1,  // scene_mainMenu
     1,  // scene_mainMenu
   };
   vars.levelOrderIdx = 0;
@@ -68,24 +73,22 @@ init {
 
 update {
   vars.isLoading.Update(game);
-  // vars.arenaWatcher.Update(game);
+  if (vars.arenaWatcher != null)
+    vars.arenaWatcher.Update(game);
 }
 
 isLoading { return vars.isLoading.Current; }
 
 start {
-  if (vars.isLoading.Current &&
-      current.levelNumber == vars.levelOrder[vars.startingSplit]) {
-    vars.levelOrderIdx = 0;
-    return true;
-  }
-  return false;
+  return vars.isLoading.Current &&
+      current.levelNumber == vars.levelOrder[vars.startingSplit];
 }
 
 split {
-  // if (vars.arenaWatcher.Current != vars.arenaWatcher.Old) {
-  //   return true;
-  // }
+  if (vars.arenaWatcher != null &&
+      vars.arenaWatcher.Current != vars.arenaWatcher.Old) {
+    return true;
+  }
 
   if (vars.isLoading.Current &&
       (!vars.isLoading.Old || current.levelNumber != old.levelNumber)) {
@@ -105,6 +108,11 @@ split {
   }
 
   return false;
+}
+
+onReset {
+  vars.levelOrderIdx = 0;
+  vars.targetLevelOrderIdx = vars.startingSplit;
 }
 
 exit { timer.IsGameTimePaused = true; }

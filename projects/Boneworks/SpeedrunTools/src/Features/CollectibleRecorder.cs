@@ -33,6 +33,10 @@ class CollectibleRecorder : Feature {
     Instance = this;
   }
 
+  public override void OnApplicationStart() {
+    SaveDefaultRecordingsIfNecessary();
+  }
+
   public override void OnLevelStart(int sceneIdx) {
     IsSceneWithCollectibleAmmo = sceneIdx >= 2 && sceneIdx <= 10;
     CurrentLevelCollectedItems = new List<HundredPercentState.Collectible>();
@@ -48,18 +52,18 @@ class CollectibleRecorder : Feature {
     OnDisabled();
   }
 
-  private string GetFilename(int sceneIdx) =>
-      Utils.SCENE_NAME_BY_INDEX.TryGetValue(sceneIdx, out var sceneName)
-          ? Regex.Replace(sceneName, "^(scene|sandbox)_", "") + ".txt"
-          : null;
+  private string GetFilename(int sceneIdx
+  ) => Utils.SCENE_NAME_BY_INDEX.TryGetValue(sceneIdx, out var sceneName)
+      ? Regex.Replace(sceneName, "^(scene|sandbox)_", "") + ".txt"
+      : null;
 
   public override void OnDisabled() {
     IsSceneWithCollectibleAmmo = false;
     CurrentLevelCollectedItems = null;
   }
 
-  private void SaveRecording(int sceneIdx,
-                             List<HundredPercentState.Collectible> items) {
+  private void
+  SaveRecording(int sceneIdx, List<HundredPercentState.Collectible> items) {
     var filename = GetFilename(sceneIdx);
     if (filename == null) {
       MelonLogger.Warning("Scene name for index not known: " + sceneIdx);
@@ -70,7 +74,8 @@ class CollectibleRecorder : Feature {
     Directory.CreateDirectory(RECORDINGS_DIR);
     File.WriteAllLines(
         Path.Combine(RECORDINGS_DIR, filename),
-        items.Select(item => $"{item.Type} {item.Uuid} {item.DisplayName}"));
+        items.Select(item => $"{item.Type} {item.Uuid} {item.DisplayName}")
+    );
   }
 
   public HundredPercentState.Collectible[] LoadRecording(int sceneIdx) {
@@ -105,12 +110,13 @@ class CollectibleRecorder : Feature {
       return;
 
     Directory.CreateDirectory(ORDER_DIR);
-    Utilities.Resources.ExtractResource("DefaultCollectibleOrder.zip",
-                                        ORDER_DIR);
+    Utilities.Resources.ExtractResource(
+        "DefaultCollectibleOrder.zip", ORDER_DIR
+    );
   }
 
-  private static void OnItemCollected(string type, string uuid,
-                                      string displayName) {
+  private static void
+  OnItemCollected(string type, string uuid, string displayName) {
     if (Instance.CurrentLevelCollectedItems == null)
       return;
 
@@ -125,9 +131,9 @@ class CollectibleRecorder : Feature {
   }
 
   private static void OnAmmoCollected(Weight weight, SaveItem saveItem) {
-    var type = weight == Weight.LIGHT    ? HundredPercentState.TYPE_AMMO_LIGHT
-               : weight == Weight.MEDIUM ? HundredPercentState.TYPE_AMMO_MEDIUM
-                                         : null;
+    var type = weight == Weight.LIGHT ? HundredPercentState.TYPE_AMMO_LIGHT
+        : weight == Weight.MEDIUM     ? HundredPercentState.TYPE_AMMO_MEDIUM
+                                      : null;
     if (type != null && Instance.IsSceneWithCollectibleAmmo)
       OnItemCollected(type, saveItem.UUID, saveItem.name);
   }
@@ -168,7 +174,8 @@ class CollectibleRecorder : Feature {
           HundredPercentState.TYPE_ITEM, keycode,
           PoolManager._registeredSpawnableObjects.ContainsKey(keycode)
               ? PoolManager._registeredSpawnableObjects[keycode].title
-              : "UNKNOWN");
+              : "UNKNOWN"
+      );
     }
   }
 }

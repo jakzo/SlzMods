@@ -1,4 +1,12 @@
 <updates>
+  <update version="1.0.2">
+    <files>
+      <file path="Components/BoneworksHundredStatus.dll" status="changed" />
+    </files>
+    <change>Fixed the overall run luck calculation (would display values too low, making them appear luckier than they actually were).
+</change>
+    <changelog />
+  </update>
   <update version="1.0.1">
     <files>
       <file path="Components/BoneworksHundredStatus.dll" status="changed" />

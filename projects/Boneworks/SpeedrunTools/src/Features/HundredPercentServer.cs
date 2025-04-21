@@ -55,7 +55,7 @@ class HundredPercentServer : Feature {
   }
 
   private void OnCollected(Collectible collectible) {
-    State.justCollected = new[] { collectible };
+    State.justCollected = [collectible];
     if (LevelUncollectedIndexes.ContainsKey(collectible.Uuid))
       LevelUncollectedIndexes.Remove(collectible.Uuid);
     SendState();
@@ -79,7 +79,7 @@ class HundredPercentServer : Feature {
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
     if (State.levelCollectibles == null)
-      State.levelCollectibles = new Collectible[] {};
+      State.levelCollectibles = [];
 
     var levelUnlocks =
         State.levelCollectibles.Where(c => c.Type == TYPE_ITEM).ToArray();
@@ -96,6 +96,12 @@ class HundredPercentServer : Feature {
     State.ammoLevelMax =
         State.levelCollectibles.Where(c => IsTypeAmmo(c.Type)).Count();
     State.ammoLevelCount = 0;
+
+    // Avoid reporting collectibles collected in a previous level as missing
+    State.levelCollectibles =
+        State.levelCollectibles
+            .Where(c => !ReclaimerData._reclaimedObjects.ContainsKey(c.Uuid))
+            .ToArray();
 
     SendState();
   }

@@ -97,8 +97,7 @@ public class Component : IComponent {
   }
 
   public void DrawVertical(
-      System.Drawing.Graphics g, LiveSplitState state, float width,
-      Region clipRegion
+      Graphics g, LiveSplitState state, float width, Region clipRegion
   ) {
     DrawGeneral(g, state, width, VerticalHeight, LayoutMode.Vertical);
   }
@@ -177,7 +176,7 @@ public class Component : IComponent {
                 .Concat(_remainingCollectibles.Select(
                     c => $"Remaining: {c.DisplayName}"
                 ))
-          : new string[] {};
+          : [];
       var overallChance = PercentileMapping(
           state.rngUnlocks
               .Select(pair => (double)pair.Value.probabilityNotDroppedYet)
@@ -189,13 +188,13 @@ public class Component : IComponent {
           missingCollectibleLines
               .Concat(
                   state.rngUnlocks.All(pair => pair.Value.hasDropped)
-                      ? new[] { $"Overall RNG chance: {overallChanceStr}%" }
-                      : new string[] {}
+                      ? [$"Overall RNG chance: {overallChanceStr}%"]
+                      : []
               )
-              .Concat(new[] {
+              .Concat([
                 $"Level unlocks: {state.unlockLevelCount} / {state.unlockLevelMax}",
                 $"Level Ammo: {state.ammoLevelCount} / {state.ammoLevelMax}",
-              })
+              ])
               .Concat(state.rngUnlocks.Select(pair => {
                 var u = pair.Value;
                 var status = u.hasDropped ? "✅" : "❌";
@@ -213,7 +212,7 @@ public class Component : IComponent {
 
   // TODO: I would much rather a formula which produces a uniform distribution
   //       than using a lookup table but I can't think of one
-  private static double[] MAPPINGS = {
+  private static double[] MAPPINGS = [
     0.0585, 0.1256, 0.1477, 0.1638, 0.1765, 0.188,  0.1974, 0.2066, 0.2145,
     0.2229, 0.2309, 0.2384, 0.2454, 0.252,  0.2581, 0.2642, 0.2704, 0.2766,
     0.2827, 0.288,  0.2937, 0.2989, 0.3045, 0.3097, 0.3147, 0.3198, 0.3249,
@@ -226,7 +225,7 @@ public class Component : IComponent {
     0.6248, 0.6326, 0.6405, 0.6488, 0.6574, 0.6662, 0.6753, 0.6849, 0.6948,
     0.7055, 0.7168, 0.7287, 0.7416, 0.7557, 0.7711, 0.7887, 0.8092, 0.8347,
     0.8701, 1.0,
-  };
+  ];
   private static double PercentileMapping(double[] probabilitiesNotDroppedYet) {
     var geometricMean = Math.Pow(
         probabilitiesNotDroppedYet.Aggregate(

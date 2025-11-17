@@ -4,10 +4,10 @@ using UnityEngine;
 using MelonLoader;
 using HarmonyLib;
 
-#if (PATCH4 || PATCH5) && ML6
+#if (PATCH4 || PATCH5 || PATCH6) && ML6
 using Il2CppSLZ.Bonelab.SaveData;
 using Il2CppSLZ.Marrow.SaveData;
-#elif (PATCH4 || PATCH5) && ML5
+#elif (PATCH4 || PATCH5 || PATCH6) && ML5
 using SLZ.Bonelab.SaveData;
 using SLZ.Marrow.SaveData;
 #elif PATCH2 || PATCH3
@@ -62,7 +62,7 @@ public static class SaveDeleteImprovements {
     }
   }
 
-#if (PATCH4 || PATCH5) && ML5
+#if (PATCH4 || PATCH5 || PATCH6) && ML5
 // Melon Loader 0.5 messes up the order of the generics in MarrowDataManager
 // so it cannot be patched unfortunately meaning no stopping Mods from being
 // deleted on Quest patch 4 :'(
@@ -80,7 +80,7 @@ public static class SaveDeleteImprovements {
 
 // According to Ghidra this is the only hookable method which is called after
 // the Mods folder is deleted and before the application quits
-#if PATCH5 && ML6
+#if (PATCH5 || PATCH6) && ML6
   [HarmonyPatch(
       typeof(MarrowDataManager<
              DataManager, Save, Settings, PlayerSettings, PlayerProgression,

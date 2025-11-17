@@ -166,7 +166,7 @@ class SplitsTimer {
   }
 
   private string BarcodeOf(LevelCrate level) {
-#if PATCH5
+#if PATCH5 || PATCH6
     return level.Barcode.ID;
 #else
     return level.Barcode;

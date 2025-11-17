@@ -17,6 +17,8 @@
       Properties="Configuration=$(Configuration);Patch=5;MelonLoader=5" />
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
       Properties="Configuration=$(Configuration);Patch=5;MelonLoader=6" />
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+      Properties="Configuration=$(Configuration);Patch=6;MelonLoader=6" />
   </Target>
 
   <PropertyGroup>

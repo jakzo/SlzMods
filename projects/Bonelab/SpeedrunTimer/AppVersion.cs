@@ -1,5 +1,5 @@
 namespace Sst.SpeedrunTimer {
 static class AppVersion {
-  public const string Value = "1.8.1";
+  public const string Value = "1.8.2";
 }
 }

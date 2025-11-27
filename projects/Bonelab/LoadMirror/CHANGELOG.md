@@ -1,3 +1,8 @@
+## 1.1.2
+
+Updated for patch 6.
+
+
 ## 1.1.1
 
 Added builds for different versions of the game.

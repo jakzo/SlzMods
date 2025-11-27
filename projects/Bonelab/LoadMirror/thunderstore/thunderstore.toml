@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "jakzo"
 name = "LoadMirror"
-versionNumber = "1.1.1"
+versionNumber = "1.1.2"
 description = "Shows the headset view during loading screens instead of a still image."
 websiteUrl = "https://github.com/jakzo/SlzMods/tree/main/projects/Bonelab/LoadMirror"
 containsNsfwContent = false

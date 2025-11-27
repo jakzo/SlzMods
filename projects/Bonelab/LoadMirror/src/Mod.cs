@@ -13,7 +13,7 @@ using Il2CppSLZ.Marrow;
 using Il2CppSLZ.Marrow.Warehouse;
 using Il2CppSLZ.Bonelab.SaveData;
 
-#if PATCH5
+#if PATCH5 || PATCH6
 using Il2CppSLZ.Marrow.SaveData;
 #endif
 

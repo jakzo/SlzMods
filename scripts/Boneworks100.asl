@@ -2,24 +2,17 @@ state("BONEWORKS") {
   int levelNumber : "GameAssembly.dll", 0x01E7E4E0, 0xB8, 0x590;
 }
 
+startup {
+  vars.boneworksAslHelper =
+      Assembly.Load(File.ReadAllBytes(@"Components\BoneworksAslHelper.dll"))
+          .CreateInstance("BoneworksAslHelper");
+}
+
 init {
-  var module = modules.First(x => x.ModuleName == "vrclient_x64.dll");
+  vars.boneworksAslHelper.Initialize();
 
-  var scanner =
-      new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
-
-  vars.loadingPointer = scanner.Scan(
-      new SigScanTarget(3, "488B??????????FF????440F????4885??74??8B") {
-        OnFound = (process, scanners, addr) =>
-            addr + 0xC + process.ReadValue<int>(addr)
-      }
-  );
-  if (vars.loadingPointer == IntPtr.Zero) {
-    throw new Exception("Game engine not initialized - retrying");
-  }
-
-  vars.isLoading =
-      new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC64));
+  vars.isLoading = false;
+  vars.wasLoading = false;
 
   var arenaTarget = new SigScanTarget(7, "D5 E2 03 34 C2 DF 63 ??");
   var ptr = IntPtr.Zero;
@@ -72,15 +65,20 @@ init {
 }
 
 update {
-  vars.isLoading.Update(game);
+  if (vars.boneworksAslHelper == null)
+    return false;
+
+  vars.wasLoading = vars.isLoading;
+  vars.isLoading = vars.boneworksAslHelper.IsLoading();
+
   if (vars.arenaWatcher != null)
     vars.arenaWatcher.Update(game);
 }
 
-isLoading { return vars.isLoading.Current; }
+isLoading { return vars.isLoading; }
 
 start {
-  return vars.isLoading.Current &&
+  return vars.isLoading &&
       current.levelNumber == vars.levelOrder[vars.startingSplit];
 }
 
@@ -90,8 +88,8 @@ split {
     return true;
   }
 
-  if (vars.isLoading.Current &&
-      (!vars.isLoading.Old || current.levelNumber != old.levelNumber)) {
+  if (vars.isLoading &&
+      (!vars.wasLoading || current.levelNumber != old.levelNumber)) {
     var nextLevelOrderIdx = vars.targetLevelOrderIdx + 1;
     if (nextLevelOrderIdx < vars.levelOrder.Length &&
         vars.levelOrder[nextLevelOrderIdx] == current.levelNumber) {

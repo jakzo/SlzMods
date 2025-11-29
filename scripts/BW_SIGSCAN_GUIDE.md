@@ -6,7 +6,7 @@
     - `rdi+C65`, `rdi+C64`, etc...
   - Open the `C65` one in disassembler
     - `vrclient_x64.dll+1002A9 - cmp byte ptr [rdi+00000C65],00`
-    - `rdi = 7FFC39FD8C98`
+    - `rdi = 7FFAD0681F98`
   - Set breakpoint
   - Find where `rdi` is set
     - `vrclient_x64.dll+FF50A - mov rdi,rcx`
@@ -28,11 +28,16 @@
     - `vrclient_x64.dll+1002A9 - cmp byte ptr [rdi+00000C65],00`
       - rdi before = 7FFC39FD8C98
       - cmp (final value) = 7FFC39FD98FD
+  - I also stumbled upon this which sets the same value:
+    - `vrclient_x64.dll+C5B70 - mov rax,[vrclient_x64.dll+450950] { (7FFAD0681F98) }`
 - Ghidra
   - Import vrclient_x64.dll into a Ghidra project (auto analyse)
   - Downgrade SteamVR and import the old version of vrclient_x64.dll into the same project
   - For each of the versions:
-    - Find the fixed offset above in the file (`vrclient_x64.dll+3CAEB8`) by: - Noting the file offset from the Cheat Engine disassembler (`A9887`) - Adding this to the Ghidra base address (`1800A9887`) - Navigate -> Go to -> the address and you should see the same code
+    - Find the fixed offset above in the file (`vrclient_x64.dll+3CAEB8`) by:
+      - Noting the file offset from the Cheat Engine disassembler (`A9887`)
+      - Adding this to the Ghidra base address (`1800A9887`)
+      - Navigate -> Go to -> the address and you should see the same code
     - Right click on the fixed offset (`DAT_1803caeb8`) -> find references
     - Skim through the references of both the new and old versions until you find a spot which best matches these criteria:
       - Exists in both new and old version

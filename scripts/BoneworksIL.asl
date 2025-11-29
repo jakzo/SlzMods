@@ -2,23 +2,15 @@ state("BONEWORKS") {
   int levelNumber : "GameAssembly.dll", 0x01E7E4E0, 0xB8, 0x590;
 }
 
+startup {
+  vars.boneworksAslHelper =
+      Assembly.Load(File.ReadAllBytes(@"Components\BoneworksAslHelper.dll"))
+          .CreateInstance("BoneworksAslHelper");
+}
+
 init {
-  var module = modules.First(x => x.ModuleName == "vrclient_x64.dll");
-
-  var scanner =
-      new SignatureScanner(game, module.BaseAddress, module.ModuleMemorySize);
-
-  vars.loadingPointer = scanner.Scan(
-      new SigScanTarget(3, "488B??????????FF????440F????4885??74??8B") {
-        OnFound = (process, scanners, addr) =>
-            addr + 0xC + process.ReadValue<int>(addr)
-      });
-  if (vars.loadingPointer == IntPtr.Zero) {
-    throw new Exception("Game engine not initialized - retrying");
-  }
-
-  vars.isLoading =
-      new MemoryWatcher<bool>(new DeepPointer(vars.loadingPointer, 0xC64));
+  vars.isLoading = false;
+  vars.boneworksAslHelper.Initialize();
 
   vars.loadStartTime = DateTime.Now;
   vars.hasReset = false;
@@ -26,27 +18,31 @@ init {
 }
 
 update {
-  vars.isLoading.Update(game);
+  if (vars.boneworksAslHelper == null)
+    return false;
 
-  if (vars.isLoading.Current && !vars.isLoading.Old) {
+  var wasLoading = vars.isLoading;
+  vars.isLoading = vars.boneworksAslHelper.IsLoading();
+
+  if (vars.isLoading && !wasLoading) {
     vars.loadStartTime = DateTime.Now;
   }
 
   if (current.levelNumber != old.levelNumber) {
     vars.prevLevelNumber = old.levelNumber;
   }
-  if (vars.isLoading.Old && !vars.isLoading.Current) {
+  if (wasLoading && !vars.isLoading) {
     vars.hasReset = false;
     vars.prevLevelNumber = 0;
   }
 }
 
-isLoading { return vars.isLoading.Current; }
+isLoading { return vars.isLoading; }
 
-start { return vars.isLoading.Current && current.levelNumber > 1; }
+start { return vars.isLoading && current.levelNumber > 1; }
 
 split {
-  if (vars.isLoading.Current && vars.prevLevelNumber != 0 &&
+  if (vars.isLoading && vars.prevLevelNumber != 0 &&
       vars.prevLevelNumber != current.levelNumber) {
     vars.prevLevelNumber = 0;
     return true;
@@ -55,7 +51,7 @@ split {
 }
 
 reset {
-  if (!vars.isLoading.Current)
+  if (!vars.isLoading)
     return false;
 
   if (current.levelNumber <= 1)
@@ -70,4 +66,9 @@ reset {
   }
 
   return false;
+}
+
+exit {
+  timer.IsGameTimePaused = true;
+  vars.boneworksAslHelper.Shutdown();
 }

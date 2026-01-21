@@ -49,6 +49,7 @@ public class Mod : MelonMod {
     new Features.MuseumBhopTimer(),
     new Features.DebugStats(),
     new Features.GripFlyFinder(),
+    new Features.ZombieWarehouseDebugger(),
   };
 
   private static List<Feature> enabledFeatures = new List<Feature>();

@@ -106,13 +106,16 @@ public class Component : IComponent {
       Graphics g, LiveSplitState state, float width, float height,
       LayoutMode mode
   ) {
-    _progressLabel.HorizontalAlignment = StringAlignment.Near;
-    _progressLabel.VerticalAlignment = StringAlignment.Far;
-    _progressLabel.X = 4;
-    _progressLabel.Y = 0;
-    _progressLabel.Width = width;
-    _progressLabel.Height = height;
     _progressLabel.Font = state.LayoutSettings.TextFont;
+    var textHeight =
+        g.MeasureString(_progressLabel.Text, _progressLabel.Font, (int)width)
+            .Height;
+    _progressLabel.HorizontalAlignment = StringAlignment.Near;
+    _progressLabel.VerticalAlignment = StringAlignment.Near;
+    _progressLabel.X = 4;
+    _progressLabel.Y = height - textHeight;
+    _progressLabel.Width = width;
+    _progressLabel.Height = textHeight;
     _progressLabel.Brush = new SolidBrush(state.LayoutSettings.TextColor);
     _progressLabel.HasShadow = state.LayoutSettings.DropShadows;
     _progressLabel.ShadowColor = state.LayoutSettings.ShadowsColor;

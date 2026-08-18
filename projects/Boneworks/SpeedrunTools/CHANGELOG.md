@@ -1,3 +1,8 @@
+## 2.5.4
+
+Fixed the anti-cheat blocking the PhysicsTickFixer mod.
+
+
 ## 2.5.3
 
 For the 100% status LiveSplit component: it will no longer show a level item as missing if you skip it during the run if you collected it in a previous level.

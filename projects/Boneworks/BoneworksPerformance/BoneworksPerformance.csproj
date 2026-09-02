@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="BuildAll">
+  <Target Name="BuildAll">
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Build"
+      Properties="Configuration=$(Configuration);MelonLoader=5" />
+  </Target>
+
+  <PropertyGroup>
+    <CopyIntoGameAfterBuild>true</CopyIntoGameAfterBuild>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ProjectGuid>{7691E80B-F5BD-43D7-BD04-438EC93C7FB4}</ProjectGuid>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="AppVersion.cs" />
+    <Compile Include="src/**/*.cs" />
+    <Compile Include="../../../common/Utilities/Metadata.cs" />
+    <Compile Include="../../../common/Boneworks/Il2CppNullable.cs" />
+  </ItemGroup>
+</Project>

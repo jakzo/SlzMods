@@ -60,6 +60,7 @@ internal sealed class SuperJumpDiagnostics {
     public int UnityFrame;
     public int TickInFrame;
     public float FixedTime;
+    public float TimeScale;
     public long ObservedTimestamp;
     public long SimulationTimestamp;
     public long PoseTargetTimestamp;
@@ -72,7 +73,10 @@ internal sealed class SuperJumpDiagnostics {
     public float PelvisY;
     public float FeetY;
     public float PelvisVelocityY;
-    public bool ButtonHeld;
+    public bool LiveButtonHeld;
+    public bool FixedButtonHeld;
+    public bool JumpReleaseDelivered;
+    public long JumpReleaseTimestamp;
     public bool ChargeInput;
     public bool Jumping;
     public int JumpStage;
@@ -88,6 +92,8 @@ internal sealed class SuperJumpDiagnostics {
     public bool ButtonHeld;
     public bool ButtonDown;
     public bool ButtonUp;
+    public int ControllerType;
+    public bool HardwareTimestampAvailable;
     public float SteamVrChangedTime;
     public long SteamVrChangedTimestamp;
     public float HmdWorldY;
@@ -163,12 +169,13 @@ internal sealed class SuperJumpDiagnostics {
     var down = controller.GetAButtonDown();
     var up = controller.GetAButtonUp();
     var changedTime = ReadChangedTime(rig);
-    var changedTimestamp = UnityRealtimeToStopwatch(
-        changedTime, realtime, now
-    );
+    var hardwareTimestampAvailable =
+        JumpButtonTiming.TryReadEdgeTimestamp(
+            rig, now, realtime, out var changedTimestamp
+        );
     var row = ReadRenderRow(
         rigManager, rig, now, realtime, held, down, up,
-        changedTime, changedTimestamp
+        changedTime, changedTimestamp, hardwareTimestampAvailable
     );
     AddPrelude(_renderPrelude, row, RenderPreludeCapacity);
 
@@ -177,7 +184,7 @@ internal sealed class SuperJumpDiagnostics {
       _haveButtonState = true;
     }
     if (down || held && !_lastButtonHeld)
-      StartAttempt(now, changedTimestamp);
+      StartAttempt(now, hardwareTimestampAvailable ? changedTimestamp : 0);
     if (_active != null)
       if (_active.Render.Count == 0 ||
           _active.Render[_active.Render.Count - 1].Timestamp != row.Timestamp)
@@ -193,7 +200,9 @@ internal sealed class SuperJumpDiagnostics {
       ControllerRig rig, int unityFrame, int tickInFrame, float fixedTime,
       long simulationTimestamp, long targetTimestamp, bool poseAvailable,
       TrackedPoseValue historicalHead, Vector3 appliedHead,
-      TrackedPoseValue latestHead
+      TrackedPoseValue latestHead, float timeScale,
+      bool fixedButtonHeld, bool jumpReleaseDelivered,
+      long jumpReleaseTimestamp
   ) {
     if (!_recording || !rig)
       return;
@@ -205,6 +214,7 @@ internal sealed class SuperJumpDiagnostics {
       UnityFrame = unityFrame,
       TickInFrame = tickInFrame,
       FixedTime = fixedTime,
+      TimeScale = timeScale,
       ObservedTimestamp = Stopwatch.GetTimestamp(),
       SimulationTimestamp = simulationTimestamp,
       PoseTargetTimestamp = targetTimestamp,
@@ -220,7 +230,10 @@ internal sealed class SuperJumpDiagnostics {
       FeetY = body && body.rbFeet ? body.rbFeet.position.y : float.NaN,
       PelvisVelocityY = body && body.rbPelvis
           ? body.rbPelvis.velocity.y : float.NaN,
-      ButtonHeld = controller && controller.GetAButton(),
+      LiveButtonHeld = controller && controller.GetAButton(),
+      FixedButtonHeld = fixedButtonHeld,
+      JumpReleaseDelivered = jumpReleaseDelivered,
+      JumpReleaseTimestamp = jumpReleaseTimestamp,
       ChargeInput = rig._chargeInput,
       Jumping = rig._jumping,
       JumpStage = rig._jumpStage,
@@ -251,18 +264,33 @@ internal sealed class SuperJumpDiagnostics {
   private void OnJump(ControllerRig rig) {
     if (!_recording || !rig)
       return;
+    if (_active != null && _active.JumpCallTimestamp != 0)
+      return;
     var now = Stopwatch.GetTimestamp();
     var realtime = Time.realtimeSinceStartup;
     var changedTime = ReadChangedTime(rig);
     var controller = JumpController(rig);
-    var hardwareTimestamp = controller && controller.GetAButtonUp()
-        ? UnityRealtimeToStopwatch(changedTime, realtime, now)
-        : 0;
+    var hardwareTimestamp = 0L;
+    if (controller && controller.GetAButtonUp() &&
+        !JumpButtonTiming.TryReadEdgeTimestamp(
+          rig, now, realtime, out hardwareTimestamp
+        ))
+      hardwareTimestamp = 0;
+    ObserveJumpRelease(rig, now, hardwareTimestamp);
+  }
+
+  public void ObserveJumpRelease(
+      ControllerRig rig, long observedTimestamp, long hardwareTimestamp
+  ) {
+    if (!_recording || !rig)
+      return;
     if (_active == null)
-      StartAttempt(now, 0);
-    _active.ReleaseObservedTimestamp = now;
+      StartAttempt(observedTimestamp, 0);
+    if (_active.JumpCallTimestamp != 0)
+      return;
+    _active.ReleaseObservedTimestamp = observedTimestamp;
     _active.ReleaseHardwareTimestamp = hardwareTimestamp;
-    _active.JumpCallTimestamp = now;
+    _active.JumpCallTimestamp = observedTimestamp;
   }
 
   private void StartAttempt(long observedTimestamp, long hardwareTimestamp) {
@@ -314,10 +342,12 @@ internal sealed class SuperJumpDiagnostics {
         _directory, "fixed-ticks.csv"
     ));
     writer.WriteLine(
-        "attempt,unity_frame,tick_in_frame,fixed_time_s,observed_us," +
+        "attempt,unity_frame,tick_in_frame,fixed_time_s,time_scale," +
+        "observed_us," +
         "simulation_us,pose_target_us,pose_available,historical_head_y," +
         "applied_head_y,latest_head_y,hmd_world_y,physics_head_y,pelvis_y," +
-        "feet_y,pelvis_velocity_y,button_held,charge_input,jumping," +
+        "feet_y,pelvis_velocity_y,live_button_held,fixed_button_held," +
+        "jump_release_delivered,jump_release_us,charge_input,jumping," +
         "jump_stage,jump_charge,feet_offset"
     );
     foreach (var attempt in _completed)
@@ -331,7 +361,8 @@ internal sealed class SuperJumpDiagnostics {
     ));
     writer.WriteLine(
         "attempt,unity_frame,timestamp_us,realtime_s,button_held," +
-        "button_down,button_up,steamvr_changed_time_s," +
+        "button_down,button_up,controller_type,hardware_timestamp_available," +
+        "steamvr_changed_time_s," +
         "steamvr_changed_timestamp_us,hmd_world_y,physics_head_y," +
         "pelvis_y,feet_y"
     );
@@ -383,7 +414,8 @@ internal sealed class SuperJumpDiagnostics {
   }
 
   private static void AppendPlot(StringBuilder html, Attempt attempt) {
-    var rows = attempt.Fixed.Where(row => row.PoseAvailable).ToArray();
+    var rows = RelevantFixedRows(attempt)
+        .Where(row => row.PoseAvailable).ToArray();
     if (rows.Length < 2) {
       html.Append("<p>No usable fixed-pose rows.</p>");
       return;
@@ -406,8 +438,9 @@ internal sealed class SuperJumpDiagnostics {
                    row => row.AppliedHeadY);
     AppendPolyline(html, rows, start, end, minimum, maximum, "pelvis",
                    row => row.PelvisY);
-    if (attempt.ReleaseHardwareTimestamp != 0) {
-      var x = X(attempt.ReleaseHardwareTimestamp, start, end);
+    var releaseTimestamp = ReleaseTimestamp(attempt);
+    if (releaseTimestamp != 0) {
+      var x = X(releaseTimestamp, start, end);
       html.Append("<line class=\"release\" x1=\"").Append(F(x))
           .Append("\" y1=\"15\" x2=\"").Append(F(x))
           .Append("\" y2=\"230\"/>");
@@ -445,7 +478,9 @@ internal sealed class SuperJumpDiagnostics {
   }
 
   private static Summary Summarize(Attempt attempt) {
-    var rows = attempt.Fixed.Where(row => row.PoseAvailable).ToArray();
+    var rows = RelevantFixedRows(attempt)
+        .Where(row => row.PoseAvailable).ToArray();
+    var releaseTimestamp = ReleaseTimestamp(attempt);
     var headRows = rows.Where(row => Finite(row.HistoricalHeadY)).ToArray();
     var pelvisRows = rows.Where(row => Finite(row.PelvisY)).ToArray();
     var headMinimum = headRows.Length == 0 ? float.NaN :
@@ -453,33 +488,35 @@ internal sealed class SuperJumpDiagnostics {
     var apex = headRows.Length == 0 ? new FixedRow() :
         headRows.OrderByDescending(row => row.HistoricalHeadY).First();
     var pelvisBaselineRows = pelvisRows
-        .Where(row => attempt.ReleaseHardwareTimestamp == 0 ||
+        .Where(row => releaseTimestamp == 0 ||
                       row.PoseTargetTimestamp <=
-                      attempt.ReleaseHardwareTimestamp)
+                      releaseTimestamp)
         .ToArray();
     var pelvisBaseline = pelvisRows.Length == 0 ? float.NaN :
         pelvisBaselineRows.Length > 0
             ? pelvisBaselineRows[pelvisBaselineRows.Length - 1].PelvisY
             : pelvisRows[0].PelvisY;
     var expectedPose = FirstTimestampAtOrAfter(
-        rows, attempt.ReleaseHardwareTimestamp,
+        rows, releaseTimestamp,
         row => row.PoseTargetTimestamp
     );
     var expectedSimulation = FirstTimestampAtOrAfter(
-        rows, attempt.ReleaseHardwareTimestamp,
+        rows, releaseTimestamp,
         row => row.SimulationTimestamp
     );
     return new Summary {
-      ObservationLatencyMs = Milliseconds(
-          attempt.ReleaseObservedTimestamp - attempt.ReleaseHardwareTimestamp
-      ),
+      ObservationLatencyMs = attempt.ReleaseHardwareTimestamp == 0
+          ? double.NaN : Milliseconds(
+              attempt.ReleaseObservedTimestamp -
+              attempt.ReleaseHardwareTimestamp
+          ),
       HeadRise = headRows.Length == 0 ? float.NaN :
           apex.HistoricalHeadY - headMinimum,
       PelvisRise = pelvisRows.Length == 0 ? float.NaN :
           pelvisRows.Max(row => row.PelvisY) - pelvisBaseline,
       ReleaseToApexMs = headRows.Length == 0 ? double.NaN :
           Milliseconds(apex.PoseTargetTimestamp -
-                       attempt.ReleaseHardwareTimestamp),
+                       releaseTimestamp),
       ExpectedPoseTick = expectedPose,
       ExpectedSimulationTick = expectedSimulation,
       PoseAlignedErrorMs = expectedPose == 0 ||
@@ -491,6 +528,19 @@ internal sealed class SuperJumpDiagnostics {
               attempt.ActualJumpSimulationTimestamp - expectedSimulation
           ),
     };
+  }
+
+  private static long ReleaseTimestamp(Attempt attempt) =>
+      attempt.ReleaseHardwareTimestamp != 0
+          ? attempt.ReleaseHardwareTimestamp
+          : attempt.ReleaseObservedTimestamp;
+
+  private static IEnumerable<FixedRow> RelevantFixedRows(Attempt attempt) {
+    if (attempt.PressObservedTimestamp == 0)
+      return attempt.Fixed;
+    var start = attempt.PressObservedTimestamp -
+        (long)(0.75 * Stopwatch.Frequency);
+    return attempt.Fixed.Where(row => row.ObservedTimestamp >= start);
   }
 
   private static long FirstTimestampAtOrAfter(
@@ -530,6 +580,7 @@ internal sealed class SuperJumpDiagnostics {
   private static void WriteFixed(TextWriter writer, FixedRow row) {
     writer.Write(row.AttemptId); writer.Write(','); writer.Write(row.UnityFrame);
     writer.Write(','); writer.Write(row.TickInFrame); Number(writer, row.FixedTime);
+    Number(writer, row.TimeScale);
     WriteTimestamp(writer, row.ObservedTimestamp);
     WriteTimestamp(writer, row.SimulationTimestamp);
     WriteTimestamp(writer, row.PoseTargetTimestamp);
@@ -538,7 +589,10 @@ internal sealed class SuperJumpDiagnostics {
     Number(writer, row.LatestHeadY); Number(writer, row.HmdWorldY);
     Number(writer, row.PhysicsHeadY); Number(writer, row.PelvisY);
     Number(writer, row.FeetY); Number(writer, row.PelvisVelocityY);
-    writer.Write(','); writer.Write(row.ButtonHeld ? 1 : 0);
+    writer.Write(','); writer.Write(row.LiveButtonHeld ? 1 : 0);
+    writer.Write(','); writer.Write(row.FixedButtonHeld ? 1 : 0);
+    writer.Write(','); writer.Write(row.JumpReleaseDelivered ? 1 : 0);
+    WriteTimestamp(writer, row.JumpReleaseTimestamp);
     writer.Write(','); writer.Write(row.ChargeInput ? 1 : 0);
     writer.Write(','); writer.Write(row.Jumping ? 1 : 0);
     writer.Write(','); writer.Write(row.JumpStage);
@@ -552,6 +606,8 @@ internal sealed class SuperJumpDiagnostics {
     writer.Write(','); writer.Write(row.ButtonHeld ? 1 : 0);
     writer.Write(','); writer.Write(row.ButtonDown ? 1 : 0);
     writer.Write(','); writer.Write(row.ButtonUp ? 1 : 0);
+    writer.Write(','); writer.Write(row.ControllerType);
+    writer.Write(','); writer.Write(row.HardwareTimestampAvailable ? 1 : 0);
     Number(writer, row.SteamVrChangedTime);
     WriteTimestamp(writer, row.SteamVrChangedTimestamp);
     Number(writer, row.HmdWorldY); Number(writer, row.PhysicsHeadY);
@@ -562,7 +618,7 @@ internal sealed class SuperJumpDiagnostics {
   private static RenderRow ReadRenderRow(
       RigManager manager, ControllerRig rig, long timestamp, float realtime,
       bool held, bool down, bool up, float changedTime,
-      long changedTimestamp
+      long changedTimestamp, bool hardwareTimestampAvailable
   ) {
     var physics = manager && manager.physicsRig ? manager.physicsRig : null;
     var body = physics && physics.physBody ? physics.physBody : null;
@@ -573,6 +629,8 @@ internal sealed class SuperJumpDiagnostics {
       ButtonHeld = held,
       ButtonDown = down,
       ButtonUp = up,
+      ControllerType = (int)JumpController(rig).controllerType,
+      HardwareTimestampAvailable = hardwareTimestampAvailable,
       SteamVrChangedTime = changedTime,
       SteamVrChangedTimestamp = changedTimestamp,
       HmdWorldY = rig.hmdTransform ? rig.hmdTransform.position.y : float.NaN,
@@ -584,7 +642,7 @@ internal sealed class SuperJumpDiagnostics {
   }
 
   private static BaseController JumpController(ControllerRig rig) =>
-      rig.isRightHanded ? rig.rightController : rig.leftController;
+      JumpButtonTiming.Controller(rig);
 
   private RigManager AcquireRigManager() {
     if (_rigManager)
@@ -598,27 +656,7 @@ internal sealed class SuperJumpDiagnostics {
   }
 
   private static float ReadChangedTime(ControllerRig rig) {
-    try {
-      var action = SteamVR_Actions.default_AClick;
-      if (action == null)
-        return 0f;
-      return action.GetTimeLastChanged(
-          rig.isRightHanded
-              ? SteamVR_Input_Sources.RightHand
-              : SteamVR_Input_Sources.LeftHand
-      );
-    } catch {
-      return 0f;
-    }
-  }
-
-  private static long UnityRealtimeToStopwatch(
-      float eventRealtime, float observedRealtime, long observedTimestamp
-  ) {
-    var age = observedRealtime - eventRealtime;
-    if (eventRealtime <= 0f || age < -0.1f || age > 10f)
-      return 0;
-    return observedTimestamp - (long)Math.Round(age * Stopwatch.Frequency);
+    return JumpButtonTiming.ReadChangedTime(rig);
   }
 
   private static void AddPrelude<T>(Queue<T> queue, T row, int capacity) {

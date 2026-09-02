@@ -156,6 +156,7 @@ internal sealed class FixedTimeMapper {
 
 internal sealed class FixedTickTimeline {
   private readonly FixedTimeMapper _mapper;
+  private readonly double _catchUpSpeed;
   private bool _hasTick;
   private float _lastFixedTime;
   private double _timestamp;
@@ -163,8 +164,11 @@ internal sealed class FixedTickTimeline {
   public long LastCorrectionTicks { get; private set; }
   public bool LastForwardCorrectionSuppressed { get; private set; }
 
-  public FixedTickTimeline(FixedTimeMapper mapper) {
+  public FixedTickTimeline(
+      FixedTimeMapper mapper, double catchUpSpeed = 2.0
+  ) {
     _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    _catchUpSpeed = Math.Max(1.0, Math.Min(8.0, catchUpSpeed));
   }
 
   public void Reset() {
@@ -211,15 +215,17 @@ internal sealed class FixedTickTimeline {
       _timestamp = nextTimestamp;
       if (beginRenderFrame) {
         var phaseError = independentlyMappedTimestamp - _timestamp;
-        var maximumCorrection = fixedDeltaTime / timeScale *
-                                stopwatchFrequency * 0.25;
+        var fixedInterval = fixedDeltaTime / timeScale *
+                            stopwatchFrequency;
+        var maximumForwardCorrection = fixedInterval *
+                                       (_catchUpSpeed - 1.0);
+        var maximumBackwardCorrection = fixedInterval * 0.25;
         var wantsForwardCorrection = phaseError > 0.0;
         var correction = wantsForwardCorrection && suppressForwardCorrection
             ? 0.0
-            : Math.Max(
-                -maximumCorrection,
-                Math.Min(maximumCorrection, phaseError * 0.125)
-            );
+            : wantsForwardCorrection
+                ? Math.Min(maximumForwardCorrection, phaseError)
+                : Math.Max(-maximumBackwardCorrection, phaseError * 0.125);
         LastForwardCorrectionSuppressed =
             wantsForwardCorrection && suppressForwardCorrection;
         LastCorrectionTicks = (long)Math.Round(correction);

@@ -16,6 +16,7 @@ public class Mod : MelonMod {
   private MelonPreferences_Entry<bool> _enableFixedUpdatePoseHistory;
   private MelonPreferences_Entry<int> _poseHistorySampleRate;
   private MelonPreferences_Entry<int> _poseHistoryInterpolationDelayTicks;
+  private MelonPreferences_Entry<float> _poseHistoryCatchUpSpeed;
   private MelonPreferences_Entry<bool> _protectRisingHeadFromPoseCatchUp;
   private MelonPreferences_Entry<float> _jumpRiseSpeedThreshold;
   private MelonPreferences_Entry<float> _jumpRiseDetectionWindowSeconds;
@@ -123,25 +124,31 @@ public class Mod : MelonMod {
     _enableFixedUpdatePoseHistory = preferences.CreateEntry(
         "SmoothTrackingDuringFrameDrops", true,
         "Smooth tracking when frames drop",
-        "Keeps head and hand movement smooth when Boneworks stutters, which " +
-        "helps fast physical movement behave consistently. The mod samples " +
-        "OpenVR poses on a background thread and interpolates a timestamped " +
-        "pose for each physics tick. Buttons and analog inputs are unchanged."
+        "Keeps HMD position and the jump button on the same timestamped " +
+        "physics clock when Boneworks stutters. Hand tracking, HMD rotation, " +
+        "analog input, and every other button remain live and unchanged."
     );
     _poseHistorySampleRate = preferences.CreateEntry(
         "TrackingSamplesPerSecond", 250,
         "Tracking samples per second",
-        "Captures quick head and hand movements more accurately. This is how " +
-        "often the background thread asks OpenVR for tracking poses. Higher " +
-        "values use slightly more CPU. The allowed range is 90 to 1000 Hz."
+        "Captures quick HMD movement more accurately. This is how often the " +
+        "background thread asks OpenVR for tracking poses. Higher values use " +
+        "slightly more CPU. The allowed range is 90 to 1000 Hz."
     );
     _poseHistoryInterpolationDelayTicks = preferences.CreateEntry(
         "TrackingSmoothingDelay", 1,
         "Tracking smoothing delay",
         "Gives the mod enough tracking history to keep movement smooth during " +
-        "uneven frames. Each step adds one physics tick of delay to head and " +
-        "hand tracking. One tick normally gives interpolation samples on both " +
-        "sides of the requested pose time."
+        "uneven frames. Each step adds one physics tick of delay to HMD " +
+        "position and jump-button timing. One tick normally gives pose " +
+        "samples on both sides of the requested time."
+    );
+    _poseHistoryCatchUpSpeed = preferences.CreateEntry(
+        "TrackingCatchUpSpeed", 2f,
+        "Tracking catch-up speed",
+        "Controls how quickly timestamped head position catches up after a " +
+        "slow frame. Two advances the tracking clock at twice normal speed " +
+        "until it reaches the current timeline. The allowed range is 1 to 8."
     );
     _protectRisingHeadFromPoseCatchUp = preferences.CreateEntry(
         "ProtectSuperJumpsDuringFrameDrops", true,
@@ -195,6 +202,7 @@ public class Mod : MelonMod {
         _enableFixedUpdatePoseHistory.Value,
         _poseHistorySampleRate.Value,
         _poseHistoryInterpolationDelayTicks.Value,
+        _poseHistoryCatchUpSpeed.Value,
         _protectRisingHeadFromPoseCatchUp.Value,
         _jumpRiseSpeedThreshold.Value,
         _jumpRiseDetectionWindowSeconds.Value

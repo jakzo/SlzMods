@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -99,6 +100,13 @@ internal sealed class FixedUpdatePoseHistory {
   private long _lastSummaryTimestamp;
   private long _lastRenderedFrameTimestamp;
   private bool _jumpCatchUpDebt;
+  private readonly List<TimedButtonEdge> _jumpButtonEdges =
+      new List<TimedButtonEdge>(32);
+  private bool _jumpButtonObserved;
+  private bool _jumpButtonInitialState;
+  private bool _jumpButtonLiveState;
+  private long _pendingJumpReleaseTimestamp;
+  private bool _deliveringQueuedJump;
   private SteamControllerRig _currentSteamRig;
   private CurrentFixedPose _current;
 
@@ -128,21 +136,17 @@ internal sealed class FixedUpdatePoseHistory {
     public bool JumpCatchUpDebtActive;
     public float Amount;
     public TrackedPoseValue Head;
-    public TrackedPoseValue Left;
-    public TrackedPoseValue Right;
     public bool HeadApplied;
-    public bool LeftApplied;
-    public bool RightApplied;
+    public bool FixedJumpButtonHeld;
+    public bool JumpReleaseDelivered;
+    public long JumpReleaseTimestamp;
     public Vector3 HeadPosition;
     public Quaternion HeadRotation;
-    public Vector3 LeftPosition;
-    public Quaternion LeftRotation;
-    public Vector3 RightPosition;
-    public Quaternion RightRotation;
   }
 
   public FixedUpdatePoseHistory(
       bool enabled, int sampleRate, int delayTicks,
+      float catchUpSpeed,
       bool protectRisingHeadFromCatchUp, float jumpRiseSpeedThreshold,
       float jumpRiseDetectionWindowSeconds
   ) {
@@ -157,7 +161,7 @@ internal sealed class FixedUpdatePoseHistory {
         Math.Max(0.02f, Math.Min(0.5f, jumpRiseDetectionWindowSeconds)) *
         Stopwatch.Frequency
     );
-    _tickTimeline = new FixedTickTimeline(_timeMapper);
+    _tickTimeline = new FixedTickTimeline(_timeMapper, catchUpSpeed);
     _instance = this;
   }
 
@@ -208,6 +212,12 @@ internal sealed class FixedUpdatePoseHistory {
     _lastTargetTimestamp = 0;
     _lastRenderedFrameTimestamp = 0;
     _jumpCatchUpDebt = false;
+    _jumpButtonEdges.Clear();
+    _jumpButtonObserved = false;
+    _jumpButtonInitialState = false;
+    _jumpButtonLiveState = false;
+    _pendingJumpReleaseTimestamp = 0;
+    _deliveringQueuedJump = false;
     _currentSteamRig = null;
     _tickTimeline.Reset();
   }
@@ -490,6 +500,7 @@ internal sealed class FixedUpdatePoseHistory {
     _current.SimulationTimestamp = simulationTimestamp;
     _current.IndependentlyMappedTimestamp = independentlyMappedTimestamp;
     _current.TargetTimestamp = targetTimestamp;
+    _current.FixedJumpButtonHeld = JumpButtonStateAt(targetTimestamp);
     _current.PreviousTargetTimestamp = previousTargetTimestamp;
     _current.TargetAgeTicks = targetAgeTicks;
     _current.MaximumHistoryAgeTicks = maximumHistoryAgeTicks;
@@ -544,12 +555,6 @@ internal sealed class FixedUpdatePoseHistory {
     var head = status == PoseBracketStatus.Extrapolated
         ? PoseHistoryMath.Extrapolate(before.Head, after.Head, amount)
         : PoseHistoryMath.Interpolate(before.Head, after.Head, amount);
-    var left = status == PoseBracketStatus.Extrapolated
-        ? PoseHistoryMath.Extrapolate(before.Left, after.Left, amount)
-        : PoseHistoryMath.Interpolate(before.Left, after.Left, amount);
-    var right = status == PoseBracketStatus.Extrapolated
-        ? PoseHistoryMath.Extrapolate(before.Right, after.Right, amount)
-        : PoseHistoryMath.Interpolate(before.Right, after.Right, amount);
     _current = new CurrentFixedPose {
       Attempted = true,
       Available = true,
@@ -577,9 +582,104 @@ internal sealed class FixedUpdatePoseHistory {
       JumpCatchUpDebtActive = _jumpCatchUpDebt,
       Amount = amount,
       Head = head,
-      Left = left,
-      Right = right,
+      FixedJumpButtonHeld = JumpButtonStateAt(targetTimestamp),
     };
+  }
+
+  private void ObserveJumpButton(SteamControllerRig rig) {
+    if (!_enabled || !rig)
+      return;
+    var controller = JumpButtonTiming.Controller(rig);
+    if (!JumpButtonTiming.UsesAButton(controller))
+      return;
+    var held = controller.GetAButton();
+    if (_jumpButtonObserved && held == _jumpButtonLiveState)
+      return;
+    var now = Stopwatch.GetTimestamp();
+    var timestamp = JumpButtonTiming.ReadEdgeTimestamp(
+        rig, now, Time.realtimeSinceStartup
+    );
+    if (!_jumpButtonObserved) {
+      _jumpButtonObserved = true;
+      _jumpButtonInitialState = false;
+      _jumpButtonLiveState = held;
+      if (held)
+        AddJumpButtonEdge(timestamp, true);
+      return;
+    }
+    _jumpButtonLiveState = held;
+    AddJumpButtonEdge(timestamp, held);
+  }
+
+  private void AddJumpButtonEdge(long timestamp, bool pressed) {
+    if (_jumpButtonEdges.Count > 0) {
+      var last = _jumpButtonEdges[_jumpButtonEdges.Count - 1];
+      if (timestamp < last.Timestamp)
+        timestamp = last.Timestamp;
+      if (last.Timestamp == timestamp && last.Pressed == pressed)
+        return;
+    }
+    _jumpButtonEdges.Add(new TimedButtonEdge(timestamp, pressed));
+    if (_jumpButtonEdges.Count <= 96)
+      return;
+    _jumpButtonInitialState = _jumpButtonEdges[63].Pressed;
+    _jumpButtonEdges.RemoveRange(0, 64);
+  }
+
+  private bool JumpButtonStateAt(long timestamp) {
+    var state = _jumpButtonInitialState;
+    for (var i = 0; i < _jumpButtonEdges.Count; i++) {
+      if (_jumpButtonEdges[i].Timestamp > timestamp)
+        break;
+      state = _jumpButtonEdges[i].Pressed;
+    }
+    return state;
+  }
+
+  private bool InterceptJump(ControllerRig rig) {
+    if (_deliveringQueuedJump || !_enabled || !rig)
+      return true;
+    var controller = JumpButtonTiming.Controller(rig);
+    if (!JumpButtonTiming.UsesAButton(controller) ||
+        !controller.GetAButtonUp())
+      return true;
+    var now = Stopwatch.GetTimestamp();
+    var timestamp = JumpButtonTiming.ReadEdgeTimestamp(
+        rig, now, Time.realtimeSinceStartup
+    );
+    _jumpButtonObserved = true;
+    _jumpButtonLiveState = false;
+    AddJumpButtonEdge(timestamp, false);
+    _pendingJumpReleaseTimestamp = timestamp;
+#if DEBUG
+    _superJumpDiagnostics?.ObserveJumpRelease(rig, now, timestamp);
+#endif
+    return false;
+  }
+
+  private void DeliverQueuedJump(ControllerRig rig) {
+    if (_pendingJumpReleaseTimestamp == 0 || !rig ||
+        _current.TargetTimestamp < _pendingJumpReleaseTimestamp)
+      return;
+    var releaseTimestamp = _pendingJumpReleaseTimestamp;
+    _pendingJumpReleaseTimestamp = 0;
+    _current.JumpReleaseDelivered = true;
+    _current.JumpReleaseTimestamp = releaseTimestamp;
+    _deliveringQueuedJump = true;
+    try {
+      rig.Jump();
+    } finally {
+      _deliveringQueuedJump = false;
+    }
+  }
+
+  private void OverrideJumpCharge(
+      ControllerRig rig, ref bool chargeInput
+  ) {
+    if (!_enabled || !_current.Attempted ||
+        _current.TargetTimestamp == 0 || !rig)
+      return;
+    chargeInput = _current.FixedJumpButtonHeld;
   }
 
 #if DEBUG
@@ -591,12 +691,7 @@ internal sealed class FixedUpdatePoseHistory {
   }
 #endif
 
-  private struct ControllerPatchState {
-    public Il2CppStructArray<TrackedDevicePose_t> Poses;
-    public int DeviceIndex;
-    public TrackedDevicePose_t LivePose;
-    public bool Replaced;
-  }
+  private struct ControllerPatchState { }
 
   private void BeforeController(
       RigController controller, out ControllerPatchState state
@@ -606,48 +701,12 @@ internal sealed class FixedUpdatePoseHistory {
       return;
     if (!_current.HeadApplied)
       ApplyHead(_currentSteamRig);
-    var deviceIndex = unchecked((int)controller.deviceIndex);
-    var rig = controller._steamControllerRig;
-    if (!rig || rig.poses == null || deviceIndex < 0 ||
-        deviceIndex >= rig.poses.Length)
-      return;
-    var historical = deviceIndex == _leftDeviceIndex
-        ? _current.Left
-        : deviceIndex == _rightDeviceIndex ? _current.Right
-        : new TrackedPoseValue();
-    if (!historical.IsValid)
-      return;
-    var livePose = rig.poses[deviceIndex];
-    if (!livePose.bPoseIsValid)
-      return;
-    state.Poses = rig.poses;
-    state.DeviceIndex = deviceIndex;
-    state.LivePose = livePose;
-    state.Replaced = true;
-    livePose.mDeviceToAbsoluteTracking = ToOpenVrMatrix(historical);
-    livePose.bPoseIsValid = historical.IsValid;
-    livePose.bDeviceIsConnected = historical.IsConnected;
-    rig.poses[deviceIndex] = livePose;
   }
 
   private void AfterController(
       RigController controller, ControllerPatchState state
   ) {
-    if (!state.Replaced)
-      return;
-    state.Poses[state.DeviceIndex] = state.LivePose;
-    if (!controller)
-      return;
-    var transform = controller.transform;
-    if (state.DeviceIndex == _leftDeviceIndex) {
-      _current.LeftApplied = true;
-      _current.LeftPosition = transform.localPosition;
-      _current.LeftRotation = transform.localRotation;
-    } else {
-      _current.RightApplied = true;
-      _current.RightPosition = transform.localPosition;
-      _current.RightRotation = transform.localRotation;
-    }
+    // Controller poses stay live. Only HMD position is replayed.
   }
 
   private void ApplyHead(SteamControllerRig rig) {
@@ -658,12 +717,11 @@ internal sealed class FixedUpdatePoseHistory {
     var target = hmd ? hmd.parent : null;
 #if DEBUG
     if (_smoothnessTest != null && target && _current.Head.IsValid) {
-      ToUnityPose(_current.Head, out var position, out var rotation);
+      ToUnityPose(_current.Head, out var position, out _);
       target.localPosition = position;
-      target.localRotation = rotation;
       _current.HeadApplied = true;
       _current.HeadPosition = position;
-      _current.HeadRotation = rotation;
+      _current.HeadRotation = target.localRotation;
       return;
     }
 #endif
@@ -671,15 +729,13 @@ internal sealed class FixedUpdatePoseHistory {
         _current.Head.IsValid) {
       var live = ReadPose(poses, 0);
       if (live.IsValid) {
-        ApplyCalibratedPose(
-            live, _current.Head, target.localPosition,
-            target.localRotation, out var position, out var rotation
+        ApplyCalibratedPosition(
+            live, _current.Head, target.localPosition, out var position
         );
         target.localPosition = position;
-        target.localRotation = rotation;
         _current.HeadApplied = true;
         _current.HeadPosition = position;
-        _current.HeadRotation = rotation;
+        _current.HeadRotation = target.localRotation;
       }
     }
   }
@@ -687,8 +743,7 @@ internal sealed class FixedUpdatePoseHistory {
   private void FinishFixedTick() {
     if (!_current.Attempted)
       return;
-    if (_current.HeadApplied || _current.LeftApplied ||
-        _current.RightApplied)
+    if (_current.HeadApplied)
       _appliedTicks++;
 #if DEBUG
     if (_superJumpDiagnostics != null) {
@@ -699,7 +754,9 @@ internal sealed class FixedUpdatePoseHistory {
           _currentSteamRig, _current.UnityFrame, _current.TickInFrame,
           _current.FixedTime, _current.SimulationTimestamp,
           _current.TargetTimestamp, _current.Available, _current.Head,
-          _current.HeadPosition, latestHead
+          _current.HeadPosition, latestHead, _current.TimeScale,
+          _current.FixedJumpButtonHeld, _current.JumpReleaseDelivered,
+          _current.JumpReleaseTimestamp
       );
     }
     if (_smoothnessTest != null && _smoothnessTest.IsActive) {
@@ -758,14 +815,14 @@ internal sealed class FixedUpdatePoseHistory {
           _current.ForwardCorrectionSuppressed,
       JumpCatchUpDebtActive = _current.JumpCatchUpDebtActive,
       HeadApplied = _current.HeadApplied,
-      LeftApplied = _current.LeftApplied,
-      RightApplied = _current.RightApplied,
+      LeftApplied = false,
+      RightApplied = false,
       HeadPosition = _current.HeadPosition,
       HeadRotation = _current.HeadRotation,
-      LeftPosition = _current.LeftPosition,
-      LeftRotation = _current.LeftRotation,
-      RightPosition = _current.RightPosition,
-      RightRotation = _current.RightRotation,
+      LeftPosition = Vector3.zero,
+      LeftRotation = Quaternion.identity,
+      RightPosition = Vector3.zero,
+      RightRotation = Quaternion.identity,
     };
   }
 
@@ -857,7 +914,7 @@ internal sealed class FixedUpdatePoseHistory {
       }
       if (row.Status == PoseBracketStatus.Stale)
         stale++;
-      if (row.HeadApplied && row.LeftApplied && row.RightApplied)
+      if (row.HeadApplied)
         allApplied++;
       if (row.JumpProtectionActive)
         jumpProtectedTicks++;
@@ -998,6 +1055,15 @@ internal sealed class FixedUpdatePoseHistory {
     rotation = historicalRotation * localRotationOffset;
   }
 
+  internal static void ApplyCalibratedPosition(
+      TrackedPoseValue live, TrackedPoseValue historical,
+      Vector3 liveOutputPosition, out Vector3 position
+  ) {
+    ToUnityPose(live, out var livePosition, out _);
+    ToUnityPose(historical, out var historicalPosition, out _);
+    position = liveOutputPosition + historicalPosition - livePosition;
+  }
+
   internal static void ToUnityPose(
       TrackedPoseValue pose, out Vector3 position, out Quaternion rotation
   ) {
@@ -1053,6 +1119,7 @@ internal sealed class FixedUpdatePoseHistory {
       if (instance == null)
         return true;
       instance.PrepareFixedTick(__instance);
+      instance.DeliverQueuedJump(__instance);
 #if DEBUG
       if (instance._smoothnessTest != null) {
         __state = true;
@@ -1069,6 +1136,28 @@ internal sealed class FixedUpdatePoseHistory {
       if (!__state)
         _instance?.FinishFixedTick();
     }
+  }
+
+  [HarmonyPatch(typeof(SteamControllerRig), nameof(SteamControllerRig.OnEarlyUpdate))]
+  private static class SteamControllerRig_OnEarlyUpdate_Patch {
+    [HarmonyPostfix]
+    private static void Postfix(SteamControllerRig __instance) =>
+        _instance?.ObserveJumpButton(__instance);
+  }
+
+  [HarmonyPatch(typeof(ControllerRig), nameof(ControllerRig.JumpCharge))]
+  private static class ControllerRig_JumpCharge_Patch {
+    [HarmonyPrefix]
+    private static void Prefix(
+        ControllerRig __instance, ref bool chargeInput
+    ) => _instance?.OverrideJumpCharge(__instance, ref chargeInput);
+  }
+
+  [HarmonyPatch(typeof(ControllerRig), nameof(ControllerRig.Jump))]
+  private static class ControllerRig_Jump_Patch {
+    [HarmonyPrefix]
+    private static bool Prefix(ControllerRig __instance) =>
+        _instance == null || _instance.InterceptJump(__instance);
   }
 
   [HarmonyPatch(typeof(RigController), nameof(RigController.OnVrFixedUpdate))]

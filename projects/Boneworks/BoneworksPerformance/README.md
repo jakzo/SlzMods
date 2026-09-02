@@ -23,9 +23,10 @@ behavior is included in BoneworksPerformance.
 
 ### Smoother tracking during dropped frames
 
-The mod records OpenVR head and controller poses on a background thread. Each
-physics tick receives the pose that belongs to that point in time, interpolated
-from the recorded history. Buttons, triggers, and thumbsticks are unchanged.
+The mod records OpenVR poses on a background thread. Each physics tick receives
+the HMD position that belongs to that point in time, interpolated from the
+recorded history. Jump-button edges use that same clock. Hand position and
+rotation, HMD rotation, triggers, thumbsticks, and all other buttons remain live.
 
 In the original game multiple physics ticks would be processed one after another
 in quick succession during dropped frames before rendering and would use the
@@ -36,7 +37,8 @@ jump's momentum.
 
 Tracking is delayed by one physics tick by default. This small delay gives the
 mod samples on both sides of the requested time and prevents repeated or uneven
-head and hand movement when several physics ticks run in one rendered frame.
+HMD movement when several physics ticks run in one rendered frame. When the
+clock falls behind, it catches up at twice normal speed by default.
 
 ### Super-jump protection
 
@@ -83,9 +85,10 @@ them.
 
 | Setting                             | Default | Effect                                                                                                   |
 | ----------------------------------- | ------: | -------------------------------------------------------------------------------------------------------- |
-| `SmoothTrackingDuringFrameDrops`    |  `true` | Uses timestamped OpenVR history for head and hand poses during physics ticks.                            |
+| `SmoothTrackingDuringFrameDrops`    |  `true` | Uses one timestamped physics clock for HMD position and the jump button.                                 |
 | `TrackingSamplesPerSecond`          |   `250` | Background tracking rate. Values are clamped to 90 through 1000 Hz. Higher values use slightly more CPU. |
-| `TrackingSmoothingDelay`            |     `1` | Tracking delay measured in physics ticks.                                                                |
+| `TrackingSmoothingDelay`            |     `1` | HMD-position and jump-button delay measured in physics ticks.                                            |
+| `TrackingCatchUpSpeed`              |     `2` | Catch-up clock speed after lag; 2 means twice normal speed.                                              |
 | `ProtectSuperJumpsDuringFrameDrops` |  `true` | Prevents positive tracking-clock correction while the headset is rising quickly.                         |
 | `JumpDetectionSpeed`                |   `0.5` | Upward headset speed in metres per second that activates jump protection.                                |
 | `JumpDetectionTime`                 |   `0.1` | Seconds of tracking history used to measure upward speed.                                                |

@@ -1,5 +1,5 @@
 namespace Sst {
 static class AppVersion {
-  public const string Value = "2.5.4";
+  public const string Value = "2.6.0";
 }
 }

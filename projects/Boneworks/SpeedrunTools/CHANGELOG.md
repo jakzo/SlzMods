@@ -1,3 +1,8 @@
+## 2.6.0
+
+- Track level resets for Baseball and Golf Club in Streets and Baton in Runoff, and send the counts to the LiveSplit 100% component. A reset counts when an uncollected item is attempted and the player then leaves through the level-select menu without getting that item, instead of finishing the level. Each visit counts at most once per unsuccessful item, regardless of how the level was entered. Leaving after an item drops does not increase its reset count.
+
+
 ## 2.5.4
 
 Fixed the anti-cheat blocking the PhysicsTickFixer mod.

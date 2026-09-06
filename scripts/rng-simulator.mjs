@@ -1,3 +1,6 @@
+// Historical simulator for the retired percentile lookup table. The component
+// now uses the deterministic sum in OverallRngLuck.cs; its regression tests
+// validate that calculation directly against enumeration and simulated runs.
 const rngItem = (dropChance) => () => Math.random() < dropChance;
 
 const baseball = rngItem(0.1);
@@ -114,13 +117,18 @@ const mappings = [
 ];
 const percentileMapping = (numBaseball, numGolfClub, numBaton) => {
   const rawLuck = geometricMean(numBaseball, numGolfClub, numBaton);
-  const mappingIndex = Math.floor(rawLuck * (mappings.length - 1));
-  const lowerValue = mappings[mappingIndex];
-  const upperValue = mappings[mappingIndex + 1];
-  const lowerPercentile = mappingIndex / (mappings.length - 1);
-  const upperPercentile = (mappingIndex + 1) / (mappings.length - 1);
-  const ratio = (rawLuck - lowerValue) / (upperValue - lowerValue);
-  return lowerPercentile + ratio * (upperPercentile - lowerPercentile);
+  if (rawLuck <= mappings[0]) return 0;
+  if (rawLuck >= mappings[mappings.length - 1]) return 1;
+  let lower = 0;
+  let upper = mappings.length - 1;
+  while (upper - lower > 1) {
+    const middle = Math.floor((lower + upper) / 2);
+    if (mappings[middle] <= rawLuck) lower = middle;
+    else upper = middle;
+  }
+  const ratio =
+    (rawLuck - mappings[lower]) / (mappings[upper] - mappings[lower]);
+  return Math.max(0, Math.min(1, (lower + ratio) / (mappings.length - 1)));
 };
 
 const baseballOnly = (numBaseball, numGolfClub, numBaton) => {

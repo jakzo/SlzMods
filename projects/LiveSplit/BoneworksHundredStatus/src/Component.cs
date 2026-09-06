@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using LiveSplit.UI;
 using LiveSplit.UI.Components;
@@ -16,6 +17,8 @@ public class Component : IComponent {
 
   private float _height = 240;
   private bool _showMissingCollectibles = true;
+  private bool _showResets = true;
+  private (string Name, string Count, string Details, Color NameColor, bool HasDropped)[] _rngRows = [];
 
   public float HorizontalWidth { get => 300; }
   public float VerticalHeight { get => _height; }
@@ -106,26 +109,133 @@ public class Component : IComponent {
       Graphics g, LiveSplitState state, float width, float height,
       LayoutMode mode
   ) {
-    _progressLabel.Font = state.LayoutSettings.TextFont;
-    var textHeight =
-        g.MeasureString(_progressLabel.Text, _progressLabel.Font, (int)width)
-            .Height;
-    _progressLabel.HorizontalAlignment = StringAlignment.Near;
-    _progressLabel.VerticalAlignment = StringAlignment.Near;
-    _progressLabel.X = 4;
-    _progressLabel.Y = height - textHeight;
-    _progressLabel.Width = width;
-    _progressLabel.Height = textHeight;
-    _progressLabel.Brush = new SolidBrush(state.LayoutSettings.TextColor);
-    _progressLabel.HasShadow = state.LayoutSettings.DropShadows;
-    _progressLabel.ShadowColor = state.LayoutSettings.ShadowsColor;
-    _progressLabel.OutlineColor = state.LayoutSettings.TextOutlineColor;
-    _progressLabel.Draw(g);
+    DrawRngDisplay(g, state, width, height);
+  }
+
+  private void DrawRngDisplay(
+      Graphics g, LiveSplitState state, float width, float height
+  ) {
+    var font = state.LayoutSettings.TextFont;
+    var iconWidth = font.GetHeight(g);
+    var availableWidth = Math.Max(1, width - 8);
+    using (var format = (StringFormat)StringFormat.GenericTypographic.Clone()) {
+      // GraphicsPath and DrawString round line heights differently. Do not
+      // discard a whole outlined row when its final pixel exceeds the bounds.
+      format.FormatFlags &= ~StringFormatFlags.LineLimit;
+      format.FormatFlags |= StringFormatFlags.MeasureTrailingSpaces;
+      var separatorWidth = g.MeasureString(": ", font, int.MaxValue, format).Width;
+      var progressHeight = g.MeasureString(
+          _progressLabel.Text, font, (int)availableWidth, format
+      ).Height;
+      var rows = _rngRows.Select(row => {
+        var nameWidth = g.MeasureString(row.Name, font, int.MaxValue, format).Width;
+        var countWidth = row.Count.Length == 0 ? 0 :
+            g.MeasureString(row.Count, font, int.MaxValue, format).Width;
+        var detailsWidth = Math.Max(1, availableWidth - iconWidth - nameWidth - separatorWidth - countWidth);
+        var rowHeight = g.MeasureString(
+            row.Details, font, (int)detailsWidth, format
+        ).Height;
+        return (row, nameWidth, countWidth, detailsWidth, rowHeight);
+      }).ToArray();
+      var y = height - progressHeight - rows.Sum(row => row.rowHeight);
+      DrawResetText(g, state, _progressLabel.Text, state.LayoutSettings.TextColor,
+                    4, y, availableWidth, progressHeight, format);
+      y += progressHeight;
+      foreach (var row in rows) {
+        DrawStatusIcon(g, row.row.HasDropped, 4, y, iconWidth);
+        DrawResetText(g, state, row.row.Name,
+                      row.row.NameColor,
+                      4 + iconWidth, y, row.nameWidth + 1, row.rowHeight, format);
+        var x = 4 + iconWidth + row.nameWidth;
+        DrawResetText(g, state, ": ", state.LayoutSettings.TextColor,
+                      x, y, separatorWidth + 1, row.rowHeight, format);
+        x += separatorWidth;
+        DrawResetText(g, state, row.row.Count,
+                      state.LayoutSettings.TextColor,
+                      x, y, row.countWidth + 1, row.rowHeight, format);
+        x += row.countWidth;
+        DrawResetText(g, state, row.row.Details, state.LayoutSettings.TextColor,
+                      x, y, row.detailsWidth, row.rowHeight, format);
+        y += row.rowHeight;
+      }
+    }
+  }
+
+  private static void DrawStatusIcon(
+      Graphics g, bool hasDropped, float x, float y, float size
+  ) {
+    var previousSmoothing = g.SmoothingMode;
+    g.SmoothingMode = SmoothingMode.AntiAlias;
+    using (var pen = new Pen(hasDropped ? Color.Lime : Color.White,
+                             Math.Max(1.4f, size / 10f))) {
+      pen.StartCap = pen.EndCap = LineCap.Round;
+      if (hasDropped) {
+        g.DrawLines(pen, new[] {
+          new PointF(x + size * 0.15f, y + size * 0.50f),
+          new PointF(x + size * 0.35f, y + size * 0.72f),
+          new PointF(x + size * 0.75f, y + size * 0.25f),
+        });
+      } else {
+        g.DrawLine(pen, x + size * 0.20f, y + size * 0.30f,
+                   x + size * 0.65f, y + size * 0.70f);
+        g.DrawLine(pen, x + size * 0.65f, y + size * 0.30f,
+                   x + size * 0.20f, y + size * 0.70f);
+      }
+    }
+    g.SmoothingMode = previousSmoothing;
+  }
+
+  private void DrawResetText(
+      Graphics g, LiveSplitState state, string text, Color color,
+      float x, float y, float width, float height, StringFormat format
+  ) {
+    if (string.IsNullOrEmpty(text))
+      return;
+    using (var brush = new SolidBrush(color)) {
+      var font = state.LayoutSettings.TextFont;
+      var bounds = new RectangleF(x, y, width, height);
+      if (state.LayoutSettings.DropShadows) {
+        using (var shadow = new SolidBrush(state.LayoutSettings.ShadowsColor)) {
+          g.DrawString(text, font, shadow,
+                       new RectangleF(x + 1, y + 1, width, height), format);
+          g.DrawString(text, font, shadow,
+                       new RectangleF(x + 2, y + 2, width, height), format);
+        }
+      }
+      if (state.LayoutSettings.TextOutlineColor.A > 0) {
+        using (var path = new GraphicsPath())
+        using (var pen = new Pen(state.LayoutSettings.TextOutlineColor, 1) {
+          LineJoin = LineJoin.Round,
+        }) {
+          path.AddString(text, font.FontFamily, (int)font.Style,
+                         font.SizeInPoints * g.DpiY / 72f, bounds, format);
+          g.DrawPath(pen, path);
+          g.FillPath(brush, path);
+        }
+      } else {
+        g.DrawString(text, font, brush, bounds, format);
+      }
+    }
   }
 
   public string ComponentName { get => NAME; }
 
-  public Control GetSettingsControl(LayoutMode mode) => null;
+  public Control GetSettingsControl(LayoutMode mode) {
+    var panel = new FlowLayoutPanel {
+      AutoSize = true, FlowDirection = FlowDirection.TopDown,
+      Padding = new Padding(8),
+    };
+    var showResets = new CheckBox {
+      Text = "Show level resets instead of item drop tries",
+      AutoSize = true, Checked = _showResets,
+    };
+    showResets.CheckedChanged += (sender, args) => {
+      _showResets = showResets.Checked;
+      _isDirty = true;
+    };
+    panel.Controls.Add(showResets);
+    return panel;
+  }
 
   public XmlNode GetSettings(XmlDocument document) {
     var root = document.CreateElement("Settings");
@@ -137,16 +247,17 @@ public class Component : IComponent {
     var showMissingCollectibles =
         document.CreateElement("ShowMissingCollectibles");
     showMissingCollectibles.InnerText = _showMissingCollectibles.ToString();
-    root.AppendChild(height);
+    root.AppendChild(showMissingCollectibles);
 
-    var splitOnArena = document.CreateElement("SplitOnArena");
-    splitOnArena.InnerText = _showMissingCollectibles.ToString();
-    root.AppendChild(height);
+    var showResets = document.CreateElement("ShowResets");
+    showResets.InnerText = _showResets.ToString();
+    root.AppendChild(showResets);
 
     return root;
   }
 
   public void SetSettings(XmlNode settings) {
+    _showResets = true;
     foreach (var n in settings.ChildNodes) {
       var node = n as XmlNode;
       switch (node.Name) {
@@ -156,11 +267,18 @@ public class Component : IComponent {
       case "ShowMissingCollectibles":
         _showMissingCollectibles = bool.Parse(node.InnerText);
         break;
+      case "ShowResets":
+        _showResets = bool.Parse(node.InnerText);
+        break;
       }
     }
+    _isDirty = true;
   }
 
-  public void Dispose() { _stateUpdater.Dispose(); }
+  public void Dispose() {
+    _stateUpdater.Dispose();
+    _progressLabel.Brush?.Dispose();
+  }
 
   public void Update(
       IInvalidator invalidator, LiveSplitState livesplitState, float width,
@@ -171,6 +289,13 @@ public class Component : IComponent {
 
     _isDirty = false;
     var state = _stateUpdater.State;
+    _rngRows = state == null ? [] : state.rngUnlocks.Values
+        .Select(item => (item.name,
+                         _showResets ? RngDisplay.ResetCount(item) : RngDisplay.TriesCount(item),
+                         _showResets ? RngDisplay.ResetSuffix(item) : RngDisplay.TriesSuffix(item),
+                         RngDisplay.NameColor(item),
+                         item.hasDropped))
+        .ToArray();
     if (state == null) {
       _progressLabel.Text = "";
     } else {
@@ -180,17 +305,18 @@ public class Component : IComponent {
                     c => $"Remaining: {c.DisplayName}"
                 ))
           : [];
-      var overallChance = PercentileMapping(
-          state.rngUnlocks
-              .Select(pair => (double)pair.Value.probabilityNotDroppedYet)
-              .ToArray()
-      );
-      var overallChanceStr = (overallChance * 100f).ToString("N0");
+      var allDropped = state.rngUnlocks.Values.All(item => item.hasDropped);
+      var overallChance = allDropped ? OverallRngLuck.Percentile(
+          state.rngUnlocks.Values.First(item => item.name == "Baseball").attempts,
+          state.rngUnlocks.Values.First(item => item.name == "Golf Club").attempts,
+          state.rngUnlocks.Values.First(item => item.name == "Baton").attempts
+      ) : 0;
+      var overallChanceStr = Math.Floor(overallChance * 100).ToString("N0");
       _progressLabel.Text = string.Join(
           "\n",
           missingCollectibleLines
               .Concat(
-                  state.rngUnlocks.All(pair => pair.Value.hasDropped)
+                  allDropped
                       ? [$"Overall RNG chance: {overallChanceStr}%"]
                       : []
               )
@@ -198,51 +324,10 @@ public class Component : IComponent {
                 $"Level unlocks: {state.unlockLevelCount} / {state.unlockLevelMax}",
                 $"Level Ammo: {state.ammoLevelCount} / {state.ammoLevelMax}",
               ])
-              .Concat(state.rngUnlocks.Select(pair => {
-                var u = pair.Value;
-                var status = u.hasDropped ? "✅" : "❌";
-                var triesStr = u.attempts == 1 ? "try" : "tries";
-                var attemptChanceStr =
-                    (u.prevAttemptChance * 100f).ToString("N0");
-                var total = 1f - u.probabilityNotDroppedYet;
-                var totalStr = (total * 100f).ToString("N0");
-                return $"{status} {u.name}: {u.attempts} {triesStr} @ {attemptChanceStr}% per try = {totalStr}% total";
-              }))
       );
     }
     invalidator?.Invalidate(0, 0, width, height);
   }
 
-  // TODO: I would much rather a formula which produces a uniform distribution
-  //       than using a lookup table but I can't think of one
-  private static double[] MAPPINGS = [
-    0.0585, 0.1256, 0.1477, 0.1638, 0.1765, 0.188,  0.1974, 0.2066, 0.2145,
-    0.2229, 0.2309, 0.2384, 0.2454, 0.252,  0.2581, 0.2642, 0.2704, 0.2766,
-    0.2827, 0.288,  0.2937, 0.2989, 0.3045, 0.3097, 0.3147, 0.3198, 0.3249,
-    0.3297, 0.3349, 0.3398, 0.3447, 0.3497, 0.3544, 0.3591, 0.364,  0.3686,
-    0.3731, 0.3779, 0.3826, 0.3873, 0.3921, 0.3966, 0.4013, 0.4062, 0.4109,
-    0.4156, 0.4204, 0.4253, 0.4301, 0.4351, 0.44,   0.4451, 0.4502, 0.4554,
-    0.4608, 0.4664, 0.4717, 0.477,  0.4825, 0.4879, 0.4935, 0.4989, 0.5045,
-    0.51,   0.5155, 0.521,  0.5268, 0.5326, 0.5384, 0.5443, 0.5502, 0.5564,
-    0.5625, 0.569,  0.5755, 0.5823, 0.5892, 0.5959, 0.6029, 0.61,   0.6173,
-    0.6248, 0.6326, 0.6405, 0.6488, 0.6574, 0.6662, 0.6753, 0.6849, 0.6948,
-    0.7055, 0.7168, 0.7287, 0.7416, 0.7557, 0.7711, 0.7887, 0.8092, 0.8347,
-    0.8701, 1.0,
-  ];
-  private static double PercentileMapping(double[] probabilitiesNotDroppedYet) {
-    var geometricMean = Math.Pow(
-        probabilitiesNotDroppedYet.Aggregate(
-            1.0, (acc, prob) => acc * (1.0 - prob)
-        ),
-        1.0 / probabilitiesNotDroppedYet.Length
-    );
-    var index = (int)(geometricMean * (MAPPINGS.Length - 1));
-    var lowerValue = MAPPINGS[index];
-    var upperValue = MAPPINGS[index + 1];
-    var lowerPercentile = (double)index / (MAPPINGS.Length - 1);
-    var upperPercentile = (double)(index + 1) / (MAPPINGS.Length - 1);
-    var ratio = (geometricMean - lowerValue) / (upperValue - lowerValue);
-    return lowerPercentile + ratio * (upperPercentile - lowerPercentile);
-  }
 }
 }

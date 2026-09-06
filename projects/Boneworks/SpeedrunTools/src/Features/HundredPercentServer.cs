@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using StressLevelZero.Data;
 using HarmonyLib;
+using StressLevelZero.UI.Radial;
+using StressLevelZero.Utilities;
 using static Sst.Common.Boneworks.HundredPercentState;
 
 namespace Sst.Features {
@@ -20,6 +22,8 @@ class HundredPercentServer : Feature {
   public Dictionary<string, int> LevelUncollectedIndexes;
 
   private Server _ipcServer;
+  private readonly RngResetTracker _resetTracker = new RngResetTracker();
+  private static bool _selectingLevel;
 
   public HundredPercentServer() {
     IsAllowedInRuns = true;
@@ -27,6 +31,7 @@ class HundredPercentServer : Feature {
   }
 
   public override void OnEnabled() {
+    _resetTracker.Clear();
     State = new HundredPercentState();
     LevelUncollectedIndexes = new Dictionary<string, int>();
 
@@ -62,6 +67,7 @@ class HundredPercentServer : Feature {
   }
 
   public override void OnLoadingScreen(int nextSceneIdx, int prevSceneIdx) {
+    _resetTracker.OnLoadingScreen();
     Task.Run(() => {
       try {
         LoadNextSceneRecording(nextSceneIdx);
@@ -78,6 +84,7 @@ class HundredPercentServer : Feature {
   }
 
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
+    _resetTracker.OnSceneInitialized(buildIndex);
     if (State.levelCollectibles == null)
       State.levelCollectibles = [];
 
@@ -107,6 +114,7 @@ class HundredPercentServer : Feature {
   }
 
   public override void OnDisabled() {
+    _resetTracker.Clear();
     State = null;
     LevelCollectibles = null;
     LevelUncollectedIndexes = null;
@@ -120,6 +128,7 @@ class HundredPercentServer : Feature {
   public void Reset() {
     if (!IsEnabled)
       return;
+    _resetTracker.Clear();
     State = new HundredPercentState();
     LevelUncollectedIndexes = new Dictionary<string, int>();
     LevelCollectibles = null;
@@ -155,6 +164,36 @@ class HundredPercentServer : Feature {
   private bool IsTypeAmmo(string type) => type == TYPE_AMMO_LIGHT
       || type == TYPE_AMMO_MEDIUM;
 
+  // Both the main-menu and in-game level selectors use LevelsPanelView.
+  // Scope the flag to the actual selection so progression/reloads do not count.
+  [HarmonyPatch(typeof(LevelsPanelView), nameof(LevelsPanelView.SelectItem))]
+  class LevelsPanelView_SelectItem_Patch {
+    [HarmonyPrefix]
+    internal static void Prefix(out bool __state) {
+      __state = _selectingLevel;
+      _selectingLevel = true;
+    }
+
+    [HarmonyFinalizer]
+    internal static void Finalizer(bool __state) {
+      _selectingLevel = __state;
+    }
+  }
+
+  [HarmonyPatch(
+      typeof(BoneworksSceneManager), nameof(BoneworksSceneManager.LoadScene),
+      new Type[] { typeof(string) }
+  )]
+  class BoneworksSceneManager_LoadScene_Patch {
+    [HarmonyPrefix]
+    internal static void Prefix() {
+      if (Instance?.State == null)
+        return;
+      if (Instance._resetTracker.OnLoadRequested(_selectingLevel, Instance.State))
+        Instance.SendState();
+    }
+  }
+
   // This can be slightly inaccurate if not using the latest LootDropBugfix mod
   [HarmonyPatch(typeof(LootTableData), nameof(LootTableData.GetLootItem))]
   class LootTableData_GetLootItem_Patch {
@@ -162,24 +201,27 @@ class HundredPercentServer : Feature {
     internal static void
     Postfix(LootTableData __instance, SpawnableObject __result) {
       try {
-        if (Instance.State == null || __result == null)
+        if (Instance?.State == null)
           return;
 
         var seenUuids = new HashSet<string>();
         var lower = 0f;
         foreach (var item in __instance.items) {
           var upper = Mathf.Min(lower + item.percentage, 100f);
-          var uuid = item.spawnable.UUID;
+          var uuid = item.spawnable != null ? item.spawnable.UUID : null;
 
-          if (item.percentage > 0f &&
+          if (upper > lower && uuid != null &&
               Instance.State.rngUnlocks.TryGetValue(uuid, out var rngState) &&
               !rngState.hasDropped && !seenUuids.Contains(uuid)) {
             seenUuids.Add(uuid);
+            Instance._resetTracker.OnAttempt(
+                uuid, rngState, ReclaimerData._reclaimedObjects.ContainsKey(uuid)
+            );
             rngState.attempts++;
             rngState.prevAttemptChance = (upper - lower) / 100f;
             rngState.probabilityNotDroppedYet *=
                 1f - rngState.prevAttemptChance;
-            if (__result.UUID == uuid)
+            if (__result != null && __result.UUID == uuid)
               rngState.hasDropped = true;
           }
 

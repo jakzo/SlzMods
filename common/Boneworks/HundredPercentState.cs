@@ -37,6 +37,7 @@ public class HundredPercentState {
   public class RngState {
     public string name;
     public int attempts;
+    public int resets;
     public float prevAttemptChance;
     public float probabilityNotDroppedYet;
     public bool hasDropped;

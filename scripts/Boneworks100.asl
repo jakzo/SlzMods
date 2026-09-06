@@ -3,6 +3,9 @@ state("BONEWORKS") {
 }
 
 startup {
+  settings.Add("splitOnArenaChallenges", false,
+               "Split on Fantasy Arena challenge completion");
+
   vars.boneworksAslHelper =
       Assembly.Load(File.ReadAllBytes(@"Components\BoneworksAslHelper.dll"))
           .CreateInstance("BoneworksAslHelper");
@@ -83,7 +86,7 @@ start {
 }
 
 split {
-  if (vars.arenaWatcher != null &&
+  if (settings["splitOnArenaChallenges"] && vars.arenaWatcher != null &&
       vars.arenaWatcher.Current != vars.arenaWatcher.Old) {
     return true;
   }

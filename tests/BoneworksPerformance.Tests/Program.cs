@@ -24,6 +24,7 @@ internal static class Program {
       TestCatchUpFixedTickTimeline();
       TestButtonEdgeAssignment();
       TestButtonStateAtFixedTicks();
+      TestSlowMotionDoubleClickReplay();
       TestConcurrentSnapshots();
       if (arguments.Length > 0)
         TestSmokeReport(arguments[0]);
@@ -257,7 +258,7 @@ internal static class Program {
     const float fixedDelta = 1f / 144f;
     var mapper = new FixedTimeMapper();
     mapper.ObserveFrame(50_000_000, 10f, 1f);
-    var timeline = new FixedTickTimeline(mapper);
+    var timeline = new FixedTickTimeline(mapper, 2.0);
     var timestamps = new long[5];
     for (var i = 0; i < timestamps.Length; i++) {
       var fixedTime = 10f + (i + 1) * fixedDelta;
@@ -284,14 +285,31 @@ internal static class Program {
     var shortHitchSpacing =
         afterShortHitch - timestamps[timestamps.Length - 1];
     True(shortHitchSpacing >= expectedSpacing - 1.0 &&
-         shortHitchSpacing <= expectedSpacing * 1.25 + 1.0,
-         "short-hitch correction is bounded to 25 percent");
+         shortHitchSpacing <= expectedSpacing * 2.0 + 1.0,
+         "short-hitch recovery is bounded to double speed");
     True(Math.Abs(shortHitchMapped - afterShortHitch) < frequency,
          "short-hitch mapping remains within the continuity limit");
 
+    var doubleMapper = new FixedTimeMapper();
+    doubleMapper.ObserveFrame(50_000_000, 10f, 1f);
+    var doubleTimeline = new FixedTickTimeline(doubleMapper, 2.0);
+    True(doubleTimeline.TryAdvance(
+             10f + fixedDelta, fixedDelta, 1f, frequency, true, false,
+             out var doubleFirst, out _, out _
+         ), "double-speed timeline starts");
+    doubleMapper.ObserveFrame(52_000_000, 10f + fixedDelta, 1f);
+    True(doubleTimeline.TryAdvance(
+             10f + 2 * fixedDelta, fixedDelta, 1f, frequency, true,
+             false, out var doubleSecond, out _, out _
+         ), "double-speed timeline corrects positive phase error");
+    Equal(expectedSpacing * 2.0, doubleSecond - doubleFirst, 2.0,
+          "default catch-up advances the input clock at double speed");
+    Equal(expectedSpacing, doubleTimeline.LastCorrectionTicks, 2.0,
+          "double-speed catch-up adds one fixed interval of correction");
+
     var protectedMapper = new FixedTimeMapper();
     protectedMapper.ObserveFrame(50_000_000, 10f, 1f);
-    var protectedTimeline = new FixedTickTimeline(protectedMapper);
+    var protectedTimeline = new FixedTickTimeline(protectedMapper, 2.0);
     True(protectedTimeline.TryAdvance(
              10f + fixedDelta, fixedDelta, 1f, frequency, true, false,
              out var protectedFirst, out _, out _
@@ -346,6 +364,41 @@ internal static class Program {
          "button is held after its press edge");
     True(!TimedButtonMath.StateAt(false, edges, 1_300),
          "button is released after its release edge");
+    Pass();
+  }
+
+  private static void TestSlowMotionDoubleClickReplay() {
+    var replay = new SlowMotionReplayState(1000);
+    Equal(
+        SlowMotionReplayCommand.DecreaseTimeScale,
+        replay.Apply(new TimedButtonEdge(1000, true)),
+        "first slow-motion press decreases time scale"
+    );
+    Equal(
+        SlowMotionReplayCommand.None,
+        replay.Apply(new TimedButtonEdge(1050, false)),
+        "first release schedules rather than toggles"
+    );
+    Equal(1300L, replay.PendingToggleTimestamp,
+          "release schedules a quarter-second toggle");
+    Equal(
+        SlowMotionReplayCommand.DecreaseTimeScale,
+        replay.Apply(new TimedButtonEdge(1125, true)),
+        "second press survives in the same slow rendered frame"
+    );
+    Equal(0L, replay.PendingToggleTimestamp,
+          "second press cancels the first release timer");
+    replay.Apply(new TimedButtonEdge(1175, false));
+    Equal(
+        SlowMotionReplayCommand.None,
+        replay.ConsumeToggleAt(1424),
+        "second release does not toggle early"
+    );
+    Equal(
+        SlowMotionReplayCommand.ToggleTimeScale,
+        replay.ConsumeToggleAt(1425),
+        "second release toggles after exactly a quarter second"
+    );
     Pass();
   }
 
@@ -503,6 +556,17 @@ internal static class Program {
 
   private static void Equal(
       PoseBracketStatus expected, PoseBracketStatus actual, string message
+  ) {
+    if (expected != actual)
+      throw new Exception(
+          "Assertion failed: " + message + ". Expected " + expected +
+          ", got " + actual + "."
+      );
+  }
+
+  private static void Equal(
+      SlowMotionReplayCommand expected, SlowMotionReplayCommand actual,
+      string message
   ) {
     if (expected != actual)
       throw new Exception(

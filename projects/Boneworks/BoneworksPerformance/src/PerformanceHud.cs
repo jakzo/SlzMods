@@ -9,7 +9,7 @@ namespace Sst.BoneworksPerformance;
 
 internal sealed class PerformanceHud {
   private const string ObjectName = "BoneworksPerformance stats HUD";
-  private const float UpdateFrequencySeconds = 0.25f;
+  private const float UpdateFrequencySeconds = 0.05f;
 
   private readonly bool _enabled;
   private readonly RateTimer _updateTimer = new RateTimer();
@@ -35,7 +35,7 @@ internal sealed class PerformanceHud {
       _fixedTimer.Add(Time.realtimeSinceStartup);
   }
 
-  public void OnUpdate() {
+  public void OnUpdate(bool jumpDetected, float inputTicksBehind) {
     if (!_enabled)
       return;
     var now = Time.realtimeSinceStartup;
@@ -51,7 +51,13 @@ internal sealed class PerformanceHud {
         "FPS: " + _updateTimer.GetRate(now).ToString("N1") +
         "\nFixed: " + _fixedTimer.GetRate(now).ToString("N1") +
         "\nVR client: " + ReadClientPoseRate() +
-        "\nDisplay: " + ReadDisplayRate()
+        "\nDisplay: " + ReadDisplayRate() +
+        "\nJump detected: " + (jumpDetected
+            ? "<color=#55ff55>YES</color>"
+            : "<color=#ff7777>NO</color>") +
+        "\nInput behind: " + (inputTicksBehind < 0f
+            ? "--"
+            : inputTicksBehind.ToString("N1") + " ticks")
     );
   }
 
@@ -74,7 +80,7 @@ internal sealed class PerformanceHud {
       _text = gameObject.AddComponent<TextMeshPro>();
     _text.alignment = TextAlignmentOptions.BottomRight;
     _text.fontSize = 0.35f;
-    _text.rectTransform.sizeDelta = new Vector2(0.9f, 0.72f);
+    _text.rectTransform.sizeDelta = new Vector2(0.9f, 1.08f);
     _text.transform.SetParent(controller.transform, false);
     _text.rectTransform.localPosition = new Vector3(-0.36f, 0.3f, 0.03f);
     _text.rectTransform.localRotation = Quaternion.Euler(46f, 356f, 3f);

@@ -77,6 +77,10 @@ internal sealed class SuperJumpDiagnostics {
     public bool FixedButtonHeld;
     public bool JumpReleaseDelivered;
     public long JumpReleaseTimestamp;
+    public int SlowMotionPressesDelivered;
+    public int SlowMotionReleasesDelivered;
+    public bool SlowMotionToggleDelivered;
+    public long PendingSlowMotionToggleTimestamp;
     public bool ChargeInput;
     public bool Jumping;
     public int JumpStage;
@@ -202,7 +206,9 @@ internal sealed class SuperJumpDiagnostics {
       TrackedPoseValue historicalHead, Vector3 appliedHead,
       TrackedPoseValue latestHead, float timeScale,
       bool fixedButtonHeld, bool jumpReleaseDelivered,
-      long jumpReleaseTimestamp
+      long jumpReleaseTimestamp, int slowMotionPressesDelivered,
+      int slowMotionReleasesDelivered, bool slowMotionToggleDelivered,
+      long pendingSlowMotionToggleTimestamp
   ) {
     if (!_recording || !rig)
       return;
@@ -234,6 +240,10 @@ internal sealed class SuperJumpDiagnostics {
       FixedButtonHeld = fixedButtonHeld,
       JumpReleaseDelivered = jumpReleaseDelivered,
       JumpReleaseTimestamp = jumpReleaseTimestamp,
+      SlowMotionPressesDelivered = slowMotionPressesDelivered,
+      SlowMotionReleasesDelivered = slowMotionReleasesDelivered,
+      SlowMotionToggleDelivered = slowMotionToggleDelivered,
+      PendingSlowMotionToggleTimestamp = pendingSlowMotionToggleTimestamp,
       ChargeInput = rig._chargeInput,
       Jumping = rig._jumping,
       JumpStage = rig._jumpStage,
@@ -348,7 +358,9 @@ internal sealed class SuperJumpDiagnostics {
         "applied_head_y,latest_head_y,hmd_world_y,physics_head_y,pelvis_y," +
         "feet_y,pelvis_velocity_y,live_button_held,fixed_button_held," +
         "jump_release_delivered,jump_release_us,charge_input,jumping," +
-        "jump_stage,jump_charge,feet_offset"
+        "jump_stage,jump_charge,feet_offset,slowmo_presses_delivered," +
+        "slowmo_releases_delivered,slowmo_toggle_delivered," +
+        "pending_slowmo_toggle_us"
     );
     foreach (var attempt in _completed)
       foreach (var row in attempt.Fixed)
@@ -382,7 +394,8 @@ internal sealed class SuperJumpDiagnostics {
         "player_pelvis_rise_m,release_to_head_apex_ms," +
         "expected_pose_aligned_tick_us,expected_simulation_tick_us," +
         "actual_jump_pose_tick_us,actual_jump_simulation_tick_us," +
-        "pose_aligned_error_ms,simulation_error_ms"
+        "pose_aligned_error_ms,simulation_error_ms,min_time_scale," +
+        "slowmo_presses_delivered,max_pose_backlog_ms"
     );
     foreach (var attempt in _completed)
       WriteSummary(writer, attempt);
@@ -394,13 +407,16 @@ internal sealed class SuperJumpDiagnostics {
     html.Append("<style>body{font:14px system-ui;background:#111;color:#ddd;margin:24px}a{color:#8cf}table{border-collapse:collapse;margin:12px 0 28px}th,td{padding:6px 9px;border:1px solid #444;text-align:right}th:first-child,td:first-child{text-align:left}h2{margin-top:32px}.bad{color:#ff8a8a}.good{color:#91e6a7}svg{background:#181818;border:1px solid #444;max-width:1100px;width:100%;height:260px}.raw{stroke:#6cf}.applied{stroke:#fc6}.pelvis{stroke:#9e7}.release{stroke:#f66;stroke-dasharray:5 4}.axis{stroke:#555}.legend{color:#aaa}</style>");
     html.Append("<h1>BONEWORKS super-jump timing</h1><p>");
     html.Append("The blue line is the timestamped OpenVR head pose selected for each physics tick. Orange is the pose applied to BONEWORKS, and green is the pelvis. The red line is the hardware-timestamped A-button release. Times are also available in <a href=\"jumps.csv\">jumps.csv</a>, <a href=\"fixed-ticks.csv\">fixed-ticks.csv</a>, and <a href=\"rendered-frames.csv\">rendered-frames.csv</a>.</p>");
-    html.Append("<table><thead><tr><th>Jump</th><th>Scene</th><th>Head rise</th><th>Pelvis rise</th><th>Release to head apex</th><th>Game observed edge late</th><th>Pose-clock jump error</th></tr></thead><tbody>");
+    html.Append("<table><thead><tr><th>Jump</th><th>Scene</th><th>Head rise</th><th>Pelvis rise</th><th>Minimum time scale</th><th>Slow-mo presses</th><th>Max pose backlog</th><th>Release to head apex</th><th>Game observed edge late</th><th>Pose-clock jump error</th></tr></thead><tbody>");
     foreach (var attempt in _completed) {
       var summary = Summarize(attempt);
       html.Append("<tr><td>").Append(attempt.Id).Append("</td><td>")
           .Append(Escape(attempt.Scene)).Append("</td><td>")
           .Append(F(summary.HeadRise)).Append(" m</td><td>")
           .Append(F(summary.PelvisRise)).Append(" m</td><td>")
+          .Append(F(summary.MinimumTimeScale)).Append("</td><td>")
+          .Append(summary.SlowMotionPressesDelivered).Append("</td><td>")
+          .Append(F(summary.MaximumPoseBacklogMs)).Append(" ms</td><td>")
           .Append(F(summary.ReleaseToApexMs)).Append(" ms</td><td>")
           .Append(F(summary.ObservationLatencyMs)).Append(" ms</td><td>")
           .Append(F(summary.PoseAlignedErrorMs)).Append(" ms</td></tr>");
@@ -475,18 +491,33 @@ internal sealed class SuperJumpDiagnostics {
     public long ExpectedSimulationTick;
     public double PoseAlignedErrorMs;
     public double SimulationErrorMs;
+    public float MinimumTimeScale;
+    public int SlowMotionPressesDelivered;
+    public double MaximumPoseBacklogMs;
   }
 
   private static Summary Summarize(Attempt attempt) {
-    var rows = RelevantFixedRows(attempt)
-        .Where(row => row.PoseAvailable).ToArray();
+    var allRows = RelevantFixedRows(attempt).ToArray();
+    var rows = allRows.Where(row => row.PoseAvailable).ToArray();
+    var backlogRows = allRows.Where(row =>
+        row.PoseTargetTimestamp != 0
+    ).ToArray();
     var releaseTimestamp = ReleaseTimestamp(attempt);
+    var pressTimestamp = PressTimestamp(attempt);
     var headRows = rows.Where(row => Finite(row.HistoricalHeadY)).ToArray();
+    var apexRows = headRows.Where(row =>
+        pressTimestamp == 0 || row.PoseTargetTimestamp >= pressTimestamp
+    ).ToArray();
     var pelvisRows = rows.Where(row => Finite(row.PelvisY)).ToArray();
-    var headMinimum = headRows.Length == 0 ? float.NaN :
-        headRows.Min(row => row.HistoricalHeadY);
-    var apex = headRows.Length == 0 ? new FixedRow() :
-        headRows.OrderByDescending(row => row.HistoricalHeadY).First();
+    var apex = apexRows.Length == 0 ? new FixedRow() :
+        apexRows.OrderByDescending(row => row.HistoricalHeadY).First();
+    var headBaselineRows = apexRows.Length == 0
+        ? new FixedRow[0]
+        : headRows.Where(row =>
+            row.PoseTargetTimestamp <= apex.PoseTargetTimestamp
+        ).ToArray();
+    var headMinimum = headBaselineRows.Length == 0 ? float.NaN :
+        headBaselineRows.Min(row => row.HistoricalHeadY);
     var pelvisBaselineRows = pelvisRows
         .Where(row => releaseTimestamp == 0 ||
                       row.PoseTargetTimestamp <=
@@ -510,11 +541,11 @@ internal sealed class SuperJumpDiagnostics {
               attempt.ReleaseObservedTimestamp -
               attempt.ReleaseHardwareTimestamp
           ),
-      HeadRise = headRows.Length == 0 ? float.NaN :
+      HeadRise = apexRows.Length == 0 ? float.NaN :
           apex.HistoricalHeadY - headMinimum,
       PelvisRise = pelvisRows.Length == 0 ? float.NaN :
           pelvisRows.Max(row => row.PelvisY) - pelvisBaseline,
-      ReleaseToApexMs = headRows.Length == 0 ? double.NaN :
+      ReleaseToApexMs = apexRows.Length == 0 ? double.NaN :
           Milliseconds(apex.PoseTargetTimestamp -
                        releaseTimestamp),
       ExpectedPoseTick = expectedPose,
@@ -527,6 +558,15 @@ internal sealed class SuperJumpDiagnostics {
           !attempt.ActualJumpTickFound ? double.NaN : Milliseconds(
               attempt.ActualJumpSimulationTimestamp - expectedSimulation
           ),
+      MinimumTimeScale = allRows.Length == 0 ? float.NaN :
+          allRows.Min(row => row.TimeScale),
+      SlowMotionPressesDelivered = allRows.Sum(
+          row => row.SlowMotionPressesDelivered
+      ),
+      MaximumPoseBacklogMs = backlogRows.Length == 0 ? double.NaN :
+          backlogRows.Max(row => Milliseconds(
+              row.ObservedTimestamp - row.PoseTargetTimestamp
+          )),
     };
   }
 
@@ -534,6 +574,11 @@ internal sealed class SuperJumpDiagnostics {
       attempt.ReleaseHardwareTimestamp != 0
           ? attempt.ReleaseHardwareTimestamp
           : attempt.ReleaseObservedTimestamp;
+
+  private static long PressTimestamp(Attempt attempt) =>
+      attempt.PressHardwareTimestamp != 0
+          ? attempt.PressHardwareTimestamp
+          : attempt.PressObservedTimestamp;
 
   private static IEnumerable<FixedRow> RelevantFixedRows(Attempt attempt) {
     if (attempt.PressObservedTimestamp == 0)
@@ -574,6 +619,9 @@ internal sealed class SuperJumpDiagnostics {
     WriteTimestamp(writer, attempt.ActualJumpSimulationTimestamp);
     Number(writer, summary.PoseAlignedErrorMs);
     Number(writer, summary.SimulationErrorMs);
+    Number(writer, summary.MinimumTimeScale);
+    writer.Write(','); writer.Write(summary.SlowMotionPressesDelivered);
+    Number(writer, summary.MaximumPoseBacklogMs);
     writer.WriteLine();
   }
 
@@ -597,6 +645,10 @@ internal sealed class SuperJumpDiagnostics {
     writer.Write(','); writer.Write(row.Jumping ? 1 : 0);
     writer.Write(','); writer.Write(row.JumpStage);
     Number(writer, row.JumpCharge); Number(writer, row.FeetOffset);
+    writer.Write(','); writer.Write(row.SlowMotionPressesDelivered);
+    writer.Write(','); writer.Write(row.SlowMotionReleasesDelivered);
+    writer.Write(','); writer.Write(row.SlowMotionToggleDelivered ? 1 : 0);
+    WriteTimestamp(writer, row.PendingSlowMotionToggleTimestamp);
     writer.WriteLine();
   }
 

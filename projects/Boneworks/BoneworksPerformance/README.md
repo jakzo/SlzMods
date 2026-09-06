@@ -25,8 +25,10 @@ behavior is included in BoneworksPerformance.
 
 The mod records OpenVR poses on a background thread. Each physics tick receives
 the HMD position that belongs to that point in time, interpolated from the
-recorded history. Jump-button edges use that same clock. Hand position and
-rotation, HMD rotation, triggers, thumbsticks, and all other buttons remain live.
+recorded history. Jump-button edges and slow-motion clicks use that same clock.
+The background sampler preserves both clicks of a fast slow-motion double-click
+even when no rendered frame occurs between them. Hand position and rotation,
+HMD rotation, triggers, thumbsticks, and other buttons remain live.
 
 In the original game multiple physics ticks would be processed one after another
 in quick succession during dropped frames before rendering and would use the
@@ -80,20 +82,23 @@ display frequency.
 
 Settings are in the `BoneworksPerformance` section of
 `UserData/MelonPreferences.cfg`. You can also change them with an
-IL2CPP-compatible MelonPreferences manager. Restart BONEWORKS after changing
-them.
+IL2CPP-compatible MelonPreferences manager. Release settings changed through
+a preferences manager apply on the next game update. Editing the file directly
+still requires MelonLoader to reload it.
 
 | Setting                             | Default | Effect                                                                                                   |
 | ----------------------------------- | ------: | -------------------------------------------------------------------------------------------------------- |
-| `SmoothTrackingDuringFrameDrops`    |  `true` | Uses one timestamped physics clock for HMD position and the jump button.                                 |
+| `SmoothTrackingDuringFrameDrops`    |  `true` | Uses one timestamped physics clock for HMD position, jump, and slow-motion clicks.                       |
 | `TrackingSamplesPerSecond`          |   `250` | Background tracking rate. Values are clamped to 90 through 1000 Hz. Higher values use slightly more CPU. |
-| `TrackingSmoothingDelay`            |     `1` | HMD-position and jump-button delay measured in physics ticks.                                            |
+| `TrackingSmoothingDelay`            |     `1` | HMD, jump, and slow-motion input delay measured in physics ticks.                                        |
 | `TrackingCatchUpSpeed`              |     `2` | Catch-up clock speed after lag; 2 means twice normal speed.                                              |
+| `TrackingCatchUpHistorySeconds`     |     `1` | Maximum input-history age during protected jump catch-up; it adds no normal-play delay.                   |
 | `ProtectSuperJumpsDuringFrameDrops` |  `true` | Prevents positive tracking-clock correction while the headset is rising quickly.                         |
 | `JumpDetectionSpeed`                |   `0.5` | Upward headset speed in metres per second that activates jump protection.                                |
 | `JumpDetectionTime`                 |   `0.1` | Seconds of tracking history used to measure upward speed.                                                |
-| `ShowPerformanceStats`              | `false` | Shows the performance display above the left hand.                                                       |
+| `ShowPerformanceStats`              | `false` | Shows rates, jump detection, and input-history delay in physics ticks above the left hand.                |
 | `UsePhysicsRateMenu`                |  `true` | Uses the physics rate selected in BONEWORKS instead of the headset frequency.                            |
+| `CustomPhysicsTickRate`             |     `0` | Positive values force that rate; 0 lets `UsePhysicsRateMenu` select menu or normal headset-rate behavior.  |
 | `KeepSlottedWeaponsWithPhysics`     |  `true` | Keeps body-slot weapons at the current physics-chest pose during multi-tick rendered frames.             |
 
 ## Troubleshooting

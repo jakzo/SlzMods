@@ -1,5 +1,20 @@
 ## Unreleased
 
+- Apply every Release preference while the game is running. Physics-rate
+  changes take effect before the left-hand display updates, while tracking
+  changes restart only the background pose sampler.
+- Show how many physics ticks behind real time the replayed input is in the
+  optional left-hand performance display.
+- Default protected jump catch-up to at most one second of timestamped input
+  history.
+- Stop updating SteamVR action state from the background pose thread. SteamVR
+  input now remains on Unity's thread to avoid native heap corruption during
+  startup.
+- Show whether rising-head jump protection is active in the optional left-hand
+  performance display.
+- Add an optional custom physics tick rate. Zero follows the rate selected in
+  the BONEWORKS menu when `UsePhysicsRateMenu` is enabled, while a positive
+  value forces that rate.
 - Preserve the game's separate back-slot and open-inventory weapon rotations.
   Inventory transitions now discard any temporary fixed-tick pose, and chest
   catch-up pauses while the receiver is in UI mode.

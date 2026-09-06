@@ -17,16 +17,49 @@ public class Mod : MelonMod {
   private MelonPreferences_Entry<int> _poseHistorySampleRate;
   private MelonPreferences_Entry<int> _poseHistoryInterpolationDelayTicks;
   private MelonPreferences_Entry<float> _poseHistoryCatchUpSpeed;
+  private MelonPreferences_Entry<float> _poseHistoryCatchUpHistorySeconds;
   private MelonPreferences_Entry<bool> _protectRisingHeadFromPoseCatchUp;
   private MelonPreferences_Entry<float> _jumpRiseSpeedThreshold;
   private MelonPreferences_Entry<float> _jumpRiseDetectionWindowSeconds;
   private MelonPreferences_Entry<bool> _showPerformanceHud;
   private MelonPreferences_Entry<bool> _usePhysicsRateMenu;
+  private MelonPreferences_Entry<int> _customPhysicsTickRate;
   private MelonPreferences_Entry<bool> _keepSlottedWeaponsWithPhysics;
   private FixedUpdatePoseHistory _fixedUpdatePoseHistory;
   private PerformanceHud _performanceHud;
   private PhysicsRateMenu _physicsRateMenu;
+  private RuntimeSettings _runtimeSettings;
+  private bool _hasRuntimeSettings;
   internal SlottedWeaponFixedCatchUp SlottedWeaponCatchUp { get; private set; }
+
+  private struct RuntimeSettings {
+    public bool SmoothTracking;
+    public int SampleRate;
+    public int DelayTicks;
+    public float CatchUpSpeed;
+    public float CatchUpHistorySeconds;
+    public bool ProtectRisingHead;
+    public float JumpSpeedThreshold;
+    public float JumpDetectionSeconds;
+    public bool ShowHud;
+    public bool UsePhysicsRateMenu;
+    public int CustomPhysicsRate;
+    public bool KeepSlottedWeaponsWithPhysics;
+
+    public bool SamePoseSettings(RuntimeSettings other) =>
+        SmoothTracking == other.SmoothTracking &&
+        SampleRate == other.SampleRate &&
+        DelayTicks == other.DelayTicks &&
+        CatchUpSpeed == other.CatchUpSpeed &&
+        CatchUpHistorySeconds == other.CatchUpHistorySeconds &&
+        ProtectRisingHead == other.ProtectRisingHead &&
+        JumpSpeedThreshold == other.JumpSpeedThreshold &&
+        JumpDetectionSeconds == other.JumpDetectionSeconds;
+
+    public bool SamePhysicsSettings(RuntimeSettings other) =>
+        UsePhysicsRateMenu == other.UsePhysicsRateMenu &&
+        CustomPhysicsRate == other.CustomPhysicsRate;
+  }
 
 #if DEBUG
   private PerformanceCapture _capture;
@@ -124,9 +157,9 @@ public class Mod : MelonMod {
     _enableFixedUpdatePoseHistory = preferences.CreateEntry(
         "SmoothTrackingDuringFrameDrops", true,
         "Smooth tracking when frames drop",
-        "Keeps HMD position and the jump button on the same timestamped " +
-        "physics clock when Boneworks stutters. Hand tracking, HMD rotation, " +
-        "analog input, and every other button remain live and unchanged."
+        "Keeps HMD position, the jump button, and slow-motion clicks on the " +
+        "same timestamped physics clock when Boneworks stutters. Hand " +
+        "tracking, HMD rotation, analog input, and other buttons remain live."
     );
     _poseHistorySampleRate = preferences.CreateEntry(
         "TrackingSamplesPerSecond", 250,
@@ -140,7 +173,7 @@ public class Mod : MelonMod {
         "Tracking smoothing delay",
         "Gives the mod enough tracking history to keep movement smooth during " +
         "uneven frames. Each step adds one physics tick of delay to HMD " +
-        "position and jump-button timing. One tick normally gives pose " +
+        "position, jump timing, and slow-motion timing. One tick gives pose " +
         "samples on both sides of the requested time."
     );
     _poseHistoryCatchUpSpeed = preferences.CreateEntry(
@@ -149,6 +182,13 @@ public class Mod : MelonMod {
         "Controls how quickly timestamped head position catches up after a " +
         "slow frame. Two advances the tracking clock at twice normal speed " +
         "until it reaches the current timeline. The allowed range is 1 to 8."
+    );
+    _poseHistoryCatchUpHistorySeconds = preferences.CreateEntry(
+        "TrackingCatchUpHistorySeconds", 1f,
+        "Input history available for catch-up",
+        "Maximum age, in seconds, of timestamped input that can be replayed " +
+        "while jump protection has delayed catch-up. This does not add input " +
+        "latency during normal play."
     );
     _protectRisingHeadFromPoseCatchUp = preferences.CreateEntry(
         "ProtectSuperJumpsDuringFrameDrops", true,
@@ -188,7 +228,17 @@ public class Mod : MelonMod {
         "Time.fixedDeltaTime. Disable this to restore original Boneworks " +
         "behavior."
     );
-    _physicsRateMenu = new PhysicsRateMenu(_usePhysicsRateMenu.Value);
+    _customPhysicsTickRate = preferences.CreateEntry(
+        "CustomPhysicsTickRate", 0,
+        "Custom physics tick rate (0 = use physics-rate option)",
+        "A positive number forces that physics tick rate. Zero disables the " +
+        "custom override, so UsePhysicsRateMenu decides whether to use the " +
+        "rate selected in the Boneworks menu or normal headset-rate behavior."
+    );
+    _physicsRateMenu = new PhysicsRateMenu(
+        _usePhysicsRateMenu.Value,
+        _customPhysicsTickRate.Value
+    );
     _physicsRateMenu.Initialize();
     _keepSlottedWeaponsWithPhysics = preferences.CreateEntry(
         "KeepSlottedWeaponsWithPhysics", true,
@@ -203,6 +253,7 @@ public class Mod : MelonMod {
         _poseHistorySampleRate.Value,
         _poseHistoryInterpolationDelayTicks.Value,
         _poseHistoryCatchUpSpeed.Value,
+        _poseHistoryCatchUpHistorySeconds.Value,
         _protectRisingHeadFromPoseCatchUp.Value,
         _jumpRiseSpeedThreshold.Value,
         _jumpRiseDetectionWindowSeconds.Value
@@ -408,10 +459,84 @@ public class Mod : MelonMod {
     SlottedWeaponCatchUp = new SlottedWeaponFixedCatchUp(
         _keepSlottedWeaponsWithPhysics.Value, suppressSlotCatchUp
     );
+    _runtimeSettings = ReadRuntimeSettings();
+    _hasRuntimeSettings = true;
+  }
+
+  private RuntimeSettings ReadRuntimeSettings() => new RuntimeSettings {
+    SmoothTracking = _enableFixedUpdatePoseHistory.Value,
+    SampleRate = _poseHistorySampleRate.Value,
+    DelayTicks = _poseHistoryInterpolationDelayTicks.Value,
+    CatchUpSpeed = _poseHistoryCatchUpSpeed.Value,
+    CatchUpHistorySeconds = _poseHistoryCatchUpHistorySeconds.Value,
+    ProtectRisingHead = _protectRisingHeadFromPoseCatchUp.Value,
+    JumpSpeedThreshold = _jumpRiseSpeedThreshold.Value,
+    JumpDetectionSeconds = _jumpRiseDetectionWindowSeconds.Value,
+    ShowHud = _showPerformanceHud.Value,
+    UsePhysicsRateMenu = _usePhysicsRateMenu.Value,
+    CustomPhysicsRate = _customPhysicsTickRate.Value,
+    KeepSlottedWeaponsWithPhysics =
+        _keepSlottedWeaponsWithPhysics.Value,
+  };
+
+  private void ApplyRuntimePreferenceChanges() {
+    var next = ReadRuntimeSettings();
+    if (!_hasRuntimeSettings) {
+      _runtimeSettings = next;
+      _hasRuntimeSettings = true;
+      return;
+    }
+    if (!next.SamePhysicsSettings(_runtimeSettings)) {
+      _physicsRateMenu?.Shutdown();
+      _physicsRateMenu = new PhysicsRateMenu(
+          next.UsePhysicsRateMenu, next.CustomPhysicsRate
+      );
+      _physicsRateMenu.Initialize();
+    }
+    if (!next.SamePoseSettings(_runtimeSettings)) {
+      _fixedUpdatePoseHistory?.Shutdown();
+      _fixedUpdatePoseHistory = new FixedUpdatePoseHistory(
+          next.SmoothTracking, next.SampleRate, next.DelayTicks,
+          next.CatchUpSpeed, next.CatchUpHistorySeconds,
+          next.ProtectRisingHead, next.JumpSpeedThreshold,
+          next.JumpDetectionSeconds
+      );
+#if DEBUG
+      if (_poseSmoothnessTest != null)
+        _fixedUpdatePoseHistory.SetSmoothnessTest(_poseSmoothnessTest);
+      if (_superJumpDiagnostics != null)
+        _fixedUpdatePoseHistory.SetSuperJumpDiagnostics(
+            _superJumpDiagnostics
+        );
+#endif
+    }
+    if (next.ShowHud != _runtimeSettings.ShowHud) {
+      _performanceHud?.Shutdown();
+      _performanceHud = new PerformanceHud(next.ShowHud);
+    }
+    if (next.KeepSlottedWeaponsWithPhysics !=
+        _runtimeSettings.KeepSlottedWeaponsWithPhysics) {
+      SlottedWeaponCatchUp?.Shutdown();
+      SlottedWeaponCatchUp = new SlottedWeaponFixedCatchUp(
+          next.KeepSlottedWeaponsWithPhysics,
+          ShouldSuppressSlottedWeaponCatchUp()
+      );
+      SlottedWeaponCatchUp.ResetScene();
+    }
+    _runtimeSettings = next;
+  }
+
+  private bool ShouldSuppressSlottedWeaponCatchUp() {
+#if DEBUG
+    return _forceGunflyCatchUpSequence;
+#else
+    return false;
+#endif
   }
 
 #if DEBUG
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
+    ApplyRuntimePreferenceChanges();
     _performanceHud?.ResetScene();
     _physicsRateMenu?.ResetScene();
     _rightController = null;
@@ -457,12 +582,17 @@ public class Mod : MelonMod {
   }
 
   public override void OnUpdate() {
+    ApplyRuntimePreferenceChanges();
+    _physicsRateMenu?.OnLateUpdate();
     var started = Stopwatch.GetTimestamp();
     var wasCapturing = _capture.IsActive;
     try {
       _fixedUpdatePoseHistory?.ObserveRenderedFrame();
       _superJumpDiagnostics?.ObserveRenderedFrame();
-      _performanceHud?.OnUpdate();
+      _performanceHud?.OnUpdate(
+          _fixedUpdatePoseHistory?.IsJumpDetected ?? false,
+          _fixedUpdatePoseHistory?.InputTicksBehindCurrent ?? -1f
+      );
       SlottedWeaponCatchUp?.OnUpdate();
       HandlePoseSmoothnessTest();
       _optimizations.MaintainFrameQueueDepth();
@@ -923,6 +1053,7 @@ public class Mod : MelonMod {
 
 #if !DEBUG
   public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
+    ApplyRuntimePreferenceChanges();
     _fixedUpdatePoseHistory?.ResetScene();
     _performanceHud?.ResetScene();
     _physicsRateMenu?.ResetScene();
@@ -934,8 +1065,13 @@ public class Mod : MelonMod {
   }
 
   public override void OnUpdate() {
+    ApplyRuntimePreferenceChanges();
+    _physicsRateMenu?.OnLateUpdate();
     _fixedUpdatePoseHistory?.ObserveRenderedFrame();
-    _performanceHud?.OnUpdate();
+    _performanceHud?.OnUpdate(
+        _fixedUpdatePoseHistory?.IsJumpDetected ?? false,
+        _fixedUpdatePoseHistory?.InputTicksBehindCurrent ?? -1f
+    );
     SlottedWeaponCatchUp?.OnUpdate();
   }
 
@@ -948,6 +1084,7 @@ public class Mod : MelonMod {
 #endif
 
   public override void OnLateUpdate() {
+    ApplyRuntimePreferenceChanges();
     _physicsRateMenu?.OnLateUpdate();
   }
 

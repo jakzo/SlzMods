@@ -95,6 +95,43 @@ internal static class TimedButtonMath {
   }
 }
 
+internal enum SlowMotionReplayCommand {
+  None,
+  DecreaseTimeScale,
+  ToggleTimeScale,
+}
+
+internal sealed class SlowMotionReplayState {
+  private readonly long _toggleDelayTicks;
+
+  public long PendingToggleTimestamp { get; private set; }
+
+  public SlowMotionReplayState(long stopwatchFrequency) {
+    if (stopwatchFrequency <= 0)
+      throw new ArgumentOutOfRangeException(nameof(stopwatchFrequency));
+    _toggleDelayTicks = stopwatchFrequency / 4;
+  }
+
+  public void Reset() => PendingToggleTimestamp = 0;
+
+  public SlowMotionReplayCommand Apply(TimedButtonEdge edge) {
+    if (edge.Pressed) {
+      PendingToggleTimestamp = 0;
+      return SlowMotionReplayCommand.DecreaseTimeScale;
+    }
+    PendingToggleTimestamp = edge.Timestamp + _toggleDelayTicks;
+    return SlowMotionReplayCommand.None;
+  }
+
+  public SlowMotionReplayCommand ConsumeToggleAt(long timestamp) {
+    if (PendingToggleTimestamp == 0 ||
+        PendingToggleTimestamp > timestamp)
+      return SlowMotionReplayCommand.None;
+    PendingToggleTimestamp = 0;
+    return SlowMotionReplayCommand.ToggleTimeScale;
+  }
+}
+
 #if DEBUG
 internal struct ResampledFixedPoseObservation {
   public int UnityFrame;
@@ -260,6 +297,8 @@ internal sealed class PoseHistoryBuffer {
     var sequence = Interlocked.Increment(ref _nextSequence) - 1;
     sample.Sequence = sequence;
     var index = (int)(sequence % _items.Length);
+    Volatile.Write(ref _publishedSequences[index], -1);
+    Thread.MemoryBarrier();
     _items[index] = sample;
     Thread.MemoryBarrier();
     Volatile.Write(ref _publishedSequences[index], sequence);

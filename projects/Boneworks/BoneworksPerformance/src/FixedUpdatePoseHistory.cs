@@ -69,6 +69,7 @@ internal sealed class FixedUpdatePoseHistory {
   private readonly bool _protectRisingHeadFromCatchUp;
   private readonly float _jumpRiseSpeedThreshold;
   private readonly long _jumpRiseWindowTicks;
+  private readonly long _maximumCatchUpHistoryTicks;
   private readonly PoseHistoryBuffer _history =
       new PoseHistoryBuffer(HistoryCapacity);
   private readonly FixedTimeMapper _timeMapper = new FixedTimeMapper();
@@ -107,6 +108,16 @@ internal sealed class FixedUpdatePoseHistory {
   private bool _jumpButtonLiveState;
   private long _pendingJumpReleaseTimestamp;
   private bool _deliveringQueuedJump;
+  private readonly object _slowMotionEdgeLock = new object();
+  private readonly List<TimedButtonEdge> _slowMotionEdges =
+      new List<TimedButtonEdge>(16);
+  private bool _liveSlowMotionObserved;
+  private bool _liveSlowMotionState;
+  private bool _deliveredSlowMotionState;
+  private long _lastDeliveredSlowMotionTimestamp;
+  private readonly SlowMotionReplayState _slowMotionReplay =
+      new SlowMotionReplayState(Stopwatch.Frequency);
+  private bool _suppressLiveSlowMotion;
   private SteamControllerRig _currentSteamRig;
   private CurrentFixedPose _current;
 
@@ -140,13 +151,17 @@ internal sealed class FixedUpdatePoseHistory {
     public bool FixedJumpButtonHeld;
     public bool JumpReleaseDelivered;
     public long JumpReleaseTimestamp;
+    public int SlowMotionPressesDelivered;
+    public int SlowMotionReleasesDelivered;
+    public bool SlowMotionToggleDelivered;
+    public long PendingSlowMotionToggleTimestamp;
     public Vector3 HeadPosition;
     public Quaternion HeadRotation;
   }
 
   public FixedUpdatePoseHistory(
       bool enabled, int sampleRate, int delayTicks,
-      float catchUpSpeed,
+      float catchUpSpeed, float catchUpHistorySeconds,
       bool protectRisingHeadFromCatchUp, float jumpRiseSpeedThreshold,
       float jumpRiseDetectionWindowSeconds
   ) {
@@ -161,8 +176,32 @@ internal sealed class FixedUpdatePoseHistory {
         Math.Max(0.02f, Math.Min(0.5f, jumpRiseDetectionWindowSeconds)) *
         Stopwatch.Frequency
     );
+    _maximumCatchUpHistoryTicks = (long)Math.Round(
+        Math.Max(0.1f, Math.Min(5f, catchUpHistorySeconds)) *
+        Stopwatch.Frequency
+    );
     _tickTimeline = new FixedTickTimeline(_timeMapper, catchUpSpeed);
     _instance = this;
+  }
+
+  public bool IsJumpDetected =>
+      _enabled && _running && _current.JumpProtectionActive;
+
+  public float InputTicksBehindCurrent {
+    get {
+      if (!_enabled || !_running || !_current.Attempted ||
+          _current.TargetTimestamp == 0 ||
+          _current.FixedDeltaTime <= 0f || _current.TimeScale <= 0.000001f)
+        return -1f;
+      var interval = _current.FixedDeltaTime / _current.TimeScale *
+                     Stopwatch.Frequency;
+      if (interval <= 0.0)
+        return -1f;
+      var age = Math.Max(
+          0L, Stopwatch.GetTimestamp() - _current.TargetTimestamp
+      );
+      return (float)(age / interval);
+    }
   }
 
 #if DEBUG
@@ -218,6 +257,14 @@ internal sealed class FixedUpdatePoseHistory {
     _jumpButtonLiveState = false;
     _pendingJumpReleaseTimestamp = 0;
     _deliveringQueuedJump = false;
+    lock (_slowMotionEdgeLock)
+      _slowMotionEdges.Clear();
+    _liveSlowMotionObserved = false;
+    _liveSlowMotionState = false;
+    _deliveredSlowMotionState = false;
+    _lastDeliveredSlowMotionTimestamp = 0;
+    _slowMotionReplay.Reset();
+    _suppressLiveSlowMotion = false;
     _currentSteamRig = null;
     _tickTimeline.Reset();
   }
@@ -488,7 +535,7 @@ internal sealed class FixedUpdatePoseHistory {
     var maximumHistoryAgeTicks = extendedHistoryAge
         ? Math.Max(
             normalMaximumHistoryAgeTicks,
-            fixedIntervalTicks * _delayTicks + Stopwatch.Frequency * 2
+            fixedIntervalTicks * _delayTicks + _maximumCatchUpHistoryTicks
         )
         : normalMaximumHistoryAgeTicks;
     var targetAgeTicks = Math.Max(0, now - targetTimestamp);
@@ -610,6 +657,148 @@ internal sealed class FixedUpdatePoseHistory {
     _jumpButtonLiveState = held;
     AddJumpButtonEdge(timestamp, held);
   }
+
+  private void BeginControllerEarlyUpdate(ControllerRig rig) {
+    _suppressLiveSlowMotion = false;
+    if (!_enabled || !rig)
+      return;
+    var controller = SlowMotionButtonTiming.Controller(rig);
+    if (!SlowMotionButtonTiming.IsSupported(controller))
+      return;
+    _suppressLiveSlowMotion = true;
+  }
+
+  private void EndControllerEarlyUpdate(ControllerRig rig) {
+    if (!_suppressLiveSlowMotion || !rig)
+      return;
+    ObserveLiveSlowMotionButton(rig);
+    rig._timeInput = false;
+    _suppressLiveSlowMotion = false;
+  }
+
+  private void ObserveLiveSlowMotionButton(ControllerRig rig) {
+    var controller = SlowMotionButtonTiming.Controller(rig);
+    if (!SlowMotionButtonTiming.IsSupported(controller))
+      return;
+    var pressed = SlowMotionButtonTiming.IsPressed(controller);
+    if (!_liveSlowMotionObserved) {
+      _liveSlowMotionObserved = true;
+      _liveSlowMotionState = pressed;
+    }
+    if (!SlowMotionButtonTiming.WasPressed(controller) &&
+        !SlowMotionButtonTiming.WasReleased(controller) &&
+        pressed == _liveSlowMotionState)
+      return;
+    var now = Stopwatch.GetTimestamp();
+    var action = SlowMotionButtonTiming.Action(controller);
+    var changedTime = action == null ? 0f : action.GetTimeLastChanged(
+        SlowMotionButtonTiming.Source(rig)
+    );
+    var timestamp = JumpButtonTiming.UnityRealtimeToStopwatch(
+        changedTime, Time.realtimeSinceStartup, now
+    );
+    _liveSlowMotionState = pressed;
+    AddSlowMotionEdge(timestamp, pressed);
+  }
+
+  private void AddSlowMotionEdge(long timestamp, bool pressed) {
+    lock (_slowMotionEdgeLock) {
+      if (timestamp <= _lastDeliveredSlowMotionTimestamp ||
+          _slowMotionEdges.Count == 0 &&
+          pressed == _deliveredSlowMotionState)
+        return;
+      var insertAt = _slowMotionEdges.Count;
+      for (var i = 0; i < _slowMotionEdges.Count; i++) {
+        var edge = _slowMotionEdges[i];
+        if (edge.Timestamp == timestamp && edge.Pressed == pressed)
+          return;
+        if (edge.Timestamp > timestamp) {
+          insertAt = i;
+          break;
+        }
+      }
+      _slowMotionEdges.Insert(
+          insertAt, new TimedButtonEdge(timestamp, pressed)
+      );
+      for (var i = _slowMotionEdges.Count - 1; i > 0; i--)
+        if (_slowMotionEdges[i].Pressed ==
+            _slowMotionEdges[i - 1].Pressed)
+          _slowMotionEdges.RemoveAt(i);
+      if (_slowMotionEdges.Count > 64)
+        _slowMotionEdges.RemoveRange(0, _slowMotionEdges.Count - 64);
+    }
+  }
+
+  private bool TryPeekSlowMotionEdge(out TimedButtonEdge edge) {
+    lock (_slowMotionEdgeLock) {
+      if (_slowMotionEdges.Count == 0) {
+        edge = new TimedButtonEdge();
+        return false;
+      }
+      edge = _slowMotionEdges[0];
+      return true;
+    }
+  }
+
+  private bool RemoveFirstSlowMotionEdge(TimedButtonEdge expected) {
+    lock (_slowMotionEdgeLock) {
+      if (_slowMotionEdges.Count == 0 ||
+          _slowMotionEdges[0].Timestamp != expected.Timestamp ||
+          _slowMotionEdges[0].Pressed != expected.Pressed)
+        return false;
+      _slowMotionEdges.RemoveAt(0);
+      _lastDeliveredSlowMotionTimestamp = expected.Timestamp;
+      _deliveredSlowMotionState = expected.Pressed;
+      return true;
+    }
+  }
+
+  private void DeliverSlowMotionEvents(ControllerRig rig) {
+    if (!_enabled || !_current.Attempted ||
+        _current.TargetTimestamp == 0 || !rig)
+      return;
+    var manager = rig.manager;
+    var health = manager && manager.playerHealth
+        ? manager.playerHealth
+        : null;
+    var globalTime = health ? health.globalTimeControl : null;
+    if (!globalTime)
+      return;
+    while (true) {
+      var hasEdge = TryPeekSlowMotionEdge(out var edge);
+      var edgeTimestamp = hasEdge ? edge.Timestamp : long.MaxValue;
+      var toggleTimestamp = _slowMotionReplay.PendingToggleTimestamp == 0
+          ? long.MaxValue
+          : _slowMotionReplay.PendingToggleTimestamp;
+      var nextTimestamp = Math.Min(edgeTimestamp, toggleTimestamp);
+      if (nextTimestamp > _current.TargetTimestamp)
+        break;
+      if (toggleTimestamp <= edgeTimestamp) {
+        if (_slowMotionReplay.ConsumeToggleAt(
+                _current.TargetTimestamp
+            ) == SlowMotionReplayCommand.ToggleTimeScale)
+          globalTime.TOGGLE_TIMESCALE();
+        _current.SlowMotionToggleDelivered = true;
+        continue;
+      }
+      if (!RemoveFirstSlowMotionEdge(edge))
+        continue;
+      var command = _slowMotionReplay.Apply(edge);
+      if (command == SlowMotionReplayCommand.DecreaseTimeScale) {
+        if (rig.slowMoEnabled)
+          globalTime.DECREASE_TIMESCALE();
+        _current.SlowMotionPressesDelivered++;
+      } else {
+        _current.SlowMotionReleasesDelivered++;
+      }
+    }
+    _current.PendingSlowMotionToggleTimestamp =
+        _slowMotionReplay.PendingToggleTimestamp;
+    rig._timeInput = false;
+  }
+
+  private bool ShouldSuppressLiveSlowMotion() =>
+      _enabled && _suppressLiveSlowMotion;
 
   private void AddJumpButtonEdge(long timestamp, bool pressed) {
     if (_jumpButtonEdges.Count > 0) {
@@ -756,7 +945,11 @@ internal sealed class FixedUpdatePoseHistory {
           _current.TargetTimestamp, _current.Available, _current.Head,
           _current.HeadPosition, latestHead, _current.TimeScale,
           _current.FixedJumpButtonHeld, _current.JumpReleaseDelivered,
-          _current.JumpReleaseTimestamp
+          _current.JumpReleaseTimestamp,
+          _current.SlowMotionPressesDelivered,
+          _current.SlowMotionReleasesDelivered,
+          _current.SlowMotionToggleDelivered,
+          _current.PendingSlowMotionToggleTimestamp
       );
     }
     if (_smoothnessTest != null && _smoothnessTest.IsActive) {
@@ -1119,6 +1312,7 @@ internal sealed class FixedUpdatePoseHistory {
       if (instance == null)
         return true;
       instance.PrepareFixedTick(__instance);
+      instance.DeliverSlowMotionEvents(__instance);
       instance.DeliverQueuedJump(__instance);
 #if DEBUG
       if (instance._smoothnessTest != null) {
@@ -1136,6 +1330,42 @@ internal sealed class FixedUpdatePoseHistory {
       if (!__state)
         _instance?.FinishFixedTick();
     }
+  }
+
+  [HarmonyPatch(typeof(ControllerRig), nameof(ControllerRig.OnEarlyUpdate))]
+  private static class ControllerRig_OnEarlyUpdate_Patch {
+    [HarmonyPrefix]
+    private static void Prefix(ControllerRig __instance) =>
+        _instance?.BeginControllerEarlyUpdate(__instance);
+
+    [HarmonyPostfix]
+    private static void Postfix(ControllerRig __instance) =>
+        _instance?.EndControllerEarlyUpdate(__instance);
+
+    [HarmonyFinalizer]
+    private static Exception Finalizer(Exception __exception) {
+      if (_instance != null)
+        _instance._suppressLiveSlowMotion = false;
+      return __exception;
+    }
+  }
+
+  [HarmonyPatch(
+      typeof(Control_GlobalTime), nameof(Control_GlobalTime.DECREASE_TIMESCALE)
+  )]
+  private static class ControlGlobalTime_DecreaseTimeScale_Patch {
+    [HarmonyPrefix]
+    private static bool Prefix() =>
+        _instance == null || !_instance.ShouldSuppressLiveSlowMotion();
+  }
+
+  [HarmonyPatch(
+      typeof(Control_GlobalTime), nameof(Control_GlobalTime.TOGGLE_TIMESCALE)
+  )]
+  private static class ControlGlobalTime_ToggleTimeScale_Patch {
+    [HarmonyPrefix]
+    private static bool Prefix() =>
+        _instance == null || !_instance.ShouldSuppressLiveSlowMotion();
   }
 
   [HarmonyPatch(typeof(SteamControllerRig), nameof(SteamControllerRig.OnEarlyUpdate))]

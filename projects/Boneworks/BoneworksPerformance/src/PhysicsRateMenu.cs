@@ -5,40 +5,50 @@ using Valve.VR;
 namespace Sst.BoneworksPerformance;
 
 internal sealed class PhysicsRateMenu {
-  private readonly bool _enabled;
+  private readonly bool _useMenuRate;
+  private readonly int _customRate;
   private SteamVR_Settings _steamSettings;
   private bool _originalLockSetting;
   private bool _hasOriginalLockSetting;
-  private int _lastSelectedRate = -1;
+  private int _lastSelectedRate = int.MinValue;
 
-  public PhysicsRateMenu(bool enabled) {
-    _enabled = enabled;
+  public PhysicsRateMenu(bool useMenuRate, int customRate) {
+    _useMenuRate = useMenuRate;
+    _customRate = customRate;
   }
 
+  private bool ShouldOverride => _useMenuRate || _customRate > 0;
+
   public void Initialize() {
-    if (_enabled)
+    if (ShouldOverride)
       UnlockPhysicsRate();
   }
 
   public void ResetScene() {
-    _lastSelectedRate = -1;
-    if (_enabled)
+    _lastSelectedRate = int.MinValue;
+    if (ShouldOverride)
       UnlockPhysicsRate();
   }
 
   public void OnLateUpdate() {
-    if (!_enabled)
+    if (!ShouldOverride)
       return;
     UnlockPhysicsRate();
-    var manager = Data_Manager.Instance;
-    if (!manager)
-      return;
-    var selectedRate = manager.physicsUpdateRate;
+    var selectedRate = _customRate;
+    if (selectedRate <= 0) {
+      var manager = Data_Manager.Instance;
+      if (!manager)
+        return;
+      selectedRate = manager.physicsUpdateRate;
+    }
     if (selectedRate != _lastSelectedRate) {
       _lastSelectedRate = selectedRate;
       MelonLogger.Msg(
           selectedRate > 0
-              ? "Physics-rate menu selected " + selectedRate + " Hz."
+              ? (_customRate > 0
+                  ? "Custom physics tick rate selected " + selectedRate +
+                    " Hz."
+                  : "Physics-rate menu selected " + selectedRate + " Hz.")
               : "Physics-rate menu has no valid selected rate."
       );
     }

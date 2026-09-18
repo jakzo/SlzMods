@@ -1,5 +1,5 @@
 namespace Sst.Livesplit.BoneworksHundredStatus {
 static class AppVersion {
-  public const string Value = "1.0.3";
+  public const string Value = "1.1.0";
 }
 }

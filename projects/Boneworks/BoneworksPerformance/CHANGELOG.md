@@ -1,4 +1,11 @@
-## Unreleased
+## 1.0.0
+
+- Smooth headset tracking across physics ticks during dropped frames, with
+  timestamped jump and slow-motion input and rising-head jump protection.
+- Restore the in-game physics-rate selection and add an optional left-hand
+  performance display.
+- Group developer tools under `src/Debug` and exclude them from Release builds.
+  CPU-set scheduling, process-priority, and LOD experiments remain debug-only.
 
 - Apply every Release preference while the game is running. Physics-rate
   changes take effect before the left-hand display updates, while tracking
@@ -28,7 +35,7 @@
   separately at every Unity fixed tick.
 - Add pose-history CSV files, report metadata, a headsetless smoke-test mode,
   and unit tests for pose math and the concurrent history buffer.
-- Add opt-in performance-core CPU sets, High process priority, and reduced LOD
+- Add debug-only opt-in performance-core CPU sets, High process priority, and reduced LOD
   bias experiments with a symmetric automated MetricsOnly comparison.
 - Add Detailed-mode diagnostics for `PhysBody.UpdateColliders` cost, unchanged
   collider outputs, and recurring exception identities.

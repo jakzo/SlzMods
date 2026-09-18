@@ -1,0 +1,2 @@
+# Debug contains source files, not build output.
+!src/Debug/

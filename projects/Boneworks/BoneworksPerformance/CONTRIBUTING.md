@@ -19,7 +19,9 @@ dotnet build projects/Boneworks/BoneworksPerformance/BoneworksPerformance.csproj
 ```
 
 The local project configuration copies the resulting DLL into the BONEWORKS
-`Mods` directory. Release builds omit the profiler implementation. Run the
+`Mods` directory. Debug-only tools live under `src/Debug`, including the profiler
+and CPU-set scheduling experiments. Release builds exclude this folder. Shared
+pose-history types remain under `src/Profiling`. Run the
 pose-history tests with:
 
 ```powershell

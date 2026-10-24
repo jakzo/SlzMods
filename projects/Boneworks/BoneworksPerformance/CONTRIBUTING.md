@@ -21,7 +21,7 @@ dotnet build projects/Boneworks/BoneworksPerformance/BoneworksPerformance.csproj
 The local project configuration copies the resulting DLL into the BONEWORKS
 `Mods` directory. Debug-only tools live under `src/Debug`, including the profiler
 and CPU-set scheduling experiments. Release builds exclude this folder. Shared
-pose-history types remain under `src/Profiling`. Run the
+pose-history types remain under `src/Tracking`. Run the
 pose-history tests with:
 
 ```powershell
@@ -31,6 +31,53 @@ dotnet run --project tests/BoneworksPerformance.Tests/BoneworksPerformance.Tests
 Keep the profiling mod isolated while collecting baselines. Other mods can add
 CPU work, allocations, exceptions, Harmony patches, and Unity objects that make
 the profile unrepresentative.
+
+## Background input sampling
+
+The gameplay worker captures HMD position plus the standard jump and slow-motion
+buttons. It uses a cancellable high-resolution Windows waitable timer, not a
+spin loop or a change to system-wide timer resolution. This requires Windows 10
+1803 or newer. Missed deadlines are skipped rather than burst-polled. Samples
+use their actual Stopwatch timestamps, so irregular gaps do not change replay
+speed. Thread scheduling can still delay a sample.
+
+The worker reads `GetControllerState` independently of the game's cached
+SteamVR actions. It never calls `UpdateActionState`, polls the game's event
+queue, or accesses Unity objects. Physical masks match the shipped Oculus,
+Index, WMR and Vive bindings, with the existing Vive jump exclusion. Custom
+SteamVR bindings are not resolved by this path and require validation before
+use. If native controller state is unavailable or stale, main-thread action
+observations remain the fallback. That fallback cannot recover taps entirely
+missed between action updates.
+
+Button edges are discrete, not interpolated. The main thread drains published
+samples, then applies each edge on the first fixed tick whose input timestamp
+reaches it. Initial held/released states do not create synthetic click actions.
+Scene and handedness/controller changes discard pending old input. Ring-buffer
+overruns rebaseline button history instead of inventing releases. Held-state
+history and slow-motion release timers use the same clock as HMD position.
+
+Polling timestamps estimate when a transition was observed, not the exact
+hardware event time. A tap shorter than the actual sample gap can still be
+missed. At the default 250 Hz, the requested interval is 4 ms.
+
+Debug jump recordings include `background-buttons.csv` alongside
+`fixed-ticks.csv`. The new CSV records each observed background state change,
+its capture timestamp, and when the main thread consumed the sample. Compare
+those timestamps with the fixed-tick release timestamps, not rendered-frame
+button flags. All capture/writer code remains Debug-only.
+
+Run the scheduling-only benchmark with:
+
+```powershell
+dotnet run --project tests/BoneworksPerformance.Tests -c Release -- --sampler-benchmark
+```
+
+It compares the former spin/sleep loop with the high-resolution blocking wait,
+reporting per-thread CPU time, sample gaps and managed allocations. It excludes
+OpenVR calls and does not establish in-game FPS or input correctness. Native
+button capture still needs a headset test, including rapid clicks during a
+render stall and the controller's normal bindings.
 
 ## Debug profiler controls
 
@@ -55,6 +102,31 @@ their native entry points come from runtime metadata. An optional IL2CppDumper
 missing from generated wrappers. If a matching UnityPlayer PDB is beside
 `UnityPlayer.dll`, DbgHelp resolves native engine frames. Symbol loading and
 stack resolution run outside the capture loop.
+
+## Debug and Release boundary
+
+Release sources contain tracking, button replay, the optional HUD, physics-rate
+settings and slot catch-up. Diagnostic state, writers, samplers for synthetic
+tests and profiler entry points live in `src/Debug`. Debug-only partial classes
+keep their implementations beside the other diagnostic code; runtime files
+contain only conditional call sites. Pure tracking primitives live in
+`src/Tracking`, not the profiler directory.
+
+Preference changes are coalesced by group and applied on the main thread before
+the HUD update, during LateUpdate or at scene initialization. Changing HUD or
+physics settings does not restart pose history.
+
+After building both configurations, run:
+
+```powershell
+dotnet run --project tests/BoneworksPerformance.Tests -c Release
+dotnet run --project tests/BoneworksPerformance.Tests -c Debug
+dotnet run --project tests/BoneworksPerformance.BuildTests -c Release
+```
+
+The build-boundary tests inspect the compiled assemblies and reject diagnostic
+types, methods or fields in Release. The pose tests also exercise pure diagnostic
+math without including those helpers in the Release mod.
 
 ## Gunfly matrix and mod comparison
 
@@ -185,15 +257,15 @@ Debug builds recognize command-line switches and empty sentinel directories
 under `UserData/BoneworksPerformance`. Sentinels avoid Steam's custom-argument
 confirmation dialog.
 
-| Sentinel | Command-line switch | Purpose |
-| --- | --- | --- |
-| `RunAutomatedBenchmark` | `--bw-performance-benchmark` | Loads the captured Runoff gun-fly workload. |
-| `RunAutomatedAB` | `--bw-performance-ab` | Runs the profiler-overhead A/B sequence. |
-| `RunOptimizationAB` | `--bw-performance-optimization-ab` | Compares CPU-set, process-priority, and LOD experiments. |
-| `RunFrameQueueAB` | `--bw-performance-frame-queue-ab` | Compares graphics queue depths. |
-| `RunPoseHistorySmokeTest` | `--bw-pose-history-smoke-test` | Records a five-second main-menu OpenVR smoke test. |
-| `RunFixedPoseSmoothnessTest` | `--bw-fixed-pose-smoothness-test` | Runs the synthetic fixed-update HMD motion and jump-protection test. |
-| `RunGunflyCatchUpAB` | `--bw-gunfly-catchup-ab` | Compares pose-clock catch-up behavior in the Runoff workload. |
+| Sentinel                     | Command-line switch                | Purpose                                                              |
+| ---------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| `RunAutomatedBenchmark`      | `--bw-performance-benchmark`       | Loads the captured Runoff gun-fly workload.                          |
+| `RunAutomatedAB`             | `--bw-performance-ab`              | Runs the profiler-overhead A/B sequence.                             |
+| `RunOptimizationAB`          | `--bw-performance-optimization-ab` | Compares CPU-set, process-priority, and LOD experiments.             |
+| `RunFrameQueueAB`            | `--bw-performance-frame-queue-ab`  | Compares graphics queue depths.                                      |
+| `RunPoseHistorySmokeTest`    | `--bw-pose-history-smoke-test`     | Records a five-second main-menu OpenVR smoke test.                   |
+| `RunFixedPoseSmoothnessTest` | `--bw-fixed-pose-smoothness-test`  | Runs the synthetic fixed-update HMD motion and jump-protection test. |
+| `RunGunflyCatchUpAB`         | `--bw-gunfly-catchup-ab`           | Compares pose-clock catch-up behavior in the Runoff workload.        |
 
 The Runoff benchmark teleports once to the captured gun-fly point, restores the
 captured M16 and glitched magazine, and freezes the physics rig's foot-ball
@@ -246,15 +318,3 @@ Debug-only settings live in the `BoneworksPerformance` MelonPreferences section:
 - `OptimizationCaptureSeconds`: duration of optimization A/B captures
 - `FrameQueueCaptureSeconds`: duration of frame-queue captures
 - `Il2CppDumperScriptPath`: optional matching IL2CppDumper `script.json`
-
-## Review checklist
-
-Before accepting a performance change:
-
-1. Compare symmetric baselines before and after the experimental condition.
-2. Confirm profiler self-time and suspension cost did not change the workload.
-3. Test with SteamVR and a headset when the change affects compositor pacing,
-   tracking, physics rate, or graphics queues.
-4. Check that physics, tracking, saved settings, and speedrun behavior remain
-   unchanged unless the change explicitly targets one of them.
-5. Build both Debug and Release configurations and run the pose-history tests.

@@ -135,7 +135,8 @@ namespace Sst.BoneworksPerformance.Debug.Gunfly
 
         )
         {
-          s.AppendLine(name + "=" + history.GetType().GetField(name, Flags).GetValue(history));
+          var field = history.GetType().GetField(name, Flags);
+          s.AppendLine(name + "=" + (field == null ? "debug-only" : field.GetValue(history)));
         }
 
         var buffer = history.GetType().GetField("_history", Flags).GetValue(history);

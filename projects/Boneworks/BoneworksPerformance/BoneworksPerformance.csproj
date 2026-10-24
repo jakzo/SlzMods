@@ -15,6 +15,6 @@
     <Compile Include="src/**/*.cs" Exclude="src/Debug/**/*.cs" />
     <Compile Include="src/Debug/**/*.cs" Exclude="src/Debug/Gunfly/**/*.cs" Condition=" '$(Configuration)' == 'Debug' " />
     <Compile Include="../../../common/Utilities/Metadata.cs" />
-    <Compile Include="../../../common/Boneworks/Il2CppNullable.cs" />
+    <Compile Include="../../../common/Boneworks/Il2CppNullable.cs" Condition=" '$(Configuration)' == 'Debug' " />
   </ItemGroup>
 </Project>

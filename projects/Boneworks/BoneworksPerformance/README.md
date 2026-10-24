@@ -1,119 +1,63 @@
-# BoneworksPerformance
-
-BoneworksPerformance improves tracking consistency during slow frames and makes
-the physics-rate option in BONEWORKS work as intended.
+> Allows any computer or headset to use game movement and mechanics that require high frame rates and refresh rates.
 
 ## Installation
 
-1. Install the BONEWORKS version of
-   [MelonLoader](https://melonwiki.xyz/#/?id=what-is-melonloader).
+1. Install version 0.5.7 of [MelonLoader](https://melonwiki.xyz/#/?id=what-is-melonloader).
 2. Copy `BoneworksPerformance.dll` into the game's `Mods` directory.
+   - The default Steam installation is usually at `C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS`
+3. Start the game and check the in-game "physics rate" setting in the main menu since that will be used instead of your headset refresh rate.
 
-The default Steam installation is usually at:
+Credits to Lakatrazz for the `PhysicsTickSelector` mod which was used as reference for the physics rate option!
 
-```text
-C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS
-```
+## Why?
 
-Credits to @Lakatrazz for the `PhysicsTickSelector` mod which was used as
-reference for the physics-rate option. Do not run it at the same time. Its
-behavior is included in BoneworksPerformance.
+The primary goal of this mod is to make the game behave the same as it does on a fast computer experiencing no frame drops and high refresh rate, even on slow hardware. This levels the playing field for speedruns since most movement and tricks benefit from high refresh rates and good frame rates which are only achievable for expensive top-tier CPUs and certain headsets.
 
-## What the mod does
+## How it works
 
-### Smoother tracking during dropped frames
+When the vanilla game with no mod is running well it will render the image to the headset, then calculate a physics tick, then render the next image to headset and repeat. But under lag, it renders the image to the headset, then calculates multiple physics ticks in a row before rendering the next image to the headset. Due to the way the game was made, certain things only happen when the game renders the image to the headset, such as getting the new position of the headset and updating the position of weapons in the inventory slots. These cause issues because:
 
-The mod records OpenVR poses on a background thread. Each physics tick receives
-the HMD position that belongs to that point in time, interpolated from the
-recorded history. Jump-button edges and slow-motion clicks use that same clock.
-The background sampler preserves both clicks of a fast slow-motion double-click
-even when no rendered frame occurs between them. Hand position and rotation,
-HMD rotation, triggers, thumbsticks, and other buttons remain live.
+- During an IRL jump under lag the headset moves up then stops for a couple of frames, then suddenly teleports up a bit further and stops for another few frames. This jerky movement doesn't give good momentum so stops a super jump from working as good as it would if the headset was continuously rising with each physics frame.
+- During gun fly the glitched magazine pushes into the player, the player gets pushed away since the inventory position is fixed, then the immediate frame after the mag is positioned back inside the player. But under lag the player gets pushed away, the glitched mag position is not updated and if the player has already been pushed clear of the mag they will have no momentum and simply fall.
 
-In the original game multiple physics ticks would be processed one after another
-in quick succession during dropped frames before rendering and would use the
-current tracked headset position at the time, meaning it would see a very
-similar position for the set of physics tick. During jumps it would look like
-inconsistent and choppy movement instead of a smooth motion which kills the
-jump's momentum.
+In general, this mod fixes these issues by changing the game code to instead do these things between physics ticks rather than on rendered frames.
 
-Tracking is delayed by one physics tick by default. This small delay gives the
-mod samples on both sides of the requested time and prevents repeated or uneven
-HMD movement when several physics ticks run in one rendered frame. When the
-clock falls behind, it catches up at twice normal speed by default.
+## What it improves
 
-### Super-jump protection
-
-When the headset has moved upward at least 0.5 metres per second over the last
-0.1 seconds, the mod pauses positive tracking-clock correction. Upward movement
-keeps its original speed instead of being compressed while the game catches up
-after a slow frame. Normal bounded catch-up resumes when the headset stops
-rising.
-
-### Gun-fly protection
-
-When a slow rendered frame contains several physics ticks, BONEWORKS normally
-leaves a weapon on the player's body at the chest pose from the previous
-rendered frame. A glitched magazine can lose contact with the player during
-those ticks and stop a gun fly. The mod fixes this by updating the weapon slot
-position every physics frame instead of every rendered frame, the same as if
-the game were rendering at full speed with no dropped frames.
+- **Smoother tracking during dropped frames**
+  - The mod continuously reads headset inputs in a separate thread in the background and saves them to a short-term history.
+  - Physics ticks will be computed as fast as they can under lag, meaning each one is not computed at regular intervals, so the saved headset input which corresponds to the time of the physics tick is applied for that frame.
+  - Catches up inputs when the game runs slower than real-life (happens under heavy lag).
+  - Inputs for times between collected input samples are interpolated between the values.
+  - **Benefits**
+    - Faster b-hopping
+    - Higher real-life augmented jumps
+    - Makes anything needing smooth movement better
+- **Jump protection**
+  - Detects real-life jumps by monitoring headset upwards velocity and pauses input catch-up for the duration of the jump so the in-game movement is as smooth as the real-life movement for the duration of the real-life jump.
+  - Also applies slomo and jump buttons according to the real-life jump timing, not the game's uneven or delayed timing.
+  - **Benefits**
+    - Higher real-life augmented jumps
+- **Gun fly protection**
+  - Updates the inventory weapon positions between physics ticks instead of before visual frame render.
+  - This keeps the glitched mag in the correct position and contacting the player's colliders during gun fly.
+  - **Benefits**
+    - Prevents sudden drops out of the sky which happen during frame drops
 
 ### Physics-rate menu
 
-BONEWORKS has a physics-rate selection, but SteamVR normally replaces it with
-the headset display frequency. BoneworksPerformance disables that SteamVR lock
-and applies the rate selected in the game's menu.
+The game has a physics rate option in the menu but it has not effect because SteamVR forces it to the headset refresh rate. This mod overrides this behavior and uses the game physics rate instead.
 
-### Performance display
-
-The optional display above the left hand contains:
-
-- `FPS`: rendered Unity updates per second
-- `Fixed`: physics updates per second
-- `VR client`: the rate of the OpenVR application's `WaitGetPoses` calls
-- `Display`: the headset's configured display frequency
-
-`VR client` is not the headset refresh rate. It is calculated from the latest
-OpenVR client frame interval, so it may fluctuate or appear higher than the
-display frequency.
+You can also use the `CustomPhysicsTickRate` option instead to select a custom refresh rate. This is useful to simulate what you could achieve on the vanilla game using a specific headset.
 
 ## Settings
 
-Settings are in the `BoneworksPerformance` section of
-`UserData/MelonPreferences.cfg`. You can also change them with an
-IL2CPP-compatible MelonPreferences manager. Release settings changed through
-a preferences manager apply on the next game update. Editing the file directly
-still requires MelonLoader to reload it.
+| Setting                             | Default | Effect                                                                                                    |
+| ----------------------------------- | ------: | --------------------------------------------------------------------------------------------------------- |
+| `SmoothTrackingDuringFrameDrops`    |  `true` | Uses one timestamped physics clock for HMD position, jump, and slow-motion clicks.                        |
+| `ProtectGunFlyDuringFrameDrops`     |  `true` | Keeps holstered weapons with the physics chest between additional physics ticks in a rendered frame.      |
+| `ProtectSuperJumpsDuringFrameDrops` |  `true` | Prevents positive tracking-clock correction while the headset is rising quickly.                          |
+| `UsePhysicsRateMenu`                |  `true` | Uses the physics rate selected in BONEWORKS instead of the headset frequency.                             |
+| `CustomPhysicsTickRate`             |     `0` | Positive values force that rate; 0 lets `UsePhysicsRateMenu` select menu or normal headset-rate behavior. |
 
-| Setting                             | Default | Effect                                                                                                   |
-| ----------------------------------- | ------: | -------------------------------------------------------------------------------------------------------- |
-| `SmoothTrackingDuringFrameDrops`    |  `true` | Uses one timestamped physics clock for HMD position, jump, and slow-motion clicks.                       |
-| `TrackingSamplesPerSecond`          |   `250` | Background tracking rate. Values are clamped to 90 through 1000 Hz. Higher values use slightly more CPU. |
-| `TrackingSmoothingDelay`            |     `1` | HMD, jump, and slow-motion input delay measured in physics ticks.                                        |
-| `TrackingCatchUpSpeed`              |     `2` | Catch-up clock speed after lag; 2 means twice normal speed.                                              |
-| `TrackingCatchUpHistorySeconds`     |     `1` | Maximum input-history age during protected jump catch-up; it adds no normal-play delay.                   |
-| `ProtectSuperJumpsDuringFrameDrops` |  `true` | Prevents positive tracking-clock correction while the headset is rising quickly.                         |
-| `JumpDetectionSpeed`                |   `0.5` | Upward headset speed in metres per second that activates jump protection.                                |
-| `JumpDetectionTime`                 |   `0.1` | Seconds of tracking history used to measure upward speed.                                                |
-| `ShowPerformanceStats`              | `false` | Shows rates, jump detection, and input-history delay in physics ticks above the left hand.                |
-| `UsePhysicsRateMenu`                |  `true` | Uses the physics rate selected in BONEWORKS instead of the headset frequency.                            |
-| `CustomPhysicsTickRate`             |     `0` | Positive values force that rate; 0 lets `UsePhysicsRateMenu` select menu or normal headset-rate behavior.  |
-| `KeepSlottedWeaponsWithPhysics`     |  `true` | Keeps body-slot weapons at the current physics-chest pose during multi-tick rendered frames.             |
-
-## Troubleshooting
-
-If tracking feels delayed, keep `TrackingSmoothingDelay` at `1` and confirm
-that the game is running at the intended physics rate. Larger delay values are
-mainly useful for testing.
-
-If the physics rate still follows the headset, remove or disable other mods
-that write `Time.fixedDeltaTime` or SteamVR's
-`lockPhysicsUpdateRateToRenderFrequency` setting.
-
-If the performance display does not appear, enter a level and make sure
-`ShowPerformanceStats` is enabled. The display attaches after the player rig
-and left controller exist.
-
-For building, profiling, automated tests, report formats, and implementation
-notes, see [CONTRIBUTING.md](CONTRIBUTING.md).
+There are also several advanced settings. These can negatively impact your gameplay if set incorrectly so avoid editing these unless you know what you are doing.

@@ -35,6 +35,26 @@ internal sealed class SuperJumpDiagnostics {
   private RigManager _rigManager;
   private float _nextRigSearchAt;
   private bool _recording;
+  private readonly List<ButtonRow> _buttonRows = new List<ButtonRow>();
+
+  private struct ButtonRow {
+    public long Captured, Observed;
+    public int Generation;
+    public bool Jump;
+    public SampledButton State;
+  }
+
+  public void ObserveCapturedButton(long timestamp, int generation, bool jump, SampledButton state) {
+    if (_recording && _buttonRows.Count < 65536)
+      _buttonRows.Add(new ButtonRow {
+        Captured = timestamp, Observed = Stopwatch.GetTimestamp(), Generation = generation, Jump = jump, State = state,
+      });
+  }
+
+  public void ObserveFixedJumpPress(long timestamp) {
+    if (_recording && (_active == null || _active.ReleaseObservedTimestamp != 0))
+      StartAttempt(Stopwatch.GetTimestamp(), timestamp);
+  }
 
   public bool IsEnabled => _enabled;
   public bool IsRecording => _recording;
@@ -123,6 +143,7 @@ internal sealed class SuperJumpDiagnostics {
     );
     Directory.CreateDirectory(_directory);
     _completed.Clear();
+    _buttonRows.Clear();
     _fixedPrelude.Clear();
     _renderPrelude.Clear();
     _active = null;
@@ -187,7 +208,8 @@ internal sealed class SuperJumpDiagnostics {
       _lastButtonHeld = held;
       _haveButtonState = true;
     }
-    if (down || held && !_lastButtonHeld)
+    if ((down || held && !_lastButtonHeld) &&
+        (_active == null || _active.ReleaseObservedTimestamp != 0))
       StartAttempt(now, hardwareTimestampAvailable ? changedTimestamp : 0);
     if (_active != null)
       if (_active.Render.Count == 0 ||
@@ -337,6 +359,7 @@ internal sealed class SuperJumpDiagnostics {
       return;
     try {
       WriteFixedCsv();
+      WriteButtonCsv();
       WriteRenderCsv();
       WriteSummaryCsv();
       WriteHtml();
@@ -345,6 +368,14 @@ internal sealed class SuperJumpDiagnostics {
           "Could not write super-jump diagnostics: " + exception.Message
       );
     }
+  }
+
+  private void WriteButtonCsv() {
+    using var writer = new StreamWriter(Path.Combine(_directory, "background-buttons.csv"));
+    writer.WriteLine("captured_stopwatch_ticks,observed_stopwatch_ticks,stopwatch_frequency,generation,button,state");
+    foreach (var row in _buttonRows)
+      writer.WriteLine(string.Join(",", row.Captured, row.Observed, Stopwatch.Frequency, row.Generation,
+          row.Jump ? "jump" : "slow_motion", row.State));
   }
 
   private void WriteFixedCsv() {

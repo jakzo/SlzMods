@@ -1,7 +1,5 @@
 using System;
-#if DEBUG
-using System.Diagnostics;
-#endif
+
 using HarmonyLib;
 using MelonLoader;
 using StressLevelZero.Props.Weapons;
@@ -10,27 +8,15 @@ using UnityEngine;
 
 namespace Sst.BoneworksPerformance;
 
-internal sealed class SlottedWeaponFixedCatchUp {
+internal sealed partial class SlottedWeaponFixedCatchUp {
   private readonly bool _enabled;
-  private readonly bool _suppressed;
   private SlotAnchor[] _slots = Array.Empty<SlotAnchor>();
   private RigManager _rig;
   private Transform _physicsChest;
   private int _lastFixedFrame = -1;
   private float _receiverSearchAt;
-  private bool _receiversReady;
-#if DEBUG
-  private long _catchUpTicks;
-  private long _slotMoves;
-  private long _totalStopwatchTicks;
-  private long _maximumStopwatchTicks;
-  private float _nextDiagnosticAt;
-#endif
 
-  public SlottedWeaponFixedCatchUp(bool enabled, bool suppressed) {
-    _enabled = enabled;
-    _suppressed = suppressed;
-  }
+  public SlottedWeaponFixedCatchUp(bool enabled) { _enabled = enabled; }
 
   public void ResetScene() {
     RestoreAll();
@@ -39,18 +25,13 @@ internal sealed class SlottedWeaponFixedCatchUp {
     _physicsChest = null;
     _lastFixedFrame = -1;
     _receiverSearchAt = Time.realtimeSinceStartup + 1f;
-    _receiversReady = false;
 #if DEBUG
-    _catchUpTicks = 0;
-    _slotMoves = 0;
-    _totalStopwatchTicks = 0;
-    _maximumStopwatchTicks = 0;
-    _nextDiagnosticAt = Time.realtimeSinceStartup + 10f;
+    DebugResetDiagnostics();
 #endif
   }
 
   public void OnUpdate() {
-    if (!IsActive || _receiversReady ||
+    if (!_enabled || _slots.Length != 0 ||
         Time.realtimeSinceStartup < _receiverSearchAt)
       return;
     _receiverSearchAt = Time.realtimeSinceStartup + 1f;
@@ -58,41 +39,38 @@ internal sealed class SlottedWeaponFixedCatchUp {
     if (!rig || !rig.physicsRig || !rig.physicsRig.m_chest ||
         !rig.gameWorldSkeletonRig)
       return;
-    var allReceivers = UnityEngine.Object.FindObjectsOfType<
-        HandWeaponSlotReciever>();
+    var allReceivers =
+        UnityEngine.Object.FindObjectsOfType<HandWeaponSlotReciever>();
     var count = 0;
     for (var i = 0; i < allReceivers.Length; i++) {
-      if (allReceivers[i] && allReceivers[i].transform.IsChildOf(
-              rig.gameWorldSkeletonRig.transform
+      if (allReceivers[i] &&
+          allReceivers[i].transform.IsChildOf(rig.gameWorldSkeletonRig.transform
           ))
         count++;
     }
     if (count == 0)
       return;
     _slots = new SlotAnchor[count];
-    for (int source = 0, target = 0;
-         source < allReceivers.Length; source++) {
+    for (int source = 0, target = 0; source < allReceivers.Length; source++) {
       var receiver = allReceivers[source];
-      if (!receiver || !receiver.transform.IsChildOf(
-              rig.gameWorldSkeletonRig.transform
-          ))
+      if (!receiver ||
+          !receiver.transform.IsChildOf(rig.gameWorldSkeletonRig.transform))
         continue;
       _slots[target++] = new SlotAnchor { Receiver = receiver };
     }
     _rig = rig;
     _physicsChest = rig.physicsRig.m_chest;
-    _receiversReady = true;
+#if DEBUG
     MelonLogger.Msg(
         "Fixed-tick weapon-slot catch-up found " + count + " body slots."
     );
+#endif
   }
 
   public void Shutdown() => RestoreAll();
 
-  private bool IsActive => _enabled && !_suppressed;
-
   private void OnFixedUpdatePrefix(RigManager rig) {
-    if (!IsActive || !_receiversReady || rig != _rig)
+    if (!_enabled || _slots.Length == 0 || rig != _rig)
       return;
     var frame = Time.frameCount;
     if (frame != _lastFixedFrame) {
@@ -100,12 +78,12 @@ internal sealed class SlottedWeaponFixedCatchUp {
       return;
     }
 #if DEBUG
-    var started = Stopwatch.GetTimestamp();
+    var started = DebugCatchUpStarted();
 #endif
     var moved = 0;
     for (var i = 0; i < _slots.Length; i++) {
       var slot = _slots[i];
-      if (!slot.Valid || !IsStillSlotted(slot))
+      if (!slot.Host || !IsStillSlotted(slot))
         continue;
       slot.Host.SetPositionAndRotation(
           _physicsChest.TransformPoint(slot.PositionInChest),
@@ -117,24 +95,18 @@ internal sealed class SlottedWeaponFixedCatchUp {
     if (moved > 0)
       Physics.SyncTransforms();
 #if DEBUG
-    var elapsed = Stopwatch.GetTimestamp() - started;
-    _catchUpTicks++;
-    _slotMoves += moved;
-    _totalStopwatchTicks += elapsed;
-    if (elapsed > _maximumStopwatchTicks)
-      _maximumStopwatchTicks = elapsed;
-    LogDiagnosticsIfDue();
+    DebugRecordCatchUp(started, moved);
 #endif
   }
 
   private void OnLateUpdatePrefix(RigManager rig) {
-    if (!IsActive || rig != _rig)
+    if (!_enabled || rig != _rig)
       return;
     RestoreAll();
   }
 
   private void OnLateUpdatePostfix(RigManager rig) {
-    if (!IsActive || !_receiversReady || rig != _rig || !_physicsChest)
+    if (!_enabled || _slots.Length == 0 || rig != _rig || !_physicsChest)
       return;
     for (var i = 0; i < _slots.Length; i++) {
       var slot = _slots[i];
@@ -143,13 +115,11 @@ internal sealed class SlottedWeaponFixedCatchUp {
         Invalidate(slot);
         continue;
       }
-      var host = receiver ? receiver.m_WeaponHost : null;
+      var host = receiver.m_WeaponHost;
       var hostTransform = host ? host.transform : null;
-      var expectedParent = receiver
-          ? (receiver.enableUpdateVolume
-              ? receiver.transform.parent
-              : receiver.transform)
-          : null;
+      var expectedParent = receiver.enableUpdateVolume
+          ? receiver.transform.parent
+          : receiver.transform;
       if (!hostTransform || hostTransform.parent != expectedParent) {
         Invalidate(slot);
         continue;
@@ -158,12 +128,10 @@ internal sealed class SlottedWeaponFixedCatchUp {
       slot.Parent = expectedParent;
       slot.LocalPosition = hostTransform.localPosition;
       slot.LocalRotation = hostTransform.localRotation;
-      slot.PositionInChest = _physicsChest.InverseTransformPoint(
-          hostTransform.position
-      );
-      slot.RotationInChest = Quaternion.Inverse(_physicsChest.rotation) *
-                             hostTransform.rotation;
-      slot.Valid = true;
+      slot.PositionInChest =
+          _physicsChest.InverseTransformPoint(hostTransform.position);
+      slot.RotationInChest =
+          Quaternion.Inverse(_physicsChest.rotation) * hostTransform.rotation;
     }
   }
 
@@ -174,20 +142,16 @@ internal sealed class SlottedWeaponFixedCatchUp {
     }
   }
 
-  private void OnInventoryTransitionPrefix(
-      HandWeaponSlotReciever receiver
-  ) {
-    if (!IsActive)
+  private void OnInventoryTransitionPrefix(HandWeaponSlotReciever receiver) {
+    if (!_enabled)
       return;
     var slot = FindSlot(receiver);
     if (slot != null)
       Restore(slot);
   }
 
-  private void OnInventoryTransitionPostfix(
-      HandWeaponSlotReciever receiver
-  ) {
-    if (!IsActive)
+  private void OnInventoryTransitionPostfix(HandWeaponSlotReciever receiver) {
+    if (!_enabled)
       return;
     var slot = FindSlot(receiver);
     if (slot != null)
@@ -213,7 +177,6 @@ internal sealed class SlottedWeaponFixedCatchUp {
   }
 
   private static void Invalidate(SlotAnchor slot) {
-    slot.Valid = false;
     slot.Overridden = false;
     slot.Host = null;
     slot.Parent = null;
@@ -223,27 +186,8 @@ internal sealed class SlottedWeaponFixedCatchUp {
     var receiver = slot.Receiver;
     var currentHost = receiver ? receiver.m_WeaponHost : null;
     return currentHost && currentHost.transform == slot.Host && slot.Host &&
-           slot.Host.parent == slot.Parent;
+        slot.Host.parent == slot.Parent;
   }
-
-#if DEBUG
-  private void LogDiagnosticsIfDue() {
-    var now = Time.realtimeSinceStartup;
-    if (now < _nextDiagnosticAt || _catchUpTicks == 0)
-      return;
-    _nextDiagnosticAt = now + 10f;
-    var microsecondsPerTick = _totalStopwatchTicks * 1000000.0 /
-                              Stopwatch.Frequency / _catchUpTicks;
-    var maximumMicroseconds = _maximumStopwatchTicks * 1000000.0 /
-                              Stopwatch.Frequency;
-    MelonLogger.Msg(
-        "Fixed-tick weapon-slot catch-up: ticks=" + _catchUpTicks +
-        ", slot moves=" + _slotMoves + ", mean=" +
-        microsecondsPerTick.ToString("0.###") + " us, max=" +
-        maximumMicroseconds.ToString("0.###") + " us."
-    );
-  }
-#endif
 
   private sealed class SlotAnchor {
     public HandWeaponSlotReciever Receiver;
@@ -253,7 +197,6 @@ internal sealed class SlottedWeaponFixedCatchUp {
     public Quaternion LocalRotation;
     public Vector3 PositionInChest;
     public Quaternion RotationInChest;
-    public bool Valid;
     public bool Overridden;
   }
 
@@ -279,14 +222,12 @@ internal sealed class SlottedWeaponFixedCatchUp {
   }
 
   [HarmonyPatch(
-      typeof(HandWeaponSlotReciever),
-      nameof(HandWeaponSlotReciever.SendToUI)
+      typeof(HandWeaponSlotReciever), nameof(HandWeaponSlotReciever.SendToUI)
   )]
   private static class HandWeaponSlotReceiverSendToUiPatch {
     [HarmonyPrefix]
     private static void Prefix(HandWeaponSlotReciever __instance) {
-      Mod.Instance?.SlottedWeaponCatchUp?.OnInventoryTransitionPrefix(
-          __instance
+      Mod.Instance?.SlottedWeaponCatchUp?.OnInventoryTransitionPrefix(__instance
       );
     }
 
@@ -305,8 +246,7 @@ internal sealed class SlottedWeaponFixedCatchUp {
   private static class HandWeaponSlotReceiverReturnFromUiPatch {
     [HarmonyPrefix]
     private static void Prefix(HandWeaponSlotReciever __instance) {
-      Mod.Instance?.SlottedWeaponCatchUp?.OnInventoryTransitionPrefix(
-          __instance
+      Mod.Instance?.SlottedWeaponCatchUp?.OnInventoryTransitionPrefix(__instance
       );
     }
 

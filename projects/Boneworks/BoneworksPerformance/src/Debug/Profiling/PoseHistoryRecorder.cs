@@ -228,6 +228,7 @@ internal sealed class PoseHistoryRecorder {
       // thread must be registered with IL2CPP's garbage collector before it
       // enters that assembly.
       using (Il2CppThreadRegistration.Attach()) {
+        using var wait = new SamplerWait(_stop);
         var poses = new Il2CppStructArray<TrackedDevicePose_t>(
             OpenVR.k_unMaxTrackedDeviceCount
         );
@@ -237,25 +238,15 @@ internal sealed class PoseHistoryRecorder {
           var now = Stopwatch.GetTimestamp();
           var remaining = next - now;
           if (remaining > 0) {
-            var waitMilliseconds = (int)(
-                remaining * 1000L / Stopwatch.Frequency
-            );
-            if (waitMilliseconds > 0 && _stop.WaitOne(waitMilliseconds))
+            if (!wait.Until(next))
               break;
-            if (waitMilliseconds == 0) {
-              Thread.SpinWait(32);
-              if (_stop.WaitOne(0))
-                break;
-            }
             continue;
           }
           if (now - next > interval)
             Interlocked.Increment(ref _scheduleOverruns);
           if (TryReadPoses(poses, out var sample))
             _backgroundSamples.Add(sample);
-          next += interval;
-          if (now - next > interval * 4)
-            next = now + interval;
+          next = SamplerSchedule.Next(next, Stopwatch.GetTimestamp(), interval);
         }
       }
     } catch (Exception exception) {

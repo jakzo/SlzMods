@@ -18,9 +18,7 @@ internal sealed class PerformanceHud {
   private float _nextAttachAt;
   private float _nextTextUpdateAt;
 
-  public PerformanceHud(bool enabled) {
-    _enabled = enabled;
-  }
+  public PerformanceHud(bool enabled) { _enabled = enabled; }
 
   public void ResetScene() {
     _updateTimer.Reset();
@@ -51,25 +49,21 @@ internal sealed class PerformanceHud {
         "FPS: " + _updateTimer.GetRate(now).ToString("N1") +
         "\nFixed: " + _fixedTimer.GetRate(now).ToString("N1") +
         "\nVR client: " + ReadClientPoseRate() +
-        "\nDisplay: " + ReadDisplayRate() +
-        "\nJump detected: " + (jumpDetected
-            ? "<color=#55ff55>YES</color>"
-            : "<color=#ff7777>NO</color>") +
-        "\nInput behind: " + (inputTicksBehind < 0f
-            ? "--"
-            : inputTicksBehind.ToString("N1") + " ticks")
+        "\nDisplay: " + ReadDisplayRate() + "\nJump detected: " +
+        (jumpDetected ? "<color=#55ff55>YES</color>"
+                      : "<color=#ff7777>NO</color>") +
+        "\nInput behind: " +
+        (inputTicksBehind < 0f ? "--"
+                               : inputTicksBehind.ToString("N1") + " ticks")
     );
   }
 
-  public void Shutdown() {
-    DestroyText();
-  }
+  public void Shutdown() { DestroyText(); }
 
   private void TryAttach() {
     var rig = UnityEngine.Object.FindObjectOfType<RigManager>();
-    var controller = rig && rig.ControllerRig
-        ? rig.ControllerRig.leftController
-        : null;
+    var controller =
+        rig && rig.ControllerRig ? rig.ControllerRig.leftController : null;
     if (!controller)
       return;
     var gameObject = GameObject.Find(ObjectName);
@@ -96,8 +90,7 @@ internal sealed class PerformanceHud {
     if (!compositor.GetFrameTiming(ref timing, 0) ||
         timing.m_flClientFrameIntervalMs <= 0f)
       return "--";
-    return (1000f / timing.m_flClientFrameIntervalMs).ToString("N1") +
-           " Hz";
+    return (1000f / timing.m_flClientFrameIntervalMs).ToString("N1") + " Hz";
   }
 
   private static string ReadDisplayRate() {
@@ -141,9 +134,8 @@ internal sealed class PerformanceHud {
       var windowStart = now - WindowSeconds;
       while (_start != _end && _times[_start] < windowStart)
         _start = (_start + 1) % _times.Length;
-      var count = _end >= _start
-          ? _end - _start
-          : _times.Length - _start + _end;
+      var count =
+          _end >= _start ? _end - _start : _times.Length - _start + _end;
       return count / WindowSeconds;
     }
   }

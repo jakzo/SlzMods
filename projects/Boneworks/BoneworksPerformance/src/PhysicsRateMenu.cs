@@ -1,16 +1,13 @@
-using MelonLoader;
 using UnityEngine;
 using Valve.VR;
 
 namespace Sst.BoneworksPerformance;
 
-internal sealed class PhysicsRateMenu {
+internal sealed partial class PhysicsRateMenu {
   private readonly bool _useMenuRate;
   private readonly int _customRate;
   private SteamVR_Settings _steamSettings;
   private bool _originalLockSetting;
-  private bool _hasOriginalLockSetting;
-  private int _lastSelectedRate = int.MinValue;
 
   public PhysicsRateMenu(bool useMenuRate, int customRate) {
     _useMenuRate = useMenuRate;
@@ -25,7 +22,9 @@ internal sealed class PhysicsRateMenu {
   }
 
   public void ResetScene() {
-    _lastSelectedRate = int.MinValue;
+#if DEBUG
+    DebugResetRateLog();
+#endif
     if (ShouldOverride)
       UnlockPhysicsRate();
   }
@@ -41,17 +40,9 @@ internal sealed class PhysicsRateMenu {
         return;
       selectedRate = manager.physicsUpdateRate;
     }
-    if (selectedRate != _lastSelectedRate) {
-      _lastSelectedRate = selectedRate;
-      MelonLogger.Msg(
-          selectedRate > 0
-              ? (_customRate > 0
-                  ? "Custom physics tick rate selected " + selectedRate +
-                    " Hz."
-                  : "Physics-rate menu selected " + selectedRate + " Hz.")
-              : "Physics-rate menu has no valid selected rate."
-      );
-    }
+#if DEBUG
+    DebugRateSelected(selectedRate);
+#endif
     if (Time.timeScale <= 0f || selectedRate <= 0)
       return;
     var selectedDelta = Time.timeScale / selectedRate;
@@ -60,7 +51,7 @@ internal sealed class PhysicsRateMenu {
   }
 
   public void Shutdown() {
-    if (_steamSettings && _hasOriginalLockSetting) {
+    if (_steamSettings) {
       _steamSettings.lockPhysicsUpdateRateToRenderFrequency =
           _originalLockSetting;
     }
@@ -68,12 +59,11 @@ internal sealed class PhysicsRateMenu {
 
   private void UnlockPhysicsRate() {
     if (!_steamSettings) {
-      _steamSettings = Resources.Load<SteamVR_Settings>("SteamVR_Settings");
-      if (!_steamSettings)
+      var settings = Resources.Load<SteamVR_Settings>("SteamVR_Settings");
+      if (!settings)
         return;
-      _originalLockSetting =
-          _steamSettings.lockPhysicsUpdateRateToRenderFrequency;
-      _hasOriginalLockSetting = true;
+      _originalLockSetting = settings.lockPhysicsUpdateRateToRenderFrequency;
+      _steamSettings = settings;
     }
     if (_steamSettings.lockPhysicsUpdateRateToRenderFrequency)
       _steamSettings.lockPhysicsUpdateRateToRenderFrequency = false;

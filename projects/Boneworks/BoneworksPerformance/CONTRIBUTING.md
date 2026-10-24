@@ -56,6 +56,14 @@ missing from generated wrappers. If a matching UnityPlayer PDB is beside
 `UnityPlayer.dll`, DbgHelp resolves native engine frames. Symbol loading and
 stack resolution run outside the capture loop.
 
+## Gunfly matrix and mod comparison
+
+The reusable gunfly test tools are in `src/Debug/Gunfly`, with usage instructions
+in [dev/Gunfly/README.md](dev/Gunfly/README.md). Build `GunflyBenchmarks.csproj`
+explicitly in Debug. It produces a separate helper DLL so baseline tests can run
+without loading the performance mod. The normal mod excludes these test sources
+in both configurations, and the helper rejects Release builds.
+
 ## Capture modes
 
 `MetricsOnly` records frames and PlayerLoop data without CPU sampling. It is the

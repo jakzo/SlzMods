@@ -1,4 +1,6 @@
 /projects/*/*/thunderstore/build/
+# Generated profiling recordings, analysis reports and experiment artifacts.
+/outputs/
 generated-*
 MelonPreferences.cfg
 

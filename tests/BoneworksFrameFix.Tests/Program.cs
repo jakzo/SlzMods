@@ -41,6 +41,14 @@ internal static class Program
       TestMatchingNativeButtonsKeepHistory();
       TestFallbackSlowMotionDoubleClick();
       TestRejectedNativeButtonsSurviveOverrun();
+      TestNativeAheadOfActionCache();
+      TestActionAheadOfNativeSample();
+      TestFallbackKeepsOriginalStallTimestamp();
+      TestSourceSwitchDoesNotReplayDeliveredClicks();
+      TestUncoveredNativeHistoryUsesActions();
+      TestStaleNativeSourceKeepsActionEdges();
+      TestFirstNativeSampleAfterActionPress();
+      TestSourceDuplicateDoesNotDelaySlowMotionTimer();
       if (arguments.Length > 0 && arguments[0] == "--sampler-benchmark")
         SamplerBenchmark.Run();
       else if (arguments.Length > 0)
@@ -77,8 +85,8 @@ internal static class Program
     history.Observe(200, SampledButton.Released);
     history.ObserveLive(190, 210, 50, SampledButton.Held);
     True(history.NativeRejected, "fresh all-zero legacy data cannot mask a real action press");
-    True(history.TryConsume(201, out var press) && !press.IsInitial && press.Pressed,
-        "an older action timestamp is corrected instead of discarded");
+    True(history.TryConsume(190, out var press) && !press.IsInitial && press.Pressed && press.Timestamp == 190,
+        "an older action timestamp is preserved instead of discarded or retimed");
     history.Observe(220, SampledButton.Released);
     True(history.Held && !history.TryConsume(220, out _), "rejected legacy data cannot fabricate a release");
     history.ObserveLive(230, 240, 50, SampledButton.Released);
@@ -105,6 +113,138 @@ internal static class Program
     Pass();
   }
 
+  private static void TestNativeAheadOfActionCache()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.Observe(110, SampledButton.Held);
+    history.ObserveLive(100, 115, 50, SampledButton.Released);
+    True(!history.NativeRejected, "an older released action agrees with the native state at its own time");
+    history.TryConsume(100, out _);
+    True(history.TryConsume(110, out var press) && press.Pressed, "newer worker press retained");
+    True(!history.TryConsume(120, out _) && history.Held, "stale action does not fabricate a release");
+    history.Observe(130, SampledButton.Released);
+    history.ObserveLive(115, 135, 50, SampledButton.Held);
+    True(!history.NativeRejected, "an older held action does not reject a newer native release");
+    True(history.TryConsume(130, out var release) && !release.Pressed, "real native release retained");
+    Pass();
+  }
+
+  private static void TestActionAheadOfNativeSample()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.ObserveLive(100, 100, 50, SampledButton.Released, 5);
+    history.ObserveLive(110, 112, 50, SampledButton.Held, 5);
+    True(!history.NativeRejected, "missing future native coverage is not a binding mismatch");
+    history.Observe(114, SampledButton.Held);
+    history.ObserveLive(110, 115, 50, SampledButton.Held, 5);
+    True(!history.NativeRejected, "sample quantization inside the declared tolerance is accepted");
+    history.TryConsume(100, out _);
+    True(history.TryConsume(114, out var press) && press.Timestamp == 114 && press.Pressed,
+        "quantization does not change the native sample time");
+    Pass();
+  }
+
+  private static void TestFallbackKeepsOriginalStallTimestamp()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.ObserveLive(100, 100, 50, SampledButton.Released);
+    history.TryConsume(100, out _);
+    history.Observe(1000, SampledButton.Released);
+    history.ObserveLive(200, 1010, 50, SampledButton.Held);
+    True(history.NativeRejected, "covered historical disagreement rejects zero-filled samples");
+    True(!history.TryConsume(199, out _), "action is not delivered before its real event time");
+    True(history.TryConsume(200, out var press) && press.Timestamp == 200 && press.Pressed,
+        "newer polls cannot push a recovered action to the end of a stall");
+    history.ObserveLive(300, 1020, 50, SampledButton.Released);
+    True(history.TryConsume(300, out var release) && release.Timestamp == 300 && !release.Pressed,
+        "fallback release retains its original time too");
+    Pass();
+  }
+
+  private static void TestSourceSwitchDoesNotReplayDeliveredClicks()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.ObserveLive(100, 100, 50, SampledButton.Released);
+    history.TryConsume(100, out _);
+    history.Observe(110, SampledButton.Held);
+    history.TryConsume(110, out _);
+    history.ObserveLive(110, 120, 50, SampledButton.Held);
+    history.Observe(130, SampledButton.Released);
+    history.Observe(200, SampledButton.Released);
+    history.ObserveLive(130, 210, 50, SampledButton.Released);
+    history.ObserveLive(190, 210, 50, SampledButton.Held);
+    True(history.NativeRejected, "later genuinely missing press selects action history");
+    var presses = 0;
+    while (history.TryConsume(220, out var edge))
+      if (!edge.IsInitial && edge.Pressed) presses++;
+    Equal(1, presses, "already delivered native press is not replayed after switching sources");
+    Pass();
+  }
+
+  private static void TestUncoveredNativeHistoryUsesActions()
+  {
+    var history = new ButtonHistory();
+    history.Observe(200, SampledButton.Released);
+    history.ObserveLive(100, 210, 50, SampledButton.Held);
+    True(!history.NativeRejected, "missing older coverage cannot prove a binding mismatch");
+    True(history.TryConsume(100, out var baseline) && baseline.IsInitial && history.Held,
+        "unvalidated native data cannot override the initial live action state");
+    True(!history.TryConsume(220, out _), "future unvalidated native baseline does not fabricate a release");
+    Pass();
+  }
+
+  private static void TestStaleNativeSourceKeepsActionEdges()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.ObserveLive(100, 100, 50, SampledButton.Released);
+    history.TryConsume(100, out _);
+    history.ObserveLive(150, 250, 50, SampledButton.Held);
+    True(!history.NativeRejected, "unavailable polling is not mistaken for a binding mismatch");
+    True(history.TryConsume(150, out var press) && press.Timestamp == 150 && press.Pressed,
+        "stale native source selects timestamped actions without moving their events");
+    history.ObserveLive(170, 260, 50, SampledButton.Released);
+    True(history.TryConsume(170, out var release) && release.Timestamp == 170 && !release.Pressed,
+        "stale-source release preserves the action timestamp");
+    Pass();
+  }
+
+  private static void TestFirstNativeSampleAfterActionPress()
+  {
+    var history = new ButtonHistory();
+    history.ObserveLive(100, 100, 50, SampledButton.Released);
+    history.TryConsume(100, out _);
+    history.ObserveLive(120, 120, 50, SampledButton.Held);
+    history.TryConsume(120, out _);
+    history.Observe(150, SampledButton.Released);
+    history.ObserveLive(120, 155, 50, SampledButton.Held);
+    True(!history.NativeRejected && history.Held, "uncorroborated first native sample cannot release a live press");
+    history.Observe(170, SampledButton.Released);
+    history.ObserveLive(160, 175, 50, SampledButton.Released);
+    True(history.TryConsume(170, out var release) && !release.IsInitial && !release.Pressed,
+        "switching to corroborated native data still delivers the jump-release command");
+    Pass();
+  }
+
+  private static void TestSourceDuplicateDoesNotDelaySlowMotionTimer()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.ObserveLive(100, 100, 50, SampledButton.Released);
+    history.TryConsume(100, out _);
+    history.Observe(110, SampledButton.Held);
+    history.TryConsume(110, out _);
+    history.ObserveLive(112, 120, 50, SampledButton.Held);
+    history.ObserveLive(112, 300, 50, SampledButton.Held);
+    Equal(long.MaxValue, history.NextTimestamp, "duplicate fallback press cannot block a due slow-motion timer");
+    True(!history.TryConsume(300, out _), "source switch does not invoke slow-motion twice for one held press");
+    Pass();
+  }
+
   private static void TestFallbackSlowMotionDoubleClick()
   {
     var history = new ButtonHistory();
@@ -128,7 +268,8 @@ internal static class Program
   {
     var history = new ButtonHistory();
     history.Observe(1, SampledButton.Released);
-    history.ObserveLive(2, 2, 50, SampledButton.Held);
+    history.Observe(3, SampledButton.Released);
+    history.ObserveLive(2, 3, 50, SampledButton.Held);
     for (var i = 3; i <= 5000; i++)
       history.ObserveLive(i, i, 50, i % 2 == 0 ? SampledButton.Held : SampledButton.Released);
     True(history.NativeRejected, "queue limits do not restore a known-broken native source");

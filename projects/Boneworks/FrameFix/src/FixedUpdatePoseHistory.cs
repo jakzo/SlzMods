@@ -498,7 +498,8 @@ internal sealed partial class FixedUpdatePoseHistory
       SampledButton state, string name)
   {
     var wasRejected = history.NativeRejected;
-    history.ObserveLive(timestamp, now, ButtonMaximumAge, state);
+    history.ObserveLive(timestamp, now, ButtonMaximumAge, state,
+        Math.Min(Stopwatch.Frequency / 50, Stopwatch.Frequency * 2L / _sampleRate));
     if (!wasRejected && history.NativeRejected)
       MelonLogger.Warning("Legacy OpenVR " + name + " input disagrees with the game's action binding; using action-timestamp history for this controller configuration.");
   }

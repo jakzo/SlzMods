@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
-    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Debug/Gunfly/Shared/Validation.cs" />
-    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Debug/Gunfly/Matrix/MatrixPlan.cs" />
+    <Compile Include="../../projects/Boneworks/FrameFix/src/Debug/Gunfly/Shared/Validation.cs" />
+    <Compile Include="../../projects/Boneworks/FrameFix/src/Debug/Gunfly/Matrix/MatrixPlan.cs" />
   </ItemGroup>
 </Project>

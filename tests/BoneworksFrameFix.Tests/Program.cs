@@ -37,6 +37,10 @@ internal static class Program
       TestButtonBufferOverrun();
       TestButtonHistoryBounded();
       TestConcurrentButtonPublication();
+      TestZeroLegacyButtonsFallBack();
+      TestMatchingNativeButtonsKeepHistory();
+      TestFallbackSlowMotionDoubleClick();
+      TestRejectedNativeButtonsSurviveOverrun();
       if (arguments.Length > 0 && arguments[0] == "--sampler-benchmark")
         SamplerBenchmark.Run();
       else if (arguments.Length > 0)
@@ -62,6 +66,73 @@ internal static class Program
     stop.Set();
     True(!wait.Until(System.Diagnostics.Stopwatch.GetTimestamp() + System.Diagnostics.Stopwatch.Frequency),
         "stop cancels a wait immediately");
+    Pass();
+  }
+
+  private static void TestZeroLegacyButtonsFallBack()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.TryConsume(100, out _);
+    history.Observe(200, SampledButton.Released);
+    history.ObserveLive(190, 210, 50, SampledButton.Held);
+    True(history.NativeRejected, "fresh all-zero legacy data cannot mask a real action press");
+    True(history.TryConsume(201, out var press) && !press.IsInitial && press.Pressed,
+        "an older action timestamp is corrected instead of discarded");
+    history.Observe(220, SampledButton.Released);
+    True(history.Held && !history.TryConsume(220, out _), "rejected legacy data cannot fabricate a release");
+    history.ObserveLive(230, 240, 50, SampledButton.Released);
+    True(history.TryConsume(230, out var release) && !release.IsInitial && !release.Pressed,
+        "real release is delivered exactly once for jumping");
+    history.Reset();
+    True(!history.NativeRejected && history.Observe(300, SampledButton.Released),
+        "controller reconfiguration permits native polling again");
+    Pass();
+  }
+
+  private static void TestMatchingNativeButtonsKeepHistory()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.Observe(110, SampledButton.Held);
+    history.Observe(120, SampledButton.Released);
+    history.ObserveLive(120, 125, 50, SampledButton.Released);
+    True(!history.NativeRejected, "matching final state preserves background sampling");
+    True(history.TryConsume(100, out var baseline) && baseline.IsInitial, "baseline retained");
+    True(history.TryConsume(110, out var press) && press.Pressed, "short native press between frames retained");
+    True(history.TryConsume(120, out var release) && !release.Pressed, "short native release retained");
+    True(!history.TryConsume(200, out _), "live confirmation does not duplicate native events");
+    Pass();
+  }
+
+  private static void TestFallbackSlowMotionDoubleClick()
+  {
+    var history = new ButtonHistory();
+    history.Observe(100, SampledButton.Released);
+    history.Observe(120, SampledButton.Released);
+    history.ObserveLive(110, 125, 50, SampledButton.Held);
+    history.ObserveLive(140, 145, 50, SampledButton.Released);
+    history.Observe(150, SampledButton.Released);
+    history.ObserveLive(160, 165, 50, SampledButton.Held);
+    history.ObserveLive(180, 185, 50, SampledButton.Released);
+    var replay = new SlowMotionReplayState(1000);
+    var presses = 0;
+    while (history.TryConsume(200, out var edge))
+      if (!edge.IsInitial && replay.Apply(edge) == SlowMotionReplayCommand.DecreaseTimeScale) presses++;
+    Equal(2, presses, "both slow-motion presses survive failed legacy polling");
+    Equal(430L, replay.PendingToggleTimestamp, "toggle delay follows the real action release");
+    Pass();
+  }
+
+  private static void TestRejectedNativeButtonsSurviveOverrun()
+  {
+    var history = new ButtonHistory();
+    history.Observe(1, SampledButton.Released);
+    history.ObserveLive(2, 2, 50, SampledButton.Held);
+    for (var i = 3; i <= 5000; i++)
+      history.ObserveLive(i, i, 50, i % 2 == 0 ? SampledButton.Held : SampledButton.Released);
+    True(history.NativeRejected, "queue limits do not restore a known-broken native source");
+    True(!history.Observe(6000, SampledButton.Released), "broken native samples stay rejected after overrun");
     Pass();
   }
 

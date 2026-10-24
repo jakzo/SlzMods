@@ -8,8 +8,8 @@ import {
   chestAnchorError,
   projectedLagSeconds,
   summarizePhases,
-} from "../projects/Boneworks/BoneworksFrameFix/dev/Gunfly/analysis/analyze-gunfly-slot-ab.mjs";
-import { readCsv } from "../projects/Boneworks/BoneworksFrameFix/dev/Gunfly/analysis/analyze-gunfly-slot-ab.mjs";
+} from "../projects/Boneworks/FrameFix/dev/Gunfly/analysis/analyze-gunfly-slot-ab.mjs";
+import { readCsv } from "../projects/Boneworks/FrameFix/dev/Gunfly/analysis/analyze-gunfly-slot-ab.mjs";
 
 test("raw CSV parsing preserves missing samples and rejects malformed numeric data", async (context) => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "gunfly-csv-"));

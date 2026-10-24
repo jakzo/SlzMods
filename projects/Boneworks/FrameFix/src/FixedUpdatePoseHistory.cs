@@ -450,10 +450,11 @@ internal sealed partial class FixedUpdatePoseHistory
     DrainButtonSamples();
     var controller = JumpButtonTiming.Controller(rig);
     var now = Stopwatch.GetTimestamp();
-    if (!JumpButtonTiming.UsesAButton(controller) || _jumpButtons.IsFresh(now, ButtonMaximumAge))
+    if (!JumpButtonTiming.UsesAButton(controller))
       return;
     var timestamp = JumpButtonTiming.ReadEdgeTimestamp(rig, now, Time.realtimeSinceStartup);
-    _jumpButtons.Observe(timestamp, controller.GetAButton() ? SampledButton.Held : SampledButton.Released);
+    ObserveLiveButton(_jumpButtons, timestamp, now,
+        controller.GetAButton() ? SampledButton.Held : SampledButton.Released, "jump");
   }
 
   private void BeginControllerEarlyUpdate(ControllerRig rig)
@@ -481,16 +482,25 @@ internal sealed partial class FixedUpdatePoseHistory
     DrainButtonSamples();
     var controller = SlowMotionButtonTiming.Controller(rig);
     var now = Stopwatch.GetTimestamp();
-    if (!SlowMotionButtonTiming.IsSupported(controller) ||
-        _slowMotionButtons.IsFresh(now, ButtonMaximumAge))
+    if (!SlowMotionButtonTiming.IsSupported(controller))
       return;
     var action = SlowMotionButtonTiming.Action(controller);
     var changedTime = action == null ? 0f :
         action.GetTimeLastChanged(SlowMotionButtonTiming.Source(rig));
     var timestamp = JumpButtonTiming.UnityRealtimeToStopwatch(
         changedTime, Time.realtimeSinceStartup, now);
-    _slowMotionButtons.Observe(timestamp, SlowMotionButtonTiming.IsPressed(controller)
-        ? SampledButton.Held : SampledButton.Released);
+    ObserveLiveButton(_slowMotionButtons, timestamp, now,
+        SlowMotionButtonTiming.IsPressed(controller) ? SampledButton.Held : SampledButton.Released,
+        "slow-motion");
+  }
+
+  private void ObserveLiveButton(ButtonHistory history, long timestamp, long now,
+      SampledButton state, string name)
+  {
+    var wasRejected = history.NativeRejected;
+    history.ObserveLive(timestamp, now, ButtonMaximumAge, state);
+    if (!wasRejected && history.NativeRejected)
+      MelonLogger.Warning("Legacy OpenVR " + name + " input disagrees with the game's action binding; using action-timestamp history for this controller configuration.");
   }
 
   private void DeliverSlowMotionEvents(ControllerRig rig)
@@ -549,13 +559,9 @@ internal sealed partial class FixedUpdatePoseHistory
     var controller = JumpButtonTiming.Controller(rig);
     if (!JumpButtonTiming.UsesAButton(controller) || !controller.GetAButtonUp())
       return true;
-    // The worker is authoritative while fresh. Otherwise retain the action-timestamp fallback.
     var now = Stopwatch.GetTimestamp();
-    if (!_jumpButtons.IsFresh(now, ButtonMaximumAge))
-    {
-      var timestamp = JumpButtonTiming.ReadEdgeTimestamp(rig, now, Time.realtimeSinceStartup);
-      _jumpButtons.Observe(timestamp, SampledButton.Released);
-    }
+    var timestamp = JumpButtonTiming.ReadEdgeTimestamp(rig, now, Time.realtimeSinceStartup);
+    ObserveLiveButton(_jumpButtons, timestamp, now, SampledButton.Released, "jump");
     return false;
   }
 

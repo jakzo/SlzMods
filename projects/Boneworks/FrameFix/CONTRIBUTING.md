@@ -9,13 +9,13 @@ installation and settings belong in [README.md](README.md).
 Build the release mod with:
 
 ```powershell
-dotnet build projects/Boneworks/BoneworksFrameFix/BoneworksFrameFix.csproj -c Release
+dotnet build projects/Boneworks/FrameFix/FrameFix.csproj -c Release
 ```
 
 Build the profiler and automated test tools with:
 
 ```powershell
-dotnet build projects/Boneworks/BoneworksFrameFix/BoneworksFrameFix.csproj -c Debug
+dotnet build projects/Boneworks/FrameFix/FrameFix.csproj -c Debug
 ```
 
 The local project configuration copies the resulting DLL into the BONEWORKS

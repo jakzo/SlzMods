@@ -8,7 +8,7 @@ import {
   compareCurves,
   inferredAges,
   inputStepMetrics,
-} from "../projects/Boneworks/BoneworksFrameFix/dev/Gunfly/analysis/analyze-gunfly-turning.mjs";
+} from "../projects/Boneworks/FrameFix/dev/Gunfly/analysis/analyze-gunfly-turning.mjs";
 test("quaternion comparison is sign independent and relative product preserves identity", () => {
   const h = Math.sqrt(0.5),
     q = [0, h, 0, h];

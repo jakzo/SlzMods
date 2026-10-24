@@ -6,6 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ScheduleTests.cs" />
-    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Debug/Gunfly/Shared/InputSchedule.cs" />
+    <Compile Include="../../projects/Boneworks/FrameFix/src/Debug/Gunfly/Shared/InputSchedule.cs" />
   </ItemGroup>
 </Project>

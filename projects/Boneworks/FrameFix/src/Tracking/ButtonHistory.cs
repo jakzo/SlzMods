@@ -16,6 +16,7 @@ internal sealed class ButtonHistory
 {
   private readonly Queue<TimedButtonEdge> _pending = new Queue<TimedButtonEdge>();
   private bool _observed, _pressed;
+  public bool NativeRejected { get; private set; }
   public bool Held { get; private set; }
   public long LatestTimestamp { get; private set; }
   public long NextTimestamp => _pending.Count == 0 ? long.MaxValue : _pending.Peek().Timestamp;
@@ -25,9 +26,32 @@ internal sealed class ButtonHistory
     _pending.Clear();
     _observed = _pressed = Held = false;
     LatestTimestamp = 0;
+    NativeRejected = false;
   }
 
   public bool Observe(long timestamp, SampledButton button)
+  {
+    return !NativeRejected && Record(timestamp, button);
+  }
+
+  // Some SteamVR action bindings return successful but permanently zero legacy
+  // controller states. Freshness alone cannot make those states authoritative.
+  public bool ObserveLive(long timestamp, long now, long maximumAge, SampledButton button)
+  {
+    if (button == SampledButton.Unavailable)
+      return false;
+    if (!NativeRejected && IsFresh(now, maximumAge))
+    {
+      if (_pressed == (button == SampledButton.Held))
+        return false;
+      NativeRejected = true;
+    }
+    // The action timestamp may predate a newer, incorrect legacy sample. Keep
+    // the correction ordered, instead of silently discarding the real input.
+    return Record(System.Math.Max(timestamp, LatestTimestamp + 1), button);
+  }
+
+  private bool Record(long timestamp, SampledButton button)
   {
     if (button == SampledButton.Unavailable || timestamp <= LatestTimestamp)
       return false;
@@ -35,7 +59,11 @@ internal sealed class ButtonHistory
     // A paused game may keep observing inputs without consuming any physics ticks.
     // Rebaseline rather than replay an unbounded backlog after it resumes.
     if (_pending.Count >= 4096)
-      Reset();
+    {
+      _pending.Clear();
+      _observed = _pressed = Held = false;
+      LatestTimestamp = 0;
+    }
     var changed = !_observed || pressed != _pressed;
     if (changed)
       _pending.Enqueue(new TimedButtonEdge(timestamp, pressed, !_observed));

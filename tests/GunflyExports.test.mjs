@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { csv } from "../projects/Boneworks/BoneworksFrameFix/dev/Gunfly/analysis/export-table.mjs";
-import { compare } from "../projects/Boneworks/BoneworksFrameFix/dev/Gunfly/analysis/compare-matrix.mjs";
+import { csv } from "../projects/Boneworks/FrameFix/dev/Gunfly/analysis/export-table.mjs";
+import { compare } from "../projects/Boneworks/FrameFix/dev/Gunfly/analysis/compare-matrix.mjs";
 test("CSV preserves quotes, commas, newlines and blank cells", () => {
   assert.equal(
     csv({ headers: ["a", "b"], rows: [['x,"y"\nz', null]] }),

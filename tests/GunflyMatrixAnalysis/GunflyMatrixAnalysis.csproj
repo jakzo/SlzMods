@@ -9,6 +9,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="RetrySelection.cs" />
     <Compile Include="RetryMerge.cs" />
-    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Debug/Gunfly/Shared/Validation.cs" />
+    <Compile Include="../../projects/Boneworks/FrameFix/src/Debug/Gunfly/Shared/Validation.cs" />
   </ItemGroup>
 </Project>

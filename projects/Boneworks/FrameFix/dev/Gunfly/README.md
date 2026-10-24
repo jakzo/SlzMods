@@ -9,12 +9,12 @@ Tests remain in the repository's tests/Gunfly\* directories.
 Build from the repository root:
 
 ```powershell
-dotnet build projects/Boneworks/BoneworksFrameFix/GunflyBenchmarks.csproj -c Debug
+dotnet build projects/Boneworks/FrameFix/GunflyBenchmarks.csproj -c Debug
 ```
 
 Output: BoneworksFrameFix/bin/Gunfly/Debug/BoneworksFrameFix.Gunfly.Debug.dll.
 This helper is intentionally separate from the MelonMod. A true mod-off run must
-not load BoneworksFrameFix.dll at all. Loading this helper does not register
+not load FrameFix.dll or the nightly BoneworksFrameFix.dll at all. Loading this helper does not register
 a MelonMod or start a test. Neither Debug nor Release of the normal mod includes
 its sources. Building the helper as Release fails explicitly.
 Do not put the helper in Mods. MelonMCP loads it through reflection.
@@ -30,7 +30,7 @@ installed mods or launch/close the game.
 Set this PowerShell variable from the repository root:
 
 ```powershell
-$gunfly='projects/Boneworks/BoneworksFrameFix/dev/Gunfly'
+$gunfly='projects/Boneworks/FrameFix/dev/Gunfly'
 ```
 
 ## Prepare the game

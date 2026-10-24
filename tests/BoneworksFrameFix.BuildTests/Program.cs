@@ -7,7 +7,7 @@ using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
 
 var root = Path.GetFullPath(args.Length == 0 ? "." : args[0]);
-var project = Path.Combine(root, "projects/Boneworks/BoneworksFrameFix");
+var project = Path.Combine(root, "projects/Boneworks/FrameFix");
 var source = Path.Combine(project, "src");
 var checks = 0;
 void Check(bool valid, string message)
@@ -18,10 +18,10 @@ void Check(bool valid, string message)
 
 Dictionary<string, (string[] Fields, string[] Methods)> ReadAssembly(string configuration)
 {
-  using var stream = File.OpenRead(Path.Combine(project, "bin", configuration, "BoneworksFrameFix.dll"));
+  using var stream = File.OpenRead(Path.Combine(project, "bin", configuration, "FrameFix.dll"));
   using var pe = new PEReader(stream);
   var metadata = pe.GetMetadataReader();
-  Check(metadata.GetString(metadata.GetAssemblyDefinition().Name) == "BoneworksFrameFix",
+  Check(metadata.GetString(metadata.GetAssemblyDefinition().Name) == "FrameFix",
       "Unexpected mod assembly name");
   if (configuration == "Release")
   {

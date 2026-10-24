@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <NoWarn>$(NoWarn);CS0649</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/SamplerWait.cs" Link="SamplerWait.cs" />
+    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Tracking/ButtonHistory.cs" Link="ButtonHistory.cs" />
+    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Tracking/SamplerSchedule.cs" Link="SamplerSchedule.cs" />
+    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Debug/Profiling/PoseRotation.Debug.cs" Link="PoseRotation.Debug.cs" />
+    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/PendingPreferenceChanges.cs"
+      Link="PendingPreferenceChanges.cs" />
+    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Tracking/PoseHistoryTypes.cs"
+      Link="PoseHistoryTypes.cs" />
+    <!-- Pure diagnostic utilities are tested here but excluded from the Release mod. -->
+    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Debug/Profiling/PoseHistoryUtilities.Debug.cs"
+      Link="PoseHistoryUtilities.Debug.cs" />
+    <Compile Include="../../projects/Boneworks/BoneworksFrameFix/src/Debug/Profiling/PoseHistoryDiagnosticTypes.cs"
+      Link="PoseHistoryDiagnosticTypes.cs" Condition="'$(Configuration)' == 'Debug'" />
+  </ItemGroup>
+</Project>

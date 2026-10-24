@@ -57,7 +57,7 @@ Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BonelabHandTracking", "proj
 EndProject
 Project("{74264C91-52E5-80AD-8566-C7C096F66DE6}") = "BoneworksRandomizer", "projects\Boneworks\Randomizer\BoneworksRandomizer.csproj", "{9746DCEC-6A9C-4E84-98E2-B141A702FDD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoneworksPerformance", "projects\Boneworks\BoneworksPerformance\BoneworksPerformance.csproj", "{7691E80B-F5BD-43D7-BD04-438EC93C7FB4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoneworksFrameFix", "projects\Boneworks\BoneworksFrameFix\BoneworksFrameFix.csproj", "{7691E80B-F5BD-43D7-BD04-438EC93C7FB4}"
 EndProject
 
 Global

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>BoneworksFrameFix.Gunfly.Debug</AssemblyName>
+    <RootNamespace>Sst.BoneworksFrameFix.Debug.Gunfly</RootNamespace>
+    <OutputPath>bin/Gunfly/$(Configuration)/</OutputPath>
+    <IntermediateOutputPath>obj/Gunfly/$(Configuration)/</IntermediateOutputPath>
+    <CopyIntoGameAfterBuild>false</CopyIntoGameAfterBuild>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src/Debug/Gunfly/**/*.cs" />
+    <Compile Include="../../../common/Boneworks/Il2CppNullable.cs" />
+  </ItemGroup>
+  <Target Name="RejectNonDebug" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(Configuration)' != 'Debug'" Text="Gunfly benchmarks are debug-only. Build with -c Debug. The Release FrameFix mod never contains these helpers." />
+  </Target>
+</Project>

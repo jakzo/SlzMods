@@ -4,7 +4,7 @@ import {
   summarize,
   findCleanWindows,
   summarizeFromRest,
-} from "../projects/Boneworks/BoneworksPerformance/dev/Gunfly/analysis/analyze-gunfly-feedback.mjs";
+} from "../projects/Boneworks/BoneworksFrameFix/dev/Gunfly/analysis/analyze-gunfly-feedback.mjs";
 const trajectory = (slope = 0) =>
   Array.from({ length: 401 }, (_, i) => ({
     elapsed_s: 10 + i / 20,

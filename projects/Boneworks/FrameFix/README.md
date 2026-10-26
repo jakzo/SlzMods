@@ -9,11 +9,6 @@
    - The default Steam installation is usually at `C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS`
 3. Start the game and check the in-game "physics rate" setting in the main menu since that will be used instead of your headset refresh rate.
 
-When updating from an earlier mod name, remove its DLL from `Mods` before installing
-`BoneworksFrameFix.dll`. To keep your settings, rename the existing mod sections in
-`UserData/MelonPreferences.cfg` to `[BoneworksFrameFix]` and
-`[BoneworksFrameFixAdvanced]` while the game is closed.
-
 Credits to Lakatrazz for the `PhysicsTickSelector` mod which was used as reference for the physics rate option!
 
 ## Why?

@@ -7,7 +7,7 @@
 1. Install version 0.5.7 of [MelonLoader](https://melonwiki.xyz/#/?id=what-is-melonloader).
 2. Copy `BoneworksFrameFix.dll` into the game's `Mods` directory.
    - The default Steam installation is usually at `C:\Program Files (x86)\Steam\steamapps\common\BONEWORKS\BONEWORKS`
-3. Start the game and check the in-game "physics rate" setting in the main menu since that will be used instead of your headset refresh rate.
+3. **IMPORTANT:** Start the game and check the in-game "physics rate" setting in the main menu since that will be used instead of your headset refresh rate.
 
 Credits to Lakatrazz for the `PhysicsTickSelector` mod which was used as reference for the physics rate option!
 

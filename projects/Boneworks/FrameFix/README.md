@@ -28,7 +28,7 @@ In general, this mod fixes these issues by changing the game code to instead do 
 
 - **Smoother tracking during dropped frames**
   - The mod continuously reads headset inputs in a separate thread in the background and saves them to a short-term history.
-  - Physics ticks will be computed as fast as they can under lag, meaning each one is not computed at regular intervals, so the saved headset input which corresponds to the time of the physics tick is applied for that frame.
+  - During lag the game computes the intermediate physics ticks between rendered frames as fast as it can, meaning each one is not computed at regular intervals, so the saved headset input which corresponds to the time of the physics tick is applied for that frame.
   - Catches up inputs when the game runs slower than real-life (happens under heavy lag).
   - Inputs for times between collected input samples are interpolated between the values.
   - **Benefits**
@@ -38,7 +38,6 @@ In general, this mod fixes these issues by changing the game code to instead do 
 - **Jump protection**
   - Detects real-life jumps by monitoring headset upwards velocity and pauses input catch-up for the duration of the jump so the in-game movement is as smooth as the real-life movement for the duration of the real-life jump.
   - Also applies slomo and jump buttons according to the real-life jump timing, not the game's uneven or delayed timing.
-  - Background button recording uses the game's shipped physical bindings in a small independent OpenVR process. This avoids the frozen legacy button data in the game's action-based client without changing the game's input cache. If native button data is unavailable or disagrees with the SteamVR action at the same event time, the mod uses action-timestamp history instead. This fallback cannot recover a tap that starts and ends entirely between action updates during a rendering stall.
   - **Benefits**
     - Higher real-life augmented jumps
 - **Gun fly protection**
@@ -68,5 +67,4 @@ There are also several advanced settings. These can negatively impact your gamep
 ## Known issues
 
 - By default, head position and jump/slomo inputs are buffered by one physics tick, about 6.9 ms at 144 Hz. This is not the total motion-to-screen latency; the history can fall further behind during heavy lag. Hand tracking and head rotation are not buffered by this mod.
-- Background button capture depends on the controller's OpenVR legacy bindings; custom SteamVR remaps are not validated. When native data is unavailable or a timestamp-matched disagreement is detected, the mod uses the action-timestamp fallback described above. Inputs first discovered after their intended tick are applied at the next available tick, retaining the original event timestamp; already simulated physics cannot be corrected retroactively.
 - Under heavy lag some things are not perfectly identical and there may still be slight penalties to b-hop speed and jump height (but way less than there would be without the mod)

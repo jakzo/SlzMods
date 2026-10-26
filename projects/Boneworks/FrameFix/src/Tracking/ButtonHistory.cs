@@ -95,7 +95,10 @@ internal sealed class ButtonHistory
         _nativeReady = false;
       return changed;
     }
-    if (matches.Value)
+    // SteamVR's action changed-time can be misdated after a long Unity hitch.
+    // Agreement with the latest physical state is also valid binding evidence;
+    // do not reject a working stream just because the cached action clock slipped.
+    if (matches.Value || _native.Pressed == _actions.Pressed)
     {
       _validatedActionTimestamp = timestamp;
       _nativeReady = true;

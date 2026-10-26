@@ -39,7 +39,6 @@ internal sealed partial class FixedUpdatePoseHistory
   private readonly BackgroundButtonSampler _buttonSampler = new BackgroundButtonSampler();
   private readonly ButtonHistory _jumpButtons = new ButtonHistory();
   private readonly ButtonHistory _slowMotionButtons = new ButtonHistory();
-  private long _buttonSequence;
   private bool _deliveringQueuedJump;
   private readonly SlowMotionReplayState _slowMotionReplay =
       new SlowMotionReplayState(Stopwatch.Frequency);
@@ -137,6 +136,7 @@ internal sealed partial class FixedUpdatePoseHistory
       MelonLogger.Warning("Fixed-pose sampler did not stop within two seconds."
       );
     _thread = null;
+    _buttonSampler.Dispose();
 #if DEBUG
     EndDiagnosticRun();
 #endif
@@ -159,6 +159,7 @@ internal sealed partial class FixedUpdatePoseHistory
         _system = OpenVR.System;
         if (_system == null)
           return;
+        _buttonSampler.Start(_sampleRate);
       }
       _running = true;
       _thread = new Thread(SampleLoop)
@@ -253,15 +254,6 @@ internal sealed partial class FixedUpdatePoseHistory
       DebugQueryFailed();
 #endif
       sample.Timestamp = Stopwatch.GetTimestamp();
-    }
-    try
-    {
-      sample.Buttons = _buttonSampler.Sample(_system);
-    } catch
-    {
-#if DEBUG
-      DebugQueryFailed();
-#endif
     }
     _history.Add(sample);
   }
@@ -400,7 +392,6 @@ internal sealed partial class FixedUpdatePoseHistory
 
   private void ResetButtonHistory()
   {
-    _buttonSequence = _history.TotalWritten;
     _jumpButtons.Reset();
     _slowMotionButtons.Reset();
     _slowMotionReplay.Reset();
@@ -408,7 +399,8 @@ internal sealed partial class FixedUpdatePoseHistory
 
   private void DrainButtonSamples()
   {
-    while (_history.TryReadNext(ref _buttonSequence, out var sample, out var lost))
+    var inputAvailable = _system != null && _system.IsInputAvailable();
+    while (_buttonSampler.TryRead(inputAvailable, out var buttons, out var lost))
     {
       if (lost)
       {
@@ -419,7 +411,6 @@ internal sealed partial class FixedUpdatePoseHistory
         DebugButtonHistoryLost();
 #endif
       }
-      var buttons = sample.Buttons;
       if (buttons.Generation != _buttonSampler.Generation)
         continue;
       var jumpChanged = _jumpButtons.Observe(buttons.Timestamp, buttons.Jump);
@@ -499,7 +490,7 @@ internal sealed partial class FixedUpdatePoseHistory
   {
     var wasRejected = history.NativeRejected;
     history.ObserveLive(timestamp, now, ButtonMaximumAge, state,
-        Math.Min(Stopwatch.Frequency / 50, Stopwatch.Frequency * 2L / _sampleRate));
+        Math.Max(Stopwatch.Frequency / 50, Stopwatch.Frequency * 2L / _sampleRate));
     if (!wasRejected && history.NativeRejected)
       MelonLogger.Warning("Legacy OpenVR " + name + " input disagrees with the game's action binding; using action-timestamp history for this controller configuration.");
   }

@@ -1,16 +1,20 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.IO;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Threading;
+using MelonLoader;
 using StressLevelZero.Player;
 using StressLevelZero.Rig;
 using Valve.VR;
 
 namespace Sst.BoneworksFrameFix;
 
-// Reads legacy physical button states, without updating SteamVR's shared action cache.
+// Reads physical buttons from an isolated legacy OpenVR client. The game's own
+// GetControllerState is frozen when SteamVR actions are active.
 // Masks match the game's shipped bindings. Remapped actions still need validation.
-internal sealed class BackgroundButtonSampler
+internal sealed class BackgroundButtonSampler : IDisposable
 {
   private sealed class Bindings
   {
@@ -27,22 +31,78 @@ internal sealed class BackgroundButtonSampler
     }
   }
 
-  private static readonly uint StateSize = (uint)Marshal.SizeOf(typeof(VRControllerState_t));
   private Bindings _bindings;
   private int _generation;
-  private long _refreshDevicesAt;
-  private uint _left = OpenVR.k_unTrackedDeviceIndexInvalid;
-  private uint _right = OpenVR.k_unTrackedDeviceIndexInvalid;
+  private NativeButtonBuffer _buffer;
+  private EventWaitHandle _stop;
+  private Process _process;
+  private bool _reportedExit;
+  private NativeInputClock _clock;
 
   public int Generation => _generation;
+
+  public void Start(int sampleRate)
+  {
+    try
+    {
+      _clock = new NativeInputClock();
+      var name = "Local\\FrameFix.Input." + Guid.NewGuid().ToString("N");
+      _buffer = new NativeButtonBuffer(name, true);
+      _stop = new EventWaitHandle(false, EventResetMode.ManualReset, name + ".stop");
+      var assembly = Assembly.GetExecutingAssembly();
+      using var resource = assembly.GetManifestResourceStream("FrameFix.InputCapture.exe");
+      using var bytes = new MemoryStream();
+      resource.CopyTo(bytes);
+      var executable = bytes.ToArray();
+      using var hash = SHA256.Create();
+      var version = BitConverter.ToString(hash.ComputeHash(executable)).Replace("-", "");
+      var directory = Path.Combine(Directory.GetCurrentDirectory(), "UserData", "BoneworksFrameFix", "native", version);
+      Directory.CreateDirectory(directory);
+      var path = Path.Combine(directory, "FrameFix.InputCapture.exe");
+      if (!File.Exists(path) || !System.Linq.Enumerable.SequenceEqual(hash.ComputeHash(File.ReadAllBytes(path)), hash.ComputeHash(executable)))
+        File.WriteAllBytes(path, executable);
+      using var parent = Process.GetCurrentProcess();
+      var plugins = Path.Combine(Directory.GetCurrentDirectory(), "BONEWORKS_Data", "Plugins");
+      _process = Process.Start(new ProcessStartInfo(path,
+          parent.Id + " \"" + name + "\" \"" + plugins + "\" " + sampleRate)
+      {
+        UseShellExecute = false,
+        CreateNoWindow = true,
+        WindowStyle = ProcessWindowStyle.Hidden,
+      });
+    }
+    catch (Exception exception)
+    {
+      Dispose();
+      MelonLogger.Warning("Background button capture unavailable; using action history: " + exception.Message);
+    }
+  }
+
+  public void Dispose()
+  {
+    _stop?.Set();
+    if (_process != null)
+    {
+      if (!_process.WaitForExit(2000))
+        _process.Kill();
+      _process.Dispose();
+      _process = null;
+    }
+    _stop?.Dispose();
+    _stop = null;
+    _buffer?.Dispose();
+    _buffer = null;
+  }
 
   public void Reset()
   {
     ++_generation; // Reject a sample still in flight from the previous scene.
-    Volatile.Write(ref _bindings, null);
+    _bindings = null;
+    _buffer?.SkipToLatest();
   }
 
-  // Only called on the main thread. No Unity/game objects are read by Sample().
+  // All methods in this class are main-thread owned. The helper only sees raw
+  // controller states, never Unity objects or game action handles.
   public bool Configure(ControllerRig rig)
   {
     var jump = JumpButtonTiming.Controller(rig);
@@ -53,7 +113,8 @@ internal sealed class BackgroundButtonSampler
     if (previous != null && previous.JumpMask == jumpMask &&
         previous.SlowMotionMask == slowMask && previous.JumpRight == rig.isRightHanded)
       return false;
-    Volatile.Write(ref _bindings, new Bindings(jumpMask, slowMask, rig.isRightHanded, ++_generation));
+    _bindings = new Bindings(jumpMask, slowMask, rig.isRightHanded, ++_generation);
+    _buffer?.SkipToLatest();
     return true;
   }
 
@@ -69,34 +130,31 @@ internal sealed class BackgroundButtonSampler
     }
   }
 
-  public SampledButtons Sample(CVRSystem system)
+  public bool TryRead(bool inputAvailable, out SampledButtons buttons, out bool lost)
   {
-    var bindings = Volatile.Read(ref _bindings);
-    if (bindings == null)
-      return default;
-    var started = Stopwatch.GetTimestamp();
-    if (started >= _refreshDevicesAt)
+    buttons = default;
+    lost = false;
+    if (_process != null && !_reportedExit && _process.HasExited)
     {
-      _left = system.GetTrackedDeviceIndexForControllerRole(ETrackedControllerRole.LeftHand);
-      _right = system.GetTrackedDeviceIndexForControllerRole(ETrackedControllerRole.RightHand);
-      _refreshDevicesAt = started + Stopwatch.Frequency;
+      _reportedExit = true;
+      MelonLogger.Warning("Background button reader exited with code " + _process.ExitCode + "; using action history.");
     }
-    var left = default(VRControllerState_t);
-    var right = default(VRControllerState_t);
-    var focused = system.IsInputAvailable();
-    var leftValid = focused && _left != OpenVR.k_unTrackedDeviceIndexInvalid &&
-        system.GetControllerState(_left, ref left, StateSize);
-    var rightValid = focused && _right != OpenVR.k_unTrackedDeviceIndexInvalid &&
-        system.GetControllerState(_right, ref right, StateSize);
-    return new SampledButtons
+    var bindings = _bindings;
+    if (_buffer == null || bindings == null || !_buffer.TryRead(out var timestamp,
+        out var left, out var right, out var valid, out lost))
+      return false;
+    if (!inputAvailable)
+      valid = 0;
+    buttons = new SampledButtons
     {
-      Timestamp = started + (Stopwatch.GetTimestamp() - started) / 2,
+      Timestamp = _clock.ToManaged(timestamp),
       Generation = bindings.Generation,
-      Jump = State(bindings.JumpRight ? rightValid : leftValid,
-          bindings.JumpRight ? right.ulButtonPressed : left.ulButtonPressed, bindings.JumpMask),
-      SlowMotion = State(bindings.JumpRight ? leftValid : rightValid,
-          bindings.JumpRight ? left.ulButtonPressed : right.ulButtonPressed, bindings.SlowMotionMask),
+      Jump = State((valid & (bindings.JumpRight ? 2 : 1)) != 0,
+          bindings.JumpRight ? right : left, bindings.JumpMask),
+      SlowMotion = State((valid & (bindings.JumpRight ? 1 : 2)) != 0,
+          bindings.JumpRight ? left : right, bindings.SlowMotionMask),
     };
+    return true;
   }
 
   private static SampledButton State(bool valid, ulong pressed, ulong mask) =>

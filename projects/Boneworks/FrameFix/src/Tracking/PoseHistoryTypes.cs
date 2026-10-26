@@ -14,7 +14,6 @@ internal partial struct PoseHistorySample
   public long Sequence;
   public long Timestamp;
   public TrackedPoseValue Head;
-  public SampledButtons Buttons;
 }
 
 internal enum PoseBracketStatus
@@ -247,22 +246,6 @@ internal sealed partial class PoseHistoryBuffer
     _items[index] = sample;
     Thread.MemoryBarrier();
     Volatile.Write(ref _publishedSequences[index], sequence);
-  }
-
-  // Single main-thread reader; publication can be in progress, so retry rather than skip it.
-  public bool TryReadNext(ref long sequence, out PoseHistorySample sample, out bool lost)
-  {
-    var end = Volatile.Read(ref _nextSequence);
-    var oldest = Math.Max(0, end - _items.Length);
-    lost = sequence < oldest;
-    var candidate = Math.Max(sequence, oldest);
-    if (candidate >= end || !TryReadSequence(candidate, out sample))
-    {
-      sample = default;
-      return false;
-    }
-    sequence = candidate + 1;
-    return true;
   }
 
   public bool TryGetBracket(
